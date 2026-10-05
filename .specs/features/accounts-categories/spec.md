@@ -114,7 +114,7 @@ Toda transação pertence a uma conta bancária e tem uma categoria. As contas c
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| ACCT-01 | P1: Contas (criar, validar, editar) | - | Pending |
+| ACCT-01 | P1: Contas (criar, validar, editar) | - | Implementing |
 | ACCT-02 | P1: Contas (desativar, reativar, sem exclusão) | - | Pending |
 | ACCT-03 | P1: Contas (efeitos da inatividade) | - | Pending |
 | CAT-01 | P1: Categorias iniciais (semeadura e nomes pt-BR) | - | Implementing |
