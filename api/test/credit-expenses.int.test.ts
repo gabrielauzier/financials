@@ -261,3 +261,111 @@ describe('POST /credit-expenses', () => {
     expect(res.json()).toMatchObject({ status: 'Canceled', paidAmount: '600.00' });
   });
 });
+
+describe('GET /credit-expenses', () => {
+  let u: TestUser;
+  let account: string;
+  const ids: Record<string, string> = {};
+
+  async function create(over: Record<string, unknown>): Promise<string> {
+    const res = await call(u, 'POST', '/credit-expenses', valid({ accountId: account, ...over }));
+    expect(res.statusCode).toBe(201);
+    return res.json<{ id: string }>().id;
+  }
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Listagem');
+    // One row per status, with distinct dates (Once is the oldest) and the spec example amounts.
+    ids.Once = await create({ name: 'Once', status: 'Once', occurredAt: '2026-01-01T12:00:00Z' });
+    ids.Active = await create({
+      name: 'Active', status: 'Active', occurredAt: '2026-02-01T12:00:00Z', totalAmount: '600.00', paidAmount: '200.00',
+    });
+    ids.Inactive = await create({ name: 'Inactive', status: 'Inactive', occurredAt: '2026-03-01T12:00:00Z' });
+    ids.Canceled = await create({ name: 'Canceled', status: 'Canceled', occurredAt: '2026-04-01T12:00:00Z' });
+    ids.ToCancel = await create({ name: 'ToCancel', status: 'ToCancel', occurredAt: '2026-05-01T12:00:00Z' });
+  });
+
+  async function list(query = '') {
+    const res = await call(u, 'GET', `/credit-expenses${query}`);
+    expect(res.statusCode).toBe(200);
+    return res.json<{ id: string; name: string; status: string; remainingAmount: string }[]>();
+  }
+
+  it('returns an empty array for a user with no credit expenses', async () => {
+    const empty = await createTestUser();
+    const res = await call(empty, 'GET', '/credit-expenses');
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([]);
+  });
+
+  it('computes remainingAmount as total minus paid: 600.00 and 200.00 give 400.00', async () => {
+    const row = (await list()).find((r) => r.id === ids.Active);
+    expect(row).toMatchObject({ totalAmount: '600.00', paidAmount: '200.00', remainingAmount: '400.00' });
+  });
+
+  it('computes remainingAmount exactly for cents, no float drift, and 0.00 when fully paid', async () => {
+    const cents = await create({ name: 'Centavos', totalAmount: '0.30', paidAmount: '0.10' });
+    const full = await create({ name: 'Quitada', totalAmount: '999999999999.99', paidAmount: '999999999999.99' });
+    const big = await create({ name: 'Grande', totalAmount: '999999999999.99', paidAmount: '0.01' });
+    const rows = await list();
+    expect(rows.find((r) => r.id === cents)?.remainingAmount).toBe('0.20');
+    expect(rows.find((r) => r.id === full)?.remainingAmount).toBe('0.00');
+    expect(rows.find((r) => r.id === big)?.remainingAmount).toBe('999999999999.98');
+  });
+
+  it('lists every row with the full shape, newest occurredAt first', async () => {
+    const rows = await call(u, 'GET', '/credit-expenses');
+    const body = rows.json<{ id: string; occurredAt: string }[]>();
+    const dates = body.map((r) => r.occurredAt);
+    expect(dates).toEqual([...dates].sort().reverse());
+    expect(body.find((r) => r.id === ids.ToCancel)).toEqual({
+      id: ids.ToCancel,
+      accountId: account,
+      categoryId: await categoryId(u, 'Uncategorized'),
+      categoryName: 'Sem categoria',
+      name: 'ToCancel',
+      totalAmount: '600.00',
+      paidAmount: '0.00',
+      remainingAmount: '600.00',
+      occurredAt: '2026-05-01T12:00:00.000Z',
+      recurrencyDay: 10,
+      status: 'ToCancel',
+      notes: null,
+    });
+  });
+
+  it('breaks ties between equal dates by id, descending', async () => {
+    const same = '2027-01-01T12:00:00Z';
+    const a = await create({ name: 'Empate A', occurredAt: same });
+    const b = await create({ name: 'Empate B', occurredAt: same });
+    const tied = (await list()).filter((r) => r.id === a || r.id === b).map((r) => r.id);
+    expect(tied).toEqual([a, b].sort().reverse());
+  });
+
+  it.each(['Once', 'Active', 'Inactive', 'Canceled', 'ToCancel'])('filters by status %s, returning only that status', async (status) => {
+    const rows = await list(`?status=${status}`);
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows.every((r) => r.status === status)).toBe(true);
+    expect(rows.map((r) => r.id)).toContain(ids[status]);
+    // Rows of the other statuses exist but are not returned.
+    const everything = await list();
+    expect(rows.length).toBe(everything.filter((r) => r.status === status).length);
+    expect(everything.length).toBeGreaterThan(rows.length);
+  });
+
+  it('rejects a status outside the list, in any letter case or empty, with 422 invalid_status', async () => {
+    for (const status of ['Paused', 'active', '', 'Active%20']) {
+      const res = await call(u, 'GET', `/credit-expenses?status=${status}`);
+      expect({ status, code: res.statusCode }).toEqual({ status, code: 422 });
+      expect(res.json()).toEqual({ error: { code: 'invalid_status', message: expect.any(String), field: 'status' } });
+    }
+  });
+
+  it('returns only rows of the caller', async () => {
+    const other = await createTestUser();
+    const otherAccount = await createAccount(other, 'Outra');
+    await call(other, 'POST', '/credit-expenses', valid({ accountId: otherAccount, name: 'Da outra' }));
+    expect((await list()).map((r) => r.name)).not.toContain('Da outra');
+  });
+});

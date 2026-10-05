@@ -44,6 +44,10 @@ const CreateBody = Type.Object({
   notes: Type.Optional(nullableString),
 });
 
+const ListQuery = Type.Object({
+  status: Type.Optional(Type.String({ description: `Only this status; one of: ${STATUSES.join(', ')}` })),
+});
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HAS_OFFSET = /(?:Z|[+-]\d{2}:?\d{2})$/i;
 
@@ -138,6 +142,21 @@ export async function creditExpensesRoutes(app: FastifyInstance): Promise<void> 
         return created as CreditExpenseRow;
       });
       return reply.status(201).send(toCreditExpense(row));
+    },
+  );
+
+  // All of the user's rows, newest first (`id` breaks ties so the order is stable); no pagination.
+  routes.get(
+    '/credit-expenses',
+    { schema: { querystring: ListQuery, response: { 200: Type.Array(CreditExpenseSchema) } } },
+    async (request) => {
+      const { status } = request.query;
+      const filter = status === undefined ? undefined : validStatus(status);
+      const rows = await request.withUser((tx) => tx<CreditExpenseRow[]>`
+        select ${selectColumns(tx)} from ${fromJoins(tx)}
+        ${filter === undefined ? tx`` : tx`where ce.status = ${filter}`}
+        order by ce.occurred_at desc, ce.id desc`);
+      return rows.map(toCreditExpense);
     },
   );
 }

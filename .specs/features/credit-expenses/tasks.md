@@ -143,10 +143,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] `remainingAmount` equals total minus paid (R$ 600,00 total, R$ 200,00 paid -> 400.00)
-- [ ] `status` filter returns only that status for each of the 5 statuses (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `remainingAmount` equals total minus paid (R$ 600,00 total, R$ 200,00 paid -> 400.00)
+- [x] `status` filter returns only that status for each of the 5 statuses (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
