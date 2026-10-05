@@ -147,11 +147,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `AppError` produces the documented status and body
-- [ ] Validation failures expose `field`
-- [ ] Unexpected errors return 500 `internal_error` with no stack in the body (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `AppError` produces the documented status and body
+- [x] Validation failures expose `field`
+- [x] Unexpected errors return 500 `internal_error` with no stack in the body (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
