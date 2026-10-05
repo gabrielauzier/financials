@@ -3,6 +3,7 @@ import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type, type Static } from '@sinclair/typebox';
 import postgres, { type TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
+import { categoryReferences } from './registry.js';
 
 const CategorySchema = Type.Object({
   id: Type.String({ format: 'uuid' }),
@@ -16,6 +17,10 @@ type Category = Static<typeof CategorySchema>;
 const NameBody = Type.Object({ name: Type.String() });
 
 const IdParams = Type.Object({ id: Type.String() });
+
+const DeleteQuery = Type.Object({
+  reassignTo: Type.Optional(Type.String({ description: 'Category that receives the rows of the deleted one' })),
+});
 
 interface CategoryRow {
   id: string;
@@ -63,6 +68,24 @@ async function assertEditable(tx: TransactionSql, id: string): Promise<void> {
   const [row] = await tx<{ is_system: boolean }[]>`select is_system from public.categories where id = ${id}`;
   if (!row) throw notFound();
   if (row.is_system) throw new AppError('category_protected', 403, 'System categories cannot be changed');
+}
+
+function invalidDestination(message: string): AppError {
+  return new AppError('validation_error', 422, message, 'reassignTo');
+}
+
+function reassignRequired(): AppError {
+  return new AppError('reassign_required', 422, 'Category is in use: choose a category to receive its rows', 'reassignTo');
+}
+
+/** RLS limits the reads to the user's rows, which are the only ones the composite FK allows. */
+async function isInUse(tx: TransactionSql, id: string): Promise<boolean> {
+  for (const { table, column } of categoryReferences()) {
+    const [row] = await tx<{ used: boolean }[]>`
+      select exists (select 1 from ${tx(table)} where ${tx(column)} = ${id}) as used`;
+    if (row?.used) return true;
+  }
+  return false;
 }
 
 export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
@@ -120,6 +143,37 @@ export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
         if (isNameConflict(error)) throw duplicateName();
         throw error;
       }
+    },
+  );
+  // One transaction: the rows move and the category goes, or nothing changes.
+  routes.delete(
+    '/categories/:id',
+    { schema: { params: IdParams, querystring: DeleteQuery, response: { 204: Type.Null({ description: 'Deleted' }) } } },
+    async (request, reply) => {
+      const { id } = request.params;
+      const { reassignTo } = request.query;
+      if (!UUID.test(id)) throw notFound();
+      if (reassignTo !== undefined && !UUID.test(reassignTo)) throw invalidDestination('reassignTo must be a category id');
+      // A row added concurrently after the usage check makes the delete fail on the FK (on delete
+      // restrict), so the transaction rolls back and nothing is lost.
+      await request.withUser(async (tx) => {
+        await assertEditable(tx, id);
+        if (reassignTo === undefined) {
+          if (await isInUse(tx, id)) throw reassignRequired();
+        } else {
+          if (reassignTo.toLowerCase() === id.toLowerCase()) {
+            throw invalidDestination('reassignTo must be another category');
+          }
+          const [destination] = await tx`select 1 from public.categories where id = ${reassignTo}`;
+          if (!destination) throw new AppError('not_found', 404, 'Destination category not found', 'reassignTo');
+          for (const { table, column } of categoryReferences()) {
+            await tx`update ${tx(table)} set ${tx(column)} = ${reassignTo} where ${tx(column)} = ${id}`;
+          }
+        }
+        const deleted = await tx`delete from public.categories where id = ${id}`;
+        if (deleted.count === 0) throw notFound();
+      });
+      return reply.status(204).send(null);
     },
   );
 }

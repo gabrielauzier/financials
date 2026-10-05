@@ -120,7 +120,7 @@ Toda transação pertence a uma conta bancária e tem uma categoria. As contas c
 | CAT-01 | P1: Categorias iniciais (semeadura e nomes pt-BR) | - | Implementing |
 | CAT-02 | P1: Categorias de sistema (proteção) | - | Implementing |
 | CAT-03 | P1: Categorias próprias (criar, renomear) | - | Implementing |
-| CAT-04 | P1: Categorias próprias (excluir com reatribuição) | - | Pending |
+| CAT-04 | P1: Categorias próprias (excluir com reatribuição) | - | Implementing |
 
 **Coverage:** 7 total, 0 mapped to tasks, 7 unmapped ⚠️
 

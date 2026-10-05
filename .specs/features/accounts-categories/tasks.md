@@ -420,14 +420,14 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Unused category is deleted
-- [ ] System category returns 403
-- [ ] In-use category without `reassignTo` returns 422 `reassign_required`
-- [ ] `reassignTo` equal to the category returns 422
-- [ ] Failure during reassignment leaves the category and its rows unchanged
-- [ ] Registry mechanism is tested with a temporary test table (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Unused category is deleted
+- [x] System category returns 403
+- [x] In-use category without `reassignTo` returns 422 `reassign_required`
+- [x] `reassignTo` equal to the category returns 422
+- [x] Failure during reassignment leaves the category and its rows unchanged
+- [x] Registry mechanism is tested with a temporary test table (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
