@@ -218,4 +218,51 @@ describe("extrato: categoria, lote e neutra", () => {
       expect(within(current).queryByText("Neutra")).not.toBeInTheDocument();
     });
   });
+
+  // The refetch after a failed save (onSettled) restores the row on its own when the server is
+  // reachable; offline it fails too, so only the rollback itself can bring the old value back.
+  it("restaura a categoria anterior pelo rollback mesmo quando o servidor está inacessível (PATCH e recarga falham)", async () => {
+    const {
+      items: [item],
+      categories,
+    } = await seed("Inline categoria offline");
+    if (!item) throw new Error("seed");
+    const target = categories.find((c) => c.id !== item.categoryId) as Category;
+    renderWithQuery(<TransactionsPage />);
+    const row = await rowOf(item.name);
+    failures.set("PATCH /transactions/:id", new TypeError("Failed to fetch"));
+    failures.set("GET /transactions", new TypeError("Failed to fetch"));
+    await chooseCategoryIn(row, target.name);
+    expect(await screen.findByText("Não foi possível salvar a categoria")).toBeInTheDocument();
+    await waitFor(async () =>
+      expect(within(await rowOf(item.name)).getAllByRole("combobox")[0]).toHaveTextContent(
+        item.categoryName,
+      ),
+    );
+    expect(within(await rowOf(item.name)).getAllByRole("combobox")[0]).not.toHaveTextContent(
+      target.name,
+    );
+  });
+
+  it("reverte a chave neutra e o selo pelo rollback mesmo quando o servidor está inacessível", async () => {
+    const {
+      items: [item],
+    } = await seed("Inline neutra offline");
+    if (!item) throw new Error("seed");
+    renderWithQuery(<TransactionsPage />);
+    const row = await rowOf(item.name);
+    failures.set("PATCH /transactions/:id", new TypeError("Failed to fetch"));
+    failures.set("GET /transactions", new TypeError("Failed to fetch"));
+    fireEvent.click(within(row).getByRole("switch", { name: `Marcar ${item.name} como neutra` }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível concluir a operação. Tente novamente.",
+    );
+    await waitFor(async () => {
+      const current = await rowOf(item.name);
+      expect(
+        within(current).getByRole("switch", { name: `Marcar ${item.name} como neutra` }),
+      ).not.toBeChecked();
+      expect(within(current).queryByText("Neutra")).not.toBeInTheDocument();
+    });
+  });
 });

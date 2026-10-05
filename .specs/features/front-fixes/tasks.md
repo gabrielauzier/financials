@@ -423,3 +423,7 @@ Execution is strictly sequential within each phase; cross-feature order is auth 
 - [x] F2: assert that the duplicate nickname error lands on `#account-error` and the missing holder error on `#holder-error`
 - [x] F3: assert the exact Portuguese text of the neutral switch failure and that the API text is absent
 
+## Fix tasks (Verifier iteration 2)
+
+- [x] F4: test the rollback of a failed inline category change and of a failed neutral switch with the server unreachable (PATCH and the refetch both fail), so only the `onError` rollback can restore the row
+
