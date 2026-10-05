@@ -535,10 +535,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Repeated confirm returns the same `batchId` and counts
-- [ ] Transaction count is unchanged after the second call (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Repeated confirm returns the same `batchId` and counts
+- [x] Transaction count is unchanged after the second call (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

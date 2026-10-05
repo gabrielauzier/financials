@@ -4,7 +4,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type, type Static } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
-import type { TransactionSql } from 'postgres';
+import postgres, { type TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
 import { classify } from './classify.js';
 import { parseImport } from './formats.js';
@@ -319,6 +319,21 @@ async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<Confirm
   return { batchId: c.batchId, imported, skipped };
 }
 
+const IDEMPOTENCY_CONSTRAINT = 'import_batches_user_id_idempotency_key_key';
+
+/** Summary of the user's batch confirmed with this key, if any (RLS limits it to the user). */
+async function existingSummary(tx: TransactionSql, idempotencyKey: string): Promise<ConfirmSummary | undefined> {
+  const [batch] = await tx<{ id: string; imported_count: number; skipped_count: number }[]>`
+    select id, imported_count, skipped_count from public.import_batches where idempotency_key = ${idempotencyKey}`;
+  return batch && { batchId: batch.id, imported: batch.imported_count, skipped: batch.skipped_count };
+}
+
+function isIdempotencyConflict(error: unknown): boolean {
+  return (
+    error instanceof postgres.PostgresError && error.code === '23505' && error.constraint_name === IDEMPOTENCY_CONSTRAINT
+  );
+}
+
 export interface ImportRoutesOptions {
   supabaseUrl: string;
   /** Without it, confirm answers 503 `storage_not_configured`. */
@@ -349,7 +364,14 @@ export async function importRoutes(app: FastifyInstance, options: ImportRoutesOp
   routes.post(
     '/imports/confirm',
     {
-      schema: { ...multipartRoute, body: ConfirmForm, response: { 201: ConfirmSchema } },
+      schema: {
+        ...multipartRoute,
+        body: ConfirmForm,
+        response: {
+          201: ConfirmSchema,
+          200: { ...ConfirmSchema, description: 'This idempotencyKey was already confirmed: the stored summary, nothing written' },
+        },
+      },
       validatorCompiler: skipBodyValidation,
     },
     async (request, reply) => {
@@ -365,6 +387,10 @@ export async function importRoutes(app: FastifyInstance, options: ImportRoutesOp
       const selections = parseSelections(rawSelections);
       const user = request.user as NonNullable<typeof request.user>;
       const token = (request.headers.authorization ?? '').replace(/^Bearer /i, '');
+
+      // A repeated confirmation (IMP-05.11) answers the first one's summary; nothing is uploaded or written.
+      const done = await request.withUser((tx) => existingSummary(tx, idempotencyKey));
+      if (done) return reply.status(200).send(done);
 
       // Re-parse and re-classify on the server: rows never come from the client.
       const prepared = await request.withUser(async (tx) => {
@@ -400,6 +426,11 @@ export async function importRoutes(app: FastifyInstance, options: ImportRoutesOp
           // Best effort: the orphan path holds a batch id that has no row (design risk, cleanup out of MVP).
           request.log.error({ err: cleanupError, storagePath }, 'could not remove the file of a failed import');
         });
+        // A concurrent confirmation with the same key committed first: answer its summary.
+        if (isIdempotencyConflict(error)) {
+          const first = await request.withUser((tx) => existingSummary(tx, idempotencyKey));
+          if (first) return reply.status(200).send(first);
+        }
         throw error;
       }
       return reply.status(201).send(summary);
