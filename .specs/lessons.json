@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 5,
+  "next_id": 7,
   "lessons": [
     {
       "id": "L-001",
@@ -76,6 +76,42 @@
       ],
       "created": "2026-10-05T05:05:43Z",
       "last_seen": "2026-10-05T05:05:43Z"
+    },
+    {
+      "id": "L-005",
+      "key": "spec_precision_gap::disable framework type coercion on money fields and reject non string amounts instead of converting them",
+      "text": "Disable framework type coercion on money fields and reject non-string amounts instead of converting them",
+      "signal": "spec_precision_gap",
+      "scope": "money",
+      "status": "candidate",
+      "features": [
+        "transactions"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "ranked gap 1 (validation.md): JSON-number amount coerced by Ajv (money)"
+      ],
+      "created": "2026-10-05T06:22:46Z",
+      "last_seen": "2026-10-05T06:22:46Z"
+    },
+    {
+      "id": "L-006",
+      "key": "spec_precision_gap::define one api wide status for missing and blank required fields 400 vs 422 before implementing routes",
+      "text": "Define one API-wide status for missing and blank required fields (400 vs 422) before implementing routes",
+      "signal": "spec_precision_gap",
+      "scope": "validation",
+      "status": "candidate",
+      "features": [
+        "transactions"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec-precision gaps (validation.md): status for blank vs missing required fields (validation)"
+      ],
+      "created": "2026-10-05T06:22:46Z",
+      "last_seen": "2026-10-05T06:22:46Z"
     }
   ]
 }

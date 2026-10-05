@@ -135,16 +135,16 @@ O extrato consolidado é o núcleo do produto. O usuário precisa ver todas as t
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| TXN-01 | P1: Tabela (listagem, ordenação, paginação) | - | Implementing |
-| TXN-02 | P1: Tabela (filtros e busca) | - | Implementing |
+| TXN-01 | P1: Tabela (listagem, ordenação, paginação) | - | Verified |
+| TXN-02 | P1: Tabela (filtros e busca) | - | Verified |
 | TXN-03 | P1: Tabela (formatação BRL e fuso) | - | Pending |
-| TXN-04 | P1: CRUD (criar e validar) | - | Implementing |
-| TXN-05 | P1: CRUD (editar e excluir) | - | Implementing |
-| TXN-06 | P1: Edição rápida de categoria | - | Implementing |
-| TXN-07 | P1: Edição em lote | - | Implementing |
-| TXN-08 | P1: Neutra manual | - | Implementing |
+| TXN-04 | P1: CRUD (criar e validar) | - | Verified |
+| TXN-05 | P1: CRUD (editar e excluir) | - | Verified |
+| TXN-06 | P1: Edição rápida de categoria | - | Verified |
+| TXN-07 | P1: Edição em lote | - | Verified |
+| TXN-08 | P1: Neutra manual | - | Verified |
 
-**Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️
+**Coverage:** 8 total; backend verificado: TXN-01, 02, 04, 05, 06, 07 e 08 Verified; TXN-03 (formatação BRL e fuso na tela) pertence ao front (Lovable). Pendente em outras features: exclusão de transações neutras dos totais (dashboards).
 
 ---
 

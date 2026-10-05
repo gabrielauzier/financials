@@ -938,7 +938,7 @@ describe('PATCH /transactions/category (bulk)', () => {
     expect(await categoriesOf([foreign.id])).toEqual([foreign.categoryId]);
   });
 
-  // SPEC_DEVIATION: tasks.md T10 says an unknown category returns 422; the API answers 404
+  // SPEC_DEVIATION: the original tasks.md T10 said an unknown category returns 422; the API answers 404 (tasks.md now says 404)
   // not_found with field categoryId. Reason: same answer as POST/PATCH for an unknown category
   // and as the Lovable contract (orchestrator decision for this batch).
   it("returns 404 not_found on categoryId for an unknown, malformed or another user's category, changing nothing", async () => {

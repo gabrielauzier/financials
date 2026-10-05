@@ -38,6 +38,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness)
 - last seen: 2026-10-05T05:05:43Z
 
+### L-005 - Disable framework type coercion on money fields and reject non-string amounts instead of converting them
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `money` · harmful: 0
+- features: transactions
+- evidence: ranked gap 1 (validation.md): JSON-number amount coerced by Ajv (money)
+- last seen: 2026-10-05T06:22:46Z
+
+### L-006 - Define one API-wide status for missing and blank required fields (400 vs 422) before implementing routes
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `validation` · harmful: 0
+- features: transactions
+- evidence: spec-precision gaps (validation.md): status for blank vs missing required fields (validation)
+- last seen: 2026-10-05T06:22:46Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
