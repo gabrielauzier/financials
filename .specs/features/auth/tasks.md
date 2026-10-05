@@ -203,11 +203,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `supabase start` brings up Postgres, Auth and Storage locally
-- [ ] `config.toml` has email confirmation enabled
-- [ ] Root README snippet documents the local stack commands
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `supabase start` brings up Postgres, Auth and Storage locally
+- [x] `config.toml` has email confirmation enabled
+- [x] Root README snippet documents the local stack commands
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build

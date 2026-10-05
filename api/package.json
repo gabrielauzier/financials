@@ -11,7 +11,11 @@
     "test:int": "vitest run --config vitest.int.config.ts",
     "test": "pnpm test:unit && pnpm test:int",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:start": "npx supabase --workdir .. start",
+    "db:stop": "npx supabase --workdir .. stop",
+    "db:reset": "npx supabase --workdir .. db reset",
+    "db:status": "npx supabase --workdir .. status"
   },
   "dependencies": {
     "@fastify/type-provider-typebox": "^6.1.0",
