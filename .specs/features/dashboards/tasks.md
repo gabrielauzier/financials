@@ -97,11 +97,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Amount 0 is rejected by the table
-- [ ] Another user's account cannot be referenced
-- [ ] RLS isolates rows (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Amount 0 is rejected by the table
+- [x] Another user's account cannot be referenced
+- [x] RLS isolates rows (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
