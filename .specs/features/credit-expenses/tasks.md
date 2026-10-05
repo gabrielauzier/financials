@@ -88,11 +88,11 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Each check constraint rejects its invalid value
-- [ ] Cross-user account/category references are rejected
-- [ ] RLS isolates rows (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Each check constraint rejects its invalid value
+- [x] Cross-user account/category references are rejected
+- [x] RLS isolates rows (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
