@@ -116,10 +116,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Valid payload creates the row with `paidAmount` 0
-- [ ] Total ≤ 0, paid out of range, day outside 1-31, invalid status and inactive account return 422 (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid payload creates the row with `paidAmount` 0
+- [x] Total ≤ 0, paid out of range, day outside 1-31, invalid status and inactive account return 422 (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
