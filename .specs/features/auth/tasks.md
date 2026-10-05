@@ -218,7 +218,7 @@ T14 → T20
 
 ### T6: Create the integration test helpers
 
-**What**: Helpers to connect as admin, create a confirmed test user, mint an HS256 JWT for that user with the local secret, and clean up.
+**What**: Helpers to connect as admin, create a confirmed test user, obtain a real access token for that user by signing in through GoTrue, and clean up. (Finding: local GoTrue signs user tokens with ES256 published at `/auth/v1/.well-known/jwks.json`; the HS256 `JWT_SECRET` signs only the anon and service_role API keys, so a user token cannot be minted locally.)
 **Where**: `api/test/helpers/db.ts`
 **Depends on**: T1, T5
 **Reuses**: -
@@ -304,7 +304,7 @@ T14 → T20
 
 ### T9: Implement JWT verification
 
-**What**: `verifyToken(token)` validates signature and expiry with `jose`: remote JWKS mode and HS256 secret mode selected by config; returns claims with `sub`.
+**What**: `verifyToken(token)` validates signature and expiry with `jose`: remote JWKS mode (primary; the local stack and new Supabase projects publish ES256 keys at `<SUPABASE_URL>/auth/v1/.well-known/jwks.json`) and an HS256 secret mode kept as a config fallback for legacy projects; returns claims with `sub`.
 **Where**: `api/src/plugins/auth.ts`
 **Depends on**: T2, T3
 **Reuses**: -

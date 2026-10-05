@@ -125,7 +125,7 @@ create trigger on_auth_user_created after insert on auth.users
 
 | Concern | Location (file:line) | Impact | Mitigation |
 | ------- | -------------------- | ------ | ---------- |
-| Tipo de assinatura do JWT (assimétrica via JWKS ou HS256) depende da configuração do projeto Supabase; não verificado | `api/src/plugins/auth.ts` (a criar) | Rejeitar tokens válidos ou aceitar inválidos | Suportar os dois modos por configuração e testar com token real na primeira tarefa |
+| Tipo de assinatura do JWT. **Verificado no stack local (CLI 2.119): tokens de usuário são ES256, publicados em `/auth/v1/.well-known/jwks.json`; o `JWT_SECRET` HS256 assina só as chaves anon e service_role.** Projeto de produção futuro deve ser confirmado | `api/src/plugins/auth.ts` | Rejeitar tokens válidos ou aceitar inválidos | JWKS é o modo principal; HS256 fica como fallback por configuração; testes de integração usam token real obtido por login no GoTrue |
 | Comportamento do `signUp` com e-mail existente (resposta ofuscada contra enumeração) não verificado | `web/src/features/auth` (a criar) | Spec AUTH-01.5 exige "E-mail já cadastrado" | Primeira tarefa verifica o retorno real; se não for detectável, registrar suposição revisada e levar ao usuário |
 | `SET ROLE authenticated` exige papel de conexão com esse privilégio | `api/src/plugins/db.ts` (a criar) | Falha de todas as queries | Teste de integração de smoke que lê `auth.uid()` dentro de `withUser` |
 | Trigger em `auth.users` é `security definer` | migration 0001 | Escalada de privilégio se mal escrito | `set search_path = public`, sem SQL dinâmico, revisão na verificação |
