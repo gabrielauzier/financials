@@ -369,10 +369,10 @@ T6 → T11
 
 **Done when**:
 
-- [ ] A row with `description` shows it below the name in the same cell with the muted small classes and the full text in `title` (AC 11)
-- [ ] A row without `description` renders no extra element in the name cell and the card
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 3 tests pass (no silent deletions)
+- [x] A row with `description` shows it below the name in the same cell with the muted small classes and the full text in `title` (AC 11)
+- [x] A row without `description` renders no extra element in the name cell and the card
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 3 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

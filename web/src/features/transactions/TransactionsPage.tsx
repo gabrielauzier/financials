@@ -557,7 +557,18 @@ function TransactionRow({
         />
       </TableCell>
       <TableCell className="whitespace-nowrap">{formatDateLocal(item.occurredAt)}</TableCell>
-      <TableCell className="min-w-40 font-medium">{item.name}</TableCell>
+      <TableCell className="min-w-40">
+        <div className="font-medium">{item.name}</div>
+        {item.description && (
+          <div
+            data-testid="transaction-description"
+            className="max-w-xs truncate text-xs text-muted-foreground"
+            title={item.description}
+          >
+            {item.description}
+          </div>
+        )}
+      </TableCell>
       <TableCell>{item.accountNickname}</TableCell>
       <TableCell className="min-w-48">
         <CategorySelect value={item.categoryId} onChange={onCategory} />
@@ -610,6 +621,15 @@ function TransactionCard(props: RowProps) {
           />
           <div>
             <h2 className="font-semibold">{item.name}</h2>
+            {item.description && (
+              <p
+                data-testid="transaction-description"
+                className="max-w-xs truncate text-xs text-muted-foreground"
+                title={item.description}
+              >
+                {item.description}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
               {formatDateLocal(item.occurredAt)} · {item.accountNickname}
             </p>
