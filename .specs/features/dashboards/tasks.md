@@ -11,6 +11,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/dashboards/design.md`
 **Status**: Draft
 
+**Contract**: the wire contract of the endpoints is the one in `lovable.md` ("Contrato da API"): wrapped responses (`{ points }`, `{ items }`), `categoryName`, `accountNickname`, `invalid_period` (422). Where `design.md` differs, `lovable.md` wins. Web tasks T14-T20 are implemented directly in `web/` (Lovable is not the development path anymore); `lovable.md` stays the behavior spec for the UI.
+
 **Feature prerequisites**: auth, accounts-categories, transactions, import and credit-expenses complete.
 
 ---
@@ -64,7 +66,7 @@ T10 → T13
 T11 → T13
 ```
 
-### Phase 4: Web: dashboard (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: dashboard
 ```
 T14 → T20
 T15 → T20
@@ -446,7 +448,8 @@ T19 → T20
 
 ---
 
-### Phase 4: Web: dashboard (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: dashboard
+
 ### T14: Build the last 30 days card
 
 **What**: Total, variation percent and the 'sem base de comparação' state.
