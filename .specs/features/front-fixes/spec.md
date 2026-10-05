@@ -163,8 +163,8 @@ Com o front integrado à API real, aparecem falhas de uso: editar uma transaçã
 | FIX-02 | P1: Editar transação limpa observações e recibo | - | Implementing |
 | FIX-03 | P1: Cadastro com e-mail já usado | - | Implementing |
 | FIX-04 | P2: Contas, período e aparência | - | Implementing |
-| FIX-05 | P1: Testes de interface do extrato | - | Pending |
-| FIX-06 | P2: Lockfile sincronizado | - | Pending |
+| FIX-05 | P1: Testes de interface do extrato | - | Implementing |
+| FIX-06 | P2: Lockfile sincronizado | - | Implementing |
 
 **Coverage:** 6 total, 0 mapped to tasks, 6 unmapped ⚠️
 

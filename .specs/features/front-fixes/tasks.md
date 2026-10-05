@@ -312,11 +312,11 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] Choosing a category saves without a form and a forced failure restores the previous category with 'Não foi possível salvar a categoria'
-- [ ] Two selected rows apply a category in one call with both ids; a failure keeps selection and categories
-- [ ] The neutral switch persists and a failure reverts it (6 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Choosing a category saves without a form and a forced failure restores the previous category with 'Não foi possível salvar a categoria'
+- [x] Two selected rows apply a category in one call with both ids; a failure keeps selection and categories
+- [x] The neutral switch persists and a failure reverts it (6 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
