@@ -327,10 +327,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Positive and negative amounts are created
-- [ ] Zero, 3 decimals and foreign account return 422 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Positive and negative amounts are created
+- [x] Zero, 3 decimals and foreign account return 422 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

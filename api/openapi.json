@@ -1878,6 +1878,88 @@
         }
       }
     },
+    "/investment-returns": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "occurredOn",
+                  "amount",
+                  "accountId"
+                ],
+                "properties": {
+                  "occurredOn": {
+                    "description": "Calendar date, YYYY-MM-DD",
+                    "type": "string"
+                  },
+                  "amount": {
+                    "description": "Signed decimal string, never zero, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "description": "Any account of the user, active or not",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "accountNickname",
+                    "occurredOn",
+                    "amount",
+                    "notes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountNickname": {
+                      "type": "string"
+                    },
+                    "occurredOn": {
+                      "description": "Calendar date, YYYY-MM-DD",
+                      "type": "string"
+                    },
+                    "amount": {
+                      "description": "Signed decimal string with 2 decimals, never zero, e.g. \"50.00\" or \"-20.00\"",
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {

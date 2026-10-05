@@ -77,3 +77,16 @@ export async function seedReturns(
     }
   });
 }
+
+export interface ReturnJson {
+  id: string;
+  accountId: string;
+  accountNickname: string;
+  occurredOn: string;
+  amount: string;
+  notes: string | null;
+}
+
+export function send(app: FastifyInstance, as: TestUser, method: 'POST' | 'PATCH' | 'DELETE', url: string, payload?: unknown) {
+  return app.inject({ method, url, headers: { authorization: `Bearer ${as.token}` }, payload: payload as object });
+}
