@@ -133,6 +133,47 @@ describe('GET /dashboard/net-worth', () => {
     expect(utc.series[0]?.month).not.toBe(sp.series[0]?.month);
   });
 
+  it.each([SP, 'UTC'])('counts a return dated on the 1st of a month in that month, not the previous one (%s)', async (zone) => {
+    const first = monthStart(0, zone);
+    const { user } = await fresh(
+      [],
+      [
+        { on: first.minus({ days: 1 }).toISODate() as string, amount: '10.00' },
+        { on: first.toISODate() as string, amount: '3.00' },
+      ],
+    );
+    const body = await netWorth(user, { 'x-timezone': zone });
+    expect(body.series).toEqual([
+      { month: key(1, zone), value: '10.00' },
+      { month: key(0, zone), value: '13.00' },
+    ]);
+    expect(body.current).toBe('13.00');
+  });
+
+  it.each([SP, 'UTC'])('counts a transaction at exactly 00:00 local on the 1st in that month, not the previous one (%s)', async (zone) => {
+    const first = monthStart(0, zone);
+    const { user } = await fresh([
+      { type: 'Income', amount: '100.00', at: first.minus({ minutes: 1 }).toISO() as string, category: 'Salaries' },
+      { type: 'Income', amount: '7.00', at: first.toISO() as string, category: 'Salaries' },
+    ]);
+    const body = await netWorth(user, { 'x-timezone': zone });
+    expect(body.series).toEqual([
+      { month: key(1, zone), value: '100.00' },
+      { month: key(0, zone), value: '107.00' },
+    ]);
+  });
+
+  it('returns 200 with 0.00 and an empty series when every transaction and return is future-dated', async () => {
+    const future = DateTime.now().setZone(SP).plus({ days: 3 });
+    const { user } = await fresh(
+      [{ type: 'Income', amount: '500.00', at: future.toISO() as string, category: 'Salaries' }],
+      [{ on: future.toISODate() as string, amount: '40.00' }],
+    );
+    const res = await get(app, user, '/dashboard/net-worth');
+    expect(res.statusCode).toBe(200);
+    expect(res.json<NetWorth>()).toEqual({ current: '0.00', series: [] });
+  });
+
   it('requires authentication', async () => {
     expect((await app.inject({ method: 'GET', url: '/dashboard/net-worth' })).statusCode).toBe(401);
   });

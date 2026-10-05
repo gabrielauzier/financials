@@ -77,6 +77,15 @@ describe('GET /dashboard/card', () => {
     expect((await card(user, MARCH)).transactions).toEqual([{ categoryName: 'Compras', total: '70.00' }]);
   });
 
+  it('omits a category whose CreditCard purchase and refund net to 0.00', async () => {
+    const { user } = await fresh([
+      cc({ amount: '50.00', category: 'Shopping' }),
+      cc({ type: 'Income', amount: '50.00', category: 'Shopping', at: at('11') }),
+      cc({ amount: '12.00', category: 'Food' }),
+    ]);
+    expect((await card(user, MARCH)).transactions).toEqual([{ categoryName: 'Alimentação', total: '12.00' }]);
+  });
+
   it('shows total minus paid of Active, Once and ToCancel credit expenses only, grouped by category', async () => {
     const { user, accountId } = await fresh();
     await seedCreditExpense(user, accountId, { total: '600.00', paid: '200.00', status: 'Active' });

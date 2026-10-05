@@ -61,6 +61,19 @@ describe('GET /dashboard/trend', () => {
     for (const p of empty) expect(p).toEqual({ month: p.month, ...ZERO });
   });
 
+  it('includes the oldest of the 12 months (11 back) and leaves out the month 12 back', async () => {
+    const { user, accountId } = await fresh();
+    await seedTransactions(user, accountId, [
+      { type: 'Income', amount: '200.00', at: midMonth(11), category: 'Salaries' },
+      { type: 'Expense', amount: '75.25', at: midMonth(11), category: 'Food' },
+      { type: 'Expense', amount: '999.00', at: midMonth(12), category: 'Food' },
+    ]);
+    const { points } = (await get(app, user, '/dashboard/trend')).json<{ points: Point[] }>();
+    expect(points).toHaveLength(12);
+    expect(points[0]).toEqual({ month: monthKey(11), income: '200.00', expense: '75.25', balance: '124.75' });
+    expect(points.some((p) => p.month === monthKey(12))).toBe(false);
+  });
+
   it('returns 12 zero months for a user without data', async () => {
     const { user } = await fresh();
     const { points } = (await get(app, user, '/dashboard/trend')).json<{ points: Point[] }>();
