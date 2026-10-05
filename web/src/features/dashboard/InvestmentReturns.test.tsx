@@ -236,6 +236,25 @@ describe("InvestmentReturns edit", () => {
     expect(screen.queryByText("-R$ 20,00")).not.toBeInTheDocument();
   });
 
+  it("sends notes: null when the notes of an existing return are cleared, and the row shows a dash", async () => {
+    const item = await seed("2026-10-12", "-20.00", "Antiga");
+    renderWithQuery(<InvestmentReturns />);
+    expect(await screen.findByText("Antiga")).toBeInTheDocument();
+    fireEvent.click(await editButton("12/10/2026"));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("Observações"), { target: { value: "  " } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Salvar" }));
+    await waitFor(() => expect(callsTo("PATCH", /./)).toHaveLength(1));
+    expect(callsTo("PATCH", /./)[0]?.body).toEqual({
+      occurredOn: "2026-10-12",
+      amount: "-20.00",
+      accountId: item.accountId,
+      notes: null,
+    });
+    await waitFor(() => expect(screen.queryByText("Antiga")).not.toBeInTheDocument());
+    expect(within(await rowOf("12/10/2026")).getByText("—")).toBeInTheDocument();
+  });
+
   it("restores the previous row and shows the Portuguese message when the PATCH and the refetch fail", async () => {
     await seed("2026-10-12", "-20.00");
     renderWithQuery(<InvestmentReturns />);
@@ -296,5 +315,55 @@ describe("InvestmentReturns delete", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Investment return not found")).not.toBeInTheDocument();
     expect(screen.getByText("+R$ 7,77")).toBeInTheDocument();
+  });
+});
+
+describe("InvestmentReturns account selector", () => {
+  const inactiveAccount = async (nickname: string) => {
+    const created = await mockRequest<Account>({
+      method: "POST",
+      path: "/accounts",
+      body: { bank: "Nubank", nickname, holderNames: ["Titular Teste"] },
+    });
+    await mockRequest({ method: "POST", path: `/accounts/${created.id}/deactivate` });
+    return created;
+  };
+
+  it("offers an inactive account, marked (inativa), when creating a return", async () => {
+    await inactiveAccount("Conta inativa criar");
+    renderWithQuery(<InvestmentReturns />);
+    await screen.findByRole("table");
+    fireEvent.click(screen.getByRole("button", { name: "Novo rendimento" }));
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(dialog).getByLabelText("Conta")).toBeEnabled());
+    fireEvent.click(within(dialog).getByLabelText("Conta"));
+    expect(
+      await screen.findByRole("option", { name: "Conta inativa criar (inativa)" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the inactive account of an existing return, marked (inativa), when editing", async () => {
+    const inactive = await inactiveAccount("Conta inativa editar");
+    await mockRequest<InvestmentReturn>({
+      method: "POST",
+      path: "/investment-returns",
+      body: { occurredOn: "2026-10-12", amount: "5.00", accountId: inactive.id },
+    });
+    renderWithQuery(<InvestmentReturns />);
+    fireEvent.click(
+      within(await rowOf("12/10/2026")).getByRole("button", {
+        name: "Editar rendimento de 12/10/2026",
+      }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() =>
+      expect(within(dialog).getByLabelText("Conta")).toHaveTextContent(
+        "Conta inativa editar (inativa)",
+      ),
+    );
+    fireEvent.click(within(dialog).getByLabelText("Conta"));
+    expect(
+      await screen.findByRole("option", { name: "Conta inativa editar (inativa)" }),
+    ).toBeInTheDocument();
   });
 });
