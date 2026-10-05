@@ -154,3 +154,9 @@ Faça apenas as correções abaixo, sem mudar o comportamento das demais telas. 
 Ao final, `yarn test`, `yarn typecheck` e `yarn lint` devem passar em instalação limpa.
 ~~~~
 
+### Importação (2026-10-05)
+
+Feature `import` concluída no backend e no front (implementado direto em `web/`), **PASS na primeira iteração do Verifier**. Conferida no navegador com a API real: arquivo do extrato Nubank → prévia (14 novas, 6 neutras, categorias "Sem categoria" e "Investimentos") → confirmação ("14 transações importadas") → 14 transações, 1 lote, 1 anexo e 1 objeto no Storage; reenvio com linhas já importadas mostra "duplicadas" desmarcadas. `VITE_MOCK_AREAS` local passou a ser `creditExpenses,dashboard,investmentReturns`. A API agora precisa de `SUPABASE_PUBLISHABLE_KEY` no `api/.env` para o Storage (já documentado no `.env.example` e no README).
+
+Observação de ambiente: o launcher do preview não conseguiu abrir `/Volumes/MacOnlySSD` após o reinício do app (erro `getcwd: Operation not permitted`); API e front foram subidos pelo shell. Rodar `pnpm -C api dev` e `yarn --cwd web dev` manualmente funciona.
+

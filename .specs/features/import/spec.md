@@ -31,7 +31,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 | --------------------- | -------------- | --------- | ---------- |
 | Detecção do formato | Pelo cabeçalho: `Data,Valor,Identificador,Descrição` (conta) ou `date,title,amount` (fatura); o banco da conta deve ser Nubank | Cabeçalhos das amostras são inequívocos | n |
 | Codificação | UTF-8, com ou sem BOM | Amostras em UTF-8 | n |
-| Tamanho máximo do arquivo | 5 MB | PRD não define; extratos pessoais são pequenos | n |
+| Tamanho máximo do arquivo | 5 MB (implementado como 5 MiB = 5 242 880 bytes, limite inclusivo, no front e na API) | PRD não define; extratos pessoais são pequenos | n |
 | Espaços repetidos no nome extraído | Colapsados para um espaço e aparados | Amostra tem "SOLUCOES  PUBLICIDADE" com dois espaços | n |
 | Nome da contraparte contém " - " | Não suportado; a linha vai para "não reconhecida" | PRD define nome como texto entre o 1º e o 2º " - " | n |
 | Escopo da deduplicação | Mesma conta | Mesmo `identifier` pode existir em bancos diferentes | n |
@@ -41,6 +41,10 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 | Linha de extrato não reconhecida | Importável com nome = descrição, categoria *Sem categoria*, método BankTransfer, sinalizada na prévia | PRD: nome = descrição completa e sinalizar | n |
 | Tipo da linha de extrato | Valor negativo = Expense, positivo = Income | PRD 5.5.1 | n |
 | Linha com Valor 0,00, data impossível ou valor não numérico | Status `invalid` (badge "Inválida"), sem caixa de seleção, nunca importada; "não reconhecida" (`unrecognized`) fica só para descrição sem padrão conhecido, que continua importável | Valor zero é inválido em Transactions; alinha a spec ao design | n |
+| Linha com descrição ou título em branco | Status `invalid` ("Empty description"/"Empty title"), nunca importada | `transactions.name` não aceita vazio; sem isso a importação inteira falharia com 500 | n |
+| Reenvio da confirmação | A chave de idempotência sozinha decide o reenvio: com a mesma chave, o resumo guardado é devolvido (200) sem reanalisar arquivo, conta ou seleções; a consulta passa pelo RLS e nunca devolve o lote de outro usuário | Reenvio seguro e simples; testado | n |
+| Linhas ignoradas no resumo | `ignoradas` = total de linhas do arquivo menos as importadas (inclui não selecionadas, ignoradas e inválidas) | Spec não definia a contagem | n |
+| Campos desconhecidos no multipart | Aceitos e descartados; limite de 4 campos e 5 partes por requisição | Limita o uso de memória | n |
 | Neutra automática na fatura | Mesma regra de nomes de titular | Regra única por spec; não afeta compras comuns | n |
 | Abrangência de nomes de titular | Contas ativas e inativas do usuário | Alinhado à spec `accounts-categories` | n |
 | Data sem hora | Meia-noite no fuso local do usuário | PRD 5.5.1 | n |
@@ -108,7 +112,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 **Acceptance Criteria**:
 
 1. WHEN o arquivo é válido THEN o sistema SHALL sempre exibir a prévia antes de gravar qualquer transação.
-2. The sistema SHALL classificar cada linha da prévia como nova, duplicada, ignorada ou não reconhecida.
+2. The sistema SHALL classificar cada linha da prévia como nova, duplicada, ignorada, não reconhecida ou inválida.
 3. WHEN a linha tem `identifier` já existente na mesma conta THEN o sistema SHALL classificá-la como duplicada.
 4. WHEN a linha não tem `identifier` e há transação com mesmo nome, data, valor e tipo na mesma conta THEN o sistema SHALL classificá-la como duplicada.
 5. WHEN a linha é duplicada THEN o sistema SHALL exibi-la com a seleção de importação desmarcada.
@@ -172,17 +176,17 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| IMP-01 | P1: Extrato Nubank (validação de arquivo e conta) | - | Implementing |
-| IMP-02 | P1: Extrato Nubank (data, valor, tipo) | - | Implementing |
-| IMP-03 | P1: Extrato Nubank (extração por descrição) | - | Implementing |
-| IMP-04 | P1: Fatura Nubank (parser) | - | Implementing |
-| IMP-05 | P1: Prévia (classificação e seleção) | - | Implementing |
-| IMP-06 | P1: Prévia (deduplicação) | - | Implementing |
-| IMP-07 | P1: Prévia (confirmação atômica e idempotente) | - | Implementing |
-| IMP-08 | P1: Neutras automáticas | - | Implementing |
-| IMP-09 | P1: Anexo e lote de importação | - | Implementing |
+| IMP-01 | P1: Extrato Nubank (validação de arquivo e conta) | - | Verified |
+| IMP-02 | P1: Extrato Nubank (data, valor, tipo) | - | Verified |
+| IMP-03 | P1: Extrato Nubank (extração por descrição) | - | Verified |
+| IMP-04 | P1: Fatura Nubank (parser) | - | Verified |
+| IMP-05 | P1: Prévia (classificação e seleção) | - | Verified |
+| IMP-06 | P1: Prévia (deduplicação) | - | Verified |
+| IMP-07 | P1: Prévia (confirmação atômica e idempotente) | - | Verified |
+| IMP-08 | P1: Neutras automáticas | - | Verified |
+| IMP-09 | P1: Anexo e lote de importação | - | Verified |
 
-**Coverage:** 9 total, 0 mapped to tasks, 9 unmapped ⚠️
+**Coverage:** 9 total, todos Verified (backend T1 a T18 e web T24, T19 a T23). A exclusão das compras de cartão dos totais (Fatura-8) é conferida na feature `dashboards`.
 
 ---
 

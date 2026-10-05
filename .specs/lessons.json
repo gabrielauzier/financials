@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 9,
+  "next_id": 11,
   "lessons": [
     {
       "id": "L-001",
@@ -65,17 +65,19 @@
       "text": "State in the spec how duplicates are matched (case, accents, spaces) for every uniqueness rule",
       "signal": "spec_precision_gap",
       "scope": "uniqueness",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "accounts-categories"
+        "accounts-categories",
+        "import"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness)"
+        "spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness)",
+        "SP-3 duplicate name comparison (validation.md) (uniqueness)"
       ],
       "created": "2026-10-05T05:05:43Z",
-      "last_seen": "2026-10-05T05:05:43Z"
+      "last_seen": "2026-10-05T10:26:44Z"
     },
     {
       "id": "L-005",
@@ -148,6 +150,42 @@
       ],
       "created": "2026-10-05T07:01:40Z",
       "last_seen": "2026-10-05T07:01:40Z"
+    },
+    {
+      "id": "L-009",
+      "key": "ac_gap::validate every field against the database constraints at parse time so one bad row cannot fail the whole import",
+      "text": "Validate every field against the database constraints at parse time so one bad row cannot fail the whole import",
+      "signal": "ac_gap",
+      "scope": "parsers",
+      "status": "candidate",
+      "features": [
+        "import"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "gap 1 (validation.md): empty description/title made confirm fail with 500 (parsers)"
+      ],
+      "created": "2026-10-05T10:26:44Z",
+      "last_seen": "2026-10-05T10:26:44Z"
+    },
+    {
+      "id": "L-010",
+      "key": "ac_gap::log only safe error fields never the raw postgres error whose detail holds the row values",
+      "text": "Log only safe error fields: never the raw Postgres error whose detail holds the row values",
+      "signal": "ac_gap",
+      "scope": "logging",
+      "status": "candidate",
+      "features": [
+        "import"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "gap 4 (validation.md): 500 log carried Postgres detail with row values (logging)"
+      ],
+      "created": "2026-10-05T10:26:44Z",
+      "last_seen": "2026-10-05T10:26:44Z"
     }
   ]
 }

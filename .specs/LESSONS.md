@@ -8,7 +8,11 @@
 
 Corroborated across multiple features. Safe to apply as guidance.
 
-_none_
+### L-004 - State in the spec how duplicates are matched (case, accents, spaces) for every uniqueness rule
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `uniqueness` · harmful: 0
+- features: accounts-categories, import
+- evidence: spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness) (+1 more)
+- last seen: 2026-10-05T10:26:44Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -31,12 +35,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: auth
 - evidence: AUTH-01.4 password minimum 8 vs server 6 (validation iteration 1) (config)
 - last seen: 2026-10-05T04:00:56Z
-
-### L-004 - State in the spec how duplicates are matched (case, accents, spaces) for every uniqueness rule
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `uniqueness` · harmful: 0
-- features: accounts-categories
-- evidence: spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness)
-- last seen: 2026-10-05T05:05:43Z
 
 ### L-005 - Disable framework type coercion on money fields and reject non-string amounts instead of converting them
 - signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `money` · harmful: 0
@@ -61,6 +59,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: api-server
 - evidence: origin shape and PORT parsing gaps (validation.md) (config)
 - last seen: 2026-10-05T07:01:40Z
+
+### L-009 - Validate every field against the database constraints at parse time so one bad row cannot fail the whole import
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `parsers` · harmful: 0
+- features: import
+- evidence: gap 1 (validation.md): empty description/title made confirm fail with 500 (parsers)
+- last seen: 2026-10-05T10:26:44Z
+
+### L-010 - Log only safe error fields: never the raw Postgres error whose detail holds the row values
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `logging` · harmful: 0
+- features: import
+- evidence: gap 4 (validation.md): 500 log carried Postgres detail with row values (logging)
+- last seen: 2026-10-05T10:26:44Z
 
 ## Quarantined (failed when applied - ignore)
 
