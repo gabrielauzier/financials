@@ -428,11 +428,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Duplicate `signUp` result is captured and the detection rule for 'E-mail já cadastrado' is written in `design.md`
-- [ ] Unconfirmed login error code and invalid-credentials code are captured
-- [ ] If duplicate detection is impossible, STOP and report to the user before continuing (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Duplicate `signUp` result is captured and the detection rule for 'E-mail já cadastrado' is written in `design.md`
+- [x] Unconfirmed login error code and invalid-credentials code are captured
+- [x] If duplicate detection is impossible, STOP and report to the user before continuing (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

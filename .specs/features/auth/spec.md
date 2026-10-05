@@ -107,7 +107,7 @@ O Financials guarda dados financeiros sensíveis. O MVP é de uso pessoal, mas p
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| AUTH-01 | P1: Cadastro (campos e validação) | - | Pending |
+| AUTH-01 | P1: Cadastro (campos e validação) | - | Implementing |
 | AUTH-02 | P1: Cadastro (e-mail de confirmação) | - | Implementing |
 | AUTH-03 | P1: Cadastro (confirmação do e-mail) | - | Pending |
 | AUTH-04 | P1: Cadastro (categorias semeadas) | - | Pending |
