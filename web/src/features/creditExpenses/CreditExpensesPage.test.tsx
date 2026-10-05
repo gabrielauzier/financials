@@ -184,6 +184,26 @@ describe("CreditExpensesPage", () => {
     ]);
   });
 
+  it("a failed delete shows the Portuguese message, never the API text, and keeps the row", async () => {
+    const keep = await seed("Página exclusão falha");
+    renderWithQuery(<CreditExpensesPage />);
+    fireEvent.click(
+      within(await rowOf(keep.name)).getByRole("button", { name: `Excluir ${keep.name}` }),
+    );
+    const dialog = await screen.findByRole("alertdialog");
+    failures.set(
+      "DELETE /credit-expenses/:id",
+      new ApiError("not_found", "Credit expense not found", 404),
+    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "Excluir" }));
+    expect(
+      await screen.findByText("Registro não encontrado. Atualize a página e tente de novo"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Credit expense not found")).not.toBeInTheDocument();
+    expect(callsTo("DELETE", /^\/credit-expenses\//)).toHaveLength(1);
+    expect(await rowOf(keep.name)).toBeInTheDocument();
+  });
+
   it("shows an error with retry when the list fails to load", async () => {
     failures.set("GET /credit-expenses", new ApiError("internal_error", "Technical English", 500));
     renderWithQuery(<CreditExpensesPage />);

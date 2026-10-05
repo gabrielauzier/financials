@@ -268,3 +268,49 @@ describe("CreditExpenseForm edit", () => {
     expect(callsTo("PATCH", /^\/credit-expenses\//)).toHaveLength(0);
   });
 });
+
+describe("CreditExpenseForm account selector", () => {
+  const inactiveAccount = async (nickname: string) => {
+    const account = await mockRequest<Account>({
+      method: "POST",
+      path: "/accounts",
+      body: { bank: "Nubank", nickname, holderNames: ["Titular Teste"] },
+    });
+    return account;
+  };
+
+  it("does not offer an inactive account when creating", async () => {
+    const account = await inactiveAccount("Conta inativa criar");
+    await mockRequest({ method: "POST", path: `/accounts/${account.id}/deactivate` });
+    const { dialog } = await openForm();
+    await waitFor(() => expect(within(dialog).getByLabelText("Conta")).toBeEnabled());
+    fireEvent.click(within(dialog).getByLabelText("Conta"));
+    const options = await screen.findAllByRole("option");
+    expect(options.length).toBeGreaterThan(0);
+    expect(options.map((option) => option.textContent)).not.toContain("Conta inativa criar");
+    expect(screen.queryByRole("option", { name: /Conta inativa criar/ })).not.toBeInTheDocument();
+  });
+
+  it("keeps the current inactive account visible, marked (inativa), when editing", async () => {
+    const account = await inactiveAccount("Conta inativa editar");
+    const expense = await mockRequest<CreditExpense>({
+      method: "POST",
+      path: "/credit-expenses",
+      body: {
+        name: "Despesa em conta inativa",
+        totalAmount: "100.00",
+        occurredAt: "2031-05-10T15:00:00Z",
+        recurrencyDay: 3,
+        status: "Active",
+        accountId: account.id,
+      },
+    });
+    await mockRequest({ method: "POST", path: `/accounts/${account.id}/deactivate` });
+    const { dialog } = await openForm(expense);
+    await waitFor(() =>
+      expect(within(dialog).getByLabelText("Conta")).toHaveTextContent(
+        "Conta inativa editar (inativa)",
+      ),
+    );
+  });
+});
