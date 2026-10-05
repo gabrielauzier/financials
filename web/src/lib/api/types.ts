@@ -89,3 +89,30 @@ export type TransactionInput = {
 };
 
 export type TransactionUpdate = Partial<TransactionInput> & { neutral?: boolean };
+
+export type ImportRowStatus = "new" | "duplicate" | "ignored" | "unrecognized" | "invalid";
+export type ImportPaymentMethod = "PIX" | "DebitCard" | "BankTransfer" | "CreditCard";
+
+export type PreviewRow = {
+  index: number;
+  localDate: string;
+  type: TransactionType;
+  amount: string;
+  name: string;
+  paymentMethod: ImportPaymentMethod;
+  categoryName: string;
+  status: ImportRowStatus;
+  neutral: boolean;
+  reason?: string;
+  counterpartyDocument: string | null;
+  counterpartyBank: string | null;
+};
+
+export type ImportPreview = {
+  rows: PreviewRow[];
+  totals: Record<ImportRowStatus, number>;
+};
+
+export type ImportSelection = { index: number; neutral: boolean };
+
+export type ImportConfirmResult = { batchId: string; imported: number; skipped: number };

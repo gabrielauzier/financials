@@ -646,11 +646,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Preview sends file and account
-- [ ] Confirm sends the same file, the key and selections
-- [ ] The key is stable across retries of one session (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Preview sends file and account
+- [x] Confirm sends the same file, the key and selections
+- [x] The key is stable across retries of one session (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
