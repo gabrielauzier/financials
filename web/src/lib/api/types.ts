@@ -121,3 +121,39 @@ export type ImportPreview = {
 export type ImportSelection = { index: number; neutral: boolean };
 
 export type ImportConfirmResult = { batchId: string; imported: number; skipped: number };
+
+export type CreditExpenseStatus = "Once" | "Active" | "Inactive" | "Canceled" | "ToCancel";
+
+export type CreditExpense = {
+  id: string;
+  accountId: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  totalAmount: Money;
+  paidAmount: Money;
+  remainingAmount: Money;
+  occurredAt: string;
+  recurrencyDay: number;
+  status: CreditExpenseStatus;
+  notes: string | null;
+};
+
+export type CreditExpenseFilters = { status?: CreditExpenseStatus | undefined };
+
+export type CreditExpenseInput = {
+  name: string;
+  totalAmount: Money;
+  paidAmount?: Money;
+  occurredAt: string;
+  recurrencyDay: number;
+  status: CreditExpenseStatus;
+  accountId: string;
+  categoryId?: string;
+  notes?: string;
+};
+
+// `null` clears notes; an omitted field is left unchanged.
+export type CreditExpenseUpdate = Partial<Omit<CreditExpenseInput, "notes">> & {
+  notes?: string | null;
+};

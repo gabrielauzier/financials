@@ -13,7 +13,8 @@ export const requests: RecordedRequest[] = [];
 const routeKey = (method: string, path: string) =>
   `${method} ${path
     .split("?")[0]
-    ?.replace(/^\/transactions\/(?!category$)[^/]+/, "/transactions/:id")}`;
+    ?.replace(/^\/transactions\/(?!category$)[^/]+/, "/transactions/:id")
+    .replace(/^\/credit-expenses\/[^/]+/, "/credit-expenses/:id")}`;
 
 /** Replacement for `apiRequest`: records the call, may fail it, otherwise hits the mocks. */
 export async function spiedApiRequest(

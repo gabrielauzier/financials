@@ -305,10 +305,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Hooks call the endpoints with the status filter
-- [ ] Mutations invalidate the list (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Hooks call the endpoints with the status filter
+- [x] Mutations invalidate the list (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
