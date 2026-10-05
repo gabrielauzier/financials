@@ -31,10 +31,17 @@ export function createWithUser(sql: Sql): WithUser {
 
 export interface DbPluginOptions {
   databaseUrl: string;
+  /** `false` for transaction-mode poolers, which do not support prepared statements. */
+  prepare?: boolean;
+  max?: number;
 }
 
 export const dbPlugin = fp(async (app: FastifyInstance, options: DbPluginOptions) => {
-  const sql = postgres(options.databaseUrl, { onnotice: () => {} });
+  const sql = postgres(options.databaseUrl, {
+    onnotice: () => {},
+    ...(options.prepare === false ? { prepare: false } : {}),
+    ...(options.max !== undefined ? { max: options.max } : {}),
+  });
   app.decorate('withUser', createWithUser(sql));
   app.addHook('onClose', async () => {
     await sql.end();

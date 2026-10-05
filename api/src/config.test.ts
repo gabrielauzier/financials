@@ -74,3 +74,23 @@ describe('CORS_ORIGINS', () => {
     expect(() => loadConfig({ ...base, CORS_ORIGINS: raw })).toThrow(/CORS_ORIGINS/);
   });
 });
+
+describe('loadConfig pooler settings', () => {
+  it('leaves prepared statements and the pool size to the driver by default', () => {
+    const config = loadConfig(base);
+    expect(config).not.toHaveProperty('databasePrepare');
+    expect(config).not.toHaveProperty('databasePoolMax');
+  });
+
+  it('disables prepared statements only when DATABASE_PREPARE is "false"', () => {
+    expect(loadConfig({ ...base, DATABASE_PREPARE: 'false' }).databasePrepare).toBe(false);
+    expect(loadConfig({ ...base, DATABASE_PREPARE: 'true' })).not.toHaveProperty('databasePrepare');
+  });
+
+  it('reads DATABASE_POOL_MAX and rejects invalid values', () => {
+    expect(loadConfig({ ...base, DATABASE_POOL_MAX: '3' }).databasePoolMax).toBe(3);
+    for (const raw of ['0', '101', 'x', '2.5']) {
+      expect(() => loadConfig({ ...base, DATABASE_POOL_MAX: raw })).toThrow('DATABASE_POOL_MAX');
+    }
+  });
+});

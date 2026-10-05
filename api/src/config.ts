@@ -9,6 +9,10 @@ export interface AppConfig {
   corsOrigins?: string[];
   /** Project API key sent to Storage as `apikey` (never the secret key). Without it, routes that store files answer 503. */
   supabasePublishableKey?: string;
+  /** Set to `false` behind a transaction-mode pooler (Supavisor port 6543), which has no prepared statements. */
+  databasePrepare?: boolean;
+  /** Max connections per process; serverless instances should keep this small. */
+  databasePoolMax?: number;
 }
 
 /** What `buildApp` needs plus what the process needs to listen. */
@@ -34,16 +38,28 @@ export function parseCorsOrigins(raw: string | undefined): string[] {
   return origins;
 }
 
+function parsePoolMax(raw: string | undefined): number | undefined {
+  if (raw === undefined || raw === '') return undefined;
+  const max = Number(raw);
+  if (!/^\d+$/.test(raw) || max < 1 || max > 100) {
+    throw new Error(`DATABASE_POOL_MAX must be an integer between 1 and 100, got "${raw}"`);
+  }
+  return max;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const jwtSecret = env.SUPABASE_JWT_SECRET;
   const corsOrigins = parseCorsOrigins(env.CORS_ORIGINS);
   const supabasePublishableKey = env.SUPABASE_PUBLISHABLE_KEY;
+  const databasePoolMax = parsePoolMax(env.DATABASE_POOL_MAX);
   return {
     supabaseUrl: required(env, 'SUPABASE_URL'),
     databaseUrl: required(env, 'DATABASE_URL'),
     ...(jwtSecret ? { jwtSecret } : {}),
     ...(corsOrigins.length > 0 ? { corsOrigins } : {}),
     ...(supabasePublishableKey ? { supabasePublishableKey } : {}),
+    ...(env.DATABASE_PREPARE === 'false' ? { databasePrepare: false } : {}),
+    ...(databasePoolMax !== undefined ? { databasePoolMax } : {}),
   };
 }
 

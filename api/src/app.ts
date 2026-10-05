@@ -39,7 +39,11 @@ export function buildApp(config: AppConfig = loadConfig(), options: BuildAppOpti
   // Before auth: the preflight carries no token and must be answered first.
   void app.register(corsPlugin, { origins: config.corsOrigins ?? [] });
   void app.register(swaggerPlugin);
-  void app.register(dbPlugin, { databaseUrl: config.databaseUrl });
+  void app.register(dbPlugin, {
+    databaseUrl: config.databaseUrl,
+    ...(config.databasePrepare === false ? { prepare: false } : {}),
+    ...(config.databasePoolMax !== undefined ? { max: config.databasePoolMax } : {}),
+  });
   void app.register(authPlugin, { verifyToken: createTokenVerifier(tokenVerifierConfig(config)) });
   void app.register(timezonePlugin);
 
