@@ -153,11 +153,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Window is 30 days ending today inclusive in `America/Sao_Paulo` and in `UTC`
-- [ ] Previous window is the 30 days immediately before
-- [ ] Month list has the current month plus 11 earlier, crossing year boundaries (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Window is 30 days ending today inclusive in `America/Sao_Paulo` and in `UTC`
+- [x] Previous window is the 30 days immediately before
+- [x] Month list has the current month plus 11 earlier, crossing year boundaries (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
