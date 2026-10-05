@@ -1796,6 +1796,88 @@
         }
       }
     },
+    "/dashboard/card": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "First local day, YYYY-MM-DD, inclusive; give both from and to or neither"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Last local day, YYYY-MM-DD, inclusive"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "transactions",
+                    "creditExpenses"
+                  ],
+                  "properties": {
+                    "transactions": {
+                      "description": "CreditCard transactions in the period (neutral ones included) by category, largest first; never part of the totals of the other dashboards",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "categoryName",
+                          "total"
+                        ],
+                        "properties": {
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "total": {
+                            "description": "CreditCard purchases of the category in the period, decimal string with 2 decimals",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "creditExpenses": {
+                      "description": "Active, Once and ToCancel credit expenses by category; an open balance, listed whatever the period",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "categoryName",
+                          "remaining"
+                        ],
+                        "properties": {
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "remaining": {
+                            "description": "Sum of totalAmount minus paidAmount, decimal string with 2 decimals",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {

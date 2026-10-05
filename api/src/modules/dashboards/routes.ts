@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type } from '@sinclair/typebox';
-import { COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, NET_VALUE, rule } from './rules.js';
+import { CARD_PURCHASE, CARD_VALUE, COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, NET_VALUE, OPEN_CREDIT_EXPENSE, rule } from './rules.js';
 import { AppError } from '../../plugins/errors.js';
 import {
   currentMonthWindow,
@@ -45,6 +45,23 @@ const NetWorthSchema = Type.Object({
       value: Money('Cumulative net worth at the end of the month, decimal string with 2 decimals'),
     }),
     { description: 'One point per month from the first month with a transaction or return to the current month; empty without data' },
+  ),
+});
+
+const CardSchema = Type.Object({
+  transactions: Type.Array(
+    Type.Object({
+      categoryName: Type.String(),
+      total: Money('CreditCard purchases of the category in the period, decimal string with 2 decimals'),
+    }),
+    { description: 'CreditCard transactions in the period (neutral ones included) by category, largest first; never part of the totals of the other dashboards' },
+  ),
+  creditExpenses: Type.Array(
+    Type.Object({
+      categoryName: Type.String(),
+      remaining: Money('Sum of totalAmount minus paidAmount, decimal string with 2 decimals'),
+    }),
+    { description: 'Active, Once and ToCancel credit expenses by category; an open balance, listed whatever the period' },
   ),
 });
 
@@ -194,6 +211,34 @@ export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
           order by m.month`;
         const series = rows.map((r) => ({ month: r.month, value: r.value }));
         return { current: (series.at(-1) as { value: string }).value, series };
+      });
+    },
+  );
+
+  routes.get(
+    '/dashboard/card',
+    { schema: { querystring: PeriodQuery, response: { 200: CardSchema } } },
+    async (request) => {
+      const period = requestedPeriod(request.query, request.tz);
+      return request.withUser(async (tx) => {
+        const transactions = await tx<{ category_name: string; total: string }[]>`
+          select c.name as category_name, sum(${rule(tx, CARD_VALUE)})::text as total
+          from ${rule(tx, FROM_TRANSACTIONS)}
+          where ${rule(tx, CARD_PURCHASE)} and t.occurred_at >= ${period.from} and t.occurred_at < ${period.to}
+          group by c.id, c.name
+          having sum(${rule(tx, CARD_VALUE)}) <> 0
+          order by sum(${rule(tx, CARD_VALUE)}) desc, c.name`;
+        const creditExpenses = await tx<{ category_name: string; remaining: string }[]>`
+          select c.name as category_name, sum(ce.total_amount - ce.paid_amount)::text as remaining
+          from public.credit_expenses ce
+          join public.categories c on c.id = ce.category_id and c.user_id = ce.user_id
+          where ${rule(tx, OPEN_CREDIT_EXPENSE)}
+          group by c.id, c.name
+          order by sum(ce.total_amount - ce.paid_amount) desc, c.name`;
+        return {
+          transactions: transactions.map((r) => ({ categoryName: r.category_name, total: r.total })),
+          creditExpenses: creditExpenses.map((r) => ({ categoryName: r.category_name, remaining: r.remaining })),
+        };
       });
     },
   );

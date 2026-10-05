@@ -53,6 +53,12 @@ export const CARD_PURCHASE = `(
   AND t.occurred_at <= now()
 )`;
 
+/** Amount of a card row in the card view: purchases (Expense) positive, refunds (Income) negative. */
+export const CARD_VALUE = `(CASE WHEN t.type = 'Expense' THEN t.amount ELSE -t.amount END)`;
+
+/** Open credit expenses (cards' installments and subscriptions) that still have a balance to show. */
+export const OPEN_CREDIT_EXPENSE = `ce.status IN ('Active', 'Once', 'ToCancel')`;
+
 /** Wraps a fragment for use inside a postgres.js template: `tx\`... ${rule(tx, COUNTABLE)}\``. */
 export function rule(tx: TransactionSql, fragment: string) {
   return tx.unsafe(fragment);

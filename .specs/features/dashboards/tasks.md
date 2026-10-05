@@ -296,12 +296,12 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Two CreditCard rows in Alimentação sum under that category
-- [ ] Credit expenses show total minus paid for Active, Once and ToCancel only
-- [ ] Creating a credit expense and CreditCard rows leaves last-30-days, trend, categories and net worth unchanged (CARD-05)
-- [ ] Empty period returns empty lists (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Two CreditCard rows in Alimentação sum under that category
+- [x] Credit expenses show total minus paid for Active, Once and ToCancel only
+- [x] Creating a credit expense and CreditCard rows leaves last-30-days, trend, categories and net worth unchanged (CARD-05)
+- [x] Empty period returns empty lists (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
