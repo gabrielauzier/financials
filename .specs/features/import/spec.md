@@ -176,7 +176,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 | IMP-02 | P1: Extrato Nubank (data, valor, tipo) | - | Implementing |
 | IMP-03 | P1: Extrato Nubank (extração por descrição) | - | Implementing |
 | IMP-04 | P1: Fatura Nubank (parser) | - | Implementing |
-| IMP-05 | P1: Prévia (classificação e seleção) | - | Pending |
+| IMP-05 | P1: Prévia (classificação e seleção) | - | Implementing |
 | IMP-06 | P1: Prévia (deduplicação) | - | Implementing |
 | IMP-07 | P1: Prévia (confirmação atômica e idempotente) | - | Pending |
 | IMP-08 | P1: Neutras automáticas | - | Implementing |

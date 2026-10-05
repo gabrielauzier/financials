@@ -1195,6 +1195,160 @@
           }
         }
       }
+    },
+    "/imports/preview": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "accountId"
+                ],
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "description": "The CSV file (UTF-8, at most 5 MB)",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "format": "uuid",
+                    "description": "An active account of the user",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "rows",
+                    "totals"
+                  ],
+                  "properties": {
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "index",
+                          "localDate",
+                          "type",
+                          "amount",
+                          "name",
+                          "paymentMethod",
+                          "categoryName",
+                          "status",
+                          "neutral",
+                          "counterpartyDocument",
+                          "counterpartyBank"
+                        ],
+                        "properties": {
+                          "index": {
+                            "description": "0-based data row of the file; the selection key",
+                            "type": "integer"
+                          },
+                          "localDate": {
+                            "description": "YYYY-MM-DD",
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "Income",
+                              "Expense"
+                            ]
+                          },
+                          "amount": {
+                            "description": "Decimal string, e.g. \"1234.56\"",
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "paymentMethod": {
+                            "type": "string",
+                            "enum": [
+                              "PIX",
+                              "DebitCard",
+                              "BankTransfer",
+                              "CreditCard"
+                            ]
+                          },
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "new",
+                              "duplicate",
+                              "ignored",
+                              "unrecognized",
+                              "invalid"
+                            ]
+                          },
+                          "neutral": {
+                            "type": "boolean"
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "counterpartyDocument": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "counterpartyBank": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "totals": {
+                      "type": "object",
+                      "required": [
+                        "new",
+                        "duplicate",
+                        "ignored",
+                        "unrecognized",
+                        "invalid"
+                      ],
+                      "properties": {
+                        "new": {
+                          "type": "integer"
+                        },
+                        "duplicate": {
+                          "type": "integer"
+                        },
+                        "ignored": {
+                          "type": "integer"
+                        },
+                        "unrecognized": {
+                          "type": "integer"
+                        },
+                        "invalid": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "security": [

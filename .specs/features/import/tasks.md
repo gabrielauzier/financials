@@ -450,11 +450,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Account fixture returns 14 rows, invoice fixture 18 new plus 1 ignored
-- [ ] File over 5 MB returns 413; unknown header returns 422 `unsupported_format`; invoice sent to a non-Nubank account returns 422 `bank_mismatch`; empty file returns 422
-- [ ] No row is written to any table by preview (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Account fixture returns 14 rows, invoice fixture 18 new plus 1 ignored
+- [x] File over 5 MB returns 413; unknown header returns 422 `unsupported_format`; invoice sent to a non-Nubank account returns 422 `bank_mismatch`; empty file returns 422
+- [x] No row is written to any table by preview (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

@@ -6,6 +6,7 @@ import { loadConfig, type AppConfig } from './config.js';
 import { authPlugin, createTokenVerifier, type TokenVerifierConfig } from './plugins/auth.js';
 import { accountsRoutes } from './modules/accounts/routes.js';
 import { categoriesRoutes } from './modules/categories/routes.js';
+import { importRoutes } from './modules/import/routes.js';
 import { transactionsRoutes } from './modules/transactions/routes.js';
 import { corsPlugin } from './plugins/cors.js';
 import { dbPlugin } from './plugins/db.js';
@@ -50,6 +51,7 @@ export function buildApp(config: AppConfig = loadConfig(), options: BuildAppOpti
   void app.register(accountsRoutes);
   void app.register(categoriesRoutes);
   void app.register(transactionsRoutes);
+  void app.register(importRoutes);
 
   return app;
 }
