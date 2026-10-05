@@ -602,11 +602,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Create and edit validate non-zero amount
-- [ ] Last entry older than 30 days is highlighted with its date
-- [ ] Delete removes the row (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Create and edit validate non-zero amount
+- [x] Last entry older than 30 days is highlighted with its date
+- [x] Delete removes the row (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
