@@ -701,12 +701,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Duplicate rows start unchecked and can be checked
-- [ ] Neutral rows are flagged and the toggle changes the payload
-- [ ] Invalid and ignored rows cannot be selected
-- [ ] Unrecognized rows are flagged for review (4 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Duplicate rows start unchecked and can be checked
+- [x] Neutral rows are flagged and the toggle changes the payload
+- [x] Invalid and ignored rows cannot be selected
+- [x] Unrecognized rows are flagged for review (4 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
