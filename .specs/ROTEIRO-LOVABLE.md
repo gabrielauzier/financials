@@ -13,7 +13,7 @@ O front é construído no Lovable. Cada feature tem **um único prompt** em `.sp
 1. Criar o projeto Supabase (ou usar o local do `supabase start`) com **confirmação de e-mail ligada**; anotar URL e anon key.
 2. Criar o projeto no Lovable, conectar a integração com o Supabase **apenas para autenticação** e ativar a sincronização com o GitHub.
 3. Definir como o código do Lovable entra neste repositório como `web/` (**decisão pendente**, ver D1 abaixo).
-4. Configurar no Lovable as variáveis: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL` (pode ficar vazia no início) e `VITE_MOCK_AREAS=*`.
+4. Configurar no Lovable as variáveis: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_API_URL` (pode ficar vazia no início) e `VITE_MOCK_AREAS=*`.
 
 ## Passo a passo dos prompts
 
@@ -21,7 +21,7 @@ Rodar na ordem. Cada prompt depende dos anteriores (reusa componentes e o client
 
 | # | Prompt | Depende de | Entrega no front | Tasks substituídas |
 | - | ------ | ---------- | ---------------- | ------------------ |
-| 1 | [auth](features/auth/lovable.md) | Passo 0 | Fundação: cliente da API, mocks, formatação, layout, cadastro, login, rota protegida | auth T14–T20 |
+| 1 ✅ | [auth](features/auth/lovable.md) | Passo 0 | Fundação: cliente da API, mocks, formatação, layout, cadastro, login, rota protegida | auth T14–T20 |
 | 2 | [accounts-categories](features/accounts-categories/lovable.md) | 1 | `/contas`, `/categorias`, `AccountSelect`, `CategorySelect` | accounts-categories T12–T16 |
 | 3 | [transactions](features/transactions/lovable.md) | 1, 2 | `/extrato` com filtros, formulário, edição inline, lote, neutra | transactions T13–T21 |
 | 4 | [import](features/import/lovable.md) | 1, 2, 3 | `/importar` com prévia obrigatória e resumo | import T19–T23 |
@@ -35,7 +35,7 @@ Os prompts 3, 4, 5 e 6 só dependem de 1 e 2 (e 4 também de 3 para o botão "Ve
 1. Abrir `features/<feature>/lovable.md` e colar o bloco do prompt no chat do Lovable (um prompt por vez; não juntar).
 2. Esperar o Lovable terminar e abrir o preview com `VITE_MOCK_AREAS=*`.
 3. Percorrer o **Checklist de aceite** do mesmo arquivo; o que falhar vira uma mensagem de correção curta no Lovable (citando o item do checklist).
-4. Trazer o código para `web/` e rodar localmente `pnpm -C web typecheck`, `pnpm -C web lint` e `pnpm -C web test`.
+4. Trazer o código para `web/` e rodar localmente, dentro de `web/`, `yarn typecheck`, `yarn lint` e `yarn test`.
 5. Só avançar para o próximo prompt com os três comandos verdes e o checklist completo; fazer um commit por prompt.
 
 ## Troca de mocks pela API real (pontos de integração)
@@ -80,3 +80,27 @@ O prompt de uma feature pode rodar antes ou depois da API correspondente; o úni
 | - | ------- | ------------ |
 | D1 | Como o repositório do Lovable vira `web/` neste projeto | Clonar o repositório do Lovable em `web/` (cópia versionada neste repo, sincronizando manualmente após cada prompt); alternativa: submódulo git. Este diretório ainda não é um repositório git |
 | D2 | Detecção de "e-mail já cadastrado" | O prompt 1 usa regra provisória (`identities` vazio); a task auth T13 confirma o comportamento real e a função `isEmailAlreadyRegistered` pode precisar de ajuste |
+
+## Registro de execução
+
+| # | Prompt | Situação | Verificação |
+| - | ------ | -------- | ----------- |
+| 1 | auth | Aplicado e verificado em 2026-10-04 | 7 de 9 itens do checklist ok; `typecheck` e `lint` pendentes de correção de configuração (ver `features/auth/lovable.md`) |
+| 2–6 | accounts-categories, transactions, import, credit-expenses, dashboards | Em andamento no Lovable | — |
+
+## Desvios registrados
+
+Detalhes e ações em `features/auth/lovable.md` (seção "Desvios registrados"). Resumo do que afeta as próximas etapas:
+
+- **Stack TanStack Start (SSR)**, não SPA Vite: o próximo código do Lovable segue rotas por arquivo em `src/routes/`; a hospedagem exige Node. Decisão pendente (D3).
+- **Gerenciador `yarn`** em `web/` (não pnpm) e chave pública `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- **Cliente da API sem `FormData`**: o prompt de `import` agora inclui o ajuste; verificar no checklist do prompt 4.
+- **Mocks de todas as áreas já existem**; conferir, a cada prompt, que o Lovable ajusta os existentes em vez de duplicar.
+- **Dívida de qualidade do front**: corrigir `typecheck` (script `tsgo`) e `lint` (Prettier em 100 colunas) antes de aceitar o prompt 2, para que os gates dos próximos prompts sejam confiáveis.
+
+### Decisões pendentes (adições)
+
+| # | Decisão | Recomendação |
+| - | ------- | ------------ |
+| D3 | Aceitar TanStack Start (SSR) ou exigir SPA Vite | Aceitar se o deploy em Node for aceitável; caso contrário pedir ao Lovable a migração antes de mais telas |
+| D4 | Projeto Supabase do Lovable é o mesmo da API? | Confirmar `project_id` e usar a mesma URL/JWKS na API |

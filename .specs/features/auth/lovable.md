@@ -52,12 +52,30 @@ Adicione testes Vitest + Testing Library cobrindo: cliente da API (headers Beare
 Reset de senha, login social, MFA, qualquer tela de dados (dashboard, extrato etc. são só placeholders), qualquer acesso direto a tabelas do Supabase.
 ~~~~
 
-## Checklist de aceite (revisar o resultado do Lovable)
+## Checklist de aceite
 
-- [ ] Nenhum `supabase.from(...)` no código; `supabase-js` só para auth.
-- [ ] `VITE_MOCK_AREAS` alterna cada área entre mock e API real sem mudar código.
-- [ ] Headers `Authorization` e `X-Timezone` presentes em toda chamada (AUTH-06).
-- [ ] Mensagens de cadastro e login idênticas às do prompt (AUTH-01, AUTH-05).
-- [ ] Rotas protegidas redirecionam para `/login` sem sessão (AUTH-06).
-- [ ] `formatBRL` opera sobre string, sem `parseFloat`.
-- [ ] `pnpm typecheck`, `lint` e `test` passam.
+Verificado em 2026-10-04 sobre a primeira versão gerada pelo Lovable em `web/` (leitura do código + execução de `yarn test`, `npx tsc --noEmit` e `eslint`).
+
+- [x] Nenhum `supabase.from(...)` no código; `supabase-js` só para auth. *(Os arquivos de service role em `src/integrations/supabase/` foram gerados pelo Lovable e não são importados; só `start.ts` importa o `auth-attacher`.)*
+- [x] `VITE_MOCK_AREAS` alterna cada área entre mock e API real sem mudar código. *(`src/lib/api/mock/index.ts`; padrão `*`, vazio = nenhuma. Sem teste cobrindo `shouldMock`.)*
+- [x] Headers `Authorization` e `X-Timezone` presentes em toda chamada real (AUTH-06). *(Teste em `client.test.ts`; chamadas mockadas não enviam headers.)*
+- [x] Mensagens de cadastro e login idênticas às do prompt (AUTH-01, AUTH-05). *(Conferidas no código de `SignupForm.tsx` e `LoginForm.tsx`.)*
+- [x] Rotas protegidas redirecionam para `/login` sem sessão (AUTH-06). *(Cada rota privada usa `RequireAuth`; teste em `RequireAuth.test.tsx`.)*
+- [x] `formatBRL` opera sobre string, sem `parseFloat`. *(Ressalva: trunca em vez de arredondar além de 2 casas e devolve `R$ 0,00` para entrada inválida, sem sinalizar.)*
+- [x] `test` passa. *(7 arquivos, 19 testes, após instalar `@testing-library/dom`, dependência faltante.)*
+- [ ] `typecheck` passa. *(Falha: o script usa `tsgo`, pacote ausente do `package.json`. `npx tsc --noEmit` dá 0 erros. Correção: trocar o script por `tsc --noEmit` ou adicionar `@typescript/native-preview`.)*
+- [ ] `lint` passa. *(688 erros, todos do Prettier: código em 100 colunas sem `.prettierrc`. Com `printWidth: 100` só sobra `routeTree.gen.ts`, que é gerado. Correção: `.prettierrc` com `printWidth: 100` e `.prettierignore` com `routeTree.gen.ts`.)*
+
+### Desvios registrados
+
+| # | Desvio | Esperado (spec/design/prompt) | Entregue pelo Lovable | Impacto / ação |
+| - | ------ | ----------------------------- | --------------------- | -------------- |
+| 1 | Stack do front | SPA Vite + React Router | TanStack Start (SSR, Nitro) com rotas por arquivo (`AGENTS.md` do projeto confirma) | Hospedagem precisa de runtime Node; **decisão pendente** (aceitar ou pedir SPA) |
+| 2 | Nome da chave pública do Supabase | `VITE_SUPABASE_ANON_KEY` | `VITE_SUPABASE_PUBLISHABLE_KEY` | Usar o nome novo na configuração; prompt e roteiro atualizados |
+| 3 | Gerenciador de pacotes | `pnpm` | `yarn.lock` e `bun.lock` presentes | Comandos do front viram `yarn` dentro de `web/`; `bun.lock` é redundante |
+| 4 | Cliente da API só envia JSON | Suporte a `FormData` para a importação | `apiRequest` sempre faz `JSON.stringify(body)` | Prompt de `import` passou a pedir a extensão do cliente |
+| 5 | Mocks de todas as áreas já criados | Só a base; mocks por prompt | Mocks de accounts, categories, transactions, import, creditExpenses, dashboard e investmentReturns | Sem dano; os prompts seguintes devem reaproveitar e ajustar, sem duplicar |
+| 6 | Script `typecheck` com `tsgo` | Script que roda | Pacote ausente | Ver item de `typecheck` acima |
+| 7 | Formatação sem `.prettierrc` | `lint` verde | 688 erros de Prettier | Ver item de `lint` acima |
+| 8 | Projeto Supabase | Projeto usado também pela API | `supabase/config.toml` com `project_id` `unyohhnzkhsnlnrrcfms` | Confirmar que é o projeto que a API usará (validação do JWT depende dele) |
+| 9 | Regra provisória de e-mail já cadastrado | Confirmada pela task auth T13 | `identities` vazio, ainda não validada contra o Supabase real | Revisar `isEmailAlreadyRegistered` quando T13 rodar |

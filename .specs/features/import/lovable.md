@@ -9,6 +9,9 @@
 ~~~~text
 Continue o app "Financials" (React + Vite + TS + Tailwind + shadcn/ui + TanStack Query, UI em pt-BR). Mantenha as regras de arquitetura: dados só pela API via `src/lib/api/client.ts`, mocks em `src/lib/api/mock/` para as áreas listadas em `VITE_MOCK_AREAS`, dinheiro como string. Implemente o fluxo de importação de extratos CSV na rota `/importar`, em `src/features/import/`. É um assistente (wizard) de 3 passos: Conta e arquivo → Prévia → Resumo.
 
+## Ajuste prévio no cliente da API
+O `apiRequest` em `src/lib/api/client.ts` hoje sempre serializa o corpo com `JSON.stringify` e define `Content-Type: application/json`. Estenda-o para aceitar `FormData`: quando o corpo for `FormData`, envie-o sem `JSON.stringify` e SEM definir `Content-Type` (o navegador define o boundary). Mantenha o comportamento atual para os demais corpos, os headers `Authorization` e `X-Timezone`, e o tratamento de 401. Adicione teste cobrindo o envio de `FormData`.
+
 ## Regra central
 A PRÉVIA É SEMPRE OBRIGATÓRIA e não grava nada. A gravação só acontece em "Confirmar importação". O cliente mantém o objeto `File` escolhido: ele é enviado na prévia e REENVIADO, o mesmo arquivo, na confirmação (o servidor reanalisa o arquivo; as linhas da prévia nunca são enviadas de volta, apenas os índices selecionados).
 
