@@ -317,12 +317,12 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Valid HS256 token returns claims
-- [ ] Expired token and bad-signature token are rejected
-- [ ] JWKS mode accepts a token signed by a locally generated key set
-- [ ] Missing `sub` is rejected (5 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid HS256 token returns claims
+- [x] Expired token and bad-signature token are rejected
+- [x] JWKS mode accepts a token signed by a locally generated key set
+- [x] Missing `sub` is rejected (5 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
