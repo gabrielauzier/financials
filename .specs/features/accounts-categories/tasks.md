@@ -392,11 +392,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Rename persists and the `key` is unchanged
-- [ ] Renaming Estorno, Sem categoria or Investimentos returns 403 `category_protected`
-- [ ] Duplicate and blank names are rejected (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Rename persists and the `key` is unchanged
+- [x] Renaming Estorno, Sem categoria or Investimentos returns 403 `category_protected`
+- [x] Duplicate and blank names are rejected (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

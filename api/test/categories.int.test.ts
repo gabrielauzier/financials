@@ -127,3 +127,79 @@ describe('POST /categories', () => {
     expect((await call(other, 'POST', '/categories', { name: 'Viagem' })).statusCode).toBe(201);
   });
 });
+
+async function byKey(as: TestUser, key: string): Promise<Category> {
+  const found = (await list(as)).find((c) => c.key === key);
+  if (!found) throw new Error(`category ${key} not found`);
+  return found;
+}
+
+describe('PATCH /categories/:id', () => {
+  it('renames a regular category, keeps its key and allows a case-only change of its own name', async () => {
+    const user = await createTestUser();
+    const food = await byKey(user, 'Food');
+
+    const res = await call(user, 'PATCH', `/categories/${food.id}`, { name: '  Mercado ', key: 'Other', isSystem: true });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ id: food.id, key: 'Food', name: 'Mercado', isSystem: false });
+    expect(await getAdminSql()`select key, name, is_system from public.categories where id = ${food.id}`).toEqual([
+      { key: 'Food', name: 'Mercado', is_system: false },
+    ]);
+
+    const own = await call(user, 'PATCH', `/categories/${food.id}`, { name: 'MERCADO' });
+    expect(own.statusCode).toBe(200);
+    expect(own.json()).toMatchObject({ key: 'Food', name: 'MERCADO' });
+  });
+
+  it('returns 403 category_protected when renaming Estorno, Sem categoria or Investimentos, changing nothing', async () => {
+    const user = await createTestUser();
+    for (const [key, name] of [
+      ['Reversal', 'Estorno (de compras)'],
+      ['Uncategorized', 'Sem categoria'],
+      ['Investments', 'Investimentos'],
+    ] as const) {
+      const category = await byKey(user, key);
+      const res = await call(user, 'PATCH', `/categories/${category.id}`, { name: 'Renomeada' });
+      expect(res.statusCode).toBe(403);
+      expect(res.json()).toEqual({ error: { code: 'category_protected', message: expect.any(String) } });
+      expect(await byKey(user, key)).toEqual({ id: category.id, key, name, isSystem: true });
+    }
+  });
+
+  it('rejects a duplicate name in any case with 409 and a blank name with 422, changing nothing', async () => {
+    const user = await createTestUser();
+    const pets = await byKey(user, 'Pets');
+    const patch = (name: string) => call(user, 'PATCH', `/categories/${pets.id}`, { name });
+
+    for (const name of ['compras', ' SEM CATEGORIA ']) {
+      const dup = await patch(name);
+      expect(dup.statusCode).toBe(409);
+      expect(dup.json()).toEqual({ error: { code: 'duplicate_name', message: expect.any(String), field: 'name' } });
+    }
+    for (const name of ['', '   ']) {
+      const blank = await patch(name);
+      expect(blank.statusCode).toBe(422);
+      expect(blank.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'name' } });
+    }
+    expect(await byKey(user, 'Pets')).toEqual({ id: pets.id, key: 'Pets', name: 'Pets', isSystem: false });
+  });
+
+  it("returns 404 for an unknown, malformed or another user's id, leaving the category untouched", async () => {
+    const owner = await createTestUser();
+    const intruder = await createTestUser();
+    const food = await byKey(owner, 'Food');
+
+    for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      const res = await call(owner, 'PATCH', `/categories/${id}`, { name: 'X' });
+      expect(res.statusCode).toBe(404);
+      expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
+    }
+    expect((await call(intruder, 'PATCH', `/categories/${food.id}`, { name: 'Hacked' })).statusCode).toBe(404);
+    const reversal = await byKey(owner, 'Reversal');
+    expect((await call(intruder, 'PATCH', `/categories/${reversal.id}`, { name: 'Hacked' })).statusCode).toBe(404);
+    expect(await getAdminSql()`select name from public.categories where id in (${food.id}, ${reversal.id}) order by name`).toEqual([
+      { name: 'Alimentação' },
+      { name: 'Estorno (de compras)' },
+    ]);
+  });
+});

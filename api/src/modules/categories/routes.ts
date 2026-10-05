@@ -15,6 +15,8 @@ type Category = Static<typeof CategorySchema>;
 // Only `name` is read: `key` and `isSystem` cannot be set by clients.
 const NameBody = Type.Object({ name: Type.String() });
 
+const IdParams = Type.Object({ id: Type.String() });
+
 interface CategoryRow {
   id: string;
   key: string | null;
@@ -46,6 +48,23 @@ function duplicateName(): AppError {
   return new AppError('duplicate_name', 409, 'A category with this name already exists', 'name');
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function notFound(): AppError {
+  return new AppError('not_found', 404, 'Category not found');
+}
+
+/**
+ * Reads the category in the request transaction. RLS scopes the read to the user, so a foreign id
+ * is absent (404); a system row is visible but protected (403). Users cannot change `is_system`,
+ * so the answer holds for the rest of the transaction.
+ */
+async function assertEditable(tx: TransactionSql, id: string): Promise<void> {
+  const [row] = await tx<{ is_system: boolean }[]>`select is_system from public.categories where id = ${id}`;
+  if (!row) throw notFound();
+  if (row.is_system) throw new AppError('category_protected', 403, 'System categories cannot be changed');
+}
+
 export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
   const routes = app.withTypeProvider<TypeBoxTypeProvider>();
 
@@ -74,6 +93,29 @@ export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
             returning ${columns(tx)}`,
         );
         return reply.status(201).send(toCategory(row as CategoryRow));
+      } catch (error) {
+        if (isNameConflict(error)) throw duplicateName();
+        throw error;
+      }
+    },
+  );
+  routes.patch(
+    '/categories/:id',
+    { schema: { params: IdParams, body: NameBody, response: { 200: CategorySchema } } },
+    async (request) => {
+      const { id } = request.params;
+      const name = validName(request.body.name);
+      if (!UUID.test(id)) throw notFound();
+      try {
+        const [row] = await request.withUser(async (tx) => {
+          await assertEditable(tx, id);
+          return tx<CategoryRow[]>`
+            update public.categories set name = ${name}
+            where id = ${id}
+            returning ${columns(tx)}`;
+        });
+        if (!row) throw notFound();
+        return toCategory(row);
       } catch (error) {
         if (isNameConflict(error)) throw duplicateName();
         throw error;
