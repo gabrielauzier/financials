@@ -5,6 +5,7 @@ import { createRemoteJWKSet } from 'jose';
 import { loadConfig, type AppConfig } from './config.js';
 import { authPlugin, createTokenVerifier, type TokenVerifierConfig } from './plugins/auth.js';
 import { accountsRoutes } from './modules/accounts/routes.js';
+import { categoriesRoutes } from './modules/categories/routes.js';
 import { dbPlugin } from './plugins/db.js';
 import { errorsPlugin } from './plugins/errors.js';
 import { swaggerPlugin } from './plugins/swagger.js';
@@ -34,6 +35,7 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
     );
   });
   void app.register(accountsRoutes);
+  void app.register(categoriesRoutes);
 
   return app;
 }

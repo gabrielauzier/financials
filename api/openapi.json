@@ -418,6 +418,47 @@
           }
         }
       }
+    },
+    "/categories": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "key",
+                      "name",
+                      "isSystem"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "isSystem": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "security": [

@@ -337,10 +337,10 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Returns 17 seeded categories with pt-BR names for a new user
-- [ ] Never returns another user's categories (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Returns 17 seeded categories with pt-BR names for a new user
+- [x] Never returns another user's categories (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
