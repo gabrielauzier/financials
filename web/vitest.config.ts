@@ -9,6 +9,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Tests always use the in-memory mocks, whatever the local .env.local says.
+    env: { VITE_MOCK_AREAS: "*" },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
