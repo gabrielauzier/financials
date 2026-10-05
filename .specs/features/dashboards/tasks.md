@@ -630,10 +630,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] All panels render from a mocked API
-- [ ] No data renders every panel at R$ 0,00 with empty states (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] All panels render from a mocked API
+- [x] No data renders every panel at R$ 0,00 with empty states (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
