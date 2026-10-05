@@ -55,3 +55,22 @@ VITE_MOCK_AREAS=import,creditExpenses,dashboard,investmentReturns
 - Sign-up e-mails land in Inbucket (http://127.0.0.1:55324); the confirmation link redirects to `http://localhost:8080`, the origin configured in `supabase/config.toml` (`site_url` and `additional_redirect_urls`).
 - The API must list the front origin in `CORS_ORIGINS` (`api/.env.example` already includes `http://localhost:8080`).
 - When a backend area is ready, remove it from `VITE_MOCK_AREAS`.
+
+## Deploy (Supabase + Vercel)
+
+Production runs on three pieces, all created from the CLIs:
+
+| Piece | Where | How it is built |
+| ----- | ----- | --------------- |
+| Database, Auth, Storage | Supabase project `financials` (`us-east-1`) | `npx supabase link --project-ref <ref>` then `npx supabase db push` |
+| API | Vercel project `financials-api` (root `api/`) | `pnpm build:vercel` bundles the Fastify app into a Vercel Build Output function (`api/scripts/build-vercel.mjs`) |
+| Front | Vercel project `financials-web` (root `web/`) | `yarn build`, Nitro detects Vercel |
+
+Deploy with `vercel deploy --prod` from `api/` and from `web/`.
+
+API environment (Vercel, production): `SUPABASE_URL`, `DATABASE_URL` (transaction pooler, port 6543), `DATABASE_PREPARE=false`, `DATABASE_POOL_MAX=3`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` (exact front origin), `LOG_LEVEL`.
+Front environment (build time): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_API_URL`, and `VITE_MOCK_AREAS=none` (unset means everything is mocked).
+
+Supabase Auth must have the front URL as `site_url` and in `additional_redirect_urls`, and `minimum_password_length = 8` (set with `supabase config push` using a copy of `supabase/config.toml` with the production URLs).
+
+`vercel link` rewrites `web/.env.local` and `api/.env.local` with the Vercel development variables; keep your local development values in a safe place before linking again.
