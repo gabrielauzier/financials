@@ -131,6 +131,7 @@ create policy transactions_all on public.transactions for all
 | ------- | -------------------- | ------ | ---------- |
 | Busca `unaccent` + `ILIKE '%q%'` não usa índice | `transactions/service.ts` (a criar) | Lentidão com muitos milhares de linhas | Aceitável no MVP pessoal; `pg_trgm` + índice GIN como evolução |
 | Ordenação por coluna de outra tabela (categoria) com paginação | `transactions/service.ts` | Ordem instável entre páginas | Desempate por `id` em toda ordenação |
+| FK de `category_id`/`account_id` com `on delete restrict` e exclusão de usuário em cascata: o resultado depende da ordem de criação das constraints (verificado na validação de accounts-categories) | `0003_transactions.sql` | Exclusão de usuário pode falhar | Usar `on delete no action` nas FKs compostas para `categories`/`accounts` e testar a exclusão de um usuário que tenha transações |
 | Fuso nos filtros de data | `transactions/service.ts` | Dia incorreto nas bordas | Converter `from/to` para instantes locais com Luxon e testar bordas de meia-noite |
 
 ---

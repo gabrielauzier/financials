@@ -32,6 +32,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: AUTH-01.4 password minimum 8 vs server 6 (validation iteration 1) (config)
 - last seen: 2026-10-05T04:00:56Z
 
+### L-004 - State in the spec how duplicates are matched (case, accents, spaces) for every uniqueness rule
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `uniqueness` · harmful: 0
+- features: accounts-categories
+- evidence: spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness)
+- last seen: 2026-10-05T05:05:43Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

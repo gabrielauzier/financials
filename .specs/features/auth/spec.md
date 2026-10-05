@@ -110,13 +110,13 @@ O Financials guarda dados financeiros sensíveis. O MVP é de uso pessoal, mas p
 | AUTH-01 | P1: Cadastro (campos e validação) | - | Verified |
 | AUTH-02 | P1: Cadastro (e-mail de confirmação) | - | Verified |
 | AUTH-03 | P1: Cadastro (confirmação do e-mail) | - | Verified |
-| AUTH-04 | P1: Cadastro (categorias semeadas) | - | Pending |
+| AUTH-04 | P1: Cadastro (categorias semeadas) | - | Verified |
 | AUTH-05 | P1: Login | - | Verified |
 | AUTH-06 | P1: Proteção da API (JWT) | - | Verified |
 | AUTH-07 | P1: Isolamento (user_id + RLS) | - | Verified |
-| AUTH-08 | P1: Isolamento (404 cruzado, sem chave de serviço) | - | Implementing |
+| AUTH-08 | P1: Isolamento (404 cruzado, sem chave de serviço) | - | Verified |
 
-**Coverage:** 8 total; backend verificado: 6 Verified (AUTH-01, 02, 03, 05, 06, 07), AUTH-08 Implementing (o 404 cruzado só é testável quando houver rotas de dados, em accounts-categories), AUTH-04 Pending (semeadura vem com accounts-categories). Mensagens e redirecionamentos de tela pertencem ao front (Lovable).
+**Coverage:** 8 total; backend verificado: 7 Verified (AUTH-01, 02, 03, 05, 06, 07, 08; o 404 cruzado foi comprovado em contas e categorias na feature accounts-categories), AUTH-04 Verified pela semeadura de accounts-categories (migration 0002). Mensagens e redirecionamentos de tela pertencem ao front (Lovable).
 
 ---
 

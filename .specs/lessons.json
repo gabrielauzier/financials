@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 4,
+  "next_id": 5,
   "lessons": [
     {
       "id": "L-001",
@@ -58,6 +58,24 @@
       ],
       "created": "2026-10-05T04:00:56Z",
       "last_seen": "2026-10-05T04:00:56Z"
+    },
+    {
+      "id": "L-004",
+      "key": "spec_precision_gap::state in the spec how duplicates are matched case accents spaces for every uniqueness rule",
+      "text": "State in the spec how duplicates are matched (case, accents, spaces) for every uniqueness rule",
+      "signal": "spec_precision_gap",
+      "scope": "uniqueness",
+      "status": "candidate",
+      "features": [
+        "accounts-categories"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness)"
+      ],
+      "created": "2026-10-05T05:05:43Z",
+      "last_seen": "2026-10-05T05:05:43Z"
     }
   ]
 }

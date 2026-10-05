@@ -147,6 +147,7 @@ Detalhes e ações em `features/auth/lovable.md` (seção "Desvios registrados")
 | Receitas com `text-primary` em vez de verde | v3 | Baixa |
 | `AccountsPage` sem tratamento de erro ao ativar/desativar; lacunas de validação no mock de contas | v2 | Baixa |
 | Decisões D3 (TanStack Start/SSR) e D4 (projeto Supabase do Lovable é o da API) | prompt 1 | D4 relevante para o backend |
+| **Contrato 400 x 422 em contas e categorias**: a API responde 400 `validation_error` para corpo malformado (campo ausente, tipo errado) e 422 só para as regras semânticas; o contrato do prompt 2 diz 422 com `field`. O front já cai na mensagem genérica, mas conferir na integração e ajustar o contrato ou o tratamento de erro | backend accounts-categories | Baixa |
 | **`web/src/features/auth/emailExists.ts` precisa de um terceiro critério** para detectar e-mail já cadastrado e não confirmado: `confirmation_sent_at - created_at >= 1000 ms` (hoje esse caso mostra "Verifique seu e-mail" em vez de "E-mail já cadastrado"). O caso de e-mail confirmado já funciona (`user_already_exists`). Achado do backend (T13) | backend auth | Média |
 
 ### Como retomar
