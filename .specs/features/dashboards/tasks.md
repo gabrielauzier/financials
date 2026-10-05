@@ -493,10 +493,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Renders 12 months with zero months
-- [ ] Shows income, expense and balance series (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Renders 12 months with zero months
+- [x] Shows income, expense and balance series (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
