@@ -436,10 +436,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] User B's dashboards never include user A's data
-- [ ] User B gets 404 on user A's investment returns (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] User B's dashboards never include user A's data
+- [x] User B gets 404 on user A's investment returns (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
