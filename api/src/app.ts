@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type } from '@sinclair/typebox';
 import { createRemoteJWKSet } from 'jose';
@@ -19,8 +19,14 @@ function tokenVerifierConfig(config: AppConfig): TokenVerifierConfig {
   return { mode: 'jwks', getKey: createRemoteJWKSet(jwksUrl) };
 }
 
-export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
+export interface BuildAppOptions {
+  /** Fastify logger settings; off by default so tests stay quiet. */
+  logger?: FastifyServerOptions['logger'];
+}
+
+export function buildApp(config: AppConfig = loadConfig(), options: BuildAppOptions = {}): FastifyInstance {
   const app = Fastify({
+    logger: options.logger ?? false,
     // Only registers an annotation keyword with Ajv; coercion and the other defaults stay as they are.
     ajv: { plugins: [(ajv) => ajv.addKeyword(OPENAPI_TYPE_KEY)] },
   }).withTypeProvider<TypeBoxTypeProvider>();

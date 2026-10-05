@@ -136,12 +136,12 @@ T3 → T4
 
 **Done when**:
 
-- [ ] `startServer` on port 0 serves `GET /health` 200 over real HTTP
-- [ ] A child process started with the compiled-or-tsx entry exits with code 0 after SIGTERM and after SIGINT and refuses new connections
-- [ ] A child process without `SUPABASE_URL` exits non-zero with a message citing the variable
-- [ ] A request carrying an Authorization header never leaves the token in the log output (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `startServer` on port 0 serves `GET /health` 200 over real HTTP
+- [x] A child process started with the compiled-or-tsx entry exits with code 0 after SIGTERM and after SIGINT and refuses new connections
+- [x] A child process without `SUPABASE_URL` exits non-zero with a message citing the variable
+- [x] A request carrying an Authorization header never leaves the token in the log output (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
