@@ -169,3 +169,22 @@ describe('GoTrue e-mail confirmation link', () => {
     expect(((await login.json()) as { access_token?: string }).access_token).toEqual(expect.any(String));
   });
 });
+
+describe('GoTrue password policy (supabase/config.toml minimum_password_length = 8)', () => {
+  const signUpWith = (password: string) => {
+    const email = freshEmail();
+    return post<GoTrueUser & GoTrueError>('/signup', { email, password, data: { name: 'U', nickname: 'u' } });
+  };
+
+  it('rejects a 7-character password with 422 weak_password', async () => {
+    const res = await signUpWith('abcdefg');
+    expect(res.status).toBe(422);
+    expect(res.body).toMatchObject({ code: 422, error_code: 'weak_password' });
+  });
+
+  it('accepts an 8-character password, with no character-class requirement (password_requirements is empty)', async () => {
+    const res = await signUpWith('abcdefgh');
+    expect(res.status).toBe(200);
+    signedUpIds.add(res.body.id);
+  });
+});

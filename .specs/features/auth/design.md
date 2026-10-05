@@ -130,6 +130,7 @@ create trigger on_auth_user_created after insert on auth.users
 | `SET ROLE authenticated` exige papel de conexão com esse privilégio | `api/src/plugins/db.ts` (a criar) | Falha de todas as queries | Teste de integração de smoke que lê `auth.uid()` dentro de `withUser` |
 | Trigger em `auth.users` é `security definer` | migration 0001 | Escalada de privilégio se mal escrito | `set search_path = public`, sem SQL dinâmico, revisão na verificação |
 | Conexão por pooler em modo transação | `api/src/plugins/db.ts` | `set_config` sem `local` vazaria entre requisições | Sempre `set_config(..., true)` dentro de `BEGIN`; teste de vazamento entre dois usuários |
+| Senha mínima de 8 caracteres só era validada no front. **Verificado no stack local:** com `minimum_password_length = 8` em `supabase/config.toml`, `POST /auth/v1/signup` com 7 caracteres responde 422 `weak_password` e com 8 responde 200; `password_requirements` vazio, então não há exigência de classes de caracteres (`api/test/gotrue-behavior.int.test.ts`) | `supabase/config.toml` | Cadastro aceitar senha curta se alguém chamar o GoTrue direto | Projeto hospedado precisa da mesma configuração (Auth > Password policy) |
 
 ---
 
