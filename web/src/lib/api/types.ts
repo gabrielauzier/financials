@@ -157,3 +157,43 @@ export type CreditExpenseInput = {
 export type CreditExpenseUpdate = Partial<Omit<CreditExpenseInput, "notes">> & {
   notes?: string | null;
 };
+
+export type Last30Days = { total: Money; previousTotal: Money; changePct: number | null };
+
+export type TrendPoint = { month: string; income: Money; expense: Money; balance: Money };
+export type Trend = { points: TrendPoint[] };
+
+export type CategoryTotal = { categoryId: string; name: string; total: Money };
+export type CategoryDistribution = { items: CategoryTotal[] };
+
+export type NetWorth = { current: Money; series: { month: string; value: Money }[] };
+
+export type CardView = {
+  transactions: { categoryName: string; total: Money }[];
+  creditExpenses: { categoryName: string; remaining: Money }[];
+};
+
+export type DashboardPeriod = { from: string; to: string };
+
+export type InvestmentReturn = {
+  id: string;
+  accountId: string;
+  accountNickname: string;
+  occurredOn: string;
+  amount: Money;
+  notes: string | null;
+};
+
+export type InvestmentReturns = { items: InvestmentReturn[]; lastDate: string | null };
+
+export type InvestmentReturnInput = {
+  occurredOn: string;
+  amount: Money;
+  accountId: string;
+  notes?: string;
+};
+
+// `null` clears notes; an omitted field is left unchanged.
+export type InvestmentReturnUpdate = Partial<Omit<InvestmentReturnInput, "notes">> & {
+  notes?: string | null;
+};

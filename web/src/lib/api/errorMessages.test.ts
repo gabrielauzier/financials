@@ -39,6 +39,36 @@ describe("messageForError", () => {
     expect(messageForError(api(code), "creditExpense")).toBe(text);
   });
 
+  it.each([
+    ["invalid_period", "Período inválido"],
+    ["invalid_date", "Data inválida"],
+    ["invalid_amount", "Valor inválido"],
+  ])(
+    "maps the dashboard code %s to its Portuguese text in the investmentReturn context",
+    (code, text) => {
+      expect(messageForError(api(code), "investmentReturn")).toBe(text);
+      expect(messageForError(api(code))).toBe(text);
+    },
+  );
+
+  it("explains invalid_account as a valid account (inactive ones are allowed) for investment returns", () => {
+    expect(messageForError(api("invalid_account"), "investmentReturn")).toBe(
+      "Selecione uma conta válida",
+    );
+    expect(messageForError(api("invalid_account"), "creditExpense")).toBe(
+      "Selecione uma conta ativa",
+    );
+  });
+
+  it("keeps generic codes in the investmentReturn context without leaking the API message", () => {
+    expect(messageForError(api("not_found"), "investmentReturn")).toBe(
+      "Registro não encontrado. Atualize a página e tente de novo",
+    );
+    expect(messageForError(api("invalid_period"), "investmentReturn")).not.toContain(
+      "Technical English",
+    );
+  });
+
   it("reads invalid_amount as the total only in the creditExpense context", () => {
     expect(messageForError(api("invalid_amount"), "creditExpense")).toBe("Valor total inválido");
     expect(messageForError(api("invalid_amount"), "transaction")).toBe("Valor inválido");
