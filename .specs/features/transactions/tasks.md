@@ -130,11 +130,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Valid amounts pass, including `0.01` and 12-digit integers
-- [ ] Zero, negative, 3 decimals, 13 integer digits and non-numeric input are rejected
-- [ ] `http` and `https` URLs pass; `ftp`, `javascript:` and plain text are rejected (6 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid amounts pass, including `0.01` and 12-digit integers
+- [x] Zero, negative, 3 decimals, 13 integer digits and non-numeric input are rejected
+- [x] `http` and `https` URLs pass; `ftp`, `javascript:` and plain text are rejected (6 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
