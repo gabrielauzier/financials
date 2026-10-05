@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | API pure logic (parsers, validators, helpers) | unit | All branches; 1:1 to spec ACs; every listed edge case | `api/src/**/*.test.ts` | `pnpm -C api test:unit` |
 | API routes, services, SQL rules, migrations/RLS | integration | Every route: happy path + every listed edge case + error paths; RLS and constraints exercised | `api/test/**/*.int.test.ts` | `pnpm -C api test:int` |
-| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `pnpm -C web test` |
+| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `yarn --cwd web test` |
 | Scaffold / config / generated types | none | - (build gate only) | - | build gate only |
 
 ## Gate Check Commands
@@ -32,9 +32,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `pnpm -C web test` (web tasks) |
+| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `yarn --cwd web test` (web tasks) |
 | Full | After tasks with integration tests (needs `supabase start`) | `pnpm -C api test` (unit + integration) |
-| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `pnpm -C web typecheck && pnpm -C web lint && pnpm -C web test` |
+| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test` |
 
 ---
 
@@ -75,8 +75,7 @@ T16 → T17
 T14 → T18
 ```
 
-### Phase 4: Web: import flow
-
+### Phase 4: Web: import flow (substituída pelo Lovable, ver lovable.md)
 ```
 T19 → T20
 T19 → T21
@@ -602,8 +601,7 @@ T22 → T23
 
 ---
 
-### Phase 4: Web: import flow
-
+### Phase 4: Web: import flow (substituída pelo Lovable, ver lovable.md)
 ### T19: Create the import hooks
 
 **What**: `useImportPreview` and `useImportConfirm` (multipart) with `idempotencyKey` generated per preview session.
@@ -622,7 +620,7 @@ T22 → T23
 - [ ] Preview sends file and account
 - [ ] Confirm sends the same file, the key and selections
 - [ ] The key is stable across retries of one session (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -649,7 +647,7 @@ T22 → T23
 
 - [ ] File over 5 MB is blocked with the message
 - [ ] Server `unsupported_format` and `bank_mismatch` errors are shown (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -678,7 +676,7 @@ T22 → T23
 - [ ] Neutral rows are flagged and the toggle changes the payload
 - [ ] Invalid and ignored rows cannot be selected
 - [ ] Unrecognized rows are flagged for review (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -705,7 +703,7 @@ T22 → T23
 
 - [ ] Shows imported and skipped counts
 - [ ] Failure shows the error and keeps the preview (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -732,7 +730,7 @@ T22 → T23
 
 - [ ] Full happy path with a mocked API
 - [ ] Cancel returns to the start step without calling confirm (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit

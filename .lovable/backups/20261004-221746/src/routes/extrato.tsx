@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RequireAuth } from "@/features/auth/RequireAuth";
 import { AppLayout } from "@/features/layout/AppLayout";
-import { TransactionsPage } from "@/features/transactions/TransactionsPage";
+import { PlaceholderPage } from "@/features/pages/PlaceholderPage";
 
 export const Route = createFileRoute("/extrato")({
   head: () => ({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/extrato")({
   component: () => (
     <RequireAuth>
       <AppLayout>
-        <TransactionsPage />
+        <PlaceholderPage title="Extrato" />
       </AppLayout>
     </RequireAuth>
   ),

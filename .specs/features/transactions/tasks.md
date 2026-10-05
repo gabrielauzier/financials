@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | API pure logic (parsers, validators, helpers) | unit | All branches; 1:1 to spec ACs; every listed edge case | `api/src/**/*.test.ts` | `pnpm -C api test:unit` |
 | API routes, services, SQL rules, migrations/RLS | integration | Every route: happy path + every listed edge case + error paths; RLS and constraints exercised | `api/test/**/*.int.test.ts` | `pnpm -C api test:int` |
-| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `pnpm -C web test` |
+| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `yarn --cwd web test` |
 | Scaffold / config / generated types | none | - (build gate only) | - | build gate only |
 
 ## Gate Check Commands
@@ -32,9 +32,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `pnpm -C web test` (web tasks) |
+| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `yarn --cwd web test` (web tasks) |
 | Full | After tasks with integration tests (needs `supabase start`) | `pnpm -C api test` (unit + integration) |
-| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `pnpm -C web typecheck && pnpm -C web lint && pnpm -C web test` |
+| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test` |
 
 ---
 
@@ -65,16 +65,14 @@ T9 → T12
 T10 → T12
 ```
 
-### Phase 4: Web: formatting and listing
-
+### Phase 4: Web: formatting and listing (substituída pelo Lovable, ver lovable.md)
 ```
 T13 → T15
 T14 → T15
 T13 → T16
 ```
 
-### Phase 5: Web: editing
-
+### Phase 5: Web: editing (substituída pelo Lovable, ver lovable.md)
 ```
 T17 → T21
 T18 → T21
@@ -425,8 +423,7 @@ T20 → T21
 
 ---
 
-### Phase 4: Web: formatting and listing
-
+### Phase 4: Web: formatting and listing (substituída pelo Lovable, ver lovable.md)
 ### T13: Create the formatting helpers
 
 **What**: `formatBRL('1234.56')` -> `R$ 1.234,56` and `formatDateLocal(iso)` in the browser's timezone, string-based (no float money math).
@@ -444,7 +441,7 @@ T20 → T21
 
 - [ ] Formats thousands, cents, negative and zero values
 - [ ] Dates near midnight UTC render the correct local day (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -471,7 +468,7 @@ T20 → T21
 
 - [ ] Params map to the right query string
 - [ ] Changing a filter resets to page 1 (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -500,7 +497,7 @@ T20 → T21
 - [ ] Clicking a header changes sort and order
 - [ ] Empty result shows 'Nenhuma transação encontrada'
 - [ ] Neutral rows show the visual indicator (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -527,7 +524,7 @@ T20 → T21
 
 - [ ] Each control emits the right params
 - [ ] Search is debounced (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -537,8 +534,7 @@ T20 → T21
 
 ---
 
-### Phase 5: Web: editing
-
+### Phase 5: Web: editing (substituída pelo Lovable, ver lovable.md)
 ### T17: Build the transaction form
 
 **What**: Create/edit form with required-field, amount and receipt-URL validation and account/category selects.
@@ -558,7 +554,7 @@ T20 → T21
 - [ ] Zero, negative or 3-decimal amount shows the invalid-amount message
 - [ ] Non-http URL shows the invalid-URL message
 - [ ] Inactive accounts are not offered (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -585,7 +581,7 @@ T20 → T21
 
 - [ ] Selecting a category saves without opening a form
 - [ ] A failed save restores the previous category and shows an error (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -612,7 +608,7 @@ T20 → T21
 
 - [ ] Selected rows receive the chosen category in one call
 - [ ] Failure keeps every row with the previous category (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -639,7 +635,7 @@ T20 → T21
 
 - [ ] Toggling calls the update and shows the new state
 - [ ] Failure reverts the toggle (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -666,7 +662,7 @@ T20 → T21
 
 - [ ] Create, edit and delete flows work with a mocked API
 - [ ] Delete asks for confirmation and cancelling keeps the row (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit

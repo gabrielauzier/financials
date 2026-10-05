@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | API pure logic (parsers, validators, helpers) | unit | All branches; 1:1 to spec ACs; every listed edge case | `api/src/**/*.test.ts` | `pnpm -C api test:unit` |
 | API routes, services, SQL rules, migrations/RLS | integration | Every route: happy path + every listed edge case + error paths; RLS and constraints exercised | `api/test/**/*.int.test.ts` | `pnpm -C api test:int` |
-| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `pnpm -C web test` |
+| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `yarn --cwd web test` |
 | Scaffold / config / generated types | none | - (build gate only) | - | build gate only |
 
 ## Gate Check Commands
@@ -32,9 +32,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `pnpm -C web test` (web tasks) |
+| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `yarn --cwd web test` (web tasks) |
 | Full | After tasks with integration tests (needs `supabase start`) | `pnpm -C api test` (unit + integration) |
-| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `pnpm -C web typecheck && pnpm -C web lint && pnpm -C web test` |
+| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test` |
 
 ---
 
@@ -62,8 +62,7 @@ T7 → T11
 T8 → T11
 ```
 
-### Phase 3: Web app: session, sign-up, login
-
+### Phase 3: Web app: session, sign-up, login (substituída pelo Lovable, ver lovable.md)
 ```
 T14 → T15
 T14 → T16
@@ -442,8 +441,7 @@ T14 → T20
 
 ---
 
-### Phase 3: Web app: session, sign-up, login
-
+### Phase 3: Web app: session, sign-up, login (substituída pelo Lovable, ver lovable.md)
 ### T14: Scaffold the web project tooling
 
 **What**: Create `web/`: Vite + React + TypeScript, React Router, TanStack Query, Tailwind, Vitest + Testing Library, ESLint, `typecheck` script.
@@ -459,8 +457,8 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `pnpm -C web typecheck`, `lint` and `test` run clean
-- [ ] `pnpm -C web build` succeeds
+- [ ] `yarn --cwd web typecheck`, `lint` and `test` run clean
+- [ ] `yarn --cwd web build` succeeds
 - [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
@@ -489,7 +487,7 @@ T14 → T20
 - [ ] Requests carry Bearer and `X-Timezone` headers
 - [ ] A 401 triggers the unauthorized callback
 - [ ] Error body is mapped to a typed error (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -517,7 +515,7 @@ T14 → T20
 - [ ] `signUp` passes name and nickname in metadata
 - [ ] `signIn` and `signOut` update the session state
 - [ ] Session is restored on reload (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -548,7 +546,7 @@ T14 → T20
 - [ ] Existing e-mail shows 'E-mail já cadastrado'
 - [ ] E-mail send failure shows a generic confirmation-not-sent message
 - [ ] Success shows the check-your-e-mail state (6 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -577,7 +575,7 @@ T14 → T20
 - [ ] Invalid credentials show one generic message that does not name the field
 - [ ] Unconfirmed e-mail shows the confirmation-pending message
 - [ ] Auth service failure shows the unavailable message (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -605,7 +603,7 @@ T14 → T20
 - [ ] No session redirects to `/login`
 - [ ] Session renders the protected content
 - [ ] Session loss while on a page redirects to `/login` (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -630,7 +628,7 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `pnpm -C web gen:api` regenerates `schema.d.ts` from `api/openapi.json`
+- [ ] `yarn --cwd web gen:api` regenerates `schema.d.ts` from `api/openapi.json`
 - [ ] Typecheck passes with the generated types
 - [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
 - [ ] Test count: all tests listed above pass, no silent deletions or skips

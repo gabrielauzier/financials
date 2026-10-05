@@ -126,7 +126,8 @@ plan="$(rsync "${RSYNC_ARGS[@]}" --dry-run "$SRC"/ "$DEST"/ | grep -E '^(>f|\*de
 created="$(printf '%s\n' "$plan" | grep -c '^>f+++' || true)"
 deleted="$(printf '%s\n' "$plan" | grep -c '^\*deleting' || true)"
 # ">f+++++++++" é criação; ">f.st......" etc. é atualização
-updated=$(( $(printf '%s\n' "$plan" | grep -c '^>f') - created ))
+changed_files="$(printf '%s\n' "$plan" | grep -c '^>f' || true)"
+updated=$(( changed_files - created ))
 
 echo "Zip:      $(basename "$ZIP_FILE")"
 echo "Destino:  $DEST"

@@ -6,20 +6,21 @@ import type {
   TransactionsPage,
 } from "../types";
 import { mockApiError, type MockHandler } from "./index";
-import { listMockAccounts } from "./accounts";
-import { listMockCategories } from "./categories";
-import { registerTransactionCategoryRelations } from "./transactionRelations";
 
-const seedCategoryKeys = [
-  "Entertainment",
-  "Food",
-  "Salaries",
-  "Healthcare",
-  "Transport",
-  "Bills",
-  "Uncategorized",
-  "Shopping",
+const accounts = [
+  { id: "11111111-1111-4111-8111-111111111111", nickname: "Nubank pessoal", active: true },
+  { id: "22222222-2222-4222-8222-222222222222", nickname: "Nubank PJ", active: true },
 ];
+const categories = [
+  ["30000000-0000-4000-8000-000000000001", "Entretenimento"],
+  ["30000000-0000-4000-8000-000000000002", "Alimentação"],
+  ["30000000-0000-4000-8000-000000000003", "Salários"],
+  ["30000000-0000-4000-8000-000000000004", "Saúde"],
+  ["30000000-0000-4000-8000-000000000007", "Transporte"],
+  ["30000000-0000-4000-8000-000000000010", "Contas"],
+  ["30000000-0000-4000-8000-000000000012", "Sem categoria"],
+  ["30000000-0000-4000-8000-000000000015", "Compras"],
+] as const;
 const names = [
   "Supermercado",
   "Restaurante",
@@ -43,25 +44,19 @@ const methods: PaymentMethod[] = [
 ];
 
 let transactions: Transaction[] = Array.from({ length: 120 }, (_, index) => {
-  const accounts = listMockAccounts();
-  const categories = listMockCategories().filter((category) =>
-    seedCategoryKeys.includes(category.key ?? ""),
-  );
-  const account = accounts[index % accounts.length];
-  const category = categories[index % categories.length];
-  const salaryCategory = categories.find((item) => item.key === "Salaries");
-  const name = names[index % names.length];
-  const paymentMethod = methods[index % methods.length];
-  if (!account || !category || !salaryCategory || !name || !paymentMethod)
-    throw new Error("Dados iniciais do mock de transações estão incompletos");
+  const account = accounts[index % accounts.length]!;
+  const category = categories[index % categories.length]!;
+  const salaryCategory = categories[2]!;
+  const name = names[index % names.length]!;
+  const paymentMethod = methods[index % methods.length]!;
   const income = index % 13 === 6;
   const date = new Date(Date.UTC(2026, 9 - (index % 6), 24 - (index % 22), 12, index % 60));
   return {
     id: `40000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
     accountId: account.id,
     accountNickname: account.nickname,
-    categoryId: income ? salaryCategory.id : category.id,
-    categoryName: income ? salaryCategory.name : category.name,
+    categoryId: income ? salaryCategory[0] : category[0],
+    categoryName: income ? salaryCategory[1] : category[1],
     name: income ? "Salário mensal" : name,
     type: income ? "Income" : "Expense",
     occurredAt: date.toISOString(),
@@ -84,55 +79,32 @@ const normalize = (value: string) =>
     .toLocaleLowerCase();
 const validAmount = (value: string) => /^(?:0*[1-9]\d*)(?:\.\d{1,2})?$/.test(value);
 const validReceipt = (value?: string) => !value || /^https?:\/\//i.test(value);
-const accountFor = (id: string) => listMockAccounts().find((item) => item.id === id);
-const categoryFor = (id: string) => listMockCategories().find((item) => item.id === id);
-const uncategorized = () => listMockCategories().find((item) => item.key === "Uncategorized");
-const withCurrentRelations = (item: Transaction): Transaction => {
-  const account = accountFor(item.accountId);
-  const category = categoryFor(item.categoryId);
-  return {
-    ...item,
-    accountNickname: account?.nickname ?? item.accountNickname,
-    categoryName: category?.name ?? item.categoryName,
-  };
-};
-const localDate = (iso: string) => {
-  const date = new Date(iso);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+const accountFor = (id: string) => accounts.find((item) => item.id === id);
+const categoryFor = (id?: string) => categories.find((item) => item[0] === id) ?? categories[6];
 const find = (id: string) => {
   const item = transactions.find((candidate) => candidate.id === id);
   if (!item) throw mockApiError("not_found", "Transação não encontrada", 404);
   return item;
 };
-function validate(input: TransactionInput | TransactionUpdate, requireActiveAccount = false) {
+function validate(input: TransactionInput | TransactionUpdate) {
   if (input.amount !== undefined && !validAmount(input.amount))
     throw mockApiError("invalid_amount", "Valor inválido", 422, "amount");
-  if (input.accountId !== undefined) {
-    const account = accountFor(input.accountId);
-    if (!account || (requireActiveAccount && !account.active))
-      throw mockApiError("invalid_account", "Conta inválida", 422, "accountId");
-  }
-  if (input.categoryId !== undefined && !categoryFor(input.categoryId))
-    throw mockApiError("not_found", "Categoria não encontrada", 404, "categoryId");
+  if (input.accountId !== undefined && !accountFor(input.accountId))
+    throw mockApiError("invalid_account", "Conta inválida", 422, "accountId");
   if (!validReceipt(input.receipt))
     throw mockApiError("invalid_receipt_url", "URL inválida", 422, "receipt");
 }
 function hydrate(input: TransactionInput, id = crypto.randomUUID()): Transaction {
-  validate(input, true);
+  validate(input);
   const account = accountFor(input.accountId);
   if (!account) throw mockApiError("invalid_account", "Conta inválida", 422, "accountId");
-  const category = input.categoryId ? categoryFor(input.categoryId) : uncategorized();
-  if (!category) throw mockApiError("not_found", "Categoria não encontrada", 404, "categoryId");
+  const category = categoryFor(input.categoryId);
   return {
     id,
     accountId: account.id,
     accountNickname: account.nickname,
-    categoryId: category.id,
-    categoryName: category.name,
+    categoryId: category[0],
+    categoryName: category[1],
     name: input.name.trim(),
     type: input.type,
     occurredAt: input.occurredAt,
@@ -152,11 +124,11 @@ export const transactionsHandlers: MockHandler[] = [
     path: /^\/transactions(?:\?.*)?$/,
     handle: ({ path }) => {
       const query = new URL(path, "http://mock.local").searchParams;
-      let items = transactions.map(withCurrentRelations).filter((item) => {
-        const occurredOn = localDate(item.occurredAt);
+      let items = transactions.filter((item) => {
+        const localDate = item.occurredAt.slice(0, 10);
         return (
-          (!query.get("from") || occurredOn >= String(query.get("from"))) &&
-          (!query.get("to") || occurredOn <= String(query.get("to"))) &&
+          (!query.get("from") || localDate >= String(query.get("from"))) &&
+          (!query.get("to") || localDate <= String(query.get("to"))) &&
           (!query.get("accountId") || item.accountId === query.get("accountId")) &&
           (!query.get("categoryId") || item.categoryId === query.get("categoryId")) &&
           (!query.get("type") || item.type === query.get("type")) &&
@@ -209,11 +181,14 @@ export const transactionsHandlers: MockHandler[] = [
     handle: ({ body }) => {
       const { ids, categoryId } = body as { ids: string[]; categoryId: string };
       const category = categoryFor(categoryId);
-      if (!category || ids.some((id) => !transactions.some((item) => item.id === id)))
+      if (
+        !categories.some((item) => item[0] === categoryId) ||
+        ids.some((id) => !transactions.some((item) => item.id === id))
+      )
         throw mockApiError("not_found", "Transação ou categoria não encontrada", 404);
       transactions = transactions.map((item) =>
         ids.includes(item.id)
-          ? { ...item, categoryId: category.id, categoryName: category.name }
+          ? { ...item, categoryId: category[0], categoryName: category[1] }
           : item,
       );
       return undefined;
@@ -232,7 +207,7 @@ export const transactionsHandlers: MockHandler[] = [
         ...current,
         ...input,
         ...(account ? { accountNickname: account.nickname } : {}),
-        ...(category ? { categoryName: category.name } : {}),
+        ...(category ? { categoryName: category[1] } : {}),
         notes: input.notes === undefined ? current.notes : input.notes.trim() || null,
         receipt: input.receipt === undefined ? current.receipt : input.receipt.trim() || null,
       };
@@ -250,16 +225,3 @@ export const transactionsHandlers: MockHandler[] = [
     },
   },
 ];
-
-registerTransactionCategoryRelations({
-  hasTransactions: (categoryId) => transactions.some((item) => item.categoryId === categoryId),
-  reassignTransactions: (fromCategoryId, toCategoryId) => {
-    const destination = categoryFor(toCategoryId);
-    if (!destination) throw mockApiError("not_found", "Categoria não encontrada", 404);
-    transactions = transactions.map((item) =>
-      item.categoryId === fromCategoryId
-        ? { ...item, categoryId: destination.id, categoryName: destination.name }
-        : item,
-    );
-  },
-});

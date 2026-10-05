@@ -20,10 +20,6 @@ let accounts: Account[] = [
   },
 ];
 
-export function listMockAccounts(): Account[] {
-  return accounts.map((account) => ({ ...account, holderNames: [...account.holderNames] }));
-}
-
 const cleanNames = (names: string[]) => names.map((name) => name.trim()).filter(Boolean);
 const duplicateNickname = (nickname: string, exceptId?: string) =>
   accounts.some(

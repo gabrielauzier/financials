@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | API pure logic (parsers, validators, helpers) | unit | All branches; 1:1 to spec ACs; every listed edge case | `api/src/**/*.test.ts` | `pnpm -C api test:unit` |
 | API routes, services, SQL rules, migrations/RLS | integration | Every route: happy path + every listed edge case + error paths; RLS and constraints exercised | `api/test/**/*.int.test.ts` | `pnpm -C api test:int` |
-| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `pnpm -C web test` |
+| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `yarn --cwd web test` |
 | Scaffold / config / generated types | none | - (build gate only) | - | build gate only |
 
 ## Gate Check Commands
@@ -32,9 +32,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `pnpm -C web test` (web tasks) |
+| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `yarn --cwd web test` (web tasks) |
 | Full | After tasks with integration tests (needs `supabase start`) | `pnpm -C api test` (unit + integration) |
-| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `pnpm -C web typecheck && pnpm -C web lint && pnpm -C web test` |
+| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test` |
 
 ---
 
@@ -56,8 +56,7 @@ T4 → T7
 T5 → T7
 ```
 
-### Phase 2: Web: credit expenses
-
+### Phase 2: Web: credit expenses (substituída pelo Lovable, ver lovable.md)
 ```
 T8 → T9
 T8 → T10
@@ -262,8 +261,7 @@ T11 → T12
 
 ---
 
-### Phase 2: Web: credit expenses
-
+### Phase 2: Web: credit expenses (substituída pelo Lovable, ver lovable.md)
 ### T8: Create the credit expenses hooks
 
 **What**: `useCreditExpenses({ status })` and mutations with cache invalidation.
@@ -281,7 +279,7 @@ T11 → T12
 
 - [ ] Hooks call the endpoints with the status filter
 - [ ] Mutations invalidate the list (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -308,7 +306,7 @@ T11 → T12
 
 - [ ] Shows remaining amount per row
 - [ ] Status filter emits the chosen status (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -335,7 +333,7 @@ T11 → T12
 
 - [ ] Invalid total, paid and day show their messages
 - [ ] Valid data submits (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -362,7 +360,7 @@ T11 → T12
 
 - [ ] All 5 statuses are offered from any current status
 - [ ] Changing the status calls the update (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -388,7 +386,7 @@ T11 → T12
 **Done when**:
 
 - [ ] Create, edit, status change and delete work with a mocked API (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit

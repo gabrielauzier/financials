@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | API pure logic (parsers, validators, helpers) | unit | All branches; 1:1 to spec ACs; every listed edge case | `api/src/**/*.test.ts` | `pnpm -C api test:unit` |
 | API routes, services, SQL rules, migrations/RLS | integration | Every route: happy path + every listed edge case + error paths; RLS and constraints exercised | `api/test/**/*.int.test.ts` | `pnpm -C api test:int` |
-| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `pnpm -C web test` |
+| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `yarn --cwd web test` |
 | Scaffold / config / generated types | none | - (build gate only) | - | build gate only |
 
 ## Gate Check Commands
@@ -32,9 +32,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `pnpm -C web test` (web tasks) |
+| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `yarn --cwd web test` (web tasks) |
 | Full | After tasks with integration tests (needs `supabase start`) | `pnpm -C api test` (unit + integration) |
-| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `pnpm -C web typecheck && pnpm -C web lint && pnpm -C web test` |
+| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test` |
 
 ---
 
@@ -67,8 +67,7 @@ T9 → T11
 T10 → T11
 ```
 
-### Phase 4: Web: accounts and categories
-
+### Phase 4: Web: accounts and categories (substituída pelo Lovable, ver lovable.md)
 ```
 T12 → T13
 T12 → T14
@@ -400,8 +399,7 @@ T12 → T16
 
 ---
 
-### Phase 4: Web: accounts and categories
-
+### Phase 4: Web: accounts and categories (substituída pelo Lovable, ver lovable.md)
 ### T12: Create the accounts and categories hooks
 
 **What**: `useAccounts({ active })`, `useCategories()` and their mutations with cache invalidation.
@@ -419,7 +417,7 @@ T12 → T16
 
 - [ ] Hooks call the right endpoints and parameters
 - [ ] Mutations invalidate the cached lists (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -448,7 +446,7 @@ T12 → T16
 - [ ] Deactivate and reactivate update the row state
 - [ ] There is no delete control
 - [ ] Inactive accounts are visibly marked (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -475,7 +473,7 @@ T12 → T16
 
 - [ ] Inactive accounts are not selectable
 - [ ] Emits the selected account id (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -504,7 +502,7 @@ T12 → T16
 - [ ] Deleting an in-use category requires choosing a destination
 - [ ] Duplicate name shows the error message
 - [ ] All names render in Portuguese (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -531,7 +529,7 @@ T12 → T16
 
 - [ ] Lists every category including system ones
 - [ ] Emits the selected category id (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit

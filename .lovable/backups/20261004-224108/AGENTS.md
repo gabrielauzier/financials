@@ -15,4 +15,3 @@
 - Keep monetary API values as decimal strings and format them without numeric arithmetic to preserve precision.
 - Organize product code by feature and use TanStack Router's file-based routes because this repository is a TanStack Start application.
 - Transaction list state is URL-independent TanStack Query state backed by the REST contract; optimistic row edits must snapshot and roll back every cached transaction page.
-- Transaction mocks resolve account and category relations from their canonical area mocks so cross-feature changes remain consistent.

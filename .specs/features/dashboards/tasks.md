@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | API pure logic (parsers, validators, helpers) | unit | All branches; 1:1 to spec ACs; every listed edge case | `api/src/**/*.test.ts` | `pnpm -C api test:unit` |
 | API routes, services, SQL rules, migrations/RLS | integration | Every route: happy path + every listed edge case + error paths; RLS and constraints exercised | `api/test/**/*.int.test.ts` | `pnpm -C api test:int` |
-| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `pnpm -C web test` |
+| Web components, hooks, helpers | unit | Spec-visible behavior per AC; error and empty states | `web/src/**/*.test.tsx` | `yarn --cwd web test` |
 | Scaffold / config / generated types | none | - (build gate only) | - | build gate only |
 
 ## Gate Check Commands
@@ -32,9 +32,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `pnpm -C web test` (web tasks) |
+| Quick | After tasks with unit tests only | `pnpm -C api test:unit` (API tasks) / `yarn --cwd web test` (web tasks) |
 | Full | After tasks with integration tests (needs `supabase start`) | `pnpm -C api test` (unit + integration) |
-| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `pnpm -C web typecheck && pnpm -C web lint && pnpm -C web test` |
+| Build | After phase completion or scaffold/config-only tasks | `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test` |
 
 ---
 
@@ -64,8 +64,7 @@ T10 → T13
 T11 → T13
 ```
 
-### Phase 4: Web: dashboard
-
+### Phase 4: Web: dashboard (substituída pelo Lovable, ver lovable.md)
 ```
 T14 → T20
 T15 → T20
@@ -447,8 +446,7 @@ T19 → T20
 
 ---
 
-### Phase 4: Web: dashboard
-
+### Phase 4: Web: dashboard (substituída pelo Lovable, ver lovable.md)
 ### T14: Build the last 30 days card
 
 **What**: Total, variation percent and the 'sem base de comparação' state.
@@ -467,7 +465,7 @@ T19 → T20
 - [ ] Shows total and variation
 - [ ] Null variation shows 'sem base de comparação'
 - [ ] Zero total shows R$ 0,00 (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -494,7 +492,7 @@ T19 → T20
 
 - [ ] Renders 12 months with zero months
 - [ ] Shows income, expense and balance series (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -522,7 +520,7 @@ T19 → T20
 - [ ] Changing the period requests the new range
 - [ ] Negative Estorno renders as a negative value
 - [ ] Empty state renders (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -549,7 +547,7 @@ T19 → T20
 
 - [ ] Shows the current value and the series
 - [ ] Empty data shows R$ 0,00 and the empty state (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -576,7 +574,7 @@ T19 → T20
 
 - [ ] Both sections render with totals
 - [ ] Empty period shows the empty state (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -604,7 +602,7 @@ T19 → T20
 - [ ] Create and edit validate non-zero amount
 - [ ] Last entry older than 30 days is highlighted with its date
 - [ ] Delete removes the row (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
@@ -631,7 +629,7 @@ T19 → T20
 
 - [ ] All panels render from a mocked API
 - [ ] No data renders every panel at R$ 0,00 with empty states (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
+- [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit

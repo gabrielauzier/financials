@@ -1,6 +1,5 @@
 import type { Category } from "../types";
 import { mockApiError, type MockHandler } from "./index";
-import { categoryHasTransactions, reassignCategoryTransactions } from "./transactionRelations";
 
 const seed: Array<[string, string, boolean]> = [
   ["Entertainment", "Entretenimento", false],
@@ -28,10 +27,7 @@ let categories: Category[] = seed.map(([key, name, isSystem], index) => ({
   name,
   isSystem,
 }));
-
-export function listMockCategories(): Category[] {
-  return categories.map((category) => ({ ...category }));
-}
+const categoriesInUse = new Set(["Entertainment", "Food", "Bills", "Shopping"]);
 
 const findCategory = (id: string) => {
   const category = categories.find((item) => item.id === id);
@@ -83,14 +79,14 @@ export const categoriesHandlers: MockHandler[] = [
       const current = findCategory(id);
       if (current.isSystem) throw mockApiError("category_protected", "Categoria protegida", 403);
       const destinationId = url.searchParams.get("reassignTo");
-      if (categoryHasTransactions(current.id) && !destinationId)
+      if (current.key && categoriesInUse.has(current.key) && !destinationId)
         throw mockApiError("reassign_required", "Escolha uma categoria de destino", 422);
       if (destinationId) {
         if (destinationId === id)
           throw mockApiError("validation", "Destino inválido", 422, "reassignTo");
         findCategory(destinationId);
-        reassignCategoryTransactions(current.id, destinationId);
       }
+      if (current.key) categoriesInUse.delete(current.key);
       categories = categories.filter((item) => item.id !== id);
       return undefined;
     },

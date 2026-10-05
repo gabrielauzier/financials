@@ -23,8 +23,8 @@ Rodar na ordem. Cada prompt depende dos anteriores (reusa componentes e o client
 | - | ------ | ---------- | ---------------- | ------------------ |
 | 1 ✅ | [auth](features/auth/lovable.md) | Passo 0 | Fundação: cliente da API, mocks, formatação, layout, cadastro, login, rota protegida | auth T14–T20 |
 | 2 ✅ | [accounts-categories](features/accounts-categories/lovable.md) | 1 | `/contas`, `/categorias`, `AccountSelect`, `CategorySelect` | accounts-categories T12–T16 |
-| 3 | [transactions](features/transactions/lovable.md) | 1, 2 | `/extrato` com filtros, formulário, edição inline, lote, neutra | transactions T13–T21 |
-| 4 | [import](features/import/lovable.md) | 1, 2, 3 | `/importar` com prévia obrigatória e resumo | import T19–T23 |
+| 3 ✅ | [transactions](features/transactions/lovable.md) | 1, 2 | `/extrato` com filtros, formulário, edição inline, lote, neutra | transactions T13–T21 |
+| 4 ⏸ | [import](features/import/lovable.md) | 1, 2, 3 | `/importar` com prévia obrigatória e resumo | import T19–T23 |
 | 5 | [credit-expenses](features/credit-expenses/lovable.md) | 1, 2 | `/cartao` com status manual | credit-expenses T8–T12 |
 | 6 | [dashboards](features/dashboards/lovable.md) | 1, 2 | `/` com painéis, patrimônio e rendimentos | dashboards T14–T20 |
 
@@ -87,7 +87,8 @@ O prompt de uma feature pode rodar antes ou depois da API correspondente; o úni
 | - | ------ | -------- | ----------- |
 | 1 | auth | Aplicado e verificado em 2026-10-04 | 7 de 9 itens do checklist ok; `typecheck` e `lint` pendentes de correção de configuração (ver `features/auth/lovable.md`) |
 | 2 | accounts-categories | Aplicado e verificado em 2026-10-04 | 8 de 10 itens ok; `typecheck` (script `tsgo`) e `lint` (arquivos Prettier ausentes em `web/`) pendentes; 8 achados em `features/accounts-categories/lovable.md` |
-| 3–6 | transactions, import, credit-expenses, dashboards | Em andamento no Lovable | — |
+| 3 | transactions | Aplicado (v3) e corrigido (v3.1), verificado em 2026-10-04 | Mocks, datas, `typecheck` e dependência de testes resolvidos; **testes de UI ainda faltando**; achados atualizados em `features/transactions/lovable.md` |
+| 4–6 | import, credit-expenses, dashboards | **Pausado** (2026-10-04, ver "Pausa" abaixo) | — |
 
 ## Desvios registrados
 
@@ -112,3 +113,43 @@ Detalhes e ações em `features/auth/lovable.md` (seção "Desvios registrados")
 - **`@testing-library/dom` ausente do `package.json`** (alta): `yarn install` limpo quebra todos os testes; declarar a dependência antes de aceitar o prompt 3.
 - **`typecheck` com `tsgo`**: ainda aberto desde o prompt 1.
 - **Mocks de categorias em uso são fixos**: o prompt de `transactions` deve ligar a exclusão com reatribuição aos mocks de transações.
+
+### Correções enviadas e pendentes
+
+| Prompt | Mensagem | Situação |
+| ------ | -------- | -------- |
+| 3 transactions | [Mensagem de correção](features/transactions/lovable.md#mensagem-de-correção-enviar-ao-lovable-antes-do-prompt-de-import) | Aplicada em `v3.1-transactions`: mocks conectados, datas locais e `package.json` ok; **testes de UI não entregues** (pendente) |
+
+### Achados que afetam as próximas etapas (prompt 3)
+
+- ~~Mock de transações desconectado dos mocks de contas e categorias~~ **resolvido no v3.1**: o prompt de `import` pode reutilizar `listMockAccounts`, `listMockCategories` e `transactionRelations`.
+- **Testes de UI ainda faltando** (média): o gate de `test` passa mas não protege categoria inline, lote, neutra e filtros; o plano do Lovable afirma ter entregado, o código não. Pedir novamente ou validar manualmente.
+- ~~Datas em UTC no formulário de edição~~ **resolvido no v3.1** (`toLocalDateInput`).
+- ~~`@testing-library/dom` ausente~~ **resolvido no v3.1**; `yarn.lock` ficou fora de sincronia (rodar `yarn install`).
+- **`.env` versionado**: decidir a política antes de conectar a API real.
+
+## Pausa do desenvolvimento no Lovable
+
+**Registrada em 2026-10-04**, após a versão **v3.1-transactions** (`.lovable/codebases/v3.1-transactions.zip`, idêntica a `web/` no momento da pausa). O foco passa para o backend (`api/` e `supabase/`), começando pela feature `auth`.
+
+### Estado congelado do front
+- Aplicados e verificados: prompts 1 (auth), 2 (accounts-categories) e 3 (transactions, com correções do v3.1).
+- Todo o front usa mocks (`VITE_MOCK_AREAS=*`); nenhuma área foi integrada à API real.
+- Gates em `web/` na pausa: `yarn test` 35 testes ok, `yarn typecheck` ok, `yarn lint` 0 erros.
+- Fases "Web" dos `tasks.md` continuam marcadas como substituídas pelo Lovable; não executar essas tasks no fluxo do backend.
+
+### Pendências que o front carrega até a retomada
+| Pendência | Origem | Severidade |
+| --------- | ------ | ---------- |
+| Testes de UI do extrato não entregues (categoria inline, lote, neutra, debounce, filtros, ordenação, vazio, paginação, exclusão, criar/editar) | v3.1 | Média |
+| `yarn.lock` fora de sincronia com `package.json` (`yarn install` resolve) | v3.1 | Baixa |
+| `.env` versionado (só chave publicável e id do projeto) | v3 | Baixa |
+| Receitas com `text-primary` em vez de verde | v3 | Baixa |
+| `AccountsPage` sem tratamento de erro ao ativar/desativar; lacunas de validação no mock de contas | v2 | Baixa |
+| Decisões D3 (TanStack Start/SSR) e D4 (projeto Supabase do Lovable é o da API) | prompt 1 | D4 relevante para o backend |
+
+### Como retomar
+1. Aplicar qualquer zip novo com `.lovable/sync-codebase.sh` (primeiro `--dry-run`).
+2. Reenviar a mensagem pedindo os testes de UI do extrato e confirmar no código que foram entregues.
+3. Rodar o prompt 4 (`import`); antes, conferir que o mock de importação usa `listMockAccounts`, `listMockCategories` e `transactionRelations`.
+4. Com as APIs prontas, retirar as áreas de `VITE_MOCK_AREAS` na ordem da tabela "Troca de mocks pela API real" e repetir o checklist de cada prompt contra a API real.

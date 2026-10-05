@@ -9,8 +9,5 @@
 - [x] Implementar contrato tipado, mocks e hooks de Contas e Categorias.
 - [x] Implementar telas e seletores reutilizáveis de Contas e Categorias.
 - [x] Cobrir os novos fluxos com testes e validar desktop e celular.
-- [x] Implementar contrato, mock, hooks e tela completa do Extrato.
-- [x] Cobrir filtros, formulário, ações inline, lote e responsividade do Extrato.
-- [x] Conectar o mock de transações aos mocks de contas e categorias.
-- [x] Corrigir datas locais no formulário e nos filtros do Extrato.
-- [ ] Completar os testes de interface e ajustar a configuração do projeto.
+- [ ] Implementar contrato, mock, hooks e tela completa do Extrato.
+- [ ] Cobrir filtros, formulário, ações inline, lote e responsividade do Extrato.
