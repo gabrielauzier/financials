@@ -359,10 +359,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Invalid total, paid and day show their messages
-- [ ] Valid data submits (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Invalid total, paid and day show their messages
+- [x] Valid data submits (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
