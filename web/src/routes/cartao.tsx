@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RequireAuth } from "@/features/auth/RequireAuth";
 import { AppLayout } from "@/features/layout/AppLayout";
-import { PlaceholderPage } from "@/features/pages/PlaceholderPage";
+import { CreditExpensesPage } from "@/features/creditExpenses/CreditExpensesPage";
 
 export const Route = createFileRoute("/cartao")({
   head: () => ({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/cartao")({
   component: () => (
     <RequireAuth>
       <AppLayout>
-        <PlaceholderPage title="Cartão de crédito" />
+        <CreditExpensesPage />
       </AppLayout>
     </RequireAuth>
   ),

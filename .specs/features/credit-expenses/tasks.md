@@ -413,10 +413,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Create, edit, status change and delete work with a mocked API
-- [ ] `web/src/routes/cartao.tsx` renders the page (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Create, edit, status change and delete work with a mocked API
+- [x] `web/src/routes/cartao.tsx` renders the page (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
