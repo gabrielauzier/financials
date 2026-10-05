@@ -75,8 +75,9 @@ T16 → T17
 T14 → T18
 ```
 
-### Phase 4: Web: import flow (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: import flow
 ```
+T24 → T19
 T19 → T20
 T19 → T21
 T19 → T22
@@ -601,12 +602,40 @@ T22 → T23
 
 ---
 
-### Phase 4: Web: import flow (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: import flow
+### T24: Extend the API client to send FormData
+
+**What**: `apiRequest` accepts a `FormData` body: it is sent as is (no `JSON.stringify`) and without a `Content-Type` header so the browser sets the multipart boundary; JSON bodies, the `Authorization` and `X-Timezone` headers and the 401 handling stay as they are.
+**Where**: `web/src/lib/api/client.ts`
+**Depends on**: None
+**Reuses**: existing `apiRequest` and its tests
+**Requirement**: IMP-05
+
+**Tools**:
+
+- MCP: NONE
+- Skill: react-best-practices
+
+**Done when**:
+
+- [ ] A `FormData` body reaches `fetch` unchanged and with no `Content-Type` header
+- [ ] A JSON body is still serialized with `Content-Type: application/json`
+- [ ] The Bearer and `X-Timezone` headers are still sent and a 401 still signs the user out (3 tests)
+- [ ] Gate check passes: `yarn --cwd web test`
+- [ ] Test count: all tests listed above pass, no silent deletions or skips
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(import): let the api client send form data`
+
+---
+
 ### T19: Create the import hooks
 
 **What**: `useImportPreview` and `useImportConfirm` (multipart) with `idempotencyKey` generated per preview session.
 **Where**: `web/src/features/import/useImport.ts`
-**Depends on**: None
+**Depends on**: T24
 **Reuses**: -
 **Requirement**: IMP-05
 
@@ -715,7 +744,7 @@ T22 → T23
 
 ### T23: Wire the import page
 
-**What**: Wizard composing start step, preview, confirm, summary and cancel (cancel writes nothing).
+**What**: Wizard composing start step, preview, confirm, summary and cancel (cancel writes nothing); the `/importar` route renders it in place of the placeholder.
 **Where**: `web/src/features/import/ImportPage.tsx`
 **Depends on**: T20, T21, T22
 **Reuses**: -
@@ -729,7 +758,8 @@ T22 → T23
 **Done when**:
 
 - [ ] Full happy path with a mocked API
-- [ ] Cancel returns to the start step without calling confirm (2 tests)
+- [ ] Cancel returns to the start step without calling confirm
+- [ ] `web/src/routes/importar.tsx` renders `ImportPage` inside the authenticated layout (3 tests)
 - [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 

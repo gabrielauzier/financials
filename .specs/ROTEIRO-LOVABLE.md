@@ -159,3 +159,11 @@ Front e API foram integrados localmente e testados no navegador (ver `.specs/INT
 2. Reenviar a mensagem pedindo os testes de UI do extrato e confirmar no código que foram entregues.
 3. Rodar o prompt 4 (`import`); antes, conferir que o mock de importação usa `listMockAccounts`, `listMockCategories` e `transactionRelations`.
 4. Com as APIs prontas, retirar as áreas de `VITE_MOCK_AREAS` na ordem da tabela "Troca de mocks pela API real" e repetir o checklist de cada prompt contra a API real.
+
+## Mudança de processo (2026-10-05): o front passa a ser feito aqui
+
+A partir da feature `import`, as tasks de interface (fases "Web" dos `tasks.md`) voltam a ser implementadas diretamente em `web/`, junto com as de backend, com o mesmo ciclo (testes, gate, commit por task, Verifier). O Lovable deixa de ser o caminho de desenvolvimento do front:
+
+- Os arquivos `features/*/lovable.md` passam a servir só como **especificação de comportamento e contrato** da interface; não há mais novos zips nem `sync-codebase.sh` no fluxo (o script e os backups ficam como histórico).
+- Os gates do front são `yarn --cwd web test`, `typecheck` e `lint`; a verificação inclui conferir a tela no navegador contra a API real.
+- As pendências do front listadas em `INTEGRACAO-FRONT-BACK.md` (D1, D2, D7, testes de UI do extrato, erro em contas) passam a ser tarefas minhas e entram em ciclo próprio.
