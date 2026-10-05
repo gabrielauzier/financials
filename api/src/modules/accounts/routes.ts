@@ -28,6 +28,14 @@ const CreateBody = Type.Object({
   holderNames: Type.Array(Type.String()),
 });
 
+const UpdateBody = Type.Object({
+  bank: Type.Optional(bankField),
+  nickname: Type.Optional(Type.String()),
+  holderNames: Type.Optional(Type.Array(Type.String())),
+});
+
+const IdParams = Type.Object({ id: Type.String() });
+
 interface AccountRow {
   id: string;
   bank: Bank;
@@ -90,6 +98,12 @@ function isNicknameConflict(error: unknown): boolean {
   );
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function notFound(): AppError {
+  return new AppError('not_found', 404, 'Account not found');
+}
+
 function duplicateName(): AppError {
   return new AppError('duplicate_name', 409, 'An account with this nickname already exists', 'nickname');
 }
@@ -135,6 +149,34 @@ export async function accountsRoutes(app: FastifyInstance): Promise<void> {
           order by created_at, id`,
       );
       return rows.map(toAccount);
+    },
+  );
+  routes.patch(
+    '/accounts/:id',
+    { schema: { params: IdParams, body: UpdateBody, response: { 200: AccountSchema } } },
+    async (request) => {
+      const { id } = request.params;
+      const { bank, nickname, holderNames } = request.body;
+      const patch: { bank?: Bank; nickname?: string; holder_names?: string[] } = {};
+      if (bank !== undefined) patch.bank = validBank(bank);
+      if (nickname !== undefined) patch.nickname = validNickname(nickname);
+      if (holderNames !== undefined) patch.holder_names = validHolders(holderNames);
+      if (!UUID.test(id)) throw notFound();
+      try {
+        const [row] = await request.withUser((tx) =>
+          Object.keys(patch).length === 0
+            ? tx<AccountRow[]>`select ${columns(tx)} from public.accounts where id = ${id}`
+            : tx<AccountRow[]>`
+                update public.accounts set ${tx(patch)}
+                where id = ${id}
+                returning ${columns(tx)}`,
+        );
+        if (!row) throw notFound();
+        return toAccount(row);
+      } catch (error) {
+        if (isNicknameConflict(error)) throw duplicateName();
+        throw error;
+      }
     },
   );
 }

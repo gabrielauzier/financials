@@ -278,11 +278,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Edits persist and unspecified fields stay
-- [ ] Same validations as create apply
-- [ ] Unknown id and another user's id return 404 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Edits persist and unspecified fields stay
+- [x] Same validations as create apply
+- [x] Unknown id and another user's id return 404 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

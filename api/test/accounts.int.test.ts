@@ -147,3 +147,69 @@ describe('GET /accounts', () => {
     expect((await call(owner, 'GET', '/accounts?active=maybe')).statusCode).toBe(400);
   });
 });
+
+describe('PATCH /accounts/:id', () => {
+  it('persists edits and leaves unspecified fields unchanged', async () => {
+    const owner = await createTestUser();
+    const acc = await createAccount(owner, 'Editável');
+
+    const res = await call(owner, 'PATCH', `/accounts/${acc.id}`, { nickname: ' Renomeada ', holderNames: [' Ana ', 'Bia'] });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      id: acc.id,
+      bank: 'Nubank',
+      nickname: 'Renomeada',
+      holderNames: ['Ana', 'Bia'],
+      active: true,
+      createdAt: expect.any(String),
+    });
+
+    const bankOnly = await call(owner, 'PATCH', `/accounts/${acc.id}`, { bank: 'XP' });
+    expect(bankOnly.json()).toMatchObject({ bank: 'XP', nickname: 'Renomeada', holderNames: ['Ana', 'Bia'] });
+
+    const listed = (await call(owner, 'GET', '/accounts')).json<{ id: string; bank: string; nickname: string }[]>();
+    expect(listed).toEqual([expect.objectContaining({ id: acc.id, bank: 'XP', nickname: 'Renomeada' })]);
+
+    const empty = await call(owner, 'PATCH', `/accounts/${acc.id}`, {});
+    expect(empty.statusCode).toBe(200);
+    expect(empty.json()).toMatchObject({ bank: 'XP', nickname: 'Renomeada' });
+  });
+
+  it('applies the same validations as create', async () => {
+    const owner = await createTestUser();
+    const acc = await createAccount(owner, 'Validada');
+    await createAccount(owner, 'Outra conta');
+    const patch = (body: unknown) => call(owner, 'PATCH', `/accounts/${acc.id}`, body);
+
+    const dup = await patch({ nickname: 'OUTRA CONTA' });
+    expect(dup.statusCode).toBe(409);
+    expect(dup.json()).toMatchObject({ error: { code: 'duplicate_name' } });
+    expect((await patch({ nickname: 'Validada' })).statusCode).toBe(200); // own nickname is not a duplicate
+    expect((await patch({ holderNames: [] })).json()).toMatchObject({ error: { code: 'holder_required' } });
+    expect((await patch({ holderNames: [] })).statusCode).toBe(422);
+    expect((await patch({ nickname: '  ' })).statusCode).toBe(422);
+    expect((await patch({ holderNames: ['Zé', 'ze'] })).statusCode).toBe(422);
+    expect((await patch({ bank: 'Itau' })).statusCode).toBe(422);
+    expect((await patch({ nickname: { not: "a string" } })).statusCode).toBe(400);
+
+    // Rejected edits changed nothing.
+    const [row] = (await call(owner, 'GET', '/accounts')).json<{ id: string; nickname: string; holderNames: string[] }[]>();
+    expect(row).toMatchObject({ nickname: 'Validada', holderNames: ['Maria Silva'] });
+  });
+
+  it("returns 404 for an unknown id and for another user's id, leaving the account untouched", async () => {
+    const owner = await createTestUser();
+    const intruder = await createTestUser();
+    const acc = await createAccount(owner, 'Alheia');
+
+    const unknown = await call(owner, 'PATCH', '/accounts/00000000-0000-4000-8000-000000000000', { nickname: 'X' });
+    expect(unknown.statusCode).toBe(404);
+    expect(unknown.json()).toMatchObject({ error: { code: 'not_found' } });
+    expect((await call(owner, 'PATCH', '/accounts/not-a-uuid', { nickname: 'X' })).statusCode).toBe(404);
+
+    const foreign = await call(intruder, 'PATCH', `/accounts/${acc.id}`, { nickname: 'Hacked' });
+    expect(foreign.statusCode).toBe(404);
+    const rows = await getAdminSql()`select nickname from public.accounts where id = ${acc.id}`;
+    expect(rows).toEqual([{ nickname: 'Alheia' }]);
+  });
+});
