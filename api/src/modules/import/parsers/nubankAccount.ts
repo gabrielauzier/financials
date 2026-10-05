@@ -1,3 +1,4 @@
+import { collapseSpaces } from '../../../lib/normalize.js';
 import { readCsv } from '../csv.js';
 import type { ParsedRow, ParseResult } from '../types.js';
 import { canonicalAmount, invalidRow, localDateOf } from './common.js';
@@ -5,6 +6,12 @@ import { canonicalAmount, invalidRow, localDateOf } from './common.js';
 export const NUBANK_ACCOUNT_HEADER = ['Data', 'Valor', 'Identificador', 'Descrição'];
 
 const DATE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+/**
+ * Pix description: `Transferência (recebida|enviada) pelo Pix - <name> - <document> - <bank> Agência: ...`.
+ * The name stops at the first " - " (a name containing " - " is not supported and falls through to
+ * `unrecognized`); the document may be masked (`•••.224.672-••`).
+ */
+const PIX = /^Transferência (recebida|enviada) pelo Pix - ((?:(?! - ).)+) - ([\d./•*-]+) - (.+?) Agência:/;
 const SIGNED_AMOUNT = /^(-)?(\d+)(?:\.(\d*))?$/;
 
 /** Parses `dd/mm/aaaa` into `YYYY-MM-DD`, or null when malformed or not a real date. */
@@ -56,10 +63,33 @@ function parseRecord(record: string[], index: number): ParsedRow {
     localDate,
     type: parsed.type,
     amount: parsed.amount,
+    identifier,
+    ...describe(description),
+  };
+}
+
+type Described = Pick<
+  ParsedRow,
+  'name' | 'paymentMethod' | 'categoryKey' | 'counterpartyDocument' | 'counterpartyBank' | 'status'
+>;
+
+/** Derives name, method, category and counterparty from the free-text description. */
+function describe(description: string): Described {
+  const pix = PIX.exec(description);
+  if (pix) {
+    return {
+      name: collapseSpaces(pix[2] as string),
+      paymentMethod: 'PIX',
+      categoryKey: 'Uncategorized',
+      counterpartyDocument: pix[3] as string,
+      counterpartyBank: pix[4] as string,
+      status: 'new',
+    };
+  }
+  return {
     name: description,
     paymentMethod: 'BankTransfer',
     categoryKey: 'Uncategorized',
-    identifier,
     counterpartyDocument: null,
     counterpartyBank: null,
     status: 'new',

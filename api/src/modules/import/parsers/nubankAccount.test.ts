@@ -113,3 +113,60 @@ describe('parseNubankAccount resilience', () => {
     expect(parseNubankAccount(crlf)).toEqual(parseNubankAccount(text));
   });
 });
+
+describe('parseNubankAccount Pix extraction (real sample)', () => {
+  const { rows } = parseNubankAccount(fixture('nubank_account.csv'));
+  const pix = rows.filter((r) => r.paymentMethod === 'PIX');
+
+  it('extracts name, document, bank and PIX method for the MERCADO AUTO row (double space collapsed)', () => {
+    expect(rows[2]).toMatchObject({
+      name: 'MERCADO AUTO SOLUCOES PUBLICIDADE E TECNOLOGIA LTDA',
+      counterpartyDocument: '41.460.383/0001-68',
+      counterpartyBank: 'BCO SANTANDER (BRASIL) S.A. (0033)',
+      paymentMethod: 'PIX',
+      type: 'Income',
+      amount: '8608.00',
+      categoryKey: 'Uncategorized',
+      status: 'new',
+    });
+  });
+
+  it('captures the masked document and the bank with " - " intact for the own-holder rows (the sample has 6, not 5)', () => {
+    const own = pix.filter((r) => r.name === 'Gabriel Vasconcelos Auzier');
+    expect(own.map((r) => r.index)).toEqual([3, 4, 5, 8, 12, 13]);
+    for (const row of own) {
+      expect(row.counterpartyDocument).toBe('•••.224.672-••');
+      expect(row.counterpartyBank).toBe('NU PAGAMENTOS - IP (0260)');
+    }
+  });
+
+  it('parses every Pix row of the fixture with a name and a document', () => {
+    expect(pix).toHaveLength(11);
+    for (const row of pix) {
+      expect(row.name).not.toBe('');
+      expect(row.counterpartyDocument).toMatch(/^[\d./•*-]+$/);
+      expect(row.counterpartyBank).toBeTruthy();
+      expect(row.name).not.toMatch(/ {2}|^Transferência/);
+    }
+  });
+
+  it('reads a receita federal row and a received row from another bank', () => {
+    expect(rows[9]).toMatchObject({
+      name: 'RECEITA FEDERAL',
+      counterpartyDocument: '00.394.460/0058-87',
+      counterpartyBank: 'BCO DO BRASIL S.A. (0001)',
+      type: 'Expense',
+    });
+    expect(rows[6]).toMatchObject({
+      name: 'LOLDESIGN SOLUCOES DIGITAIS LTDA',
+      counterpartyDocument: '13.182.800/0001-12',
+      counterpartyBank: 'ITAÚ UNIBANCO S.A. (0341)',
+      type: 'Income',
+    });
+  });
+
+  it('does not treat a name containing " - " as Pix (documented limitation)', () => {
+    const row = one(`02/07/2026,-1.00,x,Transferência enviada pelo Pix - A - B - 12.345.678/0001-90 - BANCO X (001) Agência: 1 Conta: 2`);
+    expect(row.paymentMethod).not.toBe('PIX');
+  });
+});

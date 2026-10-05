@@ -190,11 +190,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Row for MERCADO AUTO yields name `MERCADO AUTO SOLUCOES PUBLICIDADE E TECNOLOGIA LTDA`, document `41.460.383/0001-68`, bank `BCO SANTANDER (BRASIL) S.A. (0033)`, method PIX
-- [ ] Masked document `•••.224.672-••` and bank `NU PAGAMENTOS - IP (0260)` are captured intact
-- [ ] All Pix rows of the fixture parse with a name and a document (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Row for MERCADO AUTO yields name `MERCADO AUTO SOLUCOES PUBLICIDADE E TECNOLOGIA LTDA`, document `41.460.383/0001-68`, bank `BCO SANTANDER (BRASIL) S.A. (0033)`, method PIX
+- [x] Masked document `•••.224.672-••` and bank `NU PAGAMENTOS - IP (0260)` are captured intact
+- [x] All Pix rows of the fixture parse with a name and a document (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
