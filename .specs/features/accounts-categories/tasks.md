@@ -306,12 +306,12 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Deactivate sets `active=false` and the row is kept
-- [ ] Activate restores `active=true`
-- [ ] `DELETE /accounts/:id` returns 404 (no route)
-- [ ] Inactive accounts' holder names remain readable for neutral detection (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Deactivate sets `active=false` and the row is kept
+- [x] Activate restores `active=true`
+- [x] `DELETE /accounts/:id` returns 404 (no route)
+- [x] Inactive accounts' holder names remain readable for neutral detection (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

@@ -213,3 +213,59 @@ describe('PATCH /accounts/:id', () => {
     expect(rows).toEqual([{ nickname: 'Alheia' }]);
   });
 });
+
+describe('POST /accounts/:id/deactivate and /activate', () => {
+  it('deactivate sets active=false and keeps the row; activate restores active=true', async () => {
+    const owner = await createTestUser();
+    const acc = await createAccount(owner, 'Alternável');
+
+    const off = await call(owner, 'POST', `/accounts/${acc.id}/deactivate`);
+    expect(off.statusCode).toBe(200);
+    expect(off.json()).toMatchObject({ id: acc.id, active: false, nickname: 'Alternável' });
+    const kept = await getAdminSql()`select active from public.accounts where id = ${acc.id}`;
+    expect(kept).toEqual([{ active: false }]);
+
+    const on = await call(owner, 'POST', `/accounts/${acc.id}/activate`);
+    expect(on.statusCode).toBe(200);
+    expect(on.json()).toMatchObject({ id: acc.id, active: true });
+    expect(await getAdminSql()`select active from public.accounts where id = ${acc.id}`).toEqual([{ active: true }]);
+  });
+
+  it('answers 404 to DELETE /accounts/:id (no route) and keeps the account', async () => {
+    const owner = await createTestUser();
+    const acc = await createAccount(owner, 'Indeletável');
+    const res = await call(owner, 'DELETE', `/accounts/${acc.id}`);
+    expect(res.statusCode).toBe(404);
+    expect(await getAdminSql()`select id from public.accounts where id = ${acc.id}`).toHaveLength(1);
+  });
+
+  it('keeps the holder names of an inactive account readable, in the list and when filtering inactive', async () => {
+    const owner = await createTestUser();
+    const created = await call(owner, 'POST', '/accounts', {
+      bank: 'Neon',
+      nickname: 'Parada',
+      holderNames: ['Maria Silva', 'Maria Silva LTDA'],
+    });
+    const { id } = created.json<{ id: string }>();
+    await call(owner, 'POST', `/accounts/${id}/deactivate`);
+
+    const all = (await call(owner, 'GET', '/accounts')).json<{ id: string; active: boolean; holderNames: string[] }[]>();
+    expect(all).toEqual([expect.objectContaining({ id, active: false, holderNames: ['Maria Silva', 'Maria Silva LTDA'] })]);
+    const inactive = (await call(owner, 'GET', '/accounts?active=false')).json<{ holderNames: string[] }[]>();
+    expect(inactive[0]?.holderNames).toEqual(['Maria Silva', 'Maria Silva LTDA']);
+    expect((await call(owner, 'GET', '/accounts?active=true')).json()).toEqual([]);
+  });
+
+  it("returns 404 for an unknown id and for another user's id without changing the account", async () => {
+    const owner = await createTestUser();
+    const intruder = await createTestUser();
+    const acc = await createAccount(owner, 'Protegida');
+
+    for (const action of ['deactivate', 'activate']) {
+      const unknown = await call(owner, 'POST', `/accounts/00000000-0000-4000-8000-000000000000/${action}`);
+      expect(unknown.statusCode).toBe(404);
+      expect((await call(intruder, 'POST', `/accounts/${acc.id}/${action}`)).statusCode).toBe(404);
+    }
+    expect(await getAdminSql()`select active from public.accounts where id = ${acc.id}`).toEqual([{ active: true }]);
+  });
+});

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type, type Static } from '@sinclair/typebox';
 import postgres, { type TransactionSql } from 'postgres';
@@ -179,4 +179,20 @@ export async function accountsRoutes(app: FastifyInstance): Promise<void> {
       }
     },
   );
+  // No DELETE route on purpose (ACCT-02): accounts are only deactivated.
+  const setActive = (active: boolean) => async (request: { params: { id: string }; withUser: FastifyRequest['withUser'] }) => {
+    const { id } = request.params;
+    if (!UUID.test(id)) throw notFound();
+    const [row] = await request.withUser(
+      (tx) => tx<AccountRow[]>`
+        update public.accounts set active = ${active}
+        where id = ${id}
+        returning ${columns(tx)}`,
+    );
+    if (!row) throw notFound();
+    return toAccount(row);
+  };
+  const statusRoute = { schema: { params: IdParams, response: { 200: AccountSchema } } };
+  routes.post('/accounts/:id/deactivate', statusRoute, setActive(false));
+  routes.post('/accounts/:id/activate', statusRoute, setActive(true));
 }
