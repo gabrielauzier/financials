@@ -590,10 +590,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] User B cannot import into user A's account
-- [ ] User B cannot read user A's attachment or batch (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] User B cannot import into user A's account
+- [x] User B cannot read user A's attachment or batch (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
