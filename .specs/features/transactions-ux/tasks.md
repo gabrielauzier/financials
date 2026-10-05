@@ -187,12 +187,12 @@ T6 → T11
 
 **Done when**:
 
-- [ ] `monthRange` returns the first and last day, including `2028-02-29`, `2027-02-28`, 30-day and 31-day months and December (AC 3 and 4)
-- [ ] Choosing month and year queries with the range on page 1 and disables De/Até showing the dates; only month or only year does not query (AC 3, 5 and 6)
-- [ ] "Limpar mês" removes the quick filter and `from`/`to`; "Limpar filtros" clears it too (AC 7 and 8)
-- [ ] `applyDateFilter` clears the quick filter and keeps the date; changing the page keeps the month range (AC 9 and edge case)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 9 tests pass (no silent deletions)
+- [x] `monthRange` returns the first and last day, including `2028-02-29`, `2027-02-28`, 30-day and 31-day months and December (AC 3 and 4)
+- [x] Choosing month and year queries with the range on page 1 and disables De/Até showing the dates; only month or only year does not query (AC 3, 5 and 6)
+- [x] "Limpar mês" removes the quick filter and `from`/`to`; "Limpar filtros" clears it too (AC 7 and 8)
+- [x] `applyDateFilter` clears the quick filter and keeps the date; changing the page keeps the month range (AC 9 and edge case)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 9 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

@@ -45,9 +45,29 @@ import {
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
 import { TransactionForm } from "./TransactionForm";
+import { applyDateFilter, monthRange, type QuickMonth } from "./utils";
 
 type Sort = NonNullable<TransactionFilters["sort"]>;
 const baseFilters: TransactionFilters = { sort: "date", order: "desc", page: 1 };
+const MONTH_NAMES = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+/** Current year minus 5 up to the current year plus 1, ascending. */
+const yearOptions = () => {
+  const current = new Date().getFullYear();
+  return Array.from({ length: 7 }, (_, index) => current - 5 + index);
+};
 
 export function TransactionsPage() {
   const [filters, setFilters] = useState<TransactionFilters>(baseFilters);
@@ -57,7 +77,9 @@ export function TransactionsPage() {
   const [editing, setEditing] = useState<Transaction>();
   const [formOpen, setFormOpen] = useState(false);
   const [deleting, setDeleting] = useState<Transaction>();
+  const [quick, setQuick] = useState<QuickMonth>({});
   const [actionError, setActionError] = useState("");
+  const quickActive = quick.year !== undefined && quick.month !== undefined;
   const invalidPeriod = Boolean(filters.from && filters.to && filters.from > filters.to);
   const { data, isLoading, isError, refetch } = useTransactions(filters, !invalidPeriod);
   const update = useUpdateTransaction();
@@ -86,6 +108,26 @@ export function TransactionsPage() {
       else Object.assign(next, { [key]: value });
       return next;
     });
+  const changeDate = (key: "from" | "to", value: string) => {
+    const next = applyDateFilter({ filters, quick }, key, value);
+    setFilters(next.filters);
+    setQuick(next.quick);
+  };
+  const changeQuick = (part: keyof QuickMonth, value: number) => {
+    const next = { ...quick, [part]: value };
+    setQuick(next);
+    if (next.year === undefined || next.month === undefined) return;
+    setFilters((current) => ({ ...current, ...monthRange(next.year!, next.month!), page: 1 }));
+  };
+  const clearQuick = () => {
+    setQuick({});
+    setFilters((current) => {
+      const next = { ...current, page: 1 };
+      delete next.from;
+      delete next.to;
+      return next;
+    });
+  };
   const sortBy = (sort: Sort) =>
     setFilters((current) => ({
       ...current,
@@ -156,14 +198,16 @@ export function TransactionsPage() {
           <DatePicker
             id="filter-from"
             value={filters.from ?? ""}
-            onChange={(value) => changeFilter("from", value)}
+            disabled={quickActive}
+            onChange={(value) => changeDate("from", value)}
           />
         </Filter>
         <Filter label="Até" id="filter-to">
           <DatePicker
             id="filter-to"
             value={filters.to ?? ""}
-            onChange={(value) => changeFilter("to", value)}
+            disabled={quickActive}
+            onChange={(value) => changeDate("to", value)}
           />
         </Filter>
         <Filter label="Conta" id="filter-account">
@@ -216,9 +260,37 @@ export function TransactionsPage() {
             onClick={() => {
               setFilters(baseFilters);
               setSearch("");
+              setQuick({});
             }}
           >
             Limpar filtros
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 items-end gap-4 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto] lg:col-span-4 xl:col-span-3">
+          <Filter label="Mês" id="filter-quick-month">
+            <SimpleSelect
+              id="filter-quick-month"
+              value={quick.month === undefined ? "" : String(quick.month)}
+              placeholder="Selecione o mês"
+              onChange={(value) => changeQuick("month", Number(value))}
+              options={MONTH_NAMES.map((name, index) => [String(index + 1), name])}
+            />
+          </Filter>
+          <Filter label="Ano" id="filter-quick-year">
+            <SimpleSelect
+              id="filter-quick-year"
+              value={quick.year === undefined ? "" : String(quick.year)}
+              placeholder="Selecione o ano"
+              onChange={(value) => changeQuick("year", Number(value))}
+              options={yearOptions().map((year) => [String(year), String(year)])}
+            />
+          </Filter>
+          <Button
+            variant="outline"
+            disabled={quick.year === undefined && quick.month === undefined}
+            onClick={clearQuick}
+          >
+            Limpar mês
           </Button>
         </div>
         <div className="relative sm:col-span-2 lg:col-span-4 xl:col-span-7">
@@ -416,16 +488,18 @@ function SimpleSelect({
   value,
   onChange,
   options,
+  placeholder,
 }: {
   id: string;
   value: string;
   onChange: (value: string) => void;
   options: Array<[string, string]>;
+  placeholder?: string;
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger id={id}>
-        <SelectValue />
+        <SelectValue {...(placeholder ? { placeholder } : {})} />
       </SelectTrigger>
       <SelectContent>
         {options.map(([value, label]) => (
