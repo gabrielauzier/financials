@@ -1,4 +1,5 @@
 import type { TransactionSql } from 'postgres';
+import { normalizeName } from '../../lib/normalize.js';
 import type { ClassifiedRow, ParsedRow, RowStatus } from './types.js';
 
 /** Only importable rows can become `duplicate`; `ignored` and `invalid` rows are never touched. */
@@ -46,6 +47,13 @@ async function matchingByContent(
   return new Set(found.map((r) => r.position));
 }
 
+/** Normalized holder names of every account of the user, active or inactive. */
+async function holderNames(tx: TransactionSql): Promise<Set<string>> {
+  const found = await tx<{ name: string }[]>`
+    select unnest(holder_names) as name from public.accounts where user_id = (select auth.uid())`;
+  return new Set(found.map((r) => normalizeName(r.name)));
+}
+
 /**
  * Marks importable rows as `duplicate` (IMP-06):
  *  - with `identifier`: it already exists on the same account, or an earlier importable row of the
@@ -54,6 +62,8 @@ async function matchingByContent(
  *    (in `tz`), amount and type. Rows of the file are not compared with each other, so identical
  *    rows of a first import are all kept.
  * A row that is both `unrecognized` and a duplicate becomes `duplicate` and keeps its `reason`.
+ * Then sets `neutral` (IMP-08) on `new`, `unrecognized` and `duplicate` rows whose normalized name
+ * equals a normalized holder name of any account of the user; no value or date heuristic.
  * `tx` must be a `withUser` transaction so every read is limited to the user's rows.
  */
 export async function classify(
@@ -68,15 +78,17 @@ export async function classify(
     dedupable(row) && row.identifier === null ? [{ position, row }] : [],
   );
   const matched = await matchingByContent(tx, accountId, tz, withoutId);
+  const holders = await holderNames(tx);
   const seen = new Set<string>();
 
   return rows.map((row, position) => {
     if (!dedupable(row)) return { ...row, neutral: false };
+    const neutral = holders.has(normalizeName(row.name));
     if (row.identifier === null) {
-      return { ...row, status: matched.has(position) ? 'duplicate' : row.status, neutral: false };
+      return { ...row, status: matched.has(position) ? 'duplicate' : row.status, neutral };
     }
     const duplicate = existing.has(row.identifier) || seen.has(row.identifier);
     seen.add(row.identifier);
-    return { ...row, status: duplicate ? 'duplicate' : row.status, neutral: false };
+    return { ...row, status: duplicate ? 'duplicate' : row.status, neutral };
   });
 }

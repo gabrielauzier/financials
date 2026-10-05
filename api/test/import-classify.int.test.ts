@@ -2,9 +2,11 @@ import { randomUUID } from 'node:crypto';
 import type { TransactionSql } from 'postgres';
 import { afterAll, describe, expect, it } from 'vitest';
 import { classify } from '../src/modules/import/classify.js';
+import { parseImport } from '../src/modules/import/formats.js';
 import type { ClassifiedRow, ParsedRow } from '../src/modules/import/types.js';
 import { createWithUser } from '../src/plugins/db.js';
 import { cleanupTestUsers, closeAdminSql, createTestUser, getAdminSql, type TestUser } from './helpers/db.js';
+import { fixture } from './helpers/fixtures.js';
 
 afterAll(async () => {
   await cleanupTestUsers();
@@ -209,5 +211,77 @@ describe('classify: duplicates by name, local day, amount and type (rows without
     }
 
     expect(statuses(await run(o, rows, acc))).toEqual([[0, 'duplicate'], [1, 'duplicate'], [2, 'duplicate']]);
+  });
+});
+
+const HOLDER = 'Gabriel Vasconcelos Auzier';
+
+const neutralIndexes = (rows: ClassifiedRow[]) => rows.filter((r) => r.neutral).map((r) => r.index);
+
+describe('classify: automatic neutrals by holder name', () => {
+  it('marks the 6 Pix rows to the holder of the real account sample as neutral, and only them', async () => {
+    const o = await owner();
+    const acc = await account(o, ['Outra Pessoa', HOLDER]);
+    const { rows } = parseImport(fixture('nubank_account.csv'), 'Nubank');
+
+    const result = await run(o, rows, acc);
+
+    expect(neutralIndexes(result)).toEqual([3, 4, 5, 8, 12, 13]);
+    const notNeutral = result.filter((r) => /RECEITA FEDERAL|MERCADO AUTO|LOLDESIGN/.test(r.name));
+    expect(notNeutral.map((r) => [r.index, r.neutral])).toEqual([
+      [2, false], [6, false], [9, false], [10, false], [11, false],
+    ]);
+  });
+
+  it('ignores case, accents and repeated spaces, but needs the whole name', async () => {
+    const o = await owner();
+    const acc = await account(o, [HOLDER, 'José  da Silva']);
+
+    const result = await run(o, [
+      row(0, { name: 'GABRIEL  VASCONCELOS AUZIER' }),
+      row(1, { name: ' gabriel vasconcelos áuzier ' }),
+      row(2, { name: 'JOSE DA SILVA' }),
+      row(3, { name: 'Gabriel Vasconcelos' }),
+      row(4, { name: 'Gabriel Vasconcelos Auzier Ltda' }),
+    ], acc);
+
+    expect(result.map((r) => [r.index, r.neutral])).toEqual([[0, true], [1, true], [2, true], [3, false], [4, false]]);
+  });
+
+  it('matches the holder of an inactive account and never another user\'s holders', async () => {
+    const o = await owner();
+    const acc = await account(o, ['Fulano']);
+    await account(o, [HOLDER], false);
+    const stranger = await owner();
+    await account(stranger, ['Beltrano de Tal']);
+
+    const result = await run(o, [row(0, { name: HOLDER }), row(1, { name: 'Beltrano de Tal' })], acc);
+
+    expect(result.map((r) => [r.index, r.neutral])).toEqual([[0, true], [1, false]]);
+  });
+
+  it('keeps neutral=false without a holder match (no value/date pairing) and on ignored or invalid rows', async () => {
+    const o = await owner();
+    const acc = await account(o, [HOLDER]);
+    const other = await account(o, ['Fulano']);
+    // A mirrored transfer on another own account (same day, same amount, opposite type).
+    await existing(o, other, { name: 'Mercado', type: 'Income', amount: '500.00', occurredAt: '2026-07-02T15:00:00Z' });
+    await existing(o, acc, { identifier: 'dup' });
+
+    const result = await run(o, [
+      row(0, { name: 'Mercado', type: 'Expense', amount: '500.00' }),
+      row(1, { name: HOLDER, status: 'ignored' }),
+      row(2, { name: HOLDER, status: 'invalid', reason: 'x' }),
+      row(3, { name: HOLDER, status: 'unrecognized', reason: 'y' }),
+      row(4, { name: HOLDER, identifier: 'dup' }),
+    ], acc);
+
+    expect(result.map((r) => [r.index, r.status, r.neutral])).toEqual([
+      [0, 'new', false],
+      [1, 'ignored', false],
+      [2, 'invalid', false],
+      [3, 'unrecognized', true],
+      [4, 'duplicate', true],
+    ]);
   });
 });

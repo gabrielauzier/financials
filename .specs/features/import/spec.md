@@ -179,7 +179,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 | IMP-05 | P1: Prévia (classificação e seleção) | - | Pending |
 | IMP-06 | P1: Prévia (deduplicação) | - | Implementing |
 | IMP-07 | P1: Prévia (confirmação atômica e idempotente) | - | Pending |
-| IMP-08 | P1: Neutras automáticas | - | Pending |
+| IMP-08 | P1: Neutras automáticas | - | Implementing |
 | IMP-09 | P1: Anexo e lote de importação | - | Implementing |
 
 **Coverage:** 9 total, 0 mapped to tasks, 9 unmapped ⚠️
