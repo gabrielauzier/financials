@@ -56,8 +56,9 @@ T4 → T7
 T5 → T7
 ```
 
-### Phase 2: Web: credit expenses (substituída pelo Lovable, ver lovable.md)
+### Phase 2: Web: credit expenses
 ```
+T13 → T8
 T8 → T9
 T8 → T10
 T8 → T11
@@ -261,12 +262,39 @@ T11 → T12
 
 ---
 
-### Phase 2: Web: credit expenses (substituída pelo Lovable, ver lovable.md)
+### Phase 2: Web: credit expenses
+### T13: Add the credit expense error messages
+
+**What**: Extend the shared error module with the `creditExpense` context and the codes `invalid_paid_amount` ("Valor pago inválido"), `invalid_day` ("Dia inválido (use de 1 a 31)"), `invalid_status` ("Status inválido"); in that context `invalid_amount` reads "Valor total inválido". Existing contexts and texts stay unchanged.
+**Where**: `web/src/lib/api/errorMessages.ts`
+**Depends on**: None
+**Reuses**: existing `messageForError` and its tests
+**Requirement**: CARD-01
+
+**Tools**:
+
+- MCP: NONE
+- Skill: react-best-practices
+
+**Done when**:
+
+- [ ] Each new code returns its Portuguese text and `invalid_amount` reads "Valor total inválido" only in the `creditExpense` context
+- [ ] The API `message` is still never returned and existing codes and contexts are unchanged (4 tests)
+- [ ] Gate check passes: `yarn --cwd web test`
+- [ ] Test count: all tests listed above pass, no silent deletions or skips
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(credit-expenses): add the credit expense error messages`
+
+---
+
 ### T8: Create the credit expenses hooks
 
 **What**: `useCreditExpenses({ status })` and mutations with cache invalidation.
 **Where**: `web/src/features/creditExpenses/hooks.ts`
-**Depends on**: None
+**Depends on**: T13
 **Reuses**: -
 **Requirement**: CARD-01
 
@@ -372,7 +400,7 @@ T11 → T12
 
 ### T12: Wire the credit expenses page
 
-**What**: Page composing table, form dialog, status select and delete confirmation.
+**What**: Page composing table, form dialog, status select and delete confirmation; the `/cartao` route renders it in place of the placeholder, inside `RequireAuth` and `AppLayout`.
 **Where**: `web/src/features/creditExpenses/CreditExpensesPage.tsx`
 **Depends on**: T9, T10, T11
 **Reuses**: -
@@ -385,7 +413,8 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Create, edit, status change and delete work with a mocked API (2 tests)
+- [ ] Create, edit, status change and delete work with a mocked API
+- [ ] `web/src/routes/cartao.tsx` renders the page (3 tests)
 - [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: all tests listed above pass, no silent deletions or skips
 
