@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type, type Static } from '@sinclair/typebox';
-import postgres from 'postgres';
+import postgres, { type TransactionSql } from 'postgres';
 import { normalizeName } from '../../lib/normalize.js';
 import { AppError } from '../../plugins/errors.js';
 
@@ -36,6 +36,8 @@ interface AccountRow {
   active: boolean;
   created_at: Date;
 }
+
+const columns = (tx: TransactionSql) => tx`id, bank, nickname, holder_names, active, created_at`;
 
 function toAccount(row: AccountRow): Account {
   return {
@@ -107,13 +109,32 @@ export async function accountsRoutes(app: FastifyInstance): Promise<void> {
           (tx) => tx<AccountRow[]>`
             insert into public.accounts (bank, nickname, holder_names)
             values (${bank}, ${nickname}, ${holders})
-            returning id, bank, nickname, holder_names, active, created_at`,
+            returning ${columns(tx)}`,
         );
         return reply.status(201).send(toAccount(row as AccountRow));
       } catch (error) {
         if (isNicknameConflict(error)) throw duplicateName();
         throw error;
       }
+    },
+  );
+  routes.get(
+    '/accounts',
+    {
+      schema: {
+        querystring: Type.Object({ active: Type.Optional(Type.Boolean()) }),
+        response: { 200: Type.Array(AccountSchema) },
+      },
+    },
+    async (request) => {
+      const { active } = request.query;
+      const rows = await request.withUser(
+        (tx) => tx<AccountRow[]>`
+          select ${columns(tx)} from public.accounts
+          ${active === undefined ? tx`` : tx`where active = ${active}`}
+          order by created_at, id`,
+      );
+      return rows.map(toAccount);
     },
   );
 }

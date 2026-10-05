@@ -251,10 +251,10 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Lists all of the user's accounts and none of another user's
-- [ ] `active=true` omits inactive accounts (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Lists all of the user's accounts and none of another user's
+- [x] `active=true` omits inactive accounts (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
