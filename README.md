@@ -32,6 +32,7 @@ yarn --cwd web dev                   # 3. front on http://localhost:8080 (see we
 | `SUPABASE_URL` | required | Supabase project URL; tokens are verified against its JWKS |
 | `DATABASE_URL` | required | Postgres role allowed to `set role authenticated` |
 | `SUPABASE_JWT_SECRET` | none | Legacy HS256 secret; when set it replaces the JWKS |
+| `SUPABASE_PUBLISHABLE_KEY` | none | Project API key sent to Storage with the user's token; without it `POST /imports/confirm` answers 503 |
 | `PORT` / `HOST` | `3001` / `127.0.0.1` | Where the API listens |
 | `CORS_ORIGINS` | none | Exact browser origins allowed, comma separated, no `*`; empty allows none |
 | `LOG_LEVEL` | `info` | pino level; request logs never contain the `Authorization` header |

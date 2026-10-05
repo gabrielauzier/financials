@@ -1,11 +1,14 @@
+import { randomUUID } from 'node:crypto';
 import multipart, { type Multipart } from '@fastify/multipart';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type, type Static } from '@sinclair/typebox';
+import { DateTime } from 'luxon';
 import type { TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
 import { classify } from './classify.js';
 import { parseImport } from './formats.js';
+import { uploadImportFile } from './storage.js';
 import type { ClassifiedRow, RowStatus } from './types.js';
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -56,6 +59,27 @@ const PreviewForm = Type.Object({
   file: fileField,
   accountId: Type.String({ format: 'uuid', description: 'An active account of the user' }),
 });
+
+const ConfirmForm = Type.Object({
+  file: fileField,
+  accountId: Type.String({ format: 'uuid', description: 'An active account of the user' }),
+  idempotencyKey: Type.String({ format: 'uuid', description: 'One per preview session; a repeated key does not import twice' }),
+  selections: Type.String({
+    description:
+      'JSON array `[{ "index": number, "neutral": boolean }]` with the rows to import (status new, duplicate ' +
+      'or unrecognized), each index once',
+  }),
+});
+
+const ConfirmSchema = Type.Object({
+  batchId: Type.String({ format: 'uuid' }),
+  imported: Type.Integer(),
+  skipped: Type.Integer(),
+});
+type ConfirmSummary = Static<typeof ConfirmSchema>;
+
+/** Rows the user may select; `ignored` and `invalid` rows are never imported. */
+const SELECTABLE: ReadonlySet<RowStatus> = new Set(['new', 'duplicate', 'unrecognized']);
 
 const multipartRoute = {
   consumes: ['multipart/form-data'],
@@ -132,6 +156,37 @@ function requiredField(form: ImportForm, name: string): string {
   return value;
 }
 
+function invalid(message: string, field: string): AppError {
+  return new AppError('validation_error', 422, message, field);
+}
+
+interface Selection {
+  index: number;
+  neutral: boolean;
+}
+
+/** `selections` must be a non-empty JSON array of `{ index: integer >= 0, neutral: boolean }`, each index once. */
+function parseSelections(raw: string): Selection[] {
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    throw invalid('selections must be a JSON array', 'selections');
+  }
+  if (!Array.isArray(value)) throw invalid('selections must be a JSON array', 'selections');
+  if (value.length === 0) throw invalid('Select at least one row to import', 'selections');
+  const seen = new Set<number>();
+  return value.map((item: unknown) => {
+    const { index, neutral } = (item ?? {}) as { index?: unknown; neutral?: unknown };
+    if (typeof item !== 'object' || !Number.isSafeInteger(index) || (index as number) < 0 || typeof neutral !== 'boolean') {
+      throw invalid('Each selection must be { index: integer >= 0, neutral: boolean }', 'selections');
+    }
+    if (seen.has(index as number)) throw invalid(`Row ${String(index)} is selected more than once`, 'selections');
+    seen.add(index as number);
+    return { index: index as number, neutral };
+  });
+}
+
 function invalidAccount(): AppError {
   return new AppError('invalid_account', 422, 'Select an active account', 'accountId');
 }
@@ -155,20 +210,28 @@ async function analyze(tx: TransactionSql, accountId: string, content: Buffer, t
   return { account, rows: await classify(tx, rows, account.id, tz) };
 }
 
-/** Category key → name of the user's categories (system categories always exist). */
-async function categoryNames(tx: TransactionSql, rows: ClassifiedRow[]): Promise<Map<string, string>> {
-  const keys = [...new Set(rows.map((r) => r.categoryKey))];
-  const found = await tx<{ key: string; name: string }[]>`
-    select key, name from public.categories where key = any(${keys}::text[])`;
-  return new Map(found.map((c) => [c.key, c.name]));
+interface Category {
+  id: string;
+  name: string;
 }
 
-function toPreview(rows: ClassifiedRow[], names: Map<string, string>): Preview {
+/** The user's categories for the rows' keys (system categories, which always exist). */
+async function categoriesByKey(tx: TransactionSql, rows: ClassifiedRow[]): Promise<Map<string, Category>> {
+  const keys = [...new Set(rows.map((r) => r.categoryKey))];
+  const found = await tx<{ key: string; id: string; name: string }[]>`
+    select key, id, name from public.categories where key = any(${keys}::text[])`;
+  const byKey = new Map(found.map((c) => [c.key, { id: c.id, name: c.name }]));
+  for (const key of keys) {
+    if (!byKey.has(key)) throw new Error(`System category ${key} is missing for this user`);
+  }
+  return byKey;
+}
+
+function toPreview(rows: ClassifiedRow[], categories: Map<string, Category>): Preview {
   const totals = { new: 0, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 };
   const previewRows = rows.map((row): PreviewRow => {
     totals[row.status] += 1;
-    const categoryName = names.get(row.categoryKey);
-    if (categoryName === undefined) throw new Error(`System category ${row.categoryKey} is missing for this user`);
+    const categoryName = (categories.get(row.categoryKey) as Category).name;
     return {
       index: row.index,
       localDate: row.localDate,
@@ -187,7 +250,82 @@ function toPreview(rows: ClassifiedRow[], names: Map<string, string>): Preview {
   return { rows: previewRows, totals };
 }
 
-export async function importRoutes(app: FastifyInstance): Promise<void> {
+/** Selected rows of the file, in file order; a selection of a non-selectable or unknown row is rejected. */
+function selectedRows(rows: ClassifiedRow[], selections: Selection[]): ClassifiedRow[] {
+  const byIndex = new Map(rows.map((row) => [row.index, row]));
+  const chosen = selections.map((selection) => {
+    const row = byIndex.get(selection.index);
+    if (!row || !SELECTABLE.has(row.status)) {
+      throw new AppError(
+        'invalid_selection',
+        422,
+        `Row ${selection.index} cannot be imported (only new, duplicate or unrecognized rows)`,
+        'selections',
+      );
+    }
+    return { ...row, neutral: selection.neutral };
+  });
+  return chosen.sort((a, b) => a.index - b.index);
+}
+
+/** Midnight of the local day in `zone`, as an ISO instant with offset (DST-safe start of day). */
+function localMidnight(localDate: string, zone: string): string {
+  return DateTime.fromISO(localDate, { zone }).startOf('day').toISO() as string;
+}
+
+interface Confirmation {
+  batchId: string;
+  idempotencyKey: string;
+  account: { id: string; bank: string };
+  rowCount: number;
+  rows: ClassifiedRow[];
+  categories: Map<string, Category>;
+  file: UploadedFile & { storagePath: string };
+  tz: string;
+}
+
+/** Writes the batch, its transactions and the attachment in the caller's transaction. */
+async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<ConfirmSummary> {
+  const imported = c.rows.length;
+  const skipped = c.rowCount - imported;
+  await tx`
+    insert into public.import_batches (id, account_id, bank, idempotency_key, row_count, imported_count, skipped_count)
+    values (${c.batchId}, ${c.account.id}, ${c.account.bank}, ${c.idempotencyKey}, ${c.rowCount}, ${imported}, ${skipped})`;
+  const column = <T>(pick: (row: ClassifiedRow) => T): T[] => c.rows.map(pick);
+  const inserted = await tx`
+    insert into public.transactions
+      (account_id, category_id, name, type, occurred_at, amount, payment_method, identifier,
+       counterparty_document, counterparty_bank, neutral, import_batch_id)
+    select ${c.account.id}, r.category_id, r.name, r.type, r.occurred_at, r.amount, r.payment_method, r.identifier,
+           r.counterparty_document, r.counterparty_bank, r.neutral, ${c.batchId}
+    from unnest(
+      ${column((r) => (c.categories.get(r.categoryKey) as Category).id)}::uuid[],
+      ${column((r) => r.name)}::text[],
+      ${column((r) => r.type)}::text[],
+      ${column((r) => localMidnight(r.localDate, c.tz))}::timestamptz[],
+      ${column((r) => r.amount)}::numeric[],
+      ${column((r) => r.paymentMethod)}::text[],
+      ${column((r) => r.identifier)}::text[],
+      ${column((r) => r.counterpartyDocument)}::text[],
+      ${column((r) => r.counterpartyBank)}::text[],
+      -- postgres.js sends a boolean array as a scalar boolean; text round-trips exactly.
+      ${column((r) => String(r.neutral))}::text[]::boolean[]
+    ) as r (category_id, name, type, occurred_at, amount, payment_method, identifier,
+            counterparty_document, counterparty_bank, neutral)`;
+  if (inserted.count !== imported) throw new Error(`Inserted ${inserted.count} of ${imported} transactions`);
+  await tx`
+    insert into public.attachments (import_batch_id, filename, mime_type, size_bytes, storage_path)
+    values (${c.batchId}, ${c.file.filename}, ${c.file.mimetype}, ${c.file.content.length}, ${c.file.storagePath})`;
+  return { batchId: c.batchId, imported, skipped };
+}
+
+export interface ImportRoutesOptions {
+  supabaseUrl: string;
+  /** Without it, confirm answers 503 `storage_not_configured`. */
+  publishableKey?: string;
+}
+
+export async function importRoutes(app: FastifyInstance, options: ImportRoutesOptions): Promise<void> {
   await app.register(multipart, {
     limits: { fileSize: MAX_FILE_BYTES, files: 1, fields: 10, parts: 11, fieldSize: MAX_FIELD_BYTES },
   });
@@ -204,8 +342,57 @@ export async function importRoutes(app: FastifyInstance): Promise<void> {
       const accountId = requiredField(form, 'accountId');
       return request.withUser(async (tx) => {
         const { rows } = await analyze(tx, accountId, form.file.content, request.tz);
-        return toPreview(rows, await categoryNames(tx, rows));
+        return toPreview(rows, await categoriesByKey(tx, rows));
       });
+    },
+  );
+  routes.post(
+    '/imports/confirm',
+    {
+      schema: { ...multipartRoute, body: ConfirmForm, response: { 201: ConfirmSchema } },
+      validatorCompiler: skipBodyValidation,
+    },
+    async (request, reply) => {
+      const { publishableKey } = options;
+      if (!publishableKey) {
+        throw new AppError('storage_not_configured', 503, 'File storage is not configured on the server');
+      }
+      const form = await readForm(request);
+      const accountId = requiredField(form, 'accountId');
+      const idempotencyKey = requiredField(form, 'idempotencyKey');
+      const rawSelections = requiredField(form, 'selections');
+      if (!UUID.test(idempotencyKey)) throw invalid('idempotencyKey must be a uuid', 'idempotencyKey');
+      const selections = parseSelections(rawSelections);
+      const user = request.user as NonNullable<typeof request.user>;
+      const token = (request.headers.authorization ?? '').replace(/^Bearer /i, '');
+
+      // Re-parse and re-classify on the server: rows never come from the client.
+      const prepared = await request.withUser(async (tx) => {
+        const { account, rows } = await analyze(tx, accountId, form.file.content, request.tz);
+        const chosen = selectedRows(rows, selections);
+        return { account, rowCount: rows.length, rows: chosen, categories: await categoriesByKey(tx, chosen) };
+      });
+
+      const batchId = randomUUID();
+      const file = {
+        filename: form.file.filename || 'import.csv',
+        mimetype: form.file.mimetype || 'application/octet-stream',
+        content: form.file.content,
+      };
+      const storagePath = await uploadImportFile({
+        supabaseUrl: options.supabaseUrl,
+        publishableKey,
+        token,
+        userId: user.id,
+        batchId,
+        filename: file.filename,
+        content: new Uint8Array(file.content),
+        contentType: file.mimetype,
+      });
+      const summary = await request.withUser((tx) =>
+        insertBatch(tx, { ...prepared, batchId, idempotencyKey, file: { ...file, storagePath }, tz: request.tz }),
+      );
+      return reply.status(201).send(summary);
     },
   );
 }

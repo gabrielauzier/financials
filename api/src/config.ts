@@ -7,6 +7,8 @@ export interface AppConfig {
   jwtSecret?: string;
   /** Exact browser origins allowed by CORS; absent or empty means no origin is allowed. */
   corsOrigins?: string[];
+  /** Project API key sent to Storage as `apikey` (never the secret key). Without it, routes that store files answer 503. */
+  supabasePublishableKey?: string;
 }
 
 /** What `buildApp` needs plus what the process needs to listen. */
@@ -35,11 +37,13 @@ export function parseCorsOrigins(raw: string | undefined): string[] {
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const jwtSecret = env.SUPABASE_JWT_SECRET;
   const corsOrigins = parseCorsOrigins(env.CORS_ORIGINS);
+  const supabasePublishableKey = env.SUPABASE_PUBLISHABLE_KEY;
   return {
     supabaseUrl: required(env, 'SUPABASE_URL'),
     databaseUrl: required(env, 'DATABASE_URL'),
     ...(jwtSecret ? { jwtSecret } : {}),
     ...(corsOrigins.length > 0 ? { corsOrigins } : {}),
+    ...(supabasePublishableKey ? { supabasePublishableKey } : {}),
   };
 }
 

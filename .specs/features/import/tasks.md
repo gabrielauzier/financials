@@ -478,13 +478,13 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Only selected rows are inserted, linked by `import_batch_id`
-- [ ] Unchecked duplicates are skipped; a duplicate the user re-selects is imported
-- [ ] Per-row neutral override is stored
-- [ ] Batch counts and attachment row are recorded and the stored file equals the upload
-- [ ] Selecting an `ignored` or `invalid` index returns 422 (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Only selected rows are inserted, linked by `import_batch_id`
+- [x] Unchecked duplicates are skipped; a duplicate the user re-selects is imported
+- [x] Per-row neutral override is stored
+- [x] Batch counts and attachment row are recorded and the stored file equals the upload
+- [x] Selecting an `ignored` or `invalid` index returns 422 (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

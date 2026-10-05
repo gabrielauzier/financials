@@ -51,7 +51,10 @@ export function buildApp(config: AppConfig = loadConfig(), options: BuildAppOpti
   void app.register(accountsRoutes);
   void app.register(categoriesRoutes);
   void app.register(transactionsRoutes);
-  void app.register(importRoutes);
+  void app.register(importRoutes, {
+    supabaseUrl: config.supabaseUrl,
+    ...(config.supabasePublishableKey ? { publishableKey: config.supabasePublishableKey } : {}),
+  });
 
   return app;
 }

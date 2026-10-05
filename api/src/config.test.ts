@@ -18,6 +18,14 @@ describe('loadConfig', () => {
   it.each(['SUPABASE_URL', 'DATABASE_URL'])('fails naming %s when it is missing', (name) => {
     expect(() => loadConfig({ ...base, [name]: undefined })).toThrow(name);
   });
+
+  it('reads the optional Storage publishable key; absent or empty leaves it out', () => {
+    expect(loadConfig({ ...base, SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_x' }).supabasePublishableKey).toBe(
+      'sb_publishable_x',
+    );
+    expect(loadConfig(base)).not.toHaveProperty('supabasePublishableKey');
+    expect(loadConfig({ ...base, SUPABASE_PUBLISHABLE_KEY: '' })).not.toHaveProperty('supabasePublishableKey');
+  });
 });
 
 describe('loadServerConfig', () => {

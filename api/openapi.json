@@ -1349,6 +1349,76 @@
           }
         }
       }
+    },
+    "/imports/confirm": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "accountId",
+                  "idempotencyKey",
+                  "selections"
+                ],
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "description": "The CSV file (UTF-8, at most 5 MB)",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "format": "uuid",
+                    "description": "An active account of the user",
+                    "type": "string"
+                  },
+                  "idempotencyKey": {
+                    "format": "uuid",
+                    "description": "One per preview session; a repeated key does not import twice",
+                    "type": "string"
+                  },
+                  "selections": {
+                    "description": "JSON array `[{ \"index\": number, \"neutral\": boolean }]` with the rows to import (status new, duplicate or unrecognized), each index once",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "batchId",
+                    "imported",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "batchId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "imported": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "security": [
