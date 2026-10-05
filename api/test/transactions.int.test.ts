@@ -502,3 +502,97 @@ describe('GET /transactions name search (q)', () => {
     expect((await list(u, `q=${encodeURIComponent('   ')}`)).total).toBe(8);
   });
 });
+
+describe('GET /transactions sorting', () => {
+  let u: TestUser;
+  const cents = (amount: string) => BigInt(amount.replace('.', ''));
+  // Amounts whose text order differs from the numeric order ("100.00" < "9.00" as text).
+  const AMOUNTS = ['9.00', '10.00', '100.00', '2.50', '1000.00', '0.99'];
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    const a = await createAccount(u, 'Ordem');
+    const categories = [await categoryId(u, 'Food'), await categoryId(u, 'Bills'), await categoryId(u, 'Pets')];
+    // 75 rows -> 2 pages. Names, amounts, categories and instants are all shuffled relative to each other.
+    await seed(
+      u,
+      a,
+      Array.from({ length: 75 }, (_, i) => ({
+        name: `item ${String((i * 37) % 75).padStart(2, '0')}`,
+        amount: AMOUNTS[(i * 5) % AMOUNTS.length],
+        categoryId: categories[(i * 7) % 3],
+        occurredAt: new Date(Date.UTC(2026, 6, 1) + ((i * 29) % 75) * 3_600_000).toISOString(),
+      })),
+    );
+  });
+
+  const both = async (query: string) => {
+    const p1 = await list(u, `${query}&page=1`);
+    const p2 = await list(u, `${query}&page=2`);
+    expect(p1.items).toHaveLength(50);
+    expect(p2.items).toHaveLength(25);
+    return [...p1.items, ...p2.items];
+  };
+
+  /** Asserts the full set is ordered by `key` (then id, same direction) across both pages. */
+  function expectOrdered(rows: Page['items'], key: (r: Page['items'][number]) => string | bigint, dir: 1 | -1) {
+    for (let i = 1; i < rows.length; i++) {
+      const [a, b] = [rows[i - 1], rows[i]] as [Page['items'][number], Page['items'][number]];
+      const [ka, kb] = [key(a), key(b)];
+      const cmp = ka < kb ? -1 : ka > kb ? 1 : a.id < b.id ? -1 : 1;
+      expect(cmp * dir, `row ${i}`).toBeLessThan(0);
+    }
+    expect(new Set(rows.map((r) => r.id)).size).toBe(rows.length);
+  }
+
+  it('sorts the whole set by name ascending and descending, not only the page', async () => {
+    expectOrdered(await both('sort=name&order=asc'), (r) => r.name, 1);
+    const desc = await both('sort=name&order=desc');
+    expectOrdered(desc, (r) => r.name, -1);
+    expect(desc[0]?.name).toBe('item 74');
+    expect(desc.at(-1)?.name).toBe('item 00');
+  });
+
+  it('sorts the whole set by amount numerically (100.00 above 9.00)', async () => {
+    const asc = await both('sort=amount&order=asc');
+    expectOrdered(asc, (r) => cents(r.amount), 1);
+    expect(asc[0]?.amount).toBe('0.99');
+    expect(asc.at(-1)?.amount).toBe('1000.00');
+    expectOrdered(await both('sort=amount&order=desc'), (r) => cents(r.amount), -1);
+  });
+
+  it('sorts the whole set by category name in both directions', async () => {
+    const asc = await both('sort=category&order=asc');
+    expectOrdered(asc, (r) => r.categoryName, 1);
+    expect(asc[0]?.categoryName).toBe('Alimentação');
+    expect(asc.at(-1)?.categoryName).toBe('Pets');
+    expectOrdered(await both('sort=category&order=desc'), (r) => r.categoryName, -1);
+  });
+
+  it('sorts the whole set by date in both directions, and defaults to date descending', async () => {
+    expectOrdered(await both('sort=date&order=asc'), (r) => r.occurredAt, 1);
+    expectOrdered(await both('sort=date&order=desc'), (r) => r.occurredAt, -1);
+    expectOrdered(await both('sort=date'), (r) => r.occurredAt, -1);
+    expect((await list(u)).items.map((r) => r.id)).toEqual((await list(u, 'sort=date&order=desc')).items.map((r) => r.id));
+  });
+
+  it('combines sorting with filters and the search', async () => {
+    const rows = (await list(u, 'sort=amount&order=desc&q=item 1')).items;
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.name.includes('item 1'))).toBe(true);
+    expectOrdered(rows, (r) => cents(r.amount), -1);
+  });
+
+  it.each([
+    ['sort=foo', 'sort'],
+    ['sort=', 'sort'],
+    ['sort=Name', 'sort'],
+    ['order=up', 'order'],
+    ['sort=name&order=', 'order'],
+    ['order=ASC', 'order'],
+  ])('rejects %s with 422 validation_error naming %s', async (query, field) => {
+    const res = await call(u, 'GET', `/transactions?${query}`);
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field } });
+  });
+});

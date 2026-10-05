@@ -34,6 +34,9 @@ const CreateBody = Type.Object({
   neutral: Type.Optional(Type.Boolean()),
 });
 
+const SORTS = ['date', 'name', 'amount', 'category'] as const;
+type Sort = (typeof SORTS)[number];
+
 const PAGE_SIZE = 50 as const;
 
 const ListQuery = Type.Object({
@@ -44,6 +47,10 @@ const ListQuery = Type.Object({
   type: Type.Optional(Type.String({ description: `One of: ${TYPES.join(', ')}` })),
   neutral: Type.Optional(Type.String({ description: 'true or false' })),
   q: Type.Optional(Type.String({ description: 'Name contains this text, ignoring case and accents' })),
+  sort: Type.Optional(Type.String({ description: `One of: ${SORTS.join(', ')} (default date)` })),
+  order: Type.Optional(
+    Type.String({ description: 'asc or desc (default desc for date, asc for the other columns)' }),
+  ),
   page: Type.Optional(Type.String({ description: 'Page number, starting at 1 (50 rows per page)' })),
 });
 
@@ -166,6 +173,34 @@ function whereClause(tx: TransactionSql, filters: Filters, zone: string): Pendin
   return tx`where ${condition}`;
 }
 
+function validSort(value: string | undefined): Sort {
+  if (value === undefined) return 'date';
+  if (!(SORTS as readonly string[]).includes(value)) throw invalid(`sort must be one of: ${SORTS.join(', ')}`, 'sort');
+  return value as Sort;
+}
+
+function validOrder(value: string | undefined, sort: Sort): 'asc' | 'desc' {
+  if (value === undefined) return sort === 'date' ? 'desc' : 'asc';
+  if (value !== 'asc' && value !== 'desc') throw invalid('order must be asc or desc', 'order');
+  return value;
+}
+
+/**
+ * ORDER BY over the whole result set (before LIMIT/OFFSET), with `id` as tie-break in the same
+ * direction so pages never repeat or skip rows. Names sort by the database collation (not
+ * normalized for case or accents); amounts sort numerically (numeric column).
+ */
+function orderByClause(tx: TransactionSql, sort: Sort, order: 'asc' | 'desc'): PendingQuery<Row[]> {
+  const column = {
+    date: tx`t.occurred_at`,
+    name: tx`t.name`,
+    amount: tx`t.amount`,
+    category: tx`c.name`,
+  }[sort];
+  const direction = order === 'asc' ? tx`asc` : tx`desc`;
+  return tx`order by ${column} ${direction}, t.id ${direction}`;
+}
+
 function invalidAccount(): AppError {
   return new AppError('invalid_account', 422, 'Select an active account', 'accountId');
 }
@@ -233,13 +268,15 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
     { schema: { querystring: ListQuery, response: { 200: ListSchema } } },
     async (request) => {
       const page = validPage(request.query.page);
+      const sort = validSort(request.query.sort);
+      const order = validOrder(request.query.order, sort);
       const { rows, total } = await request.withUser(async (tx) => {
         const where = whereClause(tx, request.query, request.tz);
         const [count] = await tx<{ n: number }[]>`select count(*)::int as n from ${fromJoins(tx)} ${where}`;
         const rows = await tx<TransactionRow[]>`
           select ${selectColumns(tx)} from ${fromJoins(tx)}
           ${where}
-          order by t.occurred_at desc, t.id desc
+          ${orderByClause(tx, sort, order)}
           limit ${PAGE_SIZE} offset ${(page - 1) * PAGE_SIZE}`;
         return { rows, total: (count as { n: number }).n };
       });

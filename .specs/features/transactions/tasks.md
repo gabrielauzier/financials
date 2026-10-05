@@ -271,10 +271,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Sorting by each column orders the entire set, not only the page
-- [ ] Invalid `sort` returns 422 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Sorting by each column orders the entire set, not only the page
+- [x] Invalid `sort` returns 422 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

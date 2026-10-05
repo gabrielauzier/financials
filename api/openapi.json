@@ -832,6 +832,24 @@
               "type": "string"
             },
             "in": "query",
+            "name": "sort",
+            "required": false,
+            "description": "One of: date, name, amount, category (default date)"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "description": "asc or desc (default desc for date, asc for the other columns)"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
             "name": "page",
             "required": false,
             "description": "Page number, starting at 1 (50 rows per page)"
