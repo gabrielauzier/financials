@@ -757,11 +757,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Full happy path with a mocked API
-- [ ] Cancel returns to the start step without calling confirm
-- [ ] `web/src/routes/importar.tsx` renders `ImportPage` inside the authenticated layout (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Full happy path with a mocked API
+- [x] Cancel returns to the start step without calling confirm
+- [x] `web/src/routes/importar.tsx` renders `ImportPage` inside the authenticated layout (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

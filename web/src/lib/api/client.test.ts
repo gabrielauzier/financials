@@ -82,13 +82,11 @@ describe("apiRequest", () => {
   it("encerra a sessão em 401 também com FormData", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify({ error: { code: "unauthorized", message: "x" } }), {
-            status: 401,
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: { code: "unauthorized", message: "x" } }), {
+          status: 401,
+        }),
+      ),
     );
     await expect(
       apiRequest("/imports/preview", { method: "POST", body: new FormData() }),
