@@ -520,11 +520,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Changing the period requests the new range
-- [ ] Negative Estorno renders as a negative value
-- [ ] Empty state renders (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Changing the period requests the new range
+- [x] Negative Estorno renders as a negative value
+- [x] Empty state renders (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
