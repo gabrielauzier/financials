@@ -76,6 +76,17 @@ describe('startServer (SRV-01)', () => {
     await expect(fetch(`${server.address}/health`)).rejects.toThrow();
   });
 
+  it('releases the database pool on close: a query after close fails with CONNECTION_ENDED (SRV-03)', async () => {
+    const server = await startServer({ ...baseEnv }, { port: 0, logLevel: 'silent' });
+    const claims = { sub: '6f1c0a52-0000-4000-8000-000000000001' };
+    const rows = await server.app.withUser(claims, (tx) => tx`select 1 as one`);
+    expect(rows[0]).toEqual({ one: 1 });
+    await server.close();
+    await expect(server.app.withUser(claims, (tx) => tx`select 1`)).rejects.toMatchObject({
+      code: 'CONNECTION_ENDED',
+    });
+  });
+
   it('rejects an invalid PORT from the environment citing PORT', async () => {
     await expect(startServer({ ...baseEnv, PORT: '70000' })).rejects.toThrow(/PORT/);
   });
@@ -119,6 +130,23 @@ describe('the server process (SRV-03, SRV-02, SRV-04)', () => {
     expect(code).not.toBe(0);
     expect(code).not.toBeNull();
     expect(child.stderr()).toContain(name);
+  });
+
+  it('closes the app and exits 1 when the port is already in use (SRV-01)', async () => {
+    const port = await freePort();
+    const holder = createServer();
+    await new Promise<void>((resolve) => holder.listen(port, '127.0.0.1', resolve));
+    try {
+      const child = startChild({ ...baseEnv, LOG_LEVEL: 'info' }, port);
+      running.push(child);
+      const { code } = await child.exit;
+      expect(code).toBe(1);
+      expect(child.stderr()).toMatch(/EADDRINUSE|address already in use/i);
+      // The app is closed after the failed listen, which runs the db plugin's onClose hook.
+      expect(child.stdout()).toContain('database pool closed');
+    } finally {
+      await new Promise<void>((resolve) => holder.close(() => resolve()));
+    }
   });
 
   it('exits non-zero naming PORT when it is invalid', async () => {
