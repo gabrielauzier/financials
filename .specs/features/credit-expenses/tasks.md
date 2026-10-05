@@ -386,10 +386,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] All 5 statuses are offered from any current status
-- [ ] Changing the status calls the update (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] All 5 statuses are offered from any current status
+- [x] Changing the status calls the update (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
