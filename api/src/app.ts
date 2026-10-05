@@ -4,6 +4,7 @@ import { Type } from '@sinclair/typebox';
 import { createRemoteJWKSet } from 'jose';
 import { loadConfig, type AppConfig } from './config.js';
 import { authPlugin, createTokenVerifier, type TokenVerifierConfig } from './plugins/auth.js';
+import { accountsRoutes } from './modules/accounts/routes.js';
 import { dbPlugin } from './plugins/db.js';
 import { errorsPlugin } from './plugins/errors.js';
 import { swaggerPlugin } from './plugins/swagger.js';
@@ -32,6 +33,7 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
       () => ({ status: 'ok' as const }),
     );
   });
+  void app.register(accountsRoutes);
 
   return app;
 }

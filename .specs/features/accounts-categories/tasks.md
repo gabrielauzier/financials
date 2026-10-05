@@ -221,13 +221,13 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Valid payload creates an active account
-- [ ] Duplicate nickname returns 409 `duplicate_name`
-- [ ] No holder returns 422 `holder_required`
-- [ ] Blank nickname and duplicate holder in the same account return 422
-- [ ] Invalid bank value returns 422 (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid payload creates an active account
+- [x] Duplicate nickname returns 409 `duplicate_name`
+- [x] No holder returns 422 `holder_required`
+- [x] Blank nickname and duplicate holder in the same account return 422
+- [x] Invalid bank value returns 422 (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
