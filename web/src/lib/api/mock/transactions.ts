@@ -83,7 +83,7 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase();
 const validAmount = (value: string) => /^(?:0*[1-9]\d*)(?:\.\d{1,2})?$/.test(value);
-const validReceipt = (value?: string) => !value || /^https?:\/\//i.test(value);
+const validReceipt = (value?: string | null) => !value || /^https?:\/\//i.test(value);
 const accountFor = (id: string) => listMockAccounts().find((item) => item.id === id);
 const categoryFor = (id: string) => listMockCategories().find((item) => item.id === id);
 const uncategorized = () => listMockCategories().find((item) => item.key === "Uncategorized");
@@ -233,8 +233,8 @@ export const transactionsHandlers: MockHandler[] = [
         ...input,
         ...(account ? { accountNickname: account.nickname } : {}),
         ...(category ? { categoryName: category.name } : {}),
-        notes: input.notes === undefined ? current.notes : input.notes.trim() || null,
-        receipt: input.receipt === undefined ? current.receipt : input.receipt.trim() || null,
+        notes: input.notes === undefined ? current.notes : input.notes?.trim() || null,
+        receipt: input.receipt === undefined ? current.receipt : input.receipt?.trim() || null,
       };
       transactions = transactions.map((item) => (item.id === current.id ? updated : item));
       return updated;

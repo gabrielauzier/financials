@@ -197,12 +197,12 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] Emptying notes on edit sends `notes: null`
-- [ ] Emptying the receipt on edit sends `receipt: null`
-- [ ] Creating with empty notes and receipt omits both
-- [ ] Filled values are sent trimmed and untouched fields keep their current values (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Emptying notes on edit sends `notes: null`
+- [x] Emptying the receipt on edit sends `receipt: null`
+- [x] Creating with empty notes and receipt omits both
+- [x] Filled values are sent trimmed and untouched fields keep their current values (4 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

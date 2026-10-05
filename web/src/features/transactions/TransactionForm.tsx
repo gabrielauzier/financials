@@ -110,6 +110,8 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
     if (Object.keys(next).length || !amount) return;
     const fallbackCategory = categories.find((category) => category.key === "Uncategorized")?.id;
     const categoryId = form.categoryId || fallbackCategory;
+    const notes = form.notes.trim();
+    const receipt = form.receipt.trim();
     const input: TransactionInput = {
       name: form.name.trim(),
       type: form.type,
@@ -119,12 +121,17 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
       paymentMethod: form.paymentMethod,
       neutral: form.neutral,
       ...(categoryId ? { categoryId } : {}),
-      ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
-      ...(form.receipt.trim() ? { receipt: form.receipt.trim() } : {}),
+      ...(notes ? { notes } : {}),
+      ...(receipt ? { receipt } : {}),
     };
     try {
-      if (transaction) await update.mutateAsync({ id: transaction.id, input });
-      else await create.mutateAsync(input);
+      if (transaction) {
+        // PATCH only clears notes and receipt when they are sent as null
+        await update.mutateAsync({
+          id: transaction.id,
+          input: { ...input, notes: notes || null, receipt: receipt || null },
+        });
+      } else await create.mutateAsync(input);
       onOpenChange(false);
     } catch (reason) {
       const apiField = fieldForError(reason);

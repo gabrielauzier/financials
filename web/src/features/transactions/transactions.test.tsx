@@ -31,6 +31,7 @@ const category: Category = {
 };
 
 const failures = vi.hoisted(() => new Map<string, unknown>());
+const requests = vi.hoisted(() => [] as Array<{ method: string; path: string; body: unknown }>);
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest: async (path: string, options: { method?: string; body?: unknown } = {}) => {
@@ -38,6 +39,7 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
     const key = path
       .split("?")[0]
       ?.replace(/^\/transactions\/(?!category$)[^/]+/, "/transactions/:id");
+    requests.push({ method, path, body: options.body });
     const failure = failures.get(`${method} ${key}`);
     if (failure) throw failure;
     return mockRequest({ method, path, body: options.body });
@@ -56,6 +58,7 @@ function renderQuery(ui: React.ReactNode, client?: QueryClient) {
 afterEach(() => {
   cleanup();
   failures.clear();
+  requests.length = 0;
   vi.useRealTimers();
 });
 
@@ -348,6 +351,100 @@ describe("extrato", () => {
       fireEvent.click(within(dialog).getByRole("button", { name: "Excluir" }));
       expect(await screen.findByText(GENERIC_ERROR)).toBeInTheDocument();
       expect(screen.queryByText("DB down")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("edição e criação de observações e recibo", () => {
+    const seedEditable = async (notes: string | null, receipt: string | null) => {
+      const page = await mockRequest<TransactionsPageData>({
+        method: "GET",
+        path: "/transactions?page=1",
+      });
+      const base = page.items.find((item) => !item.neutral) as Transaction;
+      return mockRequest<Transaction>({
+        method: "PATCH",
+        path: `/transactions/${base.id}`,
+        body: { notes, receipt },
+      });
+    };
+    const patchBody = () =>
+      requests.find(
+        (request) => request.method === "PATCH" && /^\/transactions\/[^/]+$/.test(request.path),
+      )?.body as Record<string, unknown>;
+    const submitEdit = async (item: Transaction) => {
+      renderQuery(<TransactionForm open onOpenChange={vi.fn()} transaction={item} />);
+      await waitFor(() => expect(screen.getByLabelText("Nome")).toHaveValue(item.name));
+    };
+
+    it("envia notes null e mostra a transação sem observações ao esvaziar as observações", async () => {
+      const item = await seedEditable("Observação antiga", "https://exemplo.com/r.pdf");
+      await submitEdit(item);
+      fireEvent.change(screen.getByLabelText("Observações"), { target: { value: "   " } });
+      fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+      await waitFor(() => expect(patchBody()).toBeDefined());
+      expect(patchBody()).toHaveProperty("notes", null);
+      expect(patchBody()).toHaveProperty("receipt", "https://exemplo.com/r.pdf");
+      const after = await mockRequest<TransactionsPageData>({
+        method: "GET",
+        path: `/transactions?q=${encodeURIComponent(item.name)}`,
+      });
+      expect(after.items.find((row) => row.id === item.id)?.notes).toBeNull();
+    });
+
+    it("envia receipt null ao esvaziar o recibo e preserva as observações intocadas", async () => {
+      const item = await seedEditable("Manter", "https://exemplo.com/r.pdf");
+      await submitEdit(item);
+      fireEvent.change(screen.getByLabelText("Recibo (URL)"), { target: { value: "" } });
+      fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+      await waitFor(() => expect(patchBody()).toBeDefined());
+      expect(patchBody()).toHaveProperty("receipt", null);
+      expect(patchBody()).toHaveProperty("notes", "Manter");
+    });
+
+    it("envia o texto sem espaços nas pontas ao preencher na edição", async () => {
+      const item = await seedEditable(null, null);
+      await submitEdit(item);
+      fireEvent.change(screen.getByLabelText("Observações"), {
+        target: { value: "  nova nota  " },
+      });
+      fireEvent.change(screen.getByLabelText("Recibo (URL)"), {
+        target: { value: "  https://exemplo.com/novo.pdf  " },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+      await waitFor(() => expect(patchBody()).toBeDefined());
+      expect(patchBody()).toMatchObject({
+        notes: "nova nota",
+        receipt: "https://exemplo.com/novo.pdf",
+      });
+    });
+
+    it("omite observações e recibo vazios ao criar", async () => {
+      const client = new QueryClient({
+        defaultOptions: {
+          queries: { retry: false, staleTime: Infinity },
+          mutations: { retry: false },
+        },
+      });
+      client.setQueryData(["accounts", { active: true }], [account]);
+      client.setQueryData(["categories"], [category]);
+      renderQuery(<TransactionForm open onOpenChange={vi.fn()} />, client);
+      fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Sem extras" } });
+      fireEvent.change(screen.getByLabelText("Valor"), { target: { value: "10,00" } });
+      fireEvent.change(screen.getByLabelText("Observações"), { target: { value: "  " } });
+      fireEvent.click(screen.getByLabelText("Conta"));
+      fireEvent.click(await screen.findByRole("option", { name: "Nubank pessoal" }));
+      fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+      await waitFor(() =>
+        expect(
+          requests.some((request) => request.method === "POST" && request.path === "/transactions"),
+        ).toBe(true),
+      );
+      const body = requests.find((request) => request.method === "POST")?.body as Record<
+        string,
+        unknown
+      >;
+      expect(body).not.toHaveProperty("notes");
+      expect(body).not.toHaveProperty("receipt");
     });
   });
 });

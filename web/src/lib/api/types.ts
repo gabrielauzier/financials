@@ -88,7 +88,12 @@ export type TransactionInput = {
   neutral?: boolean;
 };
 
-export type TransactionUpdate = Partial<TransactionInput> & { neutral?: boolean };
+// `null` clears notes or receipt; an omitted field is left unchanged.
+export type TransactionUpdate = Partial<Omit<TransactionInput, "notes" | "receipt">> & {
+  neutral?: boolean;
+  notes?: string | null;
+  receipt?: string | null;
+};
 
 export type ImportRowStatus = "new" | "duplicate" | "ignored" | "unrecognized" | "invalid";
 export type ImportPaymentMethod = "PIX" | "DebitCard" | "BankTransfer" | "CreditCard";
