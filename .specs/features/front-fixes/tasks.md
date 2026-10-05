@@ -340,12 +340,12 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] Typing queries once after 300 ms with fake timers and resets to page 1
-- [ ] Each filter sends its parameter and resets the page; 'Limpar filtros' restores the default
-- [ ] Clicking Valor twice requests ascending then descending
-- [ ] Empty result shows 'Nenhuma transação encontrada' and Próxima/Anterior move between pages (6 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Typing queries once after 300 ms with fake timers and resets to page 1
+- [x] Each filter sends its parameter and resets the page; 'Limpar filtros' restores the default
+- [x] Clicking Valor twice requests ascending then descending
+- [x] Empty result shows 'Nenhuma transação encontrada' and Próxima/Anterior move between pages (6 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
