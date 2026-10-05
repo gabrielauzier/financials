@@ -289,11 +289,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Inside `withUser`, `auth.uid()` equals the token subject and the role is `authenticated`
-- [ ] Two consecutive `withUser` calls for different users never see each other's claims (no leakage)
-- [ ] A thrown error rolls the transaction back (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Inside `withUser`, `auth.uid()` equals the token subject and the role is `authenticated`
+- [x] Two consecutive `withUser` calls for different users never see each other's claims (no leakage)
+- [x] A thrown error rolls the transaction back (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
