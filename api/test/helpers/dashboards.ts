@@ -1,5 +1,9 @@
+import type { FastifyInstance } from 'fastify';
+import { DateTime } from 'luxon';
 import type { TransactionSql } from 'postgres';
+import { buildApp } from '../../src/app.js';
 import { getAdminSql, type TestUser } from './db.js';
+import { getLocalStack } from './stack.js';
 
 /** Runs `fn` as the `authenticated` role with the given user's claims (raw SQL, no app code). */
 export async function asUser<T>(userId: string, fn: (tx: TransactionSql) => Promise<T>): Promise<T> {
@@ -41,4 +45,22 @@ export async function seedAccount(user: TestUser, nickname = 'Conta', active = t
     insert into public.accounts (bank, nickname, holder_names, active)
     values ('Nubank', ${nickname}, ${['Fulano']}, ${active}) returning id`);
   return row?.id ?? '';
+}
+
+export async function startApp(): Promise<FastifyInstance> {
+  const { apiUrl, dbUrl } = getLocalStack();
+  const app = buildApp({ supabaseUrl: apiUrl, databaseUrl: dbUrl });
+  await app.ready();
+  return app;
+}
+
+export function get(app: FastifyInstance, as: TestUser, url: string, headers: Record<string, string> = {}) {
+  return app.inject({ method: 'GET', url, headers: { authorization: `Bearer ${as.token}`, ...headers } });
+}
+
+/** An instant `daysAgo` days before now at the given local wall-clock time (HH:mm) in `zone`. */
+export function localInstant(daysAgo: number, zone: string, time = '12:00'): string {
+  const [h, m] = time.split(':').map(Number) as [number, number];
+  const iso = DateTime.now().setZone(zone).minus({ days: daysAgo }).set({ hour: h, minute: m, second: 0, millisecond: 0 }).toISO();
+  return iso as string;
 }

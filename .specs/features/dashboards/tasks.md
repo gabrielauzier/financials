@@ -183,11 +183,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] R$ 100 and R$ 50 in the window and R$ 100 before gives total 150.00 and +50%
-- [ ] Previous total zero returns `changePct` null
-- [ ] No expenses returns 0.00 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] R$ 100 and R$ 50 in the window and R$ 100 before gives total 150.00 and +50%
+- [x] Previous total zero returns `changePct` null
+- [x] No expenses returns 0.00 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

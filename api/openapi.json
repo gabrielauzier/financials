@@ -1594,6 +1594,42 @@
         }
       }
     },
+    "/dashboard/last-30-days": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "total",
+                    "previousTotal",
+                    "changePct"
+                  ],
+                  "properties": {
+                    "total": {
+                      "description": "Expenses of the 30 days ending today (inclusive), decimal string with 2 decimals",
+                      "type": "string"
+                    },
+                    "previousTotal": {
+                      "description": "Expenses of the 30 days immediately before, decimal string with 2 decimals",
+                      "type": "string"
+                    },
+                    "changePct": {
+                      "description": "(total - previousTotal) / previousTotal * 100, 1 decimal; null when previousTotal is 0",
+                      "type": "number",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {

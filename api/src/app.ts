@@ -7,6 +7,7 @@ import { authPlugin, createTokenVerifier, type TokenVerifierConfig } from './plu
 import { accountsRoutes } from './modules/accounts/routes.js';
 import { categoriesRoutes } from './modules/categories/routes.js';
 import { creditExpensesRoutes } from './modules/creditExpenses/routes.js';
+import { dashboardsRoutes } from './modules/dashboards/routes.js';
 import { importRoutes } from './modules/import/routes.js';
 import { transactionsRoutes } from './modules/transactions/routes.js';
 import { corsPlugin } from './plugins/cors.js';
@@ -53,6 +54,7 @@ export function buildApp(config: AppConfig = loadConfig(), options: BuildAppOpti
   void app.register(categoriesRoutes);
   void app.register(transactionsRoutes);
   void app.register(creditExpensesRoutes);
+  void app.register(dashboardsRoutes);
   void app.register(importRoutes, {
     supabaseUrl: config.supabaseUrl,
     ...(config.supabasePublishableKey ? { publishableKey: config.supabasePublishableKey } : {}),
