@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { messageForError } from "@/lib/api/errorMessages";
 import type { Category } from "@/lib/api/types";
 import { CategorySelect } from "./CategorySelect";
 import { useCategories, useCreateCategory, useDeleteCategory, useRenameCategory } from "./hooks";
@@ -57,13 +58,7 @@ export function CategoriesPage() {
       await create.mutateAsync(parsed.data);
       setNewName("");
     } catch (reason) {
-      setCreateError(
-        getCode(reason) === "duplicate_name"
-          ? "Já existe uma categoria com esse nome"
-          : reason instanceof Error
-            ? reason.message
-            : "Não foi possível criar a categoria",
-      );
+      setCreateError(messageForError(reason, "category"));
     }
   };
   const submitRename = async (event: FormEvent) => {
@@ -79,16 +74,7 @@ export function CategoriesPage() {
       await rename.mutateAsync({ id: editing.id, name: parsed.data });
       setEditing(undefined);
     } catch (reason) {
-      const code = getCode(reason);
-      setEditError(
-        code === "duplicate_name"
-          ? "Já existe uma categoria com esse nome"
-          : code === "category_protected"
-            ? "Categoria protegida"
-            : reason instanceof Error
-              ? reason.message
-              : "Não foi possível renomear a categoria",
-      );
+      setEditError(messageForError(reason, "category"));
     }
   };
   const confirmDelete = async () => {
@@ -103,10 +89,7 @@ export function CategoriesPage() {
       if (getCode(reason) === "reassign_required") {
         setDestination(undefined);
         setReassigning(category);
-      } else
-        setDeleteError(
-          reason instanceof Error ? reason.message : "Não foi possível excluir a categoria",
-        );
+      } else setDeleteError(messageForError(reason, "category"));
     }
   };
   const confirmReassignment = async () => {
@@ -117,9 +100,7 @@ export function CategoriesPage() {
       setReassigning(undefined);
       setDestination(undefined);
     } catch (reason) {
-      setDeleteError(
-        reason instanceof Error ? reason.message : "Não foi possível excluir a categoria",
-      );
+      setDeleteError(messageForError(reason, "category"));
     }
   };
   return (

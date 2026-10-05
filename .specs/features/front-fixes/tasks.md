@@ -141,11 +141,11 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] Duplicate name, protected category and reassign required show the Portuguese texts
-- [ ] An unknown code shows the generic text
-- [ ] No `error.message` or `reason.message` is read in the categories feature (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Duplicate name, protected category and reassign required show the Portuguese texts
+- [x] An unknown code shows the generic text
+- [x] No `error.message` or `reason.message` is read in the categories feature (3 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
