@@ -42,7 +42,7 @@ describe('CORS preflight (CORS-01, CORS-02)', () => {
     expect(response.headers['access-control-max-age']).toBe('600');
   });
 
-  it('works for every allowed origin and for routes that do not exist', async () => {
+  it('works for every allowed origin', async () => {
     const response = await app.inject({
       method: 'OPTIONS',
       url: '/accounts',
@@ -50,6 +50,16 @@ describe('CORS preflight (CORS-01, CORS-02)', () => {
     });
     expect(response.statusCode).toBe(204);
     expect(response.headers['access-control-allow-origin']).toBe(OTHER_ALLOWED);
+  });
+
+  it('does not depend on the route existing', async () => {
+    const response = await app.inject({
+      method: 'OPTIONS',
+      url: '/this-route-does-not-exist',
+      headers: { origin: ALLOWED, ...PREFLIGHT },
+    });
+    expect(response.statusCode).toBe(204);
+    expect(response.headers['access-control-allow-origin']).toBe(ALLOWED);
   });
 
   it('does not advertise PUT and never sends credentials', async () => {

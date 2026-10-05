@@ -38,5 +38,6 @@ export const dbPlugin = fp(async (app: FastifyInstance, options: DbPluginOptions
   app.decorate('withUser', createWithUser(sql));
   app.addHook('onClose', async () => {
     await sql.end();
+    app.log.info('database pool closed');
   });
 });

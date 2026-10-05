@@ -185,3 +185,11 @@ Phase 1 → Phase 2
 ```
 
 Execution is strictly sequential within each phase; cross-feature order is auth → accounts-categories → transactions → import → credit-expenses → dashboards.
+
+## Fix tasks (Verifier iteration 1)
+
+- [x] F1: make the shutdown observable (`database pool closed`, `shutdown complete` logs) and test that SIGTERM and SIGINT close the pool before exit (kills mutant M24)
+- [x] F2: log only the request path so a query-string token or search text never reaches the logs, with a test
+- [x] F3: test hygiene: assert a non-null exit code on a config error and give the preflight-on-missing-route case its own test
+- Accepted, not fixed: closing the app when `listen` fails (M23) is untested because the pool connects lazily and nothing observable remains; documented in the validation report.
+

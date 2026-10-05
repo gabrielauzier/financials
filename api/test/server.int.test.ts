@@ -91,6 +91,27 @@ describe('the server process (SRV-03, SRV-02, SRV-04)', () => {
     await expect(fetch(`http://127.0.0.1:${child.port}/health`)).rejects.toThrow();
   });
 
+  it.each(['SIGTERM', 'SIGINT'] as const)(
+    'closes the database pool and the app before exiting after %s (SRV-03)',
+    async (signal) => {
+      const child = startChild({ ...baseEnv, LOG_LEVEL: 'info' }, await freePort());
+      running.push(child);
+      await waitHealthy(child);
+      child.process.kill(signal);
+      expect(await child.exit).toEqual({ code: 0, signal: null });
+      const messages = child
+        .stdout()
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map((line) => (JSON.parse(line) as { msg?: string }).msg);
+      // Only `app.close()` runs the db plugin's onClose hook, so a bare process.exit(0) cannot fake these.
+      const closed = messages.indexOf('database pool closed');
+      const complete = messages.indexOf('shutdown complete');
+      expect(closed).toBeGreaterThan(-1);
+      expect(complete).toBeGreaterThan(closed);
+    },
+  );
+
   it.each(['SUPABASE_URL', 'DATABASE_URL'])('exits non-zero naming %s when it is missing', async (name) => {
     const child = startChild({ ...baseEnv, [name]: undefined }, await freePort());
     running.push(child);
@@ -104,6 +125,7 @@ describe('the server process (SRV-03, SRV-02, SRV-04)', () => {
     const child = startChild({ ...baseEnv }, 0);
     running.push(child);
     const { code } = await child.exit;
+    expect(code).not.toBeNull();
     expect(code).not.toBe(0);
     expect(child.stderr()).toContain('PORT');
   });
@@ -129,5 +151,22 @@ describe('the server process (SRV-03, SRV-02, SRV-04)', () => {
     expect(records.some((record) => record.res?.statusCode === 401)).toBe(true);
     expect(child.stdout()).not.toContain(token);
     expect(child.stderr()).not.toContain(token);
+  });
+
+  it('logs only the path of a request: a token or search text in the query string never reaches the logs', async () => {
+    const secret = 'qs-secret-must-not-be-logged-41d8';
+    const child = startChild({ ...baseEnv, LOG_LEVEL: 'info' }, await freePort());
+    running.push(child);
+    await waitHealthy(child);
+    await fetch(`http://127.0.0.1:${child.port}/accounts?access_token=${secret}&q=${secret}`);
+    child.process.kill('SIGTERM');
+    await child.exit;
+    const records = child
+      .stdout()
+      .split('\n')
+      .filter((line) => line.trim() !== '')
+      .map((line) => JSON.parse(line) as { req?: { url?: string } });
+    expect(records.some((record) => record.req?.url === '/accounts')).toBe(true);
+    expect(child.stdout()).not.toContain(secret);
   });
 });
