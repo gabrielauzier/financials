@@ -158,11 +158,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Valid payload returns 201 with a uuid and category Sem categoria when none is given
-- [ ] Invalid amount, empty required field, inactive account, other user's account and invalid receipt URL are rejected with 422
-- [ ] `identifier` stays empty for manual rows (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid payload returns 201 with a uuid and category Sem categoria when none is given
+- [x] Invalid amount, empty required field, inactive account, other user's account and invalid receipt URL are rejected with 422
+- [x] `identifier` stays empty for manual rows (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
