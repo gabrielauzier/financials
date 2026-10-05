@@ -826,3 +826,110 @@ describe('DELETE /transactions/:id', () => {
     expect(await exists(id)).toBe(true);
   });
 });
+
+describe('PATCH /transactions/category (bulk)', () => {
+  let u: TestUser;
+  let account: string;
+  let food: string;
+  let uncategorized: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Lote');
+    food = await categoryId(u, 'Food');
+    uncategorized = await categoryId(u, 'Uncategorized');
+  });
+
+  async function createMany(count: number): Promise<string[]> {
+    const ids: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const res = await call(u, 'POST', '/transactions', valid({ accountId: account, name: `Lote ${i}` }));
+      expect(res.statusCode).toBe(201);
+      ids.push(res.json<{ id: string }>().id);
+    }
+    return ids;
+  }
+
+  const bulk = (body: unknown, as: TestUser = u) => call(as, 'PATCH', '/transactions/category', body);
+
+  async function categoriesOf(ids: string[]): Promise<string[]> {
+    const rows = await getAdminSql()<{ id: string; category_id: string }[]>`
+      select id, category_id from public.transactions where id in ${getAdminSql()(ids)}`;
+    return ids.map((id) => rows.find((r) => r.id === id)?.category_id ?? 'missing');
+  }
+
+  it('assigns the category to every listed row in one call (204) and leaves the others alone', async () => {
+    const [a, b, c, d, e, untouched] = (await createMany(6)) as [string, string, string, string, string, string];
+    // Matched by the static route, not by PATCH /transactions/:id with id "category".
+    const res = await bulk({ ids: [a, b, c, d, e], categoryId: food });
+    expect(res.statusCode).toBe(204);
+    expect(res.body).toBe('');
+
+    const items = (await list(u)).items as unknown as Txn[];
+    for (const id of [a, b, c, d, e]) {
+      expect(items.find((r) => r.id === id)).toMatchObject({ categoryId: food, categoryName: 'Alimentação' });
+    }
+    expect(items.find((r) => r.id === untouched)).toMatchObject({ categoryId: uncategorized, categoryName: 'Sem categoria' });
+  });
+
+  it('counts repeated ids once, in any letter case', async () => {
+    const [a, b] = (await createMany(2)) as [string, string];
+    const res = await bulk({ ids: [a, a, a.toUpperCase(), b], categoryId: food });
+    expect(res.statusCode).toBe(204);
+    expect(await categoriesOf([a, b])).toEqual([food, food]);
+  });
+
+  it("returns 404 and changes no row when one id is unknown, malformed or another user's", async () => {
+    const mine = await createMany(3);
+    const other = await createTestUser();
+    const otherAccount = await createAccount(other, 'Alheia');
+    const foreignRes = await call(other, 'POST', '/transactions', valid({ accountId: otherAccount }));
+    const foreign = foreignRes.json<{ id: string; categoryId: string }>();
+
+    for (const stranger of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid', foreign.id]) {
+      const res = await bulk({ ids: [...mine, stranger], categoryId: food });
+      expect(res.statusCode, stranger).toBe(404);
+      expect(res.json(), stranger).toEqual({ error: { code: 'not_found', message: expect.any(String), field: 'ids' } });
+    }
+    expect(await categoriesOf(mine)).toEqual([uncategorized, uncategorized, uncategorized]);
+    expect(await categoriesOf([foreign.id])).toEqual([foreign.categoryId]);
+  });
+
+  // SPEC_DEVIATION: tasks.md T10 says an unknown category returns 422; the API answers 404
+  // not_found with field categoryId. Reason: same answer as POST/PATCH for an unknown category
+  // and as the Lovable contract (orchestrator decision for this batch).
+  it("returns 404 not_found on categoryId for an unknown, malformed or another user's category, changing nothing", async () => {
+    const mine = await createMany(2);
+    const other = await createTestUser();
+    for (const category of ['00000000-0000-4000-8000-000000000000', 'nope', await categoryId(other, 'Food')]) {
+      const res = await bulk({ ids: mine, categoryId: category });
+      expect(res.statusCode, category).toBe(404);
+      expect(res.json(), category).toEqual({ error: { code: 'not_found', message: expect.any(String), field: 'categoryId' } });
+    }
+    expect(await categoriesOf(mine)).toEqual([uncategorized, uncategorized]);
+  });
+
+  it('rejects an empty ids list and more than 500 ids with 422 validation_error on ids', async () => {
+    const [a] = (await createMany(1)) as [string];
+    const tooMany = [a, ...Array.from({ length: 500 }, (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`)];
+    for (const ids of [[], tooMany]) {
+      const res = await bulk({ ids, categoryId: food });
+      expect(res.statusCode, `${ids.length} ids`).toBe(422);
+      expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'ids' } });
+    }
+    expect(await categoriesOf([a])).toEqual([uncategorized]);
+  });
+
+  it('accepts exactly 500 ids', async () => {
+    const owner = await createTestUser();
+    const ownerAccount = await createAccount(owner, 'Quinhentas');
+    await seed(owner, ownerAccount, Array.from({ length: 500 }, (_, i) => ({ occurredAt: new Date(Date.UTC(2026, 0, 1) + i * 60_000).toISOString() })));
+    const rows = await getAdminSql()<{ id: string }[]>`select id from public.transactions where user_id = ${owner.id}`;
+    const ownerFood = await categoryId(owner, 'Food');
+
+    const res = await bulk({ ids: rows.map((r) => r.id), categoryId: ownerFood }, owner);
+    expect(res.statusCode).toBe(204);
+    expect(await getAdminSql()`
+      select count(*)::int as n from public.transactions where user_id = ${owner.id} and category_id = ${ownerFood}`).toEqual([{ n: 500 }]);
+  });
+});

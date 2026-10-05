@@ -1160,6 +1160,41 @@
           }
         }
       }
+    },
+    "/transactions/category": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids",
+                  "categoryId"
+                ],
+                "properties": {
+                  "ids": {
+                    "description": "1 to 500 transaction ids; repeated ids (in any letter case) count once",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "categoryId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Category applied to every id"
+          }
+        }
+      }
     }
   },
   "security": [

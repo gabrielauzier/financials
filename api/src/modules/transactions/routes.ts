@@ -50,6 +50,15 @@ const UpdateBody = Type.Object({
 
 const IdParams = Type.Object({ id: Type.String() });
 
+const MAX_BULK_IDS = 500;
+
+const BulkCategoryBody = Type.Object({
+  ids: Type.Array(Type.String(), {
+    description: `1 to ${MAX_BULK_IDS} transaction ids; repeated ids (in any letter case) count once`,
+  }),
+  categoryId: Type.String(),
+});
+
 const SORTS = ['date', 'name', 'amount', 'category'] as const;
 type Sort = (typeof SORTS)[number];
 
@@ -229,6 +238,10 @@ function notFound(): AppError {
   return new AppError('not_found', 404, 'Transaction not found');
 }
 
+function bulkNotFound(): AppError {
+  return new AppError('not_found', 404, 'One or more transactions were not found; nothing was changed', 'ids');
+}
+
 interface TransactionPatch {
   name?: string;
   type?: TransactionType;
@@ -384,6 +397,34 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
       if (!UUID.test(id)) throw notFound();
       const deleted = await request.withUser((tx) => tx`delete from public.transactions where id = ${id}`);
       if (deleted.count === 0) throw notFound();
+      return reply.status(204).send(null);
+    },
+  );
+
+  // Static path: find-my-way matches it before the parametric `PATCH /transactions/:id`.
+  routes.patch(
+    '/transactions/category',
+    { schema: { body: BulkCategoryBody, response: { 204: Type.Null({ description: 'Category applied to every id' }) } } },
+    async (request, reply) => {
+      const { categoryId } = request.body;
+      if (request.body.ids.length === 0) throw invalid('ids must contain at least one transaction id', 'ids');
+      if (request.body.ids.length > MAX_BULK_IDS) throw invalid(`ids must contain at most ${MAX_BULK_IDS} ids`, 'ids');
+      // uuids compare case-insensitively in Postgres, so duplicates are removed the same way.
+      const ids = [...new Set(request.body.ids.map((id) => id.toLowerCase()))];
+      // A malformed id cannot name a transaction: same answer as an unknown one.
+      if (!ids.every((id) => UUID.test(id))) throw bulkNotFound();
+
+      await request.withUser(async (tx) => {
+        const [category] = UUID.test(categoryId)
+          ? await tx<{ id: string }[]>`select id from public.categories where id = ${categoryId}`
+          : [];
+        if (!category) throw categoryNotFound();
+        // One UPDATE; RLS skips other users' rows. Fewer rows than ids means an unknown or foreign
+        // id, and throwing rolls the whole statement back: all or nothing.
+        const updated = await tx`
+          update public.transactions set category_id = ${category.id} where id in ${tx(ids)}`;
+        if (updated.count !== ids.length) throw bulkNotFound();
+      });
       return reply.status(204).send(null);
     },
   );

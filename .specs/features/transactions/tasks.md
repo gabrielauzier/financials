@@ -356,11 +356,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] All listed rows get the category in one operation
-- [ ] One unknown or foreign id returns 404 and no row changes
-- [ ] Unknown category returns 422 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] All listed rows get the category in one operation
+- [x] One unknown or foreign id returns 404 and no row changes
+- [x] Unknown category returns 422 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
