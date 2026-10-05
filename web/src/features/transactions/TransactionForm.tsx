@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -29,8 +30,9 @@ import type {
   TransactionInput,
   TransactionType,
 } from "@/lib/api/types";
+import { notifyError, notifySuccess } from "@/lib/notify";
 import { useCreateTransaction, useUpdateTransaction } from "./hooks";
-import { parseBRLToDecimal, toLocalDateInput } from "./utils";
+import { parseBRLToDecimal, todayLocal, toLocalDateInput } from "./utils";
 
 const paymentLabels: Record<PaymentMethod, string> = {
   BankTransfer: "Transferência bancária",
@@ -41,10 +43,11 @@ const paymentLabels: Record<PaymentMethod, string> = {
   NuPay: "NuPay",
   PIX: "PIX",
 };
-const initial = {
+// A function, not a constant: "today" must be computed when the form opens, not when the module loads.
+const emptyForm = () => ({
   name: "",
   type: "Expense" as TransactionType,
-  date: new Date().toISOString().slice(0, 10),
+  date: todayLocal(),
   amount: "",
   accountId: "",
   categoryId: "",
@@ -52,7 +55,7 @@ const initial = {
   notes: "",
   receipt: "",
   neutral: false,
-};
+});
 
 const formFields = new Set([
   "name",
@@ -70,7 +73,7 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
   const create = useCreateTransaction();
   const update = useUpdateTransaction();
   const { data: categories = [] } = useCategories();
-  const [form, setForm] = useState(initial);
+  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   useEffect(() => {
     if (!open) return;
@@ -89,7 +92,7 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
             receipt: transaction.receipt ?? "",
             neutral: transaction.neutral,
           }
-        : initial,
+        : emptyForm(),
     );
   }, [open, transaction]);
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -133,7 +136,9 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
         });
       } else await create.mutateAsync(input);
       onOpenChange(false);
+      notifySuccess(transaction ? "Transação atualizada" : "Transação criada");
     } catch (reason) {
+      notifyError(reason, "transaction");
       const apiField = fieldForError(reason);
       const field = apiField === "occurredAt" ? "date" : apiField;
       setErrors({
@@ -172,11 +177,10 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
             </Select>
           </Field>
           <Field label="Data" id="transaction-date" error={errors["date"]}>
-            <Input
+            <DatePicker
               id="transaction-date"
-              type="date"
               value={form.date}
-              onChange={(e) => set("date", e.target.value)}
+              onChange={(value) => set("date", value)}
             />
           </Field>
           <Field label="Valor" id="transaction-amount" error={errors["amount"]}>

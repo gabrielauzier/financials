@@ -40,3 +40,11 @@ export function applyDateFilter(
   else filters[key] = value;
   return { filters, quick: {} };
 }
+
+/** Today in the user's local time zone as `YYYY-MM-DD` (local getters, never `toISOString`). */
+export function todayLocal(now: Date = new Date()): string {
+  const year = String(now.getFullYear()).padStart(4, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}

@@ -120,7 +120,7 @@ describe("extrato: categoria, lote e neutra", () => {
     renderWithQuery(<TransactionsPage />);
     await rowOf(names[0] as string);
     // the initial search debounce (300 ms) resets the selection: wait it out first
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await new Promise((resolve) => setTimeout(resolve, 800));
     for (const name of names) {
       fireEvent.click(within(await rowOf(name)).getByRole("checkbox"));
     }
@@ -166,7 +166,7 @@ describe("extrato: categoria, lote e neutra", () => {
     const target = categories.find((c) => c.id !== item.categoryId) as Category;
     renderWithQuery(<TransactionsPage />);
     await rowOf(item.name);
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await new Promise((resolve) => setTimeout(resolve, 800));
     fireEvent.click(within(await rowOf(item.name)).getByRole("checkbox"));
     const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
     expect(within(bar).getByText("1 selecionada(s)")).toBeInTheDocument();

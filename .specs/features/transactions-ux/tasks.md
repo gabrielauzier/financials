@@ -246,12 +246,12 @@ T6 → T11
 
 **Done when**:
 
-- [ ] `todayLocal` returns the local day (fake timer at 23:30 in `America/Sao_Paulo` still returns that day) and the create form opens with it (AC 11)
-- [ ] Choosing a day in the form sends `occurredAt` at local noon of that day; submitting without a date shows "Informe a data" (AC 10 and 12)
-- [ ] Create and edit success close the dialog and emit "Transação criada" and "Transação atualizada" (AC 9 and 10 of the toast story)
-- [ ] A failing create or edit keeps the dialog open, keeps the inline field error when the API sends `field`, and emits the mapped error text (AC 11)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 8 tests pass (no silent deletions)
+- [x] `todayLocal` returns the local day (fake timer at 23:30 in `America/Sao_Paulo` still returns that day) and the create form opens with it (AC 11)
+- [x] Choosing a day in the form sends `occurredAt` at local noon of that day; submitting without a date shows "Informe a data" (AC 10 and 12)
+- [x] Create and edit success close the dialog and emit "Transação criada" and "Transação atualizada" (AC 9 and 10 of the toast story)
+- [x] A failing create or edit keeps the dialog open, keeps the inline field error when the API sends `field`, and emits the mapped error text (AC 11)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 8 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

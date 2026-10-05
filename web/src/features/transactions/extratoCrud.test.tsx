@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, Transaction } from "@/lib/api/types";
-import { renderWithQuery, requests, resetSpy } from "@/test/apiSpy";
+import { ApiError } from "@/lib/api/client";
+import { GENERIC_ERROR } from "@/lib/api/errorMessages";
+import { failures, renderWithQuery, requests, resetSpy } from "@/test/apiSpy";
+import { pickDate } from "@/test/datePicker";
 import { TransactionsPage } from "./TransactionsPage";
 
 vi.mock("sonner", async (importOriginal) => ({
@@ -87,7 +90,7 @@ describe("extrato: exclusão, criação e edição", () => {
     const dialog = await screen.findByRole("dialog");
     fireEvent.change(within(dialog).getByLabelText("Nome"), { target: { value: "Crud criada" } });
     fireEvent.change(within(dialog).getByLabelText("Valor"), { target: { value: "1.234,56" } });
-    fireEvent.change(within(dialog).getByLabelText("Data"), { target: { value: "2031-03-15" } });
+    pickDate(within(dialog).getByLabelText("Data"), "2031-03-15");
     fireEvent.click(within(dialog).getByLabelText("Conta"));
     fireEvent.click(await screen.findByRole("option", { name: account.nickname }));
     fireEvent.click(within(dialog).getByRole("button", { name: "Salvar" }));
@@ -107,6 +110,8 @@ describe("extrato: exclusão, criação e edição", () => {
     expect(within(row).getByText(/1\.234,56/)).toBeInTheDocument();
     expect(within(row).getByText(account.nickname)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith("Transação criada");
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it("edita enviando os campos do formulário, com notes e receipt null ao esvaziar, e a lista mostra a mudança", async () => {
@@ -141,6 +146,9 @@ describe("extrato: exclusão, criação e edição", () => {
     const row = await rowOf("Crud editada");
     expect(within(row).queryByText("Nota antiga")).not.toBeInTheDocument();
     expect(screen.queryAllByText("Crud editar")).toHaveLength(0);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith("Transação atualizada");
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it("não oferece conta inativa no formulário, mas a lista como opção do filtro", async () => {
@@ -171,5 +179,150 @@ describe("extrato: exclusão, criação e edição", () => {
     expect(
       await screen.findByRole("option", { name: "Conta CRUD inativa (inativa)" }),
     ).toBeInTheDocument();
+  });
+
+  describe("formulário: data, hoje local e toasts", () => {
+    const openCreate = async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Nova transação" }));
+      return screen.findByRole("dialog");
+    };
+    const fillRequired = async (dialog: HTMLElement, name: string) => {
+      fireEvent.change(within(dialog).getByLabelText("Nome"), { target: { value: name } });
+      fireEvent.change(within(dialog).getByLabelText("Valor"), { target: { value: "10,00" } });
+      fireEvent.click(within(dialog).getByLabelText("Conta"));
+      fireEvent.click(
+        await screen.findByRole("option", { name: (await activeAccount()).nickname }),
+      );
+    };
+    const submit = (dialog: HTMLElement) =>
+      fireEvent.click(within(dialog).getByRole("button", { name: "Salvar" }));
+    const originalTZ = process.env["TZ"];
+    afterEach(() => {
+      if (originalTZ === undefined) delete process.env["TZ"];
+      else process.env["TZ"] = originalTZ;
+    });
+
+    it("o formulário de criação abre com hoje no fuso local (23:30 em São Paulo) e recalcula ao reabrir", async () => {
+      process.env["TZ"] = "America/Sao_Paulo";
+      vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date(2026, 9, 5, 23, 30) });
+      renderWithQuery(<TransactionsPage />);
+      await screen.findByText(/Página 1 de/);
+      let dialog = await openCreate();
+      expect(within(dialog).getByLabelText("Data")).toHaveTextContent("05/10/2026");
+      fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      // a tab left open past midnight: the default date follows the clock, not the module load
+      vi.setSystemTime(new Date(2026, 9, 6, 8, 0));
+      dialog = await openCreate();
+      expect(within(dialog).getByLabelText("Data")).toHaveTextContent("06/10/2026");
+    });
+
+    it("escolher um dia envia occurredAt ao meio-dia local desse dia", async () => {
+      process.env["TZ"] = "America/Sao_Paulo";
+      renderWithQuery(<TransactionsPage />);
+      await screen.findByText(/Página 1 de/);
+      const dialog = await openCreate();
+      await fillRequired(dialog, "Crud data");
+      pickDate(within(dialog).getByLabelText("Data"), "2026-12-31");
+      submit(dialog);
+      await waitFor(() => expect(callsTo("POST", /^\/transactions$/)).toHaveLength(1));
+      const body = callsTo("POST", /^\/transactions$/)[0]?.body as { occurredAt: string };
+      expect(body.occurredAt).toBe("2026-12-31T15:00:00.000Z");
+      expect(new Date(body.occurredAt).getHours()).toBe(12);
+    });
+
+    it("enviar sem data mostra 'Informe a data' no campo e não chama a API", async () => {
+      renderWithQuery(<TransactionsPage />);
+      await screen.findByText(/Página 1 de/);
+      const dialog = await openCreate();
+      await fillRequired(dialog, "Crud sem data");
+      fireEvent.click(within(dialog).getByLabelText("Data"));
+      fireEvent.click(await screen.findByRole("button", { name: "Limpar" }));
+      expect(within(dialog).getByLabelText("Data")).toHaveTextContent("Selecione a data");
+      submit(dialog);
+      expect(await within(dialog).findByText("Informe a data")).toHaveAttribute(
+        "id",
+        "transaction-date-error",
+      );
+      expect(callsTo("POST", /^\/transactions$/)).toHaveLength(0);
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+
+    it("editar só o nome fecha o diálogo e emite 'Transação atualizada'", async () => {
+      const item = await seed("Crud só nome");
+      renderWithQuery(<TransactionsPage />);
+      fireEvent.click(within(await rowOf(item.name)).getByRole("button", { name: /^Editar / }));
+      const dialog = await screen.findByRole("dialog");
+      await waitFor(() => expect(within(dialog).getByLabelText("Nome")).toHaveValue(item.name));
+      fireEvent.change(within(dialog).getByLabelText("Nome"), {
+        target: { value: "Crud só nome 2" },
+      });
+      submit(dialog);
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(toast.success).toHaveBeenCalledExactlyOnceWith("Transação atualizada");
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it("falha na criação com field mantém o diálogo aberto, o erro no campo e emite o toast do mapa", async () => {
+      renderWithQuery(<TransactionsPage />);
+      await screen.findByText(/Página 1 de/);
+      const dialog = await openCreate();
+      await fillRequired(dialog, "Crud falha criar");
+      failures.set(
+        "POST /transactions",
+        new ApiError("invalid_amount", "Amount must be positive", 422, "amount"),
+      );
+      submit(dialog);
+      await waitFor(() => expect(toast.error).toHaveBeenCalledExactlyOnceWith("Valor inválido"));
+      expect(await within(dialog).findByText("Valor inválido")).toHaveAttribute(
+        "id",
+        "transaction-amount-error",
+      );
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalledWith("Amount must be positive");
+    });
+
+    it("falha de rede na criação mantém o diálogo aberto, mostra o erro do formulário e emite o texto genérico", async () => {
+      renderWithQuery(<TransactionsPage />);
+      await screen.findByText(/Página 1 de/);
+      const dialog = await openCreate();
+      await fillRequired(dialog, "Crud falha rede");
+      failures.set("POST /transactions", new TypeError("Failed to fetch"));
+      submit(dialog);
+      await waitFor(() => expect(toast.error).toHaveBeenCalledExactlyOnceWith(GENERIC_ERROR));
+      expect(await within(dialog).findByText(GENERIC_ERROR)).toHaveAttribute("role", "alert");
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+
+    it("falha na edição (PATCH e recarga falham) mantém o diálogo, mantém a lista antiga e emite o toast", async () => {
+      const item = await seed("Crud falha editar");
+      renderWithQuery(<TransactionsPage />);
+      fireEvent.click(within(await rowOf(item.name)).getByRole("button", { name: /^Editar / }));
+      const dialog = await screen.findByRole("dialog");
+      await waitFor(() => expect(within(dialog).getByLabelText("Nome")).toHaveValue(item.name));
+      fireEvent.change(within(dialog).getByLabelText("Nome"), {
+        target: { value: "Nome rejeitado" },
+      });
+      failures.set(
+        "PATCH /transactions/:id",
+        new ApiError("validation_error", "Bad name", 422, "name"),
+      );
+      failures.set("GET /transactions", new TypeError("Failed to fetch"));
+      submit(dialog);
+      await waitFor(() =>
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith("Dados inválidos. Revise os campos"),
+      );
+      expect(await within(dialog).findByText("Dados inválidos. Revise os campos")).toHaveAttribute(
+        "id",
+        "transaction-name-error",
+      );
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(toast.success).not.toHaveBeenCalled();
+      // the optimistic rename was rolled back even though the refetch failed too
+      await waitFor(() => expect(screen.queryAllByText("Nome rejeitado")).toHaveLength(0));
+      expect((await screen.findAllByText(item.name)).length).toBeGreaterThan(0);
+    });
   });
 });
