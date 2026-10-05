@@ -121,6 +121,39 @@ describe('transactions migration: constraints', () => {
   });
 });
 
+describe('transactions migration 0007: description and Other', () => {
+  it('has a nullable description column that is null when not provided', async () => {
+    const [col] = await getAdminSql()`
+      select data_type, is_nullable, column_default from information_schema.columns
+      where table_schema = 'public' and table_name = 'transactions' and column_name = 'description'`;
+    expect(col).toMatchObject({ data_type: 'text', is_nullable: 'YES', column_default: null });
+    const f = await fixture();
+    await asUser(f.user.id, (tx) => insertTx(tx, f));
+    const rows = await asUser(f.user.id, (tx) => tx<{ description: string | null }[]>`
+      select description from public.transactions`);
+    expect(rows).toEqual([{ description: null }]);
+  });
+
+  it('accepts the Other payment method and still rejects a value outside the list', async () => {
+    const f = await fixture();
+    await asUser(f.user.id, (tx) => insertTx(tx, f, { method: 'Other' }));
+    await expect(asUser(f.user.id, (tx) => insertTx(tx, f, { method: 'Bitcoin' }))).rejects.toThrow(
+      /transactions_payment_method_check/,
+    );
+  });
+
+  it('stores a description for the owner and hides it from another user', async () => {
+    const a = await fixture();
+    const b = await fixture();
+    await asUser(a.user.id, (tx) => tx`
+      insert into public.transactions (account_id, category_id, name, type, occurred_at, amount, payment_method, description)
+      values (${a.accountId}, ${a.categoryId}, 'Da A', 'Expense', now(), 5, 'PIX', 'Original title')`);
+    const own = await asUser(a.user.id, (tx) => tx<{ description: string }[]>`select description from public.transactions`);
+    expect(own).toEqual([{ description: 'Original title' }]);
+    expect(await asUser(b.user.id, (tx) => tx`select description from public.transactions`)).toHaveLength(0);
+  });
+});
+
 describe('transactions migration: RLS', () => {
   it('isolates rows between two users (select, insert, update, delete)', async () => {
     const a = await fixture();

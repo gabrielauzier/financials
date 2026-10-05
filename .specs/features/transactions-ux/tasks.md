@@ -278,12 +278,12 @@ T6 → T11
 
 **Done when**:
 
-- [ ] `description` exists, is nullable and defaults to null on existing rows (AC 1)
-- [ ] A row with `payment_method` `'Other'` is accepted and a value outside the list is still rejected with `transactions_payment_method_check` (AC 2)
-- [ ] The file has two separated statements with comments naming transactions-ux and import-fixes
-- [ ] RLS still isolates rows with the new column (existing isolation tests pass)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: 3 new tests pass (no silent deletions)
+- [x] `description` exists, is nullable and defaults to null on existing rows (AC 1)
+- [x] A row with `payment_method` `'Other'` is accepted and a value outside the list is still rejected with `transactions_payment_method_check` (AC 2)
+- [x] The file has two separated statements with comments naming transactions-ux and import-fixes
+- [x] RLS still isolates rows with the new column (existing isolation tests pass)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: 3 new tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
