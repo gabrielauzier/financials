@@ -14,6 +14,12 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: spec-precision gaps 1-3 (validation.md): duplicate matching for holder names, category names, nicknames (uniqueness) (+1 more)
 - last seen: 2026-10-05T10:26:44Z
 
+### L-006 - Define one API-wide status for missing and blank required fields (400 vs 422) before implementing routes
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `validation` · harmful: 0
+- features: transactions, credit-expenses
+- evidence: spec-precision gaps (validation.md): status for blank vs missing required fields (validation) (+1 more)
+- last seen: 2026-10-05T16:31:15Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
@@ -40,12 +46,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `money` · harmful: 0
 - features: transactions
 - evidence: ranked gap 1 (validation.md): JSON-number amount coerced by Ajv (money)
-- last seen: 2026-10-05T06:22:46Z
-
-### L-006 - Define one API-wide status for missing and blank required fields (400 vs 422) before implementing routes
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `validation` · harmful: 0
-- features: transactions
-- evidence: spec-precision gaps (validation.md): status for blank vs missing required fields (validation)
 - last seen: 2026-10-05T06:22:46Z
 
 ### L-007 - Prove a resource is released with a direct check, such as a failing call after close, not with a log line printed by the code under test
@@ -83,6 +83,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: front-fixes
 - evidence: M17 (validation iteration 1): clear filters never tested from page 2 (tests)
 - last seen: 2026-10-05T15:08:23Z
+
+### L-013 - Test the failure path of every destructive action and every conditional option list, asserting the Portuguese text and the visible options
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: credit-expenses
+- evidence: W2c and W9a/W9b (validation.md): delete failure text and account selector rules untested (ui-tests)
+- last seen: 2026-10-05T16:31:15Z
 
 ## Quarantined (failed when applied - ignore)
 

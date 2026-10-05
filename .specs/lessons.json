@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 13,
+  "next_id": 14,
   "lessons": [
     {
       "id": "L-001",
@@ -103,17 +103,19 @@
       "text": "Define one API-wide status for missing and blank required fields (400 vs 422) before implementing routes",
       "signal": "spec_precision_gap",
       "scope": "validation",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "transactions"
+        "transactions",
+        "credit-expenses"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "spec-precision gaps (validation.md): status for blank vs missing required fields (validation)"
+        "spec-precision gaps (validation.md): status for blank vs missing required fields (validation)",
+        "SPG-3 (validation.md): missing vs blank field status (validation)"
       ],
       "created": "2026-10-05T06:22:46Z",
-      "last_seen": "2026-10-05T06:22:46Z"
+      "last_seen": "2026-10-05T16:31:15Z"
     },
     {
       "id": "L-007",
@@ -222,6 +224,24 @@
       ],
       "created": "2026-10-05T15:08:23Z",
       "last_seen": "2026-10-05T15:08:23Z"
+    },
+    {
+      "id": "L-013",
+      "key": "surviving_mutant::test the failure path of every destructive action and every conditional option list asserting the portuguese text and the visible options",
+      "text": "Test the failure path of every destructive action and every conditional option list, asserting the Portuguese text and the visible options",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "credit-expenses"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "W2c and W9a/W9b (validation.md): delete failure text and account selector rules untested (ui-tests)"
+      ],
+      "created": "2026-10-05T16:31:15Z",
+      "last_seen": "2026-10-05T16:31:15Z"
     }
   ]
 }
