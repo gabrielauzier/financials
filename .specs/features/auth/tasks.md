@@ -175,11 +175,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Missing header yields `America/Sao_Paulo`
-- [ ] Valid zone is exposed on `request.tz`
-- [ ] Invalid zone yields 400 `invalid_timezone` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Missing header yields `America/Sao_Paulo`
+- [x] Valid zone is exposed on `request.tz`
+- [x] Invalid zone yields 400 `invalid_timezone` (3 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
