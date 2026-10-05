@@ -48,7 +48,7 @@ jobs:
       - run: pnpm -C api install --frozen-lockfile
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.119.0
       # Applies supabase/migrations and starts Auth, Storage and the mail catcher the tests use.
       - name: Start the local Supabase stack
         run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
