@@ -1,53 +1,55 @@
-# Validation: front-fixes (web T1-T12), iteration 1 - FAIL
+# Validation: front-fixes (web T1-T12 + F1-F3), iteration 2 - FAIL
 
 **Verdict**: FAIL
 
-The product code meets every spec AC and the gates are green: web 132 passed in 20 files (77 in 16 files before the feature, +55), typecheck clean, lint 0 errors, 0 skips. The FAIL comes from the discrimination sensor: 29 mutations, 26 killed, 3 survived. One survivor is equivalent (M14). Two are real holes in tests the spec asks for:
+Gaps 1-3 from iteration 1 are closed. Their mutants (M17, M23, and the neutral text swap) are now killed by the new assertions. Gates are green: web 133 passed in 20 files, typecheck clean, lint 0 errors, 0 skips.
 
-1. **M17** - "Limpar filtros" that keeps the current page survives. FIX-05 AC5 says "Limpar filtros SHALL restaurar o padrão", but every clear in the suite starts from page 1, or from a search whose debounce resets the page anyway.
-2. **M23** - routing `holder_required` to the nickname error instead of the holder field survives. The test checks only that the text appears somewhere (FIX-01 AC5 field association, T2 Done-when).
+The FAIL comes from M14. Iteration 1 judged it equivalent. A scratch-only probe shows it is not. When the PATCH fails and the refetch triggered by `onSettled` also fails (the network is down), removing the `onError` rollback leaves the unsaved category, or the neutral switch, on screen next to the error. The suite cannot see this, because every failure test lets the refetch succeed and restore the row from the unchanged server. FIX-05 AC1 ("restaurar a categoria anterior") and AC3 ("voltar ao valor anterior") are therefore proven only through the refetch, not through the rollback the code relies on. The product code is correct. The fix is one test-only addition.
 
-Both fixes only add assertions to existing tests. No product code changes are needed.
-
-**Iteration**: 1 of 3
+**Iteration**: 2 of 3
 **Date**: 2026-10-05
 **Spec**: `.specs/features/front-fixes/spec.md`
-**Diff range**: `050949a^..HEAD` (docs commit `050949a`, then T1-T12 as `aa1c07c`..`6968f86`). `HEAD` = `6968f86bef23c05b98671e56361bf959e5443d8b`, branch `feat/front-fixes`
-**Verifier**: independent sub-agent (author != verifier). Read-only on the real tree. Mutations ran only in a temporary worktree (`/Volumes/MacOnlySSD/dev/personal/.verify-ff`, with `web/node_modules` symlinked). That worktree is now removed and pruned.
+**Diff range**: `050949a^..HEAD` for the feature. Fixes since iteration 1: `13b88d7..HEAD` = commit `ffda433` (3 test files + tasks.md). `HEAD` = `ffda433ee2b6fb71ec01a581f2ebfd2a9319d35f`, branch `feat/front-fixes`
+**Verifier**: independent sub-agent (author != verifier). Read-only on the real tree. Mutations and the probe ran only in a temporary worktree (`/Volumes/MacOnlySSD/dev/personal/.verify-ff2`, `web/node_modules` symlinked). That worktree is removed and pruned.
 
 ## Scope
 
-In scope: `web/src/lib/api/errorMessages.ts` (+test), `web/src/lib/api/types.ts`, `web/src/lib/api/mock/transactions.ts`, `web/src/features/{accounts,categories,transactions,auth,import}` changed files, `web/src/test/apiSpy.tsx`, the three `extrato*.test.tsx` files, `web/yarn.lock`.
+In scope: the whole feature surface (`web/src/lib/api/errorMessages.ts` (+test), `web/src/lib/api/types.ts`, `web/src/lib/api/mock/transactions.ts`, the changed files in `web/src/features/{accounts,categories,transactions,auth,import}`, `web/src/test/apiSpy.tsx`, the three `extrato*.test.tsx` files, `web/yarn.lock`). The fix commit `ffda433` gets the closest look:
+- `web/src/features/accounts/accounts.test.tsx`
+- `web/src/features/transactions/extratoFilters.test.tsx`
+- `web/src/features/transactions/extratoInline.test.tsx`
+- `.specs/features/front-fixes/tasks.md`
 
-Classification key: (a) covered by tests in this diff; (b) verified by a non-test artifact; (c) deferred; GAP = no evidence.
+Classification key: (a) covered by tests; (b) verified by a non-test artifact; (c) deferred; GAP = no evidence or a non-discriminating test.
 
 ---
 
 ## Task Completion
 
-`tasks.md` has exactly one `## Task Breakdown`, 12 task headings and 0 unchecked boxes.
+`tasks.md` has exactly one `## Task Breakdown` (grep count 1). T1-T12 are all ticked. The new section "Fix tasks (Verifier iteration 1)" has F1-F3, all ticked.
 
 | Task | Status | Commit | Notes |
 | ---- | ------ | ------ | ----- |
 | T1 shared module | ✅ | `aa1c07c` | - |
-| T2 accounts | ✅ | `ca5dd9d` | Holder-field routing is not discriminated (M23) |
+| T2 accounts | ✅ | `ca5dd9d` + `ffda433` | Field placement now pinned (M23 killed) |
 | T3 categories | ✅ | `0f6a29c` | - |
 | T4 transactions screens | ✅ | `7243089` | - |
 | T5 null on edit | ✅ | `4587075` | - |
 | T6 e-mail detection | ✅ | `fbbf475` | - |
 | T7 inverted period | ✅ | `7ab7195` | - |
 | T8 income green | ✅ | `ab00adc` | - |
-| T9 inline/bulk/neutral tests | ✅ | `722070a` | The neutral failure test asserts only `role="alert"`, not the text |
-| T10 filters tests | ✅ | `2dfd203` | Clear filters from page 2 is not tested (M17) |
+| T9 inline/bulk/neutral tests | ⚠️ | `722070a` + `ffda433` | Neutral text now pinned. The rollback on a failed save is not discriminated (M14, Gap 1) |
+| T10 filters tests | ✅ | `2dfd203` + `ffda433` | Clear from page 2 now tested (M17 killed) |
 | T11 CRUD tests | ✅ | `ce8a489` | - |
 | T12 lockfile | ✅ | `6968f86` | - |
+| F1 clear from page 2 | ✅ | `ffda433` | `extratoFilters.test.tsx:123-130` |
+| F2 account error placement | ✅ | `ffda433` | `accounts.test.tsx:147-157` |
+| F3 neutral failure text | ✅ | `ffda433` | `extratoInline.test.tsx:209-211` |
 
-Process notes:
-- Commit subjects are 39-67 chars, all ≤ 72.
-- The `Commit:` lines in tasks.md say `feat(front-fixes): ...`. The real commits use `feat(web)`, `test(web)` and `build(web)`. This is cosmetic.
-- The Gate Check Commands and Test Coverage Matrix in tasks.md still say `pnpm -C web ...`. The project uses yarn (`yarn --cwd web ...`). This is a stale template.
-- The Phase 2 execution graph lists `T7 → T8` and omits T6. T7 "Depends on: T5" crosses phases. Both are cosmetic.
-- `.specs/STATE.md` has no entry for this feature. The scope decisions in "Code quality" below are not recorded as decisions.
+Process notes (unchanged from iteration 1, cosmetic):
+- The `Commit:` lines in tasks.md say `feat(front-fixes)`. The real commits use `feat(web)`, `test(web)` and `build(web)`.
+- The gate commands in tasks.md still say `pnpm -C web ...`. The project uses `yarn --cwd web ...`.
+- `.specs/STATE.md` (47 lines) still has no entry for this feature.
 
 ---
 
@@ -57,254 +59,205 @@ Process notes:
 
 | AC | Spec-defined outcome | Evidence (`file:line` + assertion) | Class | Result |
 | -- | -------------------- | ---------------------------------- | ----- | ------ |
-| 1. One module, never the API `message` | No API text in any result | `web/src/lib/api/errorMessages.test.ts:51` - `expect(messageForError(api(code), "account")).not.toContain("Technical English")` for known, unknown and `internal_error` codes. UI level: `web/src/features/transactions/transactions.test.tsx:325` `expect(screen.queryByText("Kaboom")).not.toBeInTheDocument()`, `:342` (`Missing ids`), `:353` (`DB down`), `web/src/features/categories/categories.test.tsx:109-110,120,141`, `web/src/features/accounts/accounts.test.tsx:111`. Non-test: the grep below finds no UI read of `.message` | a + b | ✅ |
-| 2. `duplicate_name` by context | account "Já existe uma conta com esse apelido"; category "Já existe uma categoria com esse nome" | `web/src/lib/api/errorMessages.test.ts:10-15` `toBe(...)` for both contexts. Screens: `web/src/features/accounts/accounts.test.tsx:146` `findByText("Já existe uma conta com esse apelido")`, `web/src/features/categories/categories.test.tsx:103` `findByText("Já existe uma categoria com esse nome")` | a | ✅ |
-| 3. Text for each listed code | "a mensagem definida para ele" (texts not fixed in spec) | `web/src/lib/api/errorMessages.test.ts:20-32` `it.each` over the 9 codes, `toBe(text)`. Screens: `transactions.test.tsx:287` (invalid_amount), `:299` (invalid_account), `:308` (validation_error), `:318` (unauthorized), `:339` (not_found bulk); `categories.test.tsx:108` (category_protected), `:133` reassign dialog opens; `accounts.test.tsx:149` (holder_required) | a | ✅ ⚠️ spec-precision gap 1 |
-| 4. Unknown / network / other → generic | "Não foi possível concluir a operação. Tente novamente." | `web/src/lib/api/errorMessages.test.ts:34-38` `toBe(GENERIC_ERROR)` for unknown code, `TypeError("Failed to fetch")`, string, undefined. Screens: `transactions.test.tsx:324`, `:352`; `categories.test.tsx:119`; `accounts.test.tsx:110` | a | ✅ |
-| 5. `field` → message on that field | Shown on the matching field when the form has it | `web/src/features/transactions/transactions.test.tsx:288` `toHaveAttribute("id", "transaction-amount-error")`, `:299-302` `transaction-account-error`, `:308-311` `transaction-date-error` (occurredAt → date). `web/src/lib/api/errorMessages.test.ts:59-67` for `fieldForError`. **Accounts**: `accounts.test.tsx:149` asserts only the text, not the holder field (M23 survived) | a (partial) | ⚠️ weak for accounts (Gap 2) |
-| 6. Map used in accounts, categories, statement (form, inline, bulk, delete, neutral) | Every path shows Portuguese | Form `transactions.test.tsx:280-326`; inline category `web/src/features/transactions/extratoInline.test.tsx:95` `findByText("Não foi possível salvar a categoria")`; bulk `extratoInline.test.tsx:160-162` and `transactions.test.tsx:339`; delete `transactions.test.tsx:352`; neutral `extratoInline.test.tsx:209` `findByRole("alert")` (**text not asserted**); accounts `accounts.test.tsx:110`; categories `categories.test.tsx:97-143` | a | ✅ (neutral text weak, Gap 3) |
+| 1. One module, never the API `message` | No API text in any result | `web/src/lib/api/errorMessages.test.ts:51-53` `expect(messageForError(api(code), "account")).not.toContain("Technical English")`. UI: `web/src/features/transactions/transactions.test.tsx:325` `queryByText("Kaboom")).not.toBeInTheDocument()`, `:342` (`Missing ids`), `:353` (`DB down`); `web/src/features/categories/categories.test.tsx:109-110,120,141`; `web/src/features/accounts/accounts.test.tsx:111,158`; `web/src/features/transactions/extratoInline.test.tsx:211` `expect(alert).not.toHaveTextContent("boom")`. Non-test: grep below | a + b | ✅ |
+| 2. `duplicate_name` by context | account "Já existe uma conta com esse apelido"; category "Já existe uma categoria com esse nome" | `errorMessages.test.ts:10-17` `toBe(...)` for both contexts, generic for others. Screens: `accounts.test.tsx:147-150` `findByText("Já existe uma conta com esse apelido")).toHaveAttribute("id", "account-error")`; `categories.test.tsx:103` `findByText("Já existe uma categoria com esse nome")` | a | ✅ |
+| 3. Text for each listed code | "a mensagem definida para ele" | `errorMessages.test.ts:20-31` `it.each` over the 9 codes, `toBe(text)`. Screens: `transactions.test.tsx:288` (invalid_amount), `:299-302` (invalid_account), `:308-311` (validation_error), `:318-321` (unauthorized), `:339` (not_found bulk); `categories.test.tsx:108` (category_protected), `:133` reassign dialog; `accounts.test.tsx:154-157` (holder_required) | a | ✅ ⚠️ spec-precision gap 1 |
+| 4. Unknown / network / other → generic | "Não foi possível concluir a operação. Tente novamente." | `errorMessages.test.ts:34-38` `toBe(GENERIC_ERROR)` for unknown code, `TypeError("Failed to fetch")`, string, undefined. Screens: `transactions.test.tsx:324`; `categories.test.tsx:119`; `accounts.test.tsx:110`; `extratoInline.test.tsx:210` `toHaveTextContent("Não foi possível concluir a operação. Tente novamente.")` | a | ✅ |
+| 5. `field` → message on that field | Shown on the matching field | `transactions.test.tsx:288` `toHaveAttribute("id", "transaction-amount-error")`, `:299-302` `transaction-account-error`, `:308-311` `transaction-date-error`; `errorMessages.test.ts:59-67` `fieldForError`. Accounts (new): `accounts.test.tsx:154-157` `findByText("Informe ao menos um titular")).toHaveAttribute("id", "holder-error")` and `:147-150` `account-error` | a | ✅ (iteration-1 Gap 2 closed, M23/M23b killed) |
+| 6. Map used in accounts, categories, statement (form, inline, bulk, delete, neutral) | Portuguese on every path | Form `transactions.test.tsx:280-326`; inline `extratoInline.test.tsx:95` `findByText("Não foi possível salvar a categoria")`; bulk `extratoInline.test.tsx:160-162`, `transactions.test.tsx:339`; delete `transactions.test.tsx:352`; neutral `extratoInline.test.tsx:209-211` exact generic text and no "boom"; status `accounts.test.tsx:110,135-137`; categories `categories.test.tsx:97-143` | a | ✅ (iteration-1 Gap 3 closed, MN1/MN2 killed) |
 
-Non-test check for AC1 (`grep -rnE "error\.message|reason\.message|\.message" web/src/features web/src/lib --include='*.ts' --include='*.tsx'`, non-test files). It finds 4 hits, and none of them puts API text on screen:
-- `web/src/lib/api/client.ts:26` checks the payload shape. `:69` stores the API message inside `ApiError`. Nothing in the UI reads it now.
-- `web/src/lib/lovable-error-reporting.ts:51` sends telemetry to the editor hook. It is not UI.
-- `web/src/lib/error-capture.ts:28` builds a diagnostic string from the stack. It is not UI.
+Non-test check for AC1:
+- `grep -rnE "error\.message|reason\.message" web/src/features` finds nothing (exit 1).
+- A wider `\.message\b` grep over non-test files in `web/src/features` and `web/src/lib` finds 4 hits. None reaches the UI: `web/src/lib/api/client.ts:26` checks the payload shape, `:69` stores the message in `ApiError`, `web/src/lib/lovable-error-reporting.ts:51` is editor telemetry, `web/src/lib/error-capture.ts:28` builds a diagnostic string.
 
 ### FIX-02: Editing clears notes and receipt (P1)
 
-API contract check: `api/src/modules/transactions/routes.ts:59-60` uses `notes`/`receipt: Type.Optional(nullableString)`, where `nullableString = Union[String, Null]` (`:33`). `optionalText` (`:137-140`) turns blank text into `null`. So the API accepts `null`, and blank text also clears.
-
 | AC | Spec-defined outcome | Evidence | Class | Result |
 | -- | -------------------- | -------- | ----- | ------ |
-| 1. Emptying notes on edit | Body `notes: null`; transaction shown without notes | `web/src/features/transactions/transactions.test.tsx:385` `toHaveProperty("notes", null)` and `:391` stored `notes` `toBeNull()`. Screen: `web/src/features/transactions/extratoCrud.test.tsx:115-118` `toMatchObject({ notes: null, ... })`, `:129` `queryByText("Nota antiga")).not.toBeInTheDocument()` | a | ✅ |
+| 1. Emptying notes on edit | `notes: null`; shown without notes | `transactions.test.tsx:385` `toHaveProperty("notes", null)`, `:391` stored `notes` `toBeNull()`; `web/src/features/transactions/extratoCrud.test.tsx:115-117` `toMatchObject({ notes: null, ... })`, `:129` `queryByText("Nota antiga")).not.toBeInTheDocument()` | a | ✅ |
 | 2. Emptying receipt on edit | `receipt: null` | `transactions.test.tsx:400` `toHaveProperty("receipt", null)` | a | ✅ |
-| 3. Create with empty notes/receipt | Fields omitted | `transactions.test.tsx:446-447` `not.toHaveProperty("notes")`, `not.toHaveProperty("receipt")` (notes typed as spaces) | a | ✅ |
-| 4. Filled values trimmed | Trimmed text | `transactions.test.tsx:415-418` `toMatchObject({ notes: "nova nota", receipt: "https://exemplo.com/novo.pdf" })` from padded input | a | ✅ |
+| 3. Create with empty notes/receipt | Fields omitted | `transactions.test.tsx:446-447` `not.toHaveProperty("notes")`, `not.toHaveProperty("receipt")` | a | ✅ |
+| 4. Filled values trimmed | Trimmed text | `transactions.test.tsx:415` `toMatchObject({ notes: "nova nota", receipt: "https://exemplo.com/novo.pdf" })` from padded input | a | ✅ |
 
 ### FIX-03: Sign-up with an e-mail already in use (P1)
 
 | AC | Spec-defined outcome | Evidence | Class | Result |
 | -- | -------------------- | -------- | ----- | ------ |
 | 1. `user_already_exists` | Registered | `web/src/features/auth/emailExists.test.ts:26-32` `.toBe(true)` | a | ✅ |
-| 2. Empty `identities` | Registered | `web/src/features/auth/emailExists.test.ts:5-11` `.toBe(true)` (pre-existing test, still green) | a | ✅ |
-| 3. Gap ≥ 1000 ms | Registered | `emailExists.test.ts:34-52`: exactly 1000 ms → `true`, 5 min → `true` | a | ✅ |
-| 4. Gap < 1000 ms | New sign-up | `emailExists.test.ts:54-68`: 999 ms → `false`, 0 ms → `false`; `:70-85` missing or unparseable timestamps → `false` (NaN comparison) | a | ✅ |
-| 5. Message on the e-mail field | "E-mail já cadastrado" on the field | `web/src/features/auth/authForms.test.tsx:81-83` `findByText("E-mail já cadastrado")` and `toHaveAccessibleDescription("E-mail já cadastrado")` on the E-mail input, and no "Verifique seu e-mail" | a | ✅ |
-
-This matches the backend finding in `.specs/features/auth/design.md:129`. GoTrue returns 200 with the existing user and a fresh `confirmation_sent_at` for an unconfirmed duplicate, and the rule given there is the same three criteria with `>= 1000`. Robustness:
-- Both timestamps are server-side, so client clock skew is irrelevant.
-- For a brand-new user the gap is the time between the insert and the confirmation send in the same request, normally a few ms.
-- A resend can only happen after `max_frequency` (1 s local, 60 s hosted), so 1000 ms is a safe floor.
-- Residual risk: a new user whose sign-up takes ≥ 1 s server-side (slow SMTP or DB) would be told "E-mail já cadastrado". The account would still exist and a confirmation e-mail would be sent. The design accepts this, and it is noted as a pre-launch check on the hosted project.
+| 2. Empty `identities` | Registered | `emailExists.test.ts:5-11` `.toBe(true)`; screen `web/src/features/auth/authForms.test.tsx:57` | a | ✅ |
+| 3. Gap ≥ 1000 ms | Registered | `emailExists.test.ts:34-52`: exactly 1000 ms `toBe(true)` (`:43`), 5 min `toBe(true)` (`:52`) | a | ✅ |
+| 4. Gap < 1000 ms | New sign-up | `emailExists.test.ts:54-68`: 999 ms and 0 ms `toBe(false)`; `:70-84` missing or unparseable timestamps `toBe(false)` | a | ✅ |
+| 5. Message on the e-mail field | "E-mail já cadastrado" on the field | `authForms.test.tsx:80-83` `findByText("E-mail já cadastrado")`, `getByLabelText("E-mail")).toHaveAccessibleDescription("E-mail já cadastrado")`, no "Verifique seu e-mail" | a | ✅ ⚠️ spec-precision gap 4 |
 
 ### FIX-04: Accounts, period and appearance (P2)
 
 | AC | Spec-defined outcome | Evidence | Class | Result |
 | -- | -------------------- | -------- | ----- | ------ |
-| 1. Activate/deactivate failure | Dialog stays open with a Portuguese message | `web/src/features/accounts/accounts.test.tsx:89-123` (both actions): `within(dialog).findByText(GENERIC_ERROR)`, the dialog action button still present, no English text. `:125-138` known code `not_found` text | a | ✅ |
-| 2. Inverted period | "A data inicial deve ser anterior à final" and no API call with that period | `web/src/features/transactions/transactions.test.tsx:461-474`: `findByText("A data inicial deve ser anterior à final")`, then after 400 ms `listPaths().filter(from=2026-10-10 && to=2026-10-01)).toEqual([])`. `:476-499`: equal dates and a valid period do query and show no message | a | ✅ |
-| 3. Income green, expense red with minus | `text-emerald-700` / `text-emerald-400` (dark); expense destructive with `-` | `transactions.test.tsx:529-540`, for table row **and** mobile card: `toHaveClass("text-emerald-700", "dark:text-emerald-400")`, `not.toHaveClass("text-destructive")`, no leading `-`; expense `toHaveClass("text-destructive")` and `toMatch(/^-/)` | a | ✅ |
-
-On AC2, this is what the user sees meanwhile. `useTransactions(filters, false)` uses a new query key with `enabled: false`, so `data` is `undefined` and `isLoading` is `false`. The page shows the alert plus "Nenhuma transação encontrada", and no request goes out. That matches what the API would return (an empty list) and is acceptable. The spec does not say what the list should show.
+| 1. Activate/deactivate failure | Dialog stays open with a Portuguese message | `accounts.test.tsx:89-123` (both actions): `within(dialog).findByText(GENERIC_ERROR)` (`:110`), no English (`:111`), action button still in the dialog (`:112`); `:125-138` mapped `not_found` text | a | ✅ |
+| 2. Inverted period | "A data inicial deve ser anterior à final" and no API call with that period | `transactions.test.tsx:461-473`: `findByText("A data inicial deve ser anterior à final")`, then the list requests with `from=2026-10-10&to=2026-10-01` `toEqual([])`; `:476-499` equal and valid periods query with no message | a | ✅ ⚠️ spec-precision gap 2 |
+| 3. Income green, expense red with minus | `text-emerald-700` / `dark:text-emerald-400`; expense destructive with `-` | `transactions.test.tsx:516-539`, table row and mobile card: `toHaveClass("text-emerald-700", "dark:text-emerald-400")`, no leading `-`; expense `toHaveClass("text-destructive")`, `toMatch(/^-/)` | a | ✅ |
 
 ### FIX-05: Statement interface tests (P1)
 
 | AC | Spec-defined outcome | Evidence | Class | Result |
 | -- | -------------------- | -------- | ----- | ------ |
-| 1. Inline category, rollback | Saves with no form; on failure restores and shows "Não foi possível salvar a categoria" | `web/src/features/transactions/extratoInline.test.tsx:69-73` exact request `toEqual({ method: "PATCH", path, body: { categoryId } })`, `:74` no dialog, `:75-79` row shows the new name; `:95` text, `:97-101` row back to the old category | a | ✅ |
-| 2. Bulk in one call; failure keeps the state | One `PATCH /transactions/category` with all ids; on failure selection and categories kept | `extratoInline.test.tsx:129-132` `toHaveLength(1)`, `body toEqual({ ids: [first.id, second.id], categoryId })`, no single PATCH; `:163-172` one call, "2 selecionada(s)", both checkboxes checked, old category names | a | ✅ |
-| 3. Neutral switch persists / reverts | New value persisted; on failure reverts | `extratoInline.test.tsx:185-197` exact `{ neutral: true }`, badge "Neutra", switch checked; `:210-217` reverted switch and no badge | a | ✅ |
-| 4. Search once after 300 ms, page 1 | One request with `q`, page 1 | `web/src/features/transactions/extratoFilters.test.tsx:64` no request at 400 ms of typing; `:68-70` exactly `["/transactions?sort=date&order=desc&page=1&q=Supermercado"]` | a | ✅ |
-| 5. Filter param + page 1; "Limpar filtros" restores the default | Each param sent with page 1; default restored | `extratoFilters.test.tsx:96-103` for six filters: from page 2, `toContain(param)`, `toContain("page=1")`, `not.toContain("page=2")`; `:115-120` `lastList()).toBe(DEFAULT_QUERY)` and controls reset. **Clearing from page 2 is never exercised** (M17 survived) | a (partial) | ❌ GAP 1 |
-| 6. Valor twice → asc then desc | Ordered requests | `extratoFilters.test.tsx:147-154` `toEqual(["...sort=amount&order=asc&page=1", "...sort=amount&order=desc&page=1"])` plus the first row matches each order | a | ✅ |
-| 7. Empty state, pagination | "Nenhuma transação encontrada"; Próxima/Anterior | `extratoFilters.test.tsx:162-165` text, no footer, no table; `:168-188` "Página 1 de 3" → 2 → 3 → back to 1, exact page params, buttons disabled at the ends | a | ✅ |
-| 8. Delete confirm / cancel | Confirm removes; cancel keeps | `web/src/features/transactions/extratoCrud.test.tsx:52-55` cancel: 0 DELETE, row kept; `:59-64` confirm: exactly one DELETE `/transactions/${drop.id}`, row gone, other kept | a | ✅ |
-| 9. Create/edit send correct data, "1.234,56" → "1234.56" | Exact payload | `extratoCrud.test.tsx:83-92` `toMatchObject({ amount: "1234.56", accountId, occurredAt, categoryId, ... })` and `typeof amount === "string"`; edit `:115-127` full payload with `notes: null`; `:133-161` inactive account not offered (T11 Done-when) | a | ✅ |
+| 1. Inline category; on failure restore + text | Saves with no form; on failure restores the previous category and shows "Não foi possível salvar a categoria" | `extratoInline.test.tsx:69-73` exact `toEqual({ method: "PATCH", path, body: { categoryId } })`, `:74` no dialog, `:75-79` new name; failure `:95` text, `:97-101` row back to the old category. **The restore is reached through the `onSettled` refetch, not the rollback.** M14 survives in the suite and the probe kills it (see sensor) | a (partial) | ❌ GAP 1 |
+| 2. Bulk in one call; failure keeps state | One call with all ids; on failure selection and categories kept | `extratoInline.test.tsx:129-132` `toHaveLength(1)`, `body toEqual({ ids: [first.id, second.id], categoryId })`, no single PATCH; `:160-172` mapped text, one call, "2 selecionada(s)", both checked, old categories | a | ✅ |
+| 3. Neutral switch persists / reverts | New value persisted; on failure reverts | `extratoInline.test.tsx:185-197` exact `{ neutral: true }`, badge, switch checked; failure `:212-219` switch not checked, no badge. **Same mechanism as AC1: the revert comes from the refetch** | a (partial) | ❌ GAP 1 |
+| 4. Search once after 300 ms, page 1 | One request with `q`, page 1 | `web/src/features/transactions/extratoFilters.test.tsx:64` no request during typing; `:68-70` exactly `["/transactions?sort=date&order=desc&page=1&q=Supermercado"]` | a | ✅ |
+| 5. Filter param + page 1; "Limpar filtros" restores the default | Each param with page 1; default restored | `extratoFilters.test.tsx:96-103` six filters from page 2: `toContain(param)`, `toContain("page=1")`, `not.toContain("page=2")`; `:114-120` `lastList()).toBe(DEFAULT_QUERY)` and controls reset. New: `:123-130` from page 2 with no pending search, `findByText(/Página 1 de 3/)`, `lastList()).toBe(DEFAULT_QUERY)`, `not.toContain("page=2")` | a | ✅ (iteration-1 Gap 1 closed, M17 killed) |
+| 6. Valor twice → asc then desc | Ordered requests | `extratoFilters.test.tsx:156-163` `toEqual(["...sort=amount&order=asc&page=1", "...sort=amount&order=desc&page=1"])`, first row matches each order (`:142-155`) | a | ✅ |
+| 7. Empty state; pagination | "Nenhuma transação encontrada"; Próxima/Anterior | `extratoFilters.test.tsx:171-174` text, no footer, no table; `:177-198` pages 1 → 2 → 3 → 1 with exact page params, ends disabled | a | ✅ |
+| 8. Delete confirm / cancel | Confirm removes; cancel keeps | `extratoCrud.test.tsx:44-64`: cancel `toHaveLength(0)` DELETE (`:54`), row kept; confirm one DELETE, row gone (`:60`) | a | ✅ |
+| 9. Create/edit payload; "1.234,56" → "1234.56" | Exact payload | `extratoCrud.test.tsx:83-92` `toMatchObject({ amount: "1234.56", accountId, occurredAt, categoryId, ... })`; edit `:115-127` with `notes: null`; `:133-150` inactive account not offered (T11 Done-when) | a | ✅ |
 
 ### FIX-06: Lockfile (P2)
 
 | AC | Spec-defined outcome | Evidence | Class | Result |
 | -- | -------------------- | -------- | ----- | ------ |
-| 1. `yarn install --frozen-lockfile` in `web/` | Finishes with no lockfile change | Command on a clean rsync copy at `/Volumes/MacOnlySSD/dev/personal/.lockcheck.qrTCcc` with `YARN_CACHE_FOLDER` inside it: `Done in 22.74s`, `EXIT=0`. `git diff --no-index web/yarn.lock <copy>/yarn.lock` printed nothing (exit 0). Copy removed. Note: run with `--ignore-scripts` to skip postinstall hooks. This does not affect the frozen-lockfile check, which happens before linking. Change: `web/yarn.lock:1718` `@testing-library/dom@^10.4.2` → `^10.4.1` (matches `package.json`) | b | ✅ |
+| 1. `yarn install --frozen-lockfile` in `web/` | Finishes with no lockfile change | Iteration 1 ran it on a clean copy: `Done in 22.74s`, exit 0, no diff. Re-confirmed that the evidence still applies: `git diff --stat 6968f86..HEAD -- web/yarn.lock web/package.json` is empty. Changed line: `web/yarn.lock:1718` | b | ✅ |
 
-**Summary**: 28 ACs. (a) 27, (b) 1 (FIX-06; FIX-01 AC1 also has b), (c) 0. GAP 1 (FIX-05 AC5 partial). Weak: FIX-01 AC5 for accounts and the neutral error text in FIX-01 AC6.
+**Summary**: 28 ACs. (a) 27, (b) 1 (FIX-06; FIX-01 AC1 also has b), (c) 0. GAP: FIX-05 AC1 and AC3 share one root cause (Gap 1). Spec-precision gaps: 4.
 
 ---
 
 ## Edge Cases
 
-- [x] Unknown code → generic text, never API text: `web/src/lib/api/errorMessages.test.ts:35`, `web/src/features/categories/categories.test.tsx:119-120`, `web/src/features/transactions/transactions.test.tsx:324-325`.
-- [x] Edit without touching notes/receipt keeps the values: `transactions.test.tsx:386` (`receipt` sent unchanged), `:401` (`notes: "Manter"`), `web/src/features/transactions/extratoCrud.test.tsx:118`. The form re-sends the current value, which the spec's assumptions table explicitly allows.
-- [x] Network failure → generic: `errorMessages.test.ts:36` `new TypeError("Failed to fetch")` → `GENERIC_ERROR`. There is no screen-level test with a `TypeError`. Screens go through the same function, so this is acceptable.
+- [x] Unknown code → generic, never API text: `errorMessages.test.ts:35`, `categories.test.tsx:119-120`, `transactions.test.tsx:324-325`.
+- [x] Edit without touching notes/receipt keeps the values: `transactions.test.tsx:386` (`receipt` unchanged), `:401` (`notes: "Manter"`). The form re-sends the current value, which the spec assumption allows.
+- [x] Network failure → generic: `errorMessages.test.ts:36` `new TypeError("Failed to fetch")` → `GENERIC_ERROR`. No screen-level `TypeError` test exists. Screens call the same function, so this is acceptable.
 
 ---
 
 ## Gate Check
 
-Run once from the real tree at `HEAD`:
+Run once from the real tree at `HEAD` `ffda433`:
 
 - `yarn --cwd web typecheck`: exit 0.
-- `yarn --cwd web lint`: exit 0. It reports 0 errors and 7 warnings (`react-refresh/only-export-components` in `components/ui/*` and `features/auth/useSession.tsx`). These files are untouched and the warnings predate the feature.
-- `yarn --cwd web test`: **20 files, 132 passed, 0 failed, 0 skipped** (24.9 s).
-- `VITE_MOCK_AREAS=none yarn --cwd web test`: 20 files, 132 passed. `web/vitest.config.ts:13` pins `VITE_MOCK_AREAS: "*"`, so tests ignore the environment.
-- Skips: `git grep -nE "\.(skip|only|todo)\(|xit\(|xdescribe\(" -- web/src` → no matches.
-- **Test count before the feature** (`050949a`, same command in the scratch worktree): 16 files, 77 passed. **After**: 20 files, 132. **Delta +55**. No test was deleted, and the import tests (`web/src/features/import/*.test.tsx`) are unchanged.
-- **Flakiness**: `extratoFilters.test.tsx` ran 3 times: 6/6 passed each time (20.35 s, 20.61 s, 20.69 s). All transaction test files also ran shuffled (`--sequence.shuffle --sequence.seed=4242`): 4 files, 37 passed.
-  - Per-test times are 1.5 s, 9.1 s (30 s budget), 2.6 s, 2.1 s, 1.6 s and 2.9 s. Four tests use real 350-400 ms sleeps to outlast the 300 ms debounce, and the default timeout is 5 s.
-  - Risk: low locally, moderate on a slow CI runner. The 2.6-2.9 s tests use about 55% of the 5 s budget. This is not blocking.
+- `yarn --cwd web lint`: exit 0, `✖ 7 problems (0 errors, 7 warnings)`. These are the same pre-existing `react-refresh/only-export-components` warnings in untouched files.
+- `yarn --cwd web test`: **Test Files 20 passed (20), Tests 133 passed (133)**, exit 0 (28.5 s). This matches the author's 133. Iteration 1 had 132, so the delta is +1 (the new clear-from-page-2 test). No test was removed, and the other two fix edits only strengthen assertions.
+- Skips: `git grep -nE "\.(skip|only|todo)\(|xit\(|xdescribe\(" -- web/src` → no matches (exit 1).
+- Flakiness: `extratoFilters.test.tsx` ran twice more: 7/7 passed (22.6 s), 7/7 passed (22.9 s). The 400 ms real sleeps and the 30 s budget of the six-filter test are unchanged. The risk stays low locally and moderate on a slow CI runner.
 
 ---
 
 ## Discrimination Sensor
 
-Scratch: `git worktree add --detach /Volumes/MacOnlySSD/dev/personal/.verify-ff HEAD`, with `web/node_modules` symlinked. Each mutation was a single exact-string replacement (anchor count checked = 1). The covering tests ran in the scratch, then `git checkout -- web/src` restored it. Depth: P1 / critical paths, so the run is expanded.
+Scratch: `git worktree add --detach /Volumes/MacOnlySSD/dev/personal/.verify-ff2 HEAD`, with `web/node_modules` symlinked. Each mutation was a single exact-string replacement (anchor count checked = 1). The covering tests ran in the scratch, then `git checkout -- web/src` restored it. Depth: P1, expanded.
 
 | # | File:line | Mutation | Covering run | Killed? | Killing test |
 | - | --------- | -------- | ------------ | ------- | ------------ |
-| M1 | `web/src/lib/api/errorMessages.ts:35` | Unknown code returns `error.message` | errorMessages + categories + transactions | ✅ 6 failed | `errorMessages.test.ts:51` "never includes the API message", `categories.test.tsx:113`, `transactions.test.tsx:314,345` |
-| M2 | `errorMessages.ts:33` | `duplicate_name` ignores context (always account text) | errorMessages + categories + accounts | ✅ 2 failed | `errorMessages.test.ts:9`, `categories.test.tsx:97` |
-| M3 | `errorMessages.ts:35` | Unknown code → `""` | same as M1 | ✅ 5 failed | `errorMessages.test.ts:34`, `categories.test.tsx:113` |
-| M4 | `web/src/features/accounts/AccountsPage.tsx:41` | Status failure also closes the dialog | accounts | ✅ 3 failed | `accounts.test.tsx:89` (both), `:125` |
-| M5 | `web/src/features/categories/CategoriesPage.tsx:89` | `reassign_required` flow broken | categories | ✅ 2 failed | `categories.test.tsx:59`, `:123` |
-| M6 | `web/src/features/transactions/TransactionForm.tsx:140` | Form shows `reason.message` | transactions + crud | ✅ 3 failed | `transactions.test.tsx:280,292,314` |
-| M7 | `TransactionForm.tsx:132` | Edit sends `notes: undefined` when cleared | transactions dir | ✅ 2 failed | `transactions.test.tsx:379`, `extratoCrud.test.tsx:99` |
-| M8 | `TransactionForm.tsx:124` | Create always sends `notes` (empty string) | transactions dir | ✅ 1 failed | `transactions.test.tsx:421` |
-| M9 | `web/src/features/auth/emailExists.ts:5` | Threshold 1000 → 100 ms | auth | ✅ | `emailExists.test.ts:54` |
-| M10 | `emailExists.ts:14` | `>=` → `>` | auth | ✅ | `emailExists.test.ts:34` |
-| M11 | `emailExists.ts:11` | Empty-identities criterion removed | auth | ✅ 2 failed | `emailExists.test.ts:5`, `authForms.test.tsx:43` |
-| M11b | `emailExists.ts:8` | `user_already_exists` criterion removed | auth | ✅ | `emailExists.test.ts:26` |
-| M12 | `web/src/features/transactions/TransactionsPage.tsx:61` | Inverted period still queries (`enabled` always true) | transactions dir | ✅ | `transactions.test.tsx:461` |
-| M12b | `TransactionsPage.tsx:60` | `from > to` → `from >= to` (equal dates blocked) | transactions dir | ✅ | `transactions.test.tsx:476` |
-| M13a | `TransactionsPage.tsx:500` | Income class in table row back to `text-primary` | transactions.test | ✅ | `transactions.test.tsx:516` |
-| M13b | `TransactionsPage.tsx:552` | Income/expense classes swapped in mobile card | transactions.test | ✅ | `transactions.test.tsx:516` |
-| M14 | `web/src/features/transactions/hooks.ts:57` | Optimistic rollback (`onError`) removed | transactions dir | ❌ survived (equivalent) | - |
-| M14b | `TransactionsPage.tsx:112` | Inline category failure shows the generic text instead of "Não foi possível salvar a categoria" | transactions dir | ✅ | `extratoInline.test.tsx:83` |
-| M15 | `TransactionsPage.tsx:121` | Bulk sends one call per id | transactions dir | ✅ | `extratoInline.test.tsx:115` |
-| M16 | `TransactionsPage.tsx:76` | Debounce 300 → 0 ms | extratoFilters | ✅ | `extratoFilters.test.tsx:53` |
-| M17 | `TransactionsPage.tsx:218` | "Limpar filtros" keeps the current page | extratoFilters | ❌ **survived** | - |
-| M18 | `TransactionsPage.tsx:92` | Sort toggle always `asc` | extratoFilters | ✅ | `extratoFilters.test.tsx:123` |
-| M19 | `TransactionsPage.tsx:387` | Cancel also deletes | extratoCrud | ✅ | `extratoCrud.test.tsx:44` |
-| M20 | `TransactionForm.tsx:119` | Amount sent as a number | transactions dir | ✅ 8 failed | `extratoCrud.test.tsx:67`, ... |
-| M21 | `TransactionForm.tsx:192` | Inactive accounts offered in the form (`includeInactive`) | extratoCrud | ✅ | `extratoCrud.test.tsx:133` |
-| M22 | `TransactionForm.tsx:140` | API `field` ignored (always the form alert) | transactions.test | ✅ 2 failed | `transactions.test.tsx:280,292` |
-| M23 | `web/src/features/accounts/AccountForm.tsx:113` | `holder_required` shown in the nickname error, not the holder field | accounts | ❌ **survived** | - |
-| M24 | `web/src/features/import/errorMessages.ts:15` | Import stops delegating `invalid_account` | import | ✅ | `useImport.test.tsx:103` (pre-existing, unchanged) |
-| M25 | `TransactionForm.tsx:132` | Edit sends `receipt: undefined` when cleared | transactions dir | ✅ | `transactions.test.tsx:394` |
-| M26 | `TransactionForm.tsx:113` | Notes not trimmed | transactions dir | ✅ 3 failed | `transactions.test.tsx:379,404,421` |
-| M27 | `TransactionForm.tsx:137` | `occurredAt` not mapped to the date field | transactions.test | ✅ | `transactions.test.tsx:292` |
+| M17 | `web/src/features/transactions/TransactionsPage.tsx:218` | "Limpar filtros" keeps the current page (`{ ...baseFilters, page: c.page }`) | extratoFilters | ✅ (was ❌) | `extratoFilters.test.tsx:123` |
+| M23 | `web/src/features/accounts/AccountForm.tsx:113-114` | `holder_required` shown under the nickname | accounts | ✅ (was ❌) | `accounts.test.tsx:140` (`:154` `id holder-error`) |
+| M23b | `AccountForm.tsx:114` | Every other error (duplicate nickname) shown under the holders | accounts | ✅ | `accounts.test.tsx:140` (`:147` `id account-error`) |
+| MN1 | `TransactionsPage.tsx:113` | Neutral failure shows the API message (`reason.message`) | transactions dir | ✅ (Check B gap from iteration 1) | `extratoInline.test.tsx:200` |
+| MN2 | `TransactionsPage.tsx:113` | Neutral failure shows the category text | transactions dir | ✅ | `extratoInline.test.tsx:200` |
+| M14 | `web/src/features/transactions/hooks.ts:56-57` | Optimistic rollback (`onError`) removed | transactions dir (38 tests) | ❌ **survived in the suite**; killed by the scratch probe (below) | - |
+| M14b | `TransactionsPage.tsx:112` | Inline category failure shows the generic text | transactions dir | ✅ | `extratoInline.test.tsx:83` |
+| M14c | `hooks.ts:56-58` | Rollback and refetch both removed (category never restored) | transactions dir | ✅ 2 failed | `extratoInline.test.tsx:83`, `:200` |
+| M14d | `hooks.ts:58` | Refetch (`onSettled`) removed, rollback kept | transactions dir | ❌ survived (equivalent: the rollback restores, server unchanged) | - |
+| F1 | `web/src/lib/api/errorMessages.ts:35` | Unknown codes return the API message | lib/api + features | ✅ 8 failed | `errorMessages.test.ts:51`, `accounts.test.tsx:89`, `categories.test.tsx:113`, `transactions.test.tsx:314,345` |
+| F2 | `errorMessages.ts:33` | `duplicate_name` ignores context | lib/api, categories, accounts | ✅ 2 failed | `errorMessages.test.ts:9`, `categories.test.tsx:97` |
+| F3 | `web/src/features/accounts/AccountsPage.tsx:41` | Status failure also closes the dialog | accounts | ✅ 3 failed | `accounts.test.tsx:89` (both), `:125` |
+| F4 | `web/src/features/transactions/TransactionForm.tsx:132` | Edit sends `notes: undefined` when cleared | transactions dir | ✅ 2 failed | `transactions.test.tsx:379`, `extratoCrud.test.tsx:99` |
+| F4b | `TransactionForm.tsx:132` | Edit sends `receipt: undefined` when cleared | transactions dir | ✅ | `transactions.test.tsx:394` |
+| F5 | `TransactionForm.tsx:124` | Create always sends `notes` (empty) | transactions dir | ✅ | `transactions.test.tsx:421` |
+| F6 | `web/src/features/auth/emailExists.ts:14` | `>=` → `>` | auth | ✅ | `emailExists.test.ts:34` |
+| F7 | `emailExists.ts:11` | Empty-identities criterion removed | auth | ✅ 2 failed | `emailExists.test.ts:5`, `authForms.test.tsx:43` |
+| F16 | `emailExists.ts:8` | `user_already_exists` criterion removed | auth | ✅ | `emailExists.test.ts:26` |
+| F8 | `TransactionsPage.tsx:61` | Inverted period still queries | transactions dir | ✅ | `transactions.test.tsx:461` |
+| F9 | `TransactionsPage.tsx:500` | Income class in table row → `text-primary` | transactions.test | ✅ | `transactions.test.tsx:516` |
+| F10 | `TransactionsPage.tsx:121` | Bulk sends one call per id | transactions dir | ✅ | `extratoInline.test.tsx:115` |
+| F11 | `TransactionsPage.tsx:76` | Debounce 300 → 0 ms | extratoFilters | ✅ | `extratoFilters.test.tsx:53` |
+| F12 | `TransactionsPage.tsx:92` | Sort toggle always `asc` | extratoFilters | ✅ | `extratoFilters.test.tsx:132` |
+| F13 | `TransactionsPage.tsx:387` | Cancel also deletes | extratoCrud | ✅ | `extratoCrud.test.tsx:44` |
+| F14 | `TransactionForm.tsx:192` | Inactive account offered in the form | extratoCrud | ✅ | `extratoCrud.test.tsx:133` |
+| F15 | `TransactionsPage.tsx:219` | "Limpar filtros" does not clear the search | extratoFilters | ✅ | `extratoFilters.test.tsx:106` |
 
-**Sensor outcome**: 29 mutations, 26 killed, 3 survived. Fail: two non-equivalent survivors.
+**Sensor outcome**: 26 mutations, 24 killed, 2 survived. M14d is equivalent. **M14 is not equivalent.** All three survivors from iteration 1 that were real (M17, M23, and the neutral text in Check B) are now killed.
 
-- **M14 (equivalent)**: `useUpdateTransaction` has `onSettled: invalidateQueries`. After a failed PATCH the list is refetched from the unchanged server, so the row ends with the previous value even without the `onError` rollback. The visible end state that FIX-05 AC1/AC3 require ("restaurar", "voltar ao valor anterior") holds either way. Without the rollback, the wrong value would show only until the refetch. Not critical.
-- **M17**: a real hole in FIX-05 AC5. Both clears in the suite start from page 1. `extratoFilters.test.tsx:102` runs `resetToDefault` after the filter has already reset the page. In `:106` the search change makes the debounce set `page: 1` on its own.
-- **M23**: a real hole in FIX-01 AC5 and the T2 Done-when. `accounts.test.tsx:149` uses `findByText("Informe ao menos um titular")` anywhere on screen.
+### M14 re-assessment (probe)
 
-Check B by reasoning (no mutation run): if `saveInline` showed `reason.message` for the neutral path, `extratoInline.test.tsx:209` (`findByRole("alert")` only) would still pass. The neutral error text is not pinned (Gap 3).
+Iteration 1 called M14 equivalent because `onSettled` refetches the unchanged server state. That holds only when the refetch succeeds. Facts:
+- react-query 5.104.1 awaits `onError` and then `onSettled` before `mutateAsync` rejects (`node_modules/@tanstack/query-core/build/modern/mutation.js:191-206`). So when the error text appears, the refetch has already finished. The optimistic intermediate state cannot be observed at that moment in the happy refetch case. That part of the iteration-1 reasoning is right.
+- If the refetch fails, the query keeps its last data, which is the optimistic cache. `TransactionsPage` still renders rows when `isError` is true and `items.length > 0` (`TransactionsPage.tsx:264-277`). The typical case is the network going down: the PATCH and the GET fail together.
 
----
+Probe: a scratch-only test file in the worktree, never in the real tree. It sets `failures` for `PATCH /transactions/:id` and `GET /transactions` (`new TypeError("Failed to fetch")`), changes a row's category (test 1) or toggles the neutral switch (test 2), waits for the error text, then asserts that the old category is shown or that the switch is unchecked.
+- At `HEAD`: 2 passed.
+- With M14 (`onError` removed): 2 failed. Test 1: `toHaveTextContent()` fails because the row still shows the new category. Test 2: `Received element is checked`.
 
-## Check C (reverse mapping)
-
-Every new test maps to an AC, an edge case or a Done-when:
-- `errorMessages.test.ts` → FIX-01.1-5.
-- `accounts.test.tsx:89-151` → FIX-04.1 and FIX-01.2/6.
-- `categories.test.tsx:97-143` → FIX-01.2-4/6.
-- `transactions.test.tsx:280-354` → FIX-01.3-6; `:379-448` → FIX-02; `:461-499` → FIX-04.2; `:516` → FIX-04.3.
-- `emailExists.test.ts:26-85`, `authForms.test.tsx:59` → FIX-03.
-- `extratoInline` → FIX-05.1-3; `extratoFilters` → FIX-05.4-7; `extratoCrud` → FIX-05.8-9 and the T11 inactive-account Done-when.
-
-The "mock errors that carry a code" test (`errorMessages.test.ts:41`) documents the duck-typing choice and has no spec AC. It is acceptable as a design-level test.
+Conclusion: the rollback is the only code that makes FIX-05 AC1/AC3 hold when the save fails offline. No test in the suite pins it. This is a surviving, non-equivalent mutant on a P1 AC.
 
 ---
 
-## Code Quality
+## Check B / Check C
+
+- Payload/conjunction rule: request bodies are asserted by value (`toEqual`/`toMatchObject`/`toHaveProperty(…, null)`) in every create, edit, inline, bulk and neutral test. The new tests assert value and placement (`toHaveAttribute("id", …)`) and exact text (`toHaveTextContent(GENERIC)` plus `not.toHaveTextContent("boom")`), not just existence.
+- Check B for the three changed tests: each new assertion kills its target mutant (M17, M23/M23b, MN1/MN2). Each also fails for the opposite fault: duplicate-under-holder (M23b), category text on the neutral path (MN2).
+- Check C (reverse mapping): `extratoFilters.test.tsx:123` → FIX-05 AC5; `accounts.test.tsx:140` → FIX-01 AC2/3/5 and T2; `extratoInline.test.tsx:200` → FIX-05 AC3 and FIX-01 AC4/6. The other tests map as in iteration 1. There are no unclaimed tests.
+
+---
+
+## Code Quality (fix commit `ffda433`)
 
 | Check | Status | Note |
 | ----- | ------ | ---- |
-| No features beyond what was asked | ✅ | See the scope review below |
-| No abstractions for single-use code | ✅ | `apiSpy.tsx` is shared by 3 test files |
-| Surgical changes | ✅ | |
-| Matches existing patterns | ✅ | |
-| Tests map to ACs and are non-shallow | ⚠️ | Exact request bodies and rendered state throughout. Three weak spots: Gaps 1-3 |
-| Spec-anchored outcome check | ⚠️ | See spec-precision gaps |
-| Documented guidelines followed | ✅ | `web/AGENTS.md`; otherwise strong defaults |
+| Only touched files required | ✅ | 3 test files + the F1-F3 checklist in tasks.md. No product code |
+| Surgical, no weakened assertions | ✅ | Two `toBeInTheDocument()` became stricter `toHaveAttribute("id", …)`; one `findByRole("alert")` gained exact-text checks; one test added |
+| Clear and matches existing style | ✅ | Reuses `renderLoaded`, `goToPageTwo`, `clickButton`, `DEFAULT_QUERY`. The comments in `accounts.test.tsx:146,153` explain the field intent |
+| Test name matches behavior | ✅ | "volta à página 1 mesmo quando o usuário está na página 2 sem nenhuma busca pendente" names the exact condition that defeats the debounce reset |
+| No UI text from API `message` | ✅ | `grep -rnE "error\.message|reason\.message" web/src/features` → no matches |
+| Documented guidelines | ✅ | `web/AGENTS.md`; otherwise strong defaults |
 
-Scope review of the behavior changes the author reported:
-- **`invalid_account` text "Conta inválida" → "Selecione uma conta ativa" in the transaction form.** Justified. One map means one text, and it was already the import text. For create, the API rejects inactive accounts, so the text is accurate. On edit, inactive accounts are allowed, so the code would only mean a missing account and the text is slightly off. Minor.
-- **Unknown `field` falls back to the form alert.** Justified, and needed: without it, an error for a field the form lacks would be invisible.
-- **The Categoria field can now show an error (`categoryId`).** Justified by FIX-01 AC5. It adds one prop.
-- **`useTransactions(filters, enabled = true)`.** Justified. It is the least invasive way to meet "não consultar a API com esse período", and the default keeps other callers unchanged.
-- **`TransactionUpdate` and the mock widened to accept `null`.** Justified. It matches the real API contract (`api/src/modules/transactions/routes.ts:59-60`), and the edit payload could not be typed otherwise.
-
-Duck typing in `messageForError`: it reads `code` from any object whose `code` is a string. That is needed because the in-memory mock throws plain `Error`s with a code.
-- `DOMException.code` is a number, so it is ignored.
-- Node or fetch errors (`ECONNREFUSED`) and Supabase/PostgREST codes (`PGRST116`, `user_already_exists`, `validation_failed`, ...) do not match map keys, so they get the generic text.
-- The worst case is a foreign error whose code equals a map key, such as `unauthorized`. That shows a wrong but Portuguese text and never API text.
-
-This is acceptable. There is one inconsistency: `AccountForm.tsx:113` routes `holder_required` to the holder field only for `instanceof ApiError`. In mock mode the error is a plain `Error`, so the message lands under the nickname. This is cosmetic and limited to mock mode.
-
-Accessibility:
-- New messages use `role="alert"`: the account status dialog (`AccountsPage.tsx:154`), the inverted period (`TransactionsPage.tsx:240`), transaction field errors (`TransactionForm.tsx:287`) and the form alert (`:255`).
-- The sign-up error is linked to the e-mail input (asserted with `toHaveAccessibleDescription`).
-- Transaction form field errors have `id="<field>-error"`, but the inputs have no `aria-describedby`/`aria-invalid`. The association is visual only. This is a pre-existing pattern; the feature did not introduce it.
-- The account form uses `aria-describedby` for both errors.
+Minor: `accounts.test.tsx:147` and `:154` assert the element `id` rather than the accessible association (`toHaveAccessibleDescription` on the input). This is enough for placement, because `AccountForm.tsx:150,171` wire `aria-describedby` to those ids. It is not a defect.
 
 ---
 
 ## Ranked Gaps (fix tasks)
 
-### Fix 1 (Major): "Limpar filtros" from page 2 is untested (FIX-05 AC5, M17)
-- **Root cause**: every clear in `web/src/features/transactions/extratoFilters.test.tsx` starts at page 1, or uses search, whose debounce resets the page anyway.
-- **Fix task**: add a test (or extend `:106`) that changes only a non-search filter, goes to page 2 with "Próxima", clicks "Limpar filtros", and asserts `lastList()).toBe(DEFAULT_QUERY)` and "Página 1 de 3".
-- **Done when**: mutant M17 (`setFilters((c) => ({ ...baseFilters, page: c.page }))`) fails that test.
-
-### Fix 2 (Minor): `holder_required` is not pinned to the holder field (FIX-01 AC5, T2, M23)
-- **Fix task**: in `web/src/features/accounts/accounts.test.tsx:140`, assert that "Informe ao menos um titular" is `#holder-error`, or `toHaveAccessibleDescription` on the Titulares input. Also assert that the duplicate nickname message is `#account-error`.
-- **Done when**: mutant M23 fails.
-
-### Fix 3 (Minor): the neutral error text is not asserted (FIX-01 AC6)
-- **Fix task**: in `web/src/features/transactions/extratoInline.test.tsx:209`, assert the exact Portuguese text: `GENERIC_ERROR` for `new Error("boom")`, or a coded error's mapped text. Also assert that "boom" is absent.
+### Fix 1 (Major): the optimistic rollback on a failed inline save is not tested (FIX-05 AC1 and AC3, M14)
+- **Root cause**: every failure test in `web/src/features/transactions/extratoInline.test.tsx` (`:83`, `:200`) lets the `onSettled` refetch succeed. The refetch restores the row from the unchanged mock, so the `onError` rollback in `web/src/features/transactions/hooks.ts:56-57` is never what the assertion depends on.
+- **Fix task**: in `extratoInline.test.tsx`, add a test (or extend `:83` and `:200`) that also sets `failures.set("GET /transactions", new TypeError("Failed to fetch"))` before the change. Then assert:
+  - the category case: the error text is shown and the row's category combobox shows `item.categoryName`;
+  - the neutral case: the switch is not checked and there is no "Neutra" badge.
+  The `apiSpy` key `GET /transactions` already strips the query string. The page keeps rendering rows when the refetch errors.
+- **Done when**: removing `onError` from `useUpdateTransaction` (M14) fails the new test(s), and the suite stays green at HEAD.
 
 Not blocking, listed for the record:
-- Flaky-risk timings in `extratoFilters.test.tsx`.
-- The `invalid_account` text on edit.
-- Stale `pnpm` gate commands in tasks.md and the `Commit:` prefixes.
-- No STATE.md entry.
+- Flaky-risk timings in `extratoFilters.test.tsx` (real 350-400 ms sleeps).
+- The `invalid_account` text "Selecione uma conta ativa" is slightly off on edit, where inactive accounts are allowed.
+- Stale `pnpm` gate commands and `Commit:` prefixes in tasks.md. No STATE.md entry for the feature.
+- `AccountForm.tsx:113` routes `holder_required` to the holder field only for `instanceof ApiError`. In mock mode (plain `Error` with a code), it lands under the nickname. This affects mock mode only.
 
 ---
 
 ## Spec-Precision Gaps
 
-1. FIX-01 AC3 says "a mensagem definida para ele" but the spec does not define the texts for the nine codes. Only `duplicate_name` and the generic text are fixed in the assumptions table. The tests pin the texts chosen in `web/src/lib/api/errorMessages.ts:5-15`, which were never confirmed in the spec.
+1. FIX-01 AC3 says "a mensagem definida para ele" but the spec defines no text for the nine codes. The tests pin the texts chosen in `web/src/lib/api/errorMessages.ts:5-15`. They were never confirmed in the spec.
 2. FIX-04 AC2 does not say what the list shows while the period is invalid. The implementation shows "Nenhuma transação encontrada" under the alert.
-3. FIX-01 AC5 "associar a mensagem ao campo" does not say whether a programmatic association (`aria-describedby`) is required or only visual placement.
-4. FIX-03 AC3/4 rely on server timing: a slow but genuinely new sign-up (≥ 1 s) is misclassified. Accepted in the design; to confirm on the hosted project.
-
----
-
-## Security / Privacy
-
-- No API `message` reaches the UI in the changed screens. This is proven by the M1/M6 kills and the grep above. `ApiError.message` is still stored and goes to the telemetry/diagnostic helpers. That is not shown to the user, and `lovable-error-reporting` only runs inside the editor preview.
-- Tests contain no tokens, keys or real credentials. Fixtures use `ana@example.com`, `exemplo.com` URLs, and a password string only in `authForms.test.tsx` with mocked `signUp`.
-- `web/.env.local` is git-ignored and unused by the tests (env pinned in `vitest.config.ts`).
+3. FIX-01 AC5 "associar a mensagem ao campo" does not say whether a programmatic association (`aria-describedby`) is required. Transaction field errors are visual only, and account errors are programmatic.
+4. FIX-03 AC3/4 rely on server timing. A slow but genuinely new sign-up (≥ 1 s) is misclassified. This is accepted in the design and should be confirmed on the hosted project.
+5. FIX-05 AC1/AC3 "restaurar" / "voltar ao valor anterior" do not say whether the previous value must hold when the list cannot be reloaded (offline). This report reads it as yes (Gap 1), because the user would otherwise see an unsaved value as if saved.
 
 ---
 
 ## Isolation Proof
 
-- Baseline `git status --porcelain` before: `?? .DS_Store`. After the sensor: `?? .DS_Store`. The only other difference is this report, created at the end.
-- `git worktree list` after removal and prune: only `/Volumes/MacOnlySSD/dev/personal/financials 6968f86 [feat/front-fixes]`.
-- The `node_modules` symlink was removed before `git worktree remove --force`. `web/node_modules` in the real tree is intact.
-- `/Volumes/MacOnlySSD/dev/personal/.verify-ff` and `.lockcheck.*` are gone (`ls` shows no matches).
-- No `vitest` or `mutate.py` processes are left (`pgrep` empty). No ports were opened. The servers on 3001 and 8080 were not touched.
-- No commits were made. `HEAD` is still `6968f86bef23c05b98671e56361bf959e5443d8b`.
+- Baseline `git status --porcelain` before: `?? .DS_Store`. After the sensor, probe and cleanup: `?? .DS_Store`. The only other difference is this report.
+- `git worktree list` after `git worktree remove --force` and `git worktree prune`: only `/Volumes/MacOnlySSD/dev/personal/financials  ffda433 [feat/front-fixes]`.
+- The `web/node_modules` symlink was unlinked before the worktree was removed. The real `web/node_modules` is intact (328 entries).
+- `/Volumes/MacOnlySSD/dev/personal/.verify*` no longer exists. That includes the temporary gate log I wrote there and deleted afterwards.
+- The probe test lived only in the scratch worktree, copied from the session scratchpad. It was deleted before removal.
+- `pgrep -fl "vitest|mutate.py"` is empty. No ports were opened. The servers on 3001 and 8080 were not touched.
+- No commits were made. `HEAD` is still `ffda433ee2b6fb71ec01a581f2ebfd2a9319d35f`.
 
 ## Requirement Traceability Update
 
 | Requirement | Previous | New |
 | ----------- | -------- | --- |
-| FIX-01 | Implementing | ⚠️ Needs test fix (Gaps 2, 3) |
-| FIX-02 | Implementing | ✅ Verified |
-| FIX-03 | Implementing | ✅ Verified |
-| FIX-04 | Implementing | ✅ Verified |
-| FIX-05 | Implementing | ❌ Needs test fix (Gap 1) |
-| FIX-06 | Implementing | ✅ Verified |
+| FIX-01 | ⚠️ Needs test fix | ✅ Verified |
+| FIX-02 | ✅ Verified | ✅ Verified |
+| FIX-03 | ✅ Verified | ✅ Verified |
+| FIX-04 | ✅ Verified | ✅ Verified |
+| FIX-05 | ❌ Needs test fix (AC5) | ❌ Needs test fix (AC1/AC3 rollback, Gap 1) |
+| FIX-06 | ✅ Verified | ✅ Verified |
