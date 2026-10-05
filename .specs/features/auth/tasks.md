@@ -93,10 +93,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `pnpm -C api typecheck`, `lint` and `test` scripts exist and run clean on an empty suite
-- [ ] Scripts `test:unit` (`src/**/*.test.ts`) and `test:int` (`test/**/*.int.test.ts`) are separate
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `pnpm -C api typecheck`, `lint` and `test` scripts exist and run clean on an empty suite
+- [x] Scripts `test:unit` (`src/**/*.test.ts`) and `test:int` (`test/**/*.int.test.ts`) are separate
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build
