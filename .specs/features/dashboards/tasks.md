@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/dashboards/design.md`
-**Status**: Draft
+**Status**: Complete
 
 **Contract**: the wire contract of the endpoints is the one in `lovable.md` ("Contrato da API"): wrapped responses (`{ points }`, `{ items }`), `categoryName`, `accountNickname`, `invalid_period` (422). Where `design.md` differs, `lovable.md` wins. Web tasks T14-T20 are implemented directly in `web/` (Lovable is not the development path anymore); `lovable.md` stays the behavior spec for the UI.
 

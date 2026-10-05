@@ -411,3 +411,20 @@ W7c (pie data with the negative row) cannot be asserted in jsdom; accept, or ass
 **Issues found**: the 6 fix tasks above (month-boundary and UI-text assertions). No defect in the implementation was demonstrated.
 
 **Next steps**: implement fix tasks 1-3 (API tests) and 5-6 (web tests), decide fix 4 in the spec, then update `spec.md` traceability and `tasks.md` status.
+
+---
+
+## Addendum: fix tasks closed (2026-10-05)
+
+All 6 test-only fix tasks are closed; no implementation file changed and no defect surfaced.
+
+| Fix | Survivors | Test added | Proof (mutation in a temporary worktree, reverted) |
+| --- | --------- | ---------- | -------------------------------------------------- |
+| 1 | E6 | `dashboards-trend.int.test.ts` oldest month (11 back) asserted as `points[0]`, month 12 back absent | trend query starting at `months[1]` fails it |
+| 2 | E17, E18 | `dashboards-net-worth.int.test.ts` return on the 1st and transaction at 00:00 local on the 1st, in America/Sao_Paulo and UTC | `<=` on the date bound fails the return tests; `<=` on the month-end instant fails the transaction tests |
+| 3 | E16, E24 | `dashboards-net-worth.int.test.ts` only future-dated rows give 200, `current` "0.00", `series` [] | dropping either future filter fails it |
+| 4 | E20 | `dashboards-card.int.test.ts` zero-sum category omitted; decision recorded in `spec.md` Assumptions | removing the `having` clause fails it |
+| 5 | W19 | `InvestmentReturns.test.tsx` clearing notes sends `notes: null` and the row shows a dash | sending `undefined` instead of `null` fails it |
+| 6 | W27 | `InvestmentReturns.test.tsx` the form offers inactive accounts, marked "(inativa)", on create and edit | dropping `includeInactive` fails both tests |
+
+Traceability updated: `spec.md` DASH-01..DASH-07 Verified, `credit-expenses/spec.md` CARD-05 Verified, `tasks.md` Status Complete.
