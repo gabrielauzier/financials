@@ -8,7 +8,7 @@ import type { TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
 import { classify } from './classify.js';
 import { parseImport } from './formats.js';
-import { uploadImportFile } from './storage.js';
+import { removeImportFile, uploadImportFile } from './storage.js';
 import type { ClassifiedRow, RowStatus } from './types.js';
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -379,19 +379,29 @@ export async function importRoutes(app: FastifyInstance, options: ImportRoutesOp
         mimetype: form.file.mimetype || 'application/octet-stream',
         content: form.file.content,
       };
+      const storage = { supabaseUrl: options.supabaseUrl, publishableKey, token };
+      // Postgres and Storage share no transaction: the file goes first (a failed upload writes
+      // nothing) and is removed again when the database transaction fails (IMP-05.9).
       const storagePath = await uploadImportFile({
-        supabaseUrl: options.supabaseUrl,
-        publishableKey,
-        token,
+        ...storage,
         userId: user.id,
         batchId,
         filename: file.filename,
         content: new Uint8Array(file.content),
         contentType: file.mimetype,
       });
-      const summary = await request.withUser((tx) =>
-        insertBatch(tx, { ...prepared, batchId, idempotencyKey, file: { ...file, storagePath }, tz: request.tz }),
-      );
+      let summary: ConfirmSummary;
+      try {
+        summary = await request.withUser((tx) =>
+          insertBatch(tx, { ...prepared, batchId, idempotencyKey, file: { ...file, storagePath }, tz: request.tz }),
+        );
+      } catch (error) {
+        await removeImportFile({ ...storage, path: storagePath }).catch((cleanupError: unknown) => {
+          // Best effort: the orphan path holds a batch id that has no row (design risk, cleanup out of MVP).
+          request.log.error({ err: cleanupError, storagePath }, 'could not remove the file of a failed import');
+        });
+        throw error;
+      }
       return reply.status(201).send(summary);
     },
   );

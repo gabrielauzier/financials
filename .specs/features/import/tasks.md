@@ -508,10 +508,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Forced insert failure leaves no batch, transaction, attachment or storage object
-- [ ] Forced upload failure leaves no batch or transaction (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Forced insert failure leaves no batch, transaction, attachment or storage object
+- [x] Forced upload failure leaves no batch or transaction (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
