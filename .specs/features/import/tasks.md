@@ -391,7 +391,7 @@ T22 → T23
 
 **Done when**:
 
-- [x] With holder `Gabriel Vasconcelos Auzier`, the 5 Pix rows to that name are neutral
+- [x] With holder `Gabriel Vasconcelos Auzier`, the 6 Pix rows to that name (indexes 3, 4, 5, 8, 12 and 13) are neutral
 - [x] Case, accent and spacing variants match
 - [x] Inactive account's holder still matches
 - [x] No match keeps `neutral=false` and no value/date heuristic is applied (4 tests)
