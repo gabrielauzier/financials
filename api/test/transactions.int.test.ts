@@ -191,3 +191,126 @@ describe('POST /transactions', () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+interface SeedRow {
+  name?: string;
+  type?: 'Income' | 'Expense';
+  occurredAt: string;
+  amount?: string;
+  accountId?: string;
+  categoryId?: string;
+  paymentMethod?: string;
+  neutral?: boolean;
+}
+
+/** Inserts rows with admin SQL (as the owner) for volume; behavior is still exercised over HTTP. */
+async function seed(owner: TestUser, defaultAccountId: string, rows: SeedRow[]): Promise<void> {
+  const uncategorized = await categoryId(owner, 'Uncategorized');
+  const sql = getAdminSql();
+  await sql`
+    insert into public.transactions
+      (user_id, account_id, category_id, name, type, occurred_at, amount, payment_method, neutral)
+    select ${owner.id}::uuid, r.account_id::uuid, r.category_id::uuid, r.name, r.type, r.occurred_at::timestamptz,
+           r.amount::numeric, r.payment_method, r.neutral
+    from jsonb_to_recordset(${sql.json(
+      rows.map((r) => ({
+        name: r.name ?? 'Linha',
+        type: r.type ?? 'Expense',
+        occurred_at: r.occurredAt,
+        amount: r.amount ?? '10.00',
+        account_id: r.accountId ?? defaultAccountId,
+        category_id: r.categoryId ?? uncategorized,
+        payment_method: r.paymentMethod ?? 'PIX',
+        neutral: r.neutral ?? false,
+      })),
+    )}) as r(name text, type text, occurred_at text, amount text, account_id text, category_id text,
+             payment_method text, neutral boolean)`;
+}
+
+interface Page {
+  items: { id: string; name: string; occurredAt: string; amount: string; accountId: string; categoryName: string }[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+async function list(as: TestUser, query = '', headers: Record<string, string> = {}): Promise<Page> {
+  const res = await call(as, 'GET', `/transactions${query === '' ? '' : `?${query}`}`, undefined, headers);
+  expect(res.statusCode).toBe(200);
+  return res.json<Page>();
+}
+
+describe('GET /transactions', () => {
+  let owner: TestUser;
+  let ownerAccount: string;
+  const hour = (i: number) => new Date(Date.UTC(2026, 0, 1) + i * 3_600_000).toISOString();
+
+  beforeAll(async () => {
+    owner = await createTestUser();
+    ownerAccount = await createAccount(owner, 'Lista');
+    // 120 rows; every 10th shares its instant with the previous one to force the id tie-break.
+    await seed(
+      owner,
+      ownerAccount,
+      Array.from({ length: 120 }, (_, i) => ({ name: `Linha ${i}`, occurredAt: hour(i % 10 === 0 ? i + 1 : i) })),
+    );
+  });
+
+  it('returns page 1 with 50 items, total 120 and pageSize 50 by default', async () => {
+    const body = await list(owner);
+    expect(body).toMatchObject({ total: 120, page: 1, pageSize: 50 });
+    expect(body.items).toHaveLength(50);
+    expect(Object.keys(body.items[0] ?? {}).sort()).toEqual(
+      [
+        'id', 'accountId', 'accountNickname', 'categoryId', 'categoryName', 'name', 'type', 'occurredAt', 'amount',
+        'paymentMethod', 'notes', 'receipt', 'neutral', 'counterpartyDocument', 'counterpartyBank',
+      ].sort(),
+    );
+  });
+
+  it('returns 20 items on page 3 and an empty page past the end, keeping the total', async () => {
+    const third = await list(owner, 'page=3');
+    expect(third).toMatchObject({ total: 120, page: 3 });
+    expect(third.items).toHaveLength(20);
+    const fourth = await list(owner, 'page=4');
+    expect(fourth).toMatchObject({ total: 120, page: 4, items: [] });
+  });
+
+  it('orders by date descending, stable across pages (no duplicates or gaps with equal instants)', async () => {
+    const all = [...(await list(owner, 'page=1')).items, ...(await list(owner, 'page=2')).items, ...(await list(owner, 'page=3')).items];
+    expect(new Set(all.map((r) => r.id)).size).toBe(120);
+    const sorted = [...all].sort((a, b) =>
+      a.occurredAt === b.occurredAt ? (a.id < b.id ? 1 : -1) : a.occurredAt < b.occurredAt ? 1 : -1,
+    );
+    expect(all.map((r) => r.id)).toEqual(sorted.map((r) => r.id));
+    expect(all[0]?.occurredAt).toBe(hour(119));
+  });
+
+  it("never returns another user's rows, nor counts them", async () => {
+    const other = await createTestUser();
+    const otherAccount = await createAccount(other, 'Outra');
+    await seed(other, otherAccount, [{ name: 'Só da outra', occurredAt: hour(500) }]);
+
+    const mine = await list(owner);
+    expect(mine.total).toBe(120);
+    expect(mine.items.map((r) => r.name)).not.toContain('Só da outra');
+    const theirs = await list(other);
+    expect(theirs).toMatchObject({ total: 1 });
+    expect(theirs.items.map((r) => r.name)).toEqual(['Só da outra']);
+  });
+
+  it('returns an empty page with total 0 for a user without transactions', async () => {
+    const fresh = await createTestUser();
+    expect(await list(fresh)).toEqual({ items: [], total: 0, page: 1, pageSize: 50 });
+  });
+
+  it.each(['0', '-1', 'abc', '1.5', '', '1e2'])('rejects page=%j with 422 validation_error on field page', async (page) => {
+    const res = await call(owner, 'GET', `/transactions?page=${encodeURIComponent(page)}`);
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'page' } });
+  });
+
+  it('requires authentication', async () => {
+    expect((await app.inject({ method: 'GET', url: '/transactions' })).statusCode).toBe(401);
+  });
+});

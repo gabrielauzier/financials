@@ -33,6 +33,19 @@ const CreateBody = Type.Object({
   neutral: Type.Optional(Type.Boolean()),
 });
 
+const PAGE_SIZE = 50 as const;
+
+const ListQuery = Type.Object({
+  page: Type.Optional(Type.String({ description: 'Page number, starting at 1 (50 rows per page)' })),
+});
+
+const ListSchema = Type.Object({
+  items: Type.Array(TransactionSchema),
+  total: Type.Integer(),
+  page: Type.Integer(),
+  pageSize: Type.Literal(PAGE_SIZE),
+});
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HAS_OFFSET = /(?:Z|[+-]\d{2}:?\d{2})$/i;
 
@@ -71,6 +84,13 @@ function validOccurredAt(value: string): Date {
 function optionalText(value: string | null | undefined): string | null {
   const text = value?.trim() ?? '';
   return text === '' ? null : text;
+}
+
+function validPage(value: string | undefined): number {
+  if (value === undefined) return 1;
+  const page = /^[1-9]\d{0,8}$/.test(value) ? Number(value) : 0;
+  if (page < 1) throw invalid('page must be an integer greater than or equal to 1', 'page');
+  return page;
 }
 
 function invalidAccount(): AppError {
@@ -132,6 +152,23 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
         return created as TransactionRow;
       });
       return reply.status(201).send(toTransaction(row));
+    },
+  );
+
+  routes.get(
+    '/transactions',
+    { schema: { querystring: ListQuery, response: { 200: ListSchema } } },
+    async (request) => {
+      const page = validPage(request.query.page);
+      const { rows, total } = await request.withUser(async (tx) => {
+        const [count] = await tx<{ n: number }[]>`select count(*)::int as n from public.transactions t`;
+        const rows = await tx<TransactionRow[]>`
+          select ${selectColumns(tx)} from ${fromJoins(tx)}
+          order by t.occurred_at desc, t.id desc
+          limit ${PAGE_SIZE} offset ${(page - 1) * PAGE_SIZE}`;
+        return { rows, total: (count as { n: number }).n };
+      });
+      return { items: rows.map(toTransaction), total, page, pageSize: PAGE_SIZE as 50 };
     },
   );
 }

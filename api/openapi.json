@@ -763,6 +763,144 @@
             }
           }
         }
+      },
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "description": "Page number, starting at 1 (50 rows per page)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "accountId",
+                          "accountNickname",
+                          "categoryId",
+                          "categoryName",
+                          "name",
+                          "type",
+                          "occurredAt",
+                          "amount",
+                          "paymentMethod",
+                          "notes",
+                          "receipt",
+                          "neutral",
+                          "counterpartyDocument",
+                          "counterpartyBank"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountNickname": {
+                            "type": "string"
+                          },
+                          "categoryId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "Income",
+                              "Expense"
+                            ]
+                          },
+                          "occurredAt": {
+                            "format": "date-time",
+                            "description": "ISO-8601 instant in UTC",
+                            "type": "string"
+                          },
+                          "amount": {
+                            "description": "Positive decimal string with 2 decimals, e.g. \"1234.56\"",
+                            "type": "string"
+                          },
+                          "paymentMethod": {
+                            "type": "string",
+                            "enum": [
+                              "BankTransfer",
+                              "Boleto",
+                              "Cash",
+                              "CreditCard",
+                              "DebitCard",
+                              "NuPay",
+                              "PIX"
+                            ]
+                          },
+                          "notes": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "receipt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "neutral": {
+                            "type": "boolean"
+                          },
+                          "counterpartyDocument": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "counterpartyBank": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "enum": [
+                        50
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

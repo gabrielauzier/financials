@@ -188,11 +188,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] 120 rows return page 1 with 50 items and `total` 120; page 3 has 20
-- [ ] Default order is date descending and stable across pages
-- [ ] Another user's rows never appear (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] 120 rows return page 1 with 50 items and `total` 120; page 3 has 20
+- [x] Default order is date descending and stable across pages
+- [x] Another user's rows never appear (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
