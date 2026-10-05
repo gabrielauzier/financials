@@ -346,11 +346,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Protected sample route returns 401 without token, with malformed token and with expired token
-- [ ] Valid token returns 200 and `request.user.id` equals the subject
-- [ ] `/health` stays public (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Protected sample route returns 401 without token, with malformed token and with expired token
+- [x] Valid token returns 200 and `request.user.id` equals the subject
+- [x] `/health` stays public (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
