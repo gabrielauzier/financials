@@ -397,10 +397,10 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] `yarn install --frozen-lockfile` in a clean copy of `web/` finishes without changes
-- [ ] `yarn --cwd web test`, `typecheck` and `lint` still pass
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `yarn install --frozen-lockfile` in a clean copy of `web/` finishes without changes
+- [x] `yarn --cwd web test`, `typecheck` and `lint` still pass
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build
