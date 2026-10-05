@@ -333,12 +333,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Existing identifier on the same account is `duplicate`
-- [ ] Same identifier on another account is `new`
-- [ ] Second occurrence in the same file is `duplicate`
-- [ ] Rows with `ignored` or `invalid` status are untouched (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Existing identifier on the same account is `duplicate`
+- [x] Same identifier on another account is `new`
+- [x] Second occurrence in the same file is `duplicate`
+- [x] Rows with `ignored` or `invalid` status are untouched (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
