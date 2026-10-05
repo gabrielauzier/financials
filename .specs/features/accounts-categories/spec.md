@@ -119,7 +119,7 @@ Toda transação pertence a uma conta bancária e tem uma categoria. As contas c
 | ACCT-03 | P1: Contas (efeitos da inatividade) | - | Pending |
 | CAT-01 | P1: Categorias iniciais (semeadura e nomes pt-BR) | - | Implementing |
 | CAT-02 | P1: Categorias de sistema (proteção) | - | Pending |
-| CAT-03 | P1: Categorias próprias (criar, renomear) | - | Pending |
+| CAT-03 | P1: Categorias próprias (criar, renomear) | - | Implementing |
 | CAT-04 | P1: Categorias próprias (excluir com reatribuição) | - | Pending |
 
 **Coverage:** 7 total, 0 mapped to tasks, 7 unmapped ⚠️

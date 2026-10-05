@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
-import { cleanupTestUsers, closeAdminSql, createTestUser, type TestUser } from './helpers/db.js';
+import { cleanupTestUsers, closeAdminSql, createTestUser, getAdminSql, type TestUser } from './helpers/db.js';
 import { getLocalStack } from './helpers/stack.js';
 
 let app: FastifyInstance;
@@ -82,5 +82,48 @@ describe('GET /categories', () => {
     expect(idsA).toHaveLength(17);
     expect(idsB).toHaveLength(17);
     expect(idsA.filter((id) => idsB.includes(id))).toEqual([]);
+  });
+});
+
+describe('POST /categories', () => {
+  it('creates a trimmed, non-system category with no key, ignoring client-sent key and isSystem', async () => {
+    const user = await createTestUser();
+    const res = await call(user, 'POST', '/categories', { name: '  Mercado  ', key: 'Reversal', isSystem: true });
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toEqual({
+      id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+      key: null,
+      name: 'Mercado',
+      isSystem: false,
+    });
+
+    const rows = await getAdminSql()`
+      select user_id, key, name, is_system from public.categories where id = ${res.json<Category>().id}`;
+    expect(rows).toEqual([{ user_id: user.id, key: null, name: 'Mercado', is_system: false }]);
+    expect((await list(user)).map((c) => c.name)).toContain('Mercado');
+  });
+
+  it('returns 422 validation_error on name for a blank or whitespace-only name, creating nothing', async () => {
+    const user = await createTestUser();
+    for (const name of ['', '   ']) {
+      const res = await call(user, 'POST', '/categories', { name });
+      expect(res.statusCode).toBe(422);
+      expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'name' } });
+    }
+    expect(await list(user)).toHaveLength(17);
+  });
+
+  it('returns 409 duplicate_name on name for an existing name in any case, but allows it for another user', async () => {
+    const user = await createTestUser();
+    expect((await call(user, 'POST', '/categories', { name: 'Viagem' })).statusCode).toBe(201);
+    for (const name of ['VIAGEM', '  viagem ', 'ALIMENTAÇÃO']) {
+      const res = await call(user, 'POST', '/categories', { name });
+      expect(res.statusCode).toBe(409);
+      expect(res.json()).toEqual({ error: { code: 'duplicate_name', message: expect.any(String), field: 'name' } });
+    }
+    expect(await list(user)).toHaveLength(18);
+
+    const other = await createTestUser();
+    expect((await call(other, 'POST', '/categories', { name: 'Viagem' })).statusCode).toBe(201);
   });
 });

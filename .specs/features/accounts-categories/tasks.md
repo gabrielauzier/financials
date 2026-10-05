@@ -364,11 +364,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Creates a non-system category
-- [ ] Blank or whitespace name returns 422
-- [ ] Duplicate name in any case returns 409 `duplicate_name` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Creates a non-system category
+- [x] Blank or whitespace name returns 422
+- [x] Duplicate name in any case returns 409 `duplicate_name` (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
