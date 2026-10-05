@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ApiError } from "@/lib/api/client";
+import { messageForError } from "@/lib/api/errorMessages";
 import type { Account, AccountInput, Bank } from "@/lib/api/types";
 import { useCreateAccount, useUpdateAccount } from "./hooks";
 
@@ -107,11 +109,9 @@ export function AccountForm({
       else await create.mutateAsync(input);
       onOpenChange(false);
     } catch (reason) {
-      const code =
-        typeof reason === "object" && reason && "code" in reason ? String(reason.code) : "";
-      if (code === "duplicate_name") setError("Já existe uma conta com esse apelido");
-      else if (code === "holder_required") setHolderError("Informe ao menos um titular");
-      else setError(reason instanceof Error ? reason.message : "Não foi possível salvar a conta");
+      const message = messageForError(reason, "account");
+      if (reason instanceof ApiError && reason.code === "holder_required") setHolderError(message);
+      else setError(message);
     }
   };
   const busy = create.isPending || update.isPending;

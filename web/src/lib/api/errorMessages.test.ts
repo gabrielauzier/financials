@@ -38,6 +38,16 @@ describe("messageForError", () => {
     expect(messageForError(undefined)).toBe(GENERIC_ERROR);
   });
 
+  it("also understands in-memory mock errors that carry a code", () => {
+    const mockError = Object.assign(new Error("Já existe uma conta com esse apelido"), {
+      code: "duplicate_name",
+    });
+    expect(messageForError(mockError, "account")).toBe("Já existe uma conta com esse apelido");
+    expect(messageForError(Object.assign(new Error("English"), { code: "ECONNREFUSED" }))).toBe(
+      GENERIC_ERROR,
+    );
+  });
+
   it("never includes the API message", () => {
     for (const code of ["duplicate_name", "not_found", "unknown_code", "internal_error"]) {
       expect(messageForError(api(code), "account")).not.toContain("Technical English");

@@ -113,11 +113,11 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] A failing activate or deactivate keeps the dialog open and shows the Portuguese message
-- [ ] Duplicate nickname and missing holder still show their messages through the shared module
-- [ ] No `error.message` or `reason.message` is read in the accounts feature (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] A failing activate or deactivate keeps the dialog open and shows the Portuguese message
+- [x] Duplicate nickname and missing holder still show their messages through the shared module
+- [x] No `error.message` or `reason.message` is read in the accounts feature (3 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

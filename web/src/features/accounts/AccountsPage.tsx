@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { messageForError } from "@/lib/api/errorMessages";
 import type { Account, Bank } from "@/lib/api/types";
 import { AccountForm } from "./AccountForm";
 import { useAccounts, useSetAccountActive } from "./hooks";
@@ -29,10 +30,16 @@ export function AccountsPage() {
   const [editing, setEditing] = useState<Account>();
   const [formOpen, setFormOpen] = useState(false);
   const [confirming, setConfirming] = useState<Account>();
+  const [statusError, setStatusError] = useState("");
   const changeStatus = async () => {
     if (!confirming) return;
-    await statusMutation.mutateAsync({ id: confirming.id, active: !confirming.active });
-    setConfirming(undefined);
+    setStatusError("");
+    try {
+      await statusMutation.mutateAsync({ id: confirming.id, active: !confirming.active });
+      setConfirming(undefined);
+    } catch (reason) {
+      setStatusError(messageForError(reason, "account"));
+    }
   };
   return (
     <div className="mx-auto max-w-5xl">
@@ -108,7 +115,14 @@ export function AccountsPage() {
                   <Pencil />
                   Editar
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirming(account)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStatusError("");
+                    setConfirming(account);
+                  }}
+                >
                   {account.active ? "Desativar" : "Reativar"}
                 </Button>
               </div>
@@ -136,9 +150,19 @@ export function AccountsPage() {
                 : "Ela voltará a ficar disponível para novas transações."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {statusError && (
+            <p role="alert" className="text-sm text-destructive">
+              {statusError}
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={changeStatus}>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                void changeStatus();
+              }}
+            >
               {confirming?.active ? "Desativar" : "Reativar"}
             </AlertDialogAction>
           </AlertDialogFooter>

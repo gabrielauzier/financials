@@ -1,5 +1,3 @@
-import { ApiError } from "./client";
-
 export type ErrorContext = "account" | "category" | "transaction" | "import";
 
 export const GENERIC_ERROR = "Não foi possível concluir a operação. Tente novamente.";
@@ -21,15 +19,24 @@ const duplicateNameMessages: Partial<Record<ErrorContext, string>> = {
   category: "Já existe uma categoria com esse nome",
 };
 
+// Duck-typed on `code`/`field` so both ApiError and the in-memory mock errors are understood.
+const codeOf = (error: unknown): string | undefined =>
+  typeof error === "object" && error !== null && "code" in error && typeof error.code === "string"
+    ? error.code
+    : undefined;
+
 /** Maps an API error to a Portuguese message. Never returns the API `message`. */
 export function messageForError(error: unknown, context?: ErrorContext): string {
-  if (!(error instanceof ApiError)) return GENERIC_ERROR;
-  if (error.code === "duplicate_name") {
+  const code = codeOf(error);
+  if (code === undefined) return GENERIC_ERROR;
+  if (code === "duplicate_name") {
     return (context && duplicateNameMessages[context]) ?? GENERIC_ERROR;
   }
-  return messages[error.code] ?? GENERIC_ERROR;
+  return messages[code] ?? GENERIC_ERROR;
 }
 
 export function fieldForError(error: unknown): string | undefined {
-  return error instanceof ApiError ? error.field : undefined;
+  if (codeOf(error) === undefined) return undefined;
+  const field = (error as { field?: unknown }).field;
+  return typeof field === "string" ? field : undefined;
 }
