@@ -111,7 +111,7 @@ Parcelas e recorrências de cartão (assinaturas, compras parceladas) precisam d
 | CARD-01 | P1: CRUD (criar, validar) | - | Implementing |
 | CARD-02 | P1: CRUD (editar, excluir, valor restante) | - | Pending |
 | CARD-03 | P1: Status (valores e filtro) | - | Implementing |
-| CARD-04 | P1: Status (sem automação) | - | Pending |
+| CARD-04 | P1: Status (sem automação) | - | Implementing |
 | CARD-05 | P2: Isolamento dos totais | - | Pending |
 
 **Coverage:** 5 total, 0 mapped to tasks, 5 unmapped ⚠️

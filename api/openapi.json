@@ -1435,6 +1435,148 @@
         }
       }
     },
+    "/credit-expenses/{id}": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "totalAmount": {
+                    "description": "Decimal string, > 0, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "paidAmount": {
+                    "description": "Decimal string, 0 or more and not above totalAmount, up to 2 decimals",
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "description": "ISO-8601 instant with offset",
+                    "type": "string"
+                  },
+                  "recurrencyDay": {
+                    "description": "Day of the month, integer from 1 to 31",
+                    "type": "integer"
+                  },
+                  "status": {
+                    "description": "Any of: Once, Active, Inactive, Canceled, ToCancel; any status may follow any other",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "description": "An account of the user; inactive accounts are allowed on edit",
+                    "type": "string"
+                  },
+                  "categoryId": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "categoryId",
+                    "categoryName",
+                    "name",
+                    "totalAmount",
+                    "paidAmount",
+                    "remainingAmount",
+                    "occurredAt",
+                    "recurrencyDay",
+                    "status",
+                    "notes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryName": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "totalAmount": {
+                      "description": "Positive decimal string with 2 decimals, e.g. \"600.00\"",
+                      "type": "string"
+                    },
+                    "paidAmount": {
+                      "description": "Decimal string with 2 decimals, between 0.00 and totalAmount",
+                      "type": "string"
+                    },
+                    "remainingAmount": {
+                      "description": "totalAmount minus paidAmount, computed by the database, 2 decimals",
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "description": "ISO-8601 instant in UTC",
+                      "type": "string"
+                    },
+                    "recurrencyDay": {
+                      "minimum": 1,
+                      "maximum": 31,
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "Once",
+                        "Active",
+                        "Inactive",
+                        "Canceled",
+                        "ToCancel"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {

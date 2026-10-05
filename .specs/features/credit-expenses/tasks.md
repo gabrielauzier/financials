@@ -170,11 +170,11 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Any status can be changed to any other status
-- [ ] Total below `paid_amount` returns 422 `invalid_paid_amount`
-- [ ] Editing one field preserves the others and does not touch status or paid (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Any status can be changed to any other status
+- [x] Total below `paid_amount` returns 422 `invalid_paid_amount`
+- [x] Editing one field preserves the others and does not touch status or paid (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

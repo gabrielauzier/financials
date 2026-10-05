@@ -369,3 +369,236 @@ describe('GET /credit-expenses', () => {
     expect((await list()).map((r) => r.name)).not.toContain('Da outra');
   });
 });
+
+describe('PATCH /credit-expenses/:id', () => {
+  let u: TestUser;
+  let account: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Edição');
+  });
+
+  type Item = Record<string, unknown> & { id: string };
+
+  async function create(over: Record<string, unknown> = {}): Promise<Item> {
+    const res = await call(
+      u,
+      'POST',
+      '/credit-expenses',
+      valid({ accountId: account, totalAmount: '600.00', paidAmount: '200.00', notes: 'original', ...over }),
+    );
+    expect(res.statusCode).toBe(201);
+    return res.json<Item>();
+  }
+
+  const patch = (id: string, body: unknown) => call(u, 'PATCH', `/credit-expenses/${id}`, body);
+
+  async function read(id: string): Promise<Item | undefined> {
+    const res = await call(u, 'GET', '/credit-expenses');
+    return res.json<Item[]>().find((r) => r.id === id);
+  }
+
+  const STATUSES = ['Once', 'Active', 'Inactive', 'Canceled', 'ToCancel'];
+
+  it('changes any status to any other status, leaving paidAmount and every other field untouched', async () => {
+    for (const from of STATUSES) {
+      const item = await create({ name: `De ${from}`, status: from });
+      for (const to of STATUSES) {
+        const res = await patch(item.id, { status: to });
+        expect({ from, to, status: res.statusCode }).toEqual({ from, to, status: 200 });
+        expect(res.json()).toEqual({ ...item, status: to });
+        expect(await read(item.id)).toEqual({ ...item, status: to });
+      }
+    }
+  });
+
+  it.each<[string, Record<string, unknown>, Record<string, unknown>]>([
+    ['name', { name: '  Novo nome ' }, { name: 'Novo nome' }],
+    ['totalAmount', { totalAmount: '800' }, { totalAmount: '800.00', remainingAmount: '600.00' }],
+    ['paidAmount', { paidAmount: '350.25' }, { paidAmount: '350.25', remainingAmount: '249.75' }],
+    ['occurredAt', { occurredAt: '2026-11-20T08:00:00-03:00' }, { occurredAt: '2026-11-20T11:00:00.000Z' }],
+    ['recurrencyDay', { recurrencyDay: 28 }, { recurrencyDay: 28 }],
+    ['notes', { notes: 'outra' }, { notes: 'outra' }],
+  ])('edits only %s and preserves every other field by value', async (_field, body, expected) => {
+    const item = await create();
+    const res = await patch(item.id, body);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ ...item, ...expected });
+    expect(await read(item.id)).toEqual({ ...item, ...expected });
+    // Status and paid amount are never touched by an edit of another field.
+    expect(res.json()).toMatchObject({ status: item.status });
+    if (!('paidAmount' in body)) expect(res.json()).toMatchObject({ paidAmount: '200.00' });
+  });
+
+  it('edits several fields in one request and keeps the rest', async () => {
+    const item = await create();
+    const res = await patch(item.id, { name: 'Dois', recurrencyDay: 3, status: 'ToCancel', notes: 'x' });
+    expect(res.json()).toEqual({ ...item, name: 'Dois', recurrencyDay: 3, status: 'ToCancel', notes: 'x' });
+  });
+
+  it('clears notes with null or blank text', async () => {
+    for (const notes of [null, '', '   ']) {
+      const item = await create();
+      const res = await patch(item.id, { notes });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({ ...item, notes: null });
+    }
+  });
+
+  it('changes the category and shows its name, and keeps it when not sent', async () => {
+    const item = await create();
+    const food = await categoryId(u, 'Food');
+    const res = await patch(item.id, { categoryId: food });
+    expect(res.json()).toEqual({ ...item, categoryId: food, categoryName: 'Alimentação' });
+    expect(await patch(item.id, { name: 'Mesma categoria' })).toMatchObject({ statusCode: 200 });
+    expect(await read(item.id)).toMatchObject({ categoryId: food, categoryName: 'Alimentação' });
+  });
+
+  it('returns the current row for an empty body, changing nothing', async () => {
+    const item = await create();
+    const res = await patch(item.id, {});
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual(item);
+    expect(await read(item.id)).toEqual(item);
+  });
+
+  it('rejects lowering totalAmount below the paid amount with 422 invalid_paid_amount, keeping the row', async () => {
+    const item = await create();
+    for (const totalAmount of ['199.99', '0.01']) {
+      const res = await patch(item.id, { totalAmount });
+      expect({ totalAmount, status: res.statusCode }).toEqual({ totalAmount, status: 422 });
+      expect(res.json()).toEqual({
+        error: { code: 'invalid_paid_amount', message: expect.any(String), field: 'paidAmount' },
+      });
+    }
+    expect(await read(item.id)).toEqual(item);
+  });
+
+  it('accepts lowering totalAmount down to exactly the paid amount', async () => {
+    const item = await create();
+    const res = await patch(item.id, { totalAmount: '200.00' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ ...item, totalAmount: '200.00', remainingAmount: '0.00' });
+  });
+
+  it('rejects a paidAmount above the current total with 422 invalid_paid_amount, accepting up to the total', async () => {
+    const item = await create();
+    const over = await patch(item.id, { paidAmount: '600.01' });
+    expect(over.statusCode).toBe(422);
+    expect(over.json()).toEqual({
+      error: { code: 'invalid_paid_amount', message: expect.any(String), field: 'paidAmount' },
+    });
+    expect(await read(item.id)).toEqual(item);
+    const full = await patch(item.id, { paidAmount: '600.00' });
+    expect(full.json()).toMatchObject({ paidAmount: '600.00', remainingAmount: '0.00' });
+  });
+
+  it('validates paid against the resulting total when both change in one request', async () => {
+    const item = await create();
+    const ok = await patch(item.id, { totalAmount: '100.00', paidAmount: '90.00' });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json()).toMatchObject({ totalAmount: '100.00', paidAmount: '90.00', remainingAmount: '10.00' });
+    const bad = await patch(item.id, { totalAmount: '50.00', paidAmount: '90.00' });
+    expect(bad.statusCode).toBe(422);
+    expect(bad.json()).toMatchObject({ error: { code: 'invalid_paid_amount', field: 'paidAmount' } });
+    // Raising the total together with the paid amount is allowed even above the old total.
+    const raise = await patch(item.id, { totalAmount: '1000.00', paidAmount: '900.00' });
+    expect(raise.json()).toMatchObject({ totalAmount: '1000.00', paidAmount: '900.00' });
+  });
+
+  it('applies the field validations of create to each editable field, keeping the row unchanged', async () => {
+    const item = await create();
+    const cases: [Record<string, unknown>, number, string, string][] = [
+      [{ totalAmount: '0' }, 422, 'invalid_amount', 'totalAmount'],
+      [{ totalAmount: '-1.00' }, 422, 'invalid_amount', 'totalAmount'],
+      [{ totalAmount: '10.001' }, 422, 'invalid_amount', 'totalAmount'],
+      [{ totalAmount: 600 }, 422, 'invalid_amount', 'totalAmount'],
+      [{ totalAmount: null }, 422, 'invalid_amount', 'totalAmount'],
+      [{ paidAmount: '-0.01' }, 422, 'invalid_paid_amount', 'paidAmount'],
+      [{ paidAmount: 5 }, 422, 'invalid_paid_amount', 'paidAmount'],
+      [{ paidAmount: null }, 422, 'invalid_paid_amount', 'paidAmount'],
+      [{ recurrencyDay: 0 }, 422, 'invalid_day', 'recurrencyDay'],
+      [{ recurrencyDay: 32 }, 422, 'invalid_day', 'recurrencyDay'],
+      [{ recurrencyDay: 5.5 }, 422, 'invalid_day', 'recurrencyDay'],
+      [{ recurrencyDay: '5' }, 422, 'invalid_day', 'recurrencyDay'],
+      [{ recurrencyDay: null }, 422, 'invalid_day', 'recurrencyDay'],
+      [{ status: 'Paused' }, 422, 'invalid_status', 'status'],
+      [{ status: 'active' }, 422, 'invalid_status', 'status'],
+      [{ status: '' }, 422, 'invalid_status', 'status'],
+      [{ name: '   ' }, 422, 'validation_error', 'name'],
+      [{ occurredAt: '2026-10-05T14:30:00' }, 422, 'validation_error', 'occurredAt'],
+    ];
+    for (const [body, status, code, field] of cases) {
+      const res = await patch(item.id, body);
+      expect({ body, status: res.statusCode }).toEqual({ body, status });
+      expect(res.json()).toEqual({ error: { code, message: expect.any(String), field } });
+    }
+    expect(await read(item.id)).toEqual(item);
+  });
+
+  it('does not round a long JSON number sent as the total (raw body)', async () => {
+    const item = await create();
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/credit-expenses/${item.id}`,
+      headers: { authorization: `Bearer ${u.token}`, 'content-type': 'application/json' },
+      payload: '{"totalAmount": 12345678901.239999999}',
+    });
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toMatchObject({ error: { code: 'invalid_amount', field: 'totalAmount' } });
+    expect(await read(item.id)).toEqual(item);
+  });
+
+  it('keeps a row of an inactive account editable, and allows moving it to another account of the user', async () => {
+    const own = await createAccount(u, 'Vai ser inativada');
+    const item = await create({ accountId: own });
+    expect((await call(u, 'POST', `/accounts/${own}/deactivate`)).statusCode).toBe(200);
+
+    const edited = await patch(item.id, { name: 'Editada em conta inativa', status: 'Canceled' });
+    expect(edited.statusCode).toBe(200);
+    expect(edited.json()).toEqual({ ...item, name: 'Editada em conta inativa', status: 'Canceled' });
+    // The row is still listed.
+    expect(await read(item.id)).toMatchObject({ accountId: own });
+
+    // Creation requires an active account; an edit may move the row to an inactive one.
+    const another = await createAccount(u, 'Também inativa');
+    expect((await call(u, 'POST', `/accounts/${another}/deactivate`)).statusCode).toBe(200);
+    const moved = await patch(item.id, { accountId: another });
+    expect(moved.statusCode).toBe(200);
+    expect(moved.json()).toMatchObject({ accountId: another });
+    const back = await patch(item.id, { accountId: account });
+    expect(back.json()).toMatchObject({ accountId: account });
+  });
+
+  it('rejects an unknown or malformed account with 422 invalid_account and an unknown category with 404', async () => {
+    const item = await create();
+    for (const bad of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      const acc = await patch(item.id, { accountId: bad });
+      expect({ bad, status: acc.statusCode }).toEqual({ bad, status: 422 });
+      expect(acc.json()).toMatchObject({ error: { code: 'invalid_account', field: 'accountId' } });
+      const cat = await patch(item.id, { categoryId: bad });
+      expect({ bad, status: cat.statusCode }).toEqual({ bad, status: 404 });
+      expect(cat.json()).toMatchObject({ error: { code: 'not_found', field: 'categoryId' } });
+    }
+    expect(await read(item.id)).toEqual(item);
+  });
+
+  it('answers 404 for an unknown or malformed id, for any body', async () => {
+    for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      for (const body of [{}, { name: 'X' }, { status: 'Active' }]) {
+        const res = await patch(id, body);
+        expect({ id, body, status: res.statusCode }).toEqual({ id, body, status: 404 });
+        expect(res.json()).toEqual({ error: { code: 'not_found', message: expect.any(String) } });
+      }
+    }
+  });
+
+  it('never changes status or paid amount by itself across a sequence of edits', async () => {
+    const item = await create({ status: 'ToCancel', totalAmount: '600.00', paidAmount: '600.00' });
+    for (const body of [{ totalAmount: '600.00' }, { name: 'a' }, { recurrencyDay: 2 }, { notes: null }, {}]) {
+      const res = await patch(item.id, body);
+      expect(res.json()).toMatchObject({ status: 'ToCancel', paidAmount: '600.00', remainingAmount: '0.00' });
+    }
+  });
+});

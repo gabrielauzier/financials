@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { Type, type TUnsafe } from '@sinclair/typebox';
+import { Type, type Static, type TUnsafe } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import { AppError } from '../../plugins/errors.js';
 import { OPENAPI_TYPE_KEY } from '../../plugins/swagger.js';
@@ -43,6 +43,21 @@ const CreateBody = Type.Object({
   categoryId: Type.Optional(Type.String({ description: 'Defaults to the Sem categoria system category' })),
   notes: Type.Optional(nullableString),
 });
+
+// Every editable field is optional; `null` clears notes. An empty body changes nothing.
+const UpdateBody = Type.Object({
+  name: Type.Optional(Type.String()),
+  totalAmount: Type.Optional(AmountInput(TOTAL_DESCRIPTION)),
+  paidAmount: Type.Optional(AmountInput(PAID_DESCRIPTION)),
+  occurredAt: Type.Optional(Type.String({ description: 'ISO-8601 instant with offset' })),
+  recurrencyDay: Type.Optional(DayInput),
+  status: Type.Optional(Type.String({ description: `Any of: ${STATUSES.join(', ')}; any status may follow any other` })),
+  accountId: Type.Optional(Type.String({ description: 'An account of the user; inactive accounts are allowed on edit' })),
+  categoryId: Type.Optional(Type.String()),
+  notes: Type.Optional(nullableString),
+});
+
+const IdParams = Type.Object({ id: Type.String() });
 
 const ListQuery = Type.Object({
   status: Type.Optional(Type.String({ description: `Only this status; one of: ${STATUSES.join(', ')}` })),
@@ -89,6 +104,41 @@ function invalidAccount(): AppError {
 
 function categoryNotFound(): AppError {
   return new AppError('not_found', 404, 'Category not found', 'categoryId');
+}
+
+function notFound(): AppError {
+  return new AppError('not_found', 404, 'Credit expense not found');
+}
+
+interface CreditExpensePatch {
+  name?: string;
+  total_amount?: string;
+  paid_amount?: string;
+  occurred_at?: Date;
+  recurrency_day?: number;
+  status?: CreditExpenseStatus;
+  account_id?: string;
+  category_id?: string;
+  notes?: string | null;
+}
+
+/** Validates only the fields present in the body, with the same rules as create. */
+function validPatch(
+  body: Omit<Static<typeof UpdateBody>, 'totalAmount' | 'paidAmount' | 'recurrencyDay'> & {
+    totalAmount?: unknown;
+    paidAmount?: unknown;
+    recurrencyDay?: unknown;
+  },
+): CreditExpensePatch {
+  const patch: CreditExpensePatch = {};
+  if (body.name !== undefined) patch.name = requiredText(body.name, 'name');
+  if (body.totalAmount !== undefined) patch.total_amount = parseTotalAmount(body.totalAmount);
+  if (body.paidAmount !== undefined) patch.paid_amount = parsePaidAmount(body.paidAmount);
+  if (body.occurredAt !== undefined) patch.occurred_at = validOccurredAt(body.occurredAt);
+  if (body.recurrencyDay !== undefined) patch.recurrency_day = parseRecurrencyDay(body.recurrencyDay);
+  if (body.status !== undefined) patch.status = validStatus(body.status);
+  if (body.notes !== undefined) patch.notes = optionalText(body.notes);
+  return patch;
 }
 
 export async function creditExpensesRoutes(app: FastifyInstance): Promise<void> {
@@ -157,6 +207,56 @@ export async function creditExpensesRoutes(app: FastifyInstance): Promise<void> 
         ${filter === undefined ? tx`` : tx`where ce.status = ${filter}`}
         order by ce.occurred_at desc, ce.id desc`);
       return rows.map(toCreditExpense);
+    },
+  );
+
+  routes.patch(
+    '/credit-expenses/:id',
+    { schema: { params: IdParams, body: UpdateBody, response: { 200: CreditExpenseSchema } } },
+    async (request) => {
+      const { id } = request.params;
+      const { accountId, categoryId } = request.body;
+      const patch = validPatch(request.body);
+      if (!UUID.test(id)) throw notFound();
+
+      const row = await request.withUser(async (tx) => {
+        // The row is locked and checked first, so another user's id answers 404 whatever the body
+        // holds, and two concurrent edits cannot both pass the paid <= total check below.
+        const [current] = await tx<{ total_amount: string; paid_amount: string }[]>`
+          select total_amount::text as total_amount, paid_amount::text as paid_amount
+          from public.credit_expenses where id = ${id} for update`;
+        if (!current) throw notFound();
+
+        // The resulting pair must satisfy paid <= total, whichever of the two the body changes.
+        if (patch.total_amount !== undefined || patch.paid_amount !== undefined) {
+          assertPaidWithinTotal(patch.paid_amount ?? current.paid_amount, patch.total_amount ?? current.total_amount);
+        }
+
+        if (accountId !== undefined) {
+          // Only creation requires an active account (spec: rows of an inactive account stay
+          // editable), so any account of the user is accepted here; RLS hides foreign ones.
+          const [account] = UUID.test(accountId)
+            ? await tx<{ id: string }[]>`select id from public.accounts where id = ${accountId}`
+            : [];
+          if (!account) throw invalidAccount();
+          patch.account_id = account.id;
+        }
+        if (categoryId !== undefined) {
+          const [category] = UUID.test(categoryId)
+            ? await tx<{ id: string }[]>`select id from public.categories where id = ${categoryId}`
+            : [];
+          if (!category) throw categoryNotFound();
+          patch.category_id = category.id;
+        }
+
+        if (Object.keys(patch).length > 0) {
+          await tx`update public.credit_expenses set ${tx(patch)} where id = ${id}`;
+        }
+        const [updated] = await tx<CreditExpenseRow[]>`
+          select ${selectColumns(tx)} from ${fromJoins(tx)} where ce.id = ${id}`;
+        return updated as CreditExpenseRow;
+      });
+      return toCreditExpense(row);
     },
   );
 }
