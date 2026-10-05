@@ -1,9 +1,19 @@
 import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type } from '@sinclair/typebox';
-import { COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, rule } from './rules.js';
+import { COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, NET_VALUE, rule } from './rules.js';
 import { AppError } from '../../plugins/errors.js';
-import { currentMonthWindow, last12Months, last30DaysWindow, periodWindow, previous30DaysWindow, type Window } from './time.js';
+import {
+  currentMonthWindow,
+  last12Months,
+  last30DaysWindow,
+  localDate,
+  localMonth,
+  monthsFrom,
+  periodWindow,
+  previous30DaysWindow,
+  type Window,
+} from './time.js';
 
 const Money = (description: string) => Type.String({ description });
 
@@ -24,6 +34,17 @@ const TrendSchema = Type.Object({
       balance: Money('income minus expense, decimal string with 2 decimals (may be negative)'),
     }),
     { description: 'Always 12 points, oldest first: the 11 previous months and the current one' },
+  ),
+});
+
+const NetWorthSchema = Type.Object({
+  current: Money('Net worth now: income minus expenses plus investment returns, decimal string with 2 decimals'),
+  series: Type.Array(
+    Type.Object({
+      month: Type.String({ description: 'Local calendar month, YYYY-MM' }),
+      value: Money('Cumulative net worth at the end of the month, decimal string with 2 decimals'),
+    }),
+    { description: 'One point per month from the first month with a transaction or return to the current month; empty without data' },
   ),
 });
 
@@ -129,6 +150,51 @@ export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
         having sum(${rule(tx, EXPENSE_VALUE)}) <> 0
         order by sum(${rule(tx, EXPENSE_VALUE)}) desc, c.name`);
       return { items: rows.map((r) => ({ categoryId: r.category_id, name: r.name, total: r.total })) };
+    },
+  );
+
+  routes.get(
+    '/dashboard/net-worth',
+    { schema: { response: { 200: NetWorthSchema } } },
+    async (request) => {
+      const now = new Date();
+      const zone = request.tz;
+      const today = localDate(now, zone);
+      return request.withUser(async (tx) => {
+        // The first month with any (non-future) transaction or return; the series starts there.
+        const [first] = await tx<{ first_tx: Date | null; first_return: string | null }[]>`
+          select (select min(occurred_at) from public.transactions where occurred_at <= now()) as first_tx,
+                 (select min(occurred_on)::text from public.investment_returns where occurred_on <= ${today}::date) as first_return`;
+        const candidates = [
+          first?.first_tx ? localMonth(first.first_tx, zone) : undefined,
+          first?.first_return ? first.first_return.slice(0, 7) : undefined,
+        ].filter((m): m is string => m !== undefined);
+        if (candidates.length === 0) return { current: '0.00', series: [] };
+
+        const months = monthsFrom(candidates.sort()[0] as string, now, zone);
+        const names = months.map((m) => m.month);
+        const tos = months.map((m) => m.to.toISOString());
+        const dateTos = months.map((m) => m.nextFirstDay);
+        const rows = await tx<{ month: string; value: string }[]>`
+          with months(month, m_to, d_to) as (
+            select * from unnest(${names}::text[], ${tos}::timestamptz[], ${dateTos}::date[])
+          ),
+          moves as (
+            select t.occurred_at, ${rule(tx, NET_VALUE)} as value
+            from ${rule(tx, FROM_TRANSACTIONS)}
+            where ${rule(tx, COUNTABLE)}
+          ),
+          returns as (
+            select occurred_on, amount from public.investment_returns where occurred_on <= ${today}::date
+          )
+          select m.month,
+                 (coalesce((select sum(value) from moves where occurred_at < m.m_to), 0.00)
+                  + coalesce((select sum(amount) from returns where occurred_on < m.d_to), 0.00))::text as value
+          from months m
+          order by m.month`;
+        const series = rows.map((r) => ({ month: r.month, value: r.value }));
+        return { current: (series.at(-1) as { value: string }).value, series };
+      });
     },
   );
 }

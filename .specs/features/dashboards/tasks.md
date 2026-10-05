@@ -267,12 +267,12 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Income 1000.00, expense 300.00 and return 50.00 give 750.00
-- [ ] Series has one point per month with cumulative values, no gaps
-- [ ] Invoice payment counts as expense; Estorno counts positive; Investments, neutral and CreditCard rows do not move the value
-- [ ] No data returns 0.00 and an empty series (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Income 1000.00, expense 300.00 and return 50.00 give 750.00
+- [x] Series has one point per month with cumulative values, no gaps
+- [x] Invoice payment counts as expense; Estorno counts positive; Investments, neutral and CreditCard rows do not move the value
+- [x] No data returns 0.00 and an empty series (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

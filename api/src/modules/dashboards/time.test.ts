@@ -3,7 +3,9 @@ import {
   currentMonthWindow,
   last12Months,
   last30DaysWindow,
+  localMonth,
   monthBounds,
+  monthsFrom,
   periodWindow,
   previous30DaysWindow,
 } from './time.js';
@@ -104,5 +106,25 @@ describe('current month and period windows', () => {
     expect(periodWindow('2026-02-30', '2026-03-01', SP)).toBeNull();
     expect(periodWindow('2026-10-31', '2026-10-01', SP)).toBeNull();
     expect(periodWindow('abc', '2026-10-01', SP)).toBeNull();
+  });
+});
+
+describe('months since the first activity', () => {
+  it('lists every month from the first one to the current, with no gaps, across a year boundary', () => {
+    const months = monthsFrom('2025-11', new Date('2026-02-15T12:00:00Z'), SP);
+    expect(months.map((m) => m.month)).toEqual(['2025-11', '2025-12', '2026-01', '2026-02']);
+    expect(months[1]).toMatchObject({ firstDay: '2025-12-01', nextFirstDay: '2026-01-01' });
+    expect(iso(months[1]?.to as Date)).toBe('2026-01-01T03:00:00.000Z');
+  });
+
+  it('has only the current month when the first month is the current one, and none when it is in the future', () => {
+    const now = new Date('2026-10-05T12:00:00Z');
+    expect(monthsFrom('2026-10', now, SP).map((m) => m.month)).toEqual(['2026-10']);
+    expect(monthsFrom('2026-11', now, SP)).toEqual([]);
+  });
+
+  it('names the local month of an instant (23:30 on the last day stays in that month)', () => {
+    expect(localMonth(new Date('2026-10-01T02:30:00Z'), SP)).toBe('2026-09');
+    expect(localMonth(new Date('2026-10-01T02:30:00Z'), 'UTC')).toBe('2026-10');
   });
 });

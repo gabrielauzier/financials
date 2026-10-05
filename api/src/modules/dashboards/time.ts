@@ -15,6 +15,10 @@ export interface Window {
 export interface MonthWindow extends Window {
   /** `YYYY-MM` in the user's zone. */
   month: string;
+  /** Local date `YYYY-MM-DD` of the first day of the month. */
+  firstDay: string;
+  /** Local date `YYYY-MM-DD` of the first day of the next month (exclusive end for date columns). */
+  nextFirstDay: string;
 }
 
 const MONTH_FORMAT = 'yyyy-MM';
@@ -44,6 +48,8 @@ function monthWindow(first: DateTime): MonthWindow {
     month: first.toFormat(MONTH_FORMAT),
     from: first.toJSDate(),
     to: first.plus({ months: 1 }).startOf('month').toJSDate(),
+    firstDay: first.toFormat(DATE_FORMAT),
+    nextFirstDay: first.plus({ months: 1 }).startOf('month').toFormat(DATE_FORMAT),
   };
 }
 
@@ -51,6 +57,28 @@ function monthWindow(first: DateTime): MonthWindow {
 export function last12Months(now: Date, zone: string): MonthWindow[] {
   const current = DateTime.fromJSDate(now, { zone }).startOf('month');
   return Array.from({ length: 12 }, (_, i) => monthWindow(current.minus({ months: 11 - i })));
+}
+
+/** Local month `YYYY-MM` of an instant in the zone. */
+export function localMonth(instant: Date, zone: string): string {
+  return DateTime.fromJSDate(instant, { zone }).toFormat(MONTH_FORMAT);
+}
+
+/**
+ * Every month from `firstMonth` (`YYYY-MM`) to the current local month, inclusive, oldest first.
+ * Empty when `firstMonth` is after the current month.
+ */
+export function monthsFrom(firstMonth: string, now: Date, zone: string): MonthWindow[] {
+  const current = DateTime.fromJSDate(now, { zone }).startOf('month');
+  let cursor = monthBounds(firstMonth, zone);
+  const out: MonthWindow[] = [];
+  let at = DateTime.fromJSDate(cursor.from, { zone });
+  while (at <= current) {
+    cursor = monthBounds(at.toFormat(MONTH_FORMAT), zone);
+    out.push(cursor);
+    at = at.plus({ months: 1 }).startOf('month');
+  }
+  return out;
 }
 
 /** The calendar month `YYYY-MM`'s instants in the zone. Throws on a malformed month. */

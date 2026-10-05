@@ -1749,6 +1749,53 @@
         }
       }
     },
+    "/dashboard/net-worth": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "current",
+                    "series"
+                  ],
+                  "properties": {
+                    "current": {
+                      "description": "Net worth now: income minus expenses plus investment returns, decimal string with 2 decimals",
+                      "type": "string"
+                    },
+                    "series": {
+                      "description": "One point per month from the first month with a transaction or return to the current month; empty without data",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "month",
+                          "value"
+                        ],
+                        "properties": {
+                          "month": {
+                            "description": "Local calendar month, YYYY-MM",
+                            "type": "string"
+                          },
+                          "value": {
+                            "description": "Cumulative net worth at the end of the month, decimal string with 2 decimals",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {

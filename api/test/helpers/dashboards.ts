@@ -64,3 +64,16 @@ export function localInstant(daysAgo: number, zone: string, time = '12:00'): str
   const iso = DateTime.now().setZone(zone).minus({ days: daysAgo }).set({ hour: h, minute: m, second: 0, millisecond: 0 }).toISO();
   return iso as string;
 }
+
+/** Inserts investment returns directly (as the user). `on` is a local date `YYYY-MM-DD`. */
+export async function seedReturns(
+  user: TestUser,
+  accountId: string,
+  rows: { on: string; amount: string }[],
+): Promise<void> {
+  await asUser(user.id, async (tx) => {
+    for (const r of rows) {
+      await tx`insert into public.investment_returns (account_id, occurred_on, amount) values (${accountId}, ${r.on}, ${r.amount})`;
+    }
+  });
+}
