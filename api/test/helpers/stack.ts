@@ -5,6 +5,8 @@ export interface LocalStack {
   apiUrl: string;
   dbUrl: string;
   anonKey: string;
+  /** Project API key (`sb_publishable_...`) the API sends to Storage as `apikey`. */
+  publishableKey: string;
   serviceRoleKey: string;
   jwtSecret: string | undefined;
 }
@@ -37,7 +39,7 @@ function readStatus(): Record<string, string> {
 
 /**
  * Real URLs and keys of the local stack. Environment variables win
- * (TEST_SUPABASE_URL, TEST_DATABASE_URL, TEST_SUPABASE_ANON_KEY,
+ * (TEST_SUPABASE_URL, TEST_DATABASE_URL, TEST_SUPABASE_ANON_KEY, TEST_SUPABASE_PUBLISHABLE_KEY,
  * TEST_SUPABASE_SERVICE_ROLE_KEY, TEST_SUPABASE_JWT_SECRET); otherwise the
  * values come from `npx supabase status -o env` in the repo root.
  */
@@ -48,6 +50,7 @@ export function getLocalStack(): LocalStack {
     env.TEST_SUPABASE_URL &&
     env.TEST_DATABASE_URL &&
     env.TEST_SUPABASE_ANON_KEY &&
+    env.TEST_SUPABASE_PUBLISHABLE_KEY &&
     env.TEST_SUPABASE_SERVICE_ROLE_KEY
   );
   const status = needStatus ? readStatus() : {};
@@ -65,6 +68,7 @@ export function getLocalStack(): LocalStack {
     apiUrl: pick(env.TEST_SUPABASE_URL, 'API_URL'),
     dbUrl: pick(env.TEST_DATABASE_URL, 'DB_URL'),
     anonKey: pick(env.TEST_SUPABASE_ANON_KEY, 'ANON_KEY'),
+    publishableKey: pick(env.TEST_SUPABASE_PUBLISHABLE_KEY, 'PUBLISHABLE_KEY'),
     serviceRoleKey: pick(env.TEST_SUPABASE_SERVICE_ROLE_KEY, 'SERVICE_ROLE_KEY'),
     jwtSecret: env.TEST_SUPABASE_JWT_SECRET ?? status.JWT_SECRET,
   };
