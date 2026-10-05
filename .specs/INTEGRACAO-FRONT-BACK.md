@@ -74,3 +74,83 @@ Todas as 14 rotas de dados do front existem na API, e a API não tem rota que o 
 - Contratos de `accounts-categories`, `transactions` e `auth`: conferidos e coerentes.
 - Áreas sem backend (`import`, `credit-expenses`, `dashboards`) continuam mockadas sem impacto nas demais.
 - Pendências de endurecimento do backend (emissor e audiência do JWT, papel de banco sem bypass, `prepare: false` atrás de pooler) só importam no deploy.
+
+---
+
+## 8. Resultado da integração (2026-10-05)
+
+Feature `api-server` (servidor + CORS) implementada e **verificada (PASS na iteração 2)**, branch `feat/api-server`; integração local feita e testada no navegador com a API real.
+
+### Bloqueios e configurações
+
+| # | Item | Situação |
+| - | ---- | -------- |
+| B1 | Servidor da API (`src/server.ts`, scripts `dev`/`build`/`start`, `.env.example`, README) | ✅ Feito |
+| B2 | CORS (origens exatas, preflight sem token, 401 legível pelo navegador) | ✅ Feito e testado (12 testes de integração) |
+| B3 | Projeto Supabase | ✅ Resolvido localmente: front e API usam o stack local (`web/.env.local` e `api/.env`, ambos fora do git) |
+| F1 e F2 | `web/.env.local` com URL local, chave publicável, `VITE_API_URL` e `VITE_MOCK_AREAS=import,creditExpenses,dashboard,investmentReturns` | ✅ Feito |
+| F3 | Redirecionamento do e-mail de confirmação | ✅ `site_url=http://localhost:8080` e URLs adicionais em `supabase/config.toml`; o front roda na **porta 8080** |
+| F4 | Ordem de subida documentada | ✅ README |
+| F5 | Tipos gerados do OpenAPI | Pendente (task `auth T20`, do front) |
+
+### Fluxos conferidos no navegador, com a API real
+
+| Fluxo | Resultado |
+| ----- | --------- |
+| Cadastro (nome, apelido, e-mail, senha) | ✅ "Verifique seu e-mail"; e-mail no Mailpit com link para `http://localhost:8080` |
+| Confirmação pelo link | ✅ redireciona ao app já com sessão |
+| Preflight e chamadas (`OPTIONS` 204, `GET /accounts` 200 com Bearer) | ✅ sem erro de CORS |
+| Contas: criar | ✅ gravada no banco com o titular |
+| Contas: apelido repetido em outra caixa | ✅ "Já existe uma conta com esse apelido" (409) |
+| Categorias | ✅ as 17 em português vindas da semeadura do banco |
+| Extrato: listar dados reais | ✅ 3 transações da API |
+| Extrato: categoria inline | ✅ persistiu no banco |
+| Extrato: switch de neutra | ✅ persistiu no banco; linha esmaecida |
+| Extrato: criar pelo formulário (`1.234,56`, observação) | ✅ gravada como `1234.56` com a observação |
+| Sair, redirecionamento ao login e login com senha errada | ✅ "E-mail ou senha incorretos" |
+| Login com a senha certa | ✅ vai ao Dashboard (ainda um placeholder) |
+
+### O que ainda precisa de ajuste no front (Lovable)
+
+Nada bloqueia o uso, mas estes itens aparecerão ao usar o app (mensagem de correção ao Lovable abaixo):
+
+| # | Item | Efeito | Severidade |
+| - | ---- | ------ | ---------- |
+| D1 | Editar transação não consegue limpar observações nem recibo | O valor antigo permanece | Média |
+| D2 | Mensagens de erro da API em inglês aparecem em vários caminhos | Texto em inglês misturado | Média |
+| D7 | `emailExists.ts` não detecta e-mail já cadastrado e não confirmado | Mostra "Verifique seu e-mail" em vez de "E-mail já cadastrado" | Média |
+| — | Ativar/desativar conta sem tratamento de erro | Falha silenciosa | Baixa |
+| — | Testes de UI do extrato, `yarn.lock` fora de sincronia | Qualidade | Média/Baixa |
+
+### Mensagem de correção ao Lovable (pendente de envio)
+
+~~~~text
+Faça apenas as correções abaixo, sem mudar o comportamento das demais telas. O front agora conversa com a API real (VITE_MOCK_AREAS não inclui accounts, categories, transactions).
+
+1) Editar transação deve conseguir limpar campos
+- No formulário de edição, quando Observações ou Recibo forem esvaziados, envie `notes: null` e/ou `receipt: null` no PATCH (hoje o campo é omitido e a API mantém o valor antigo). Na criação, continue omitindo campos vazios. Teste: editar uma transação com observação, apagar o texto, salvar e ver o campo vazio depois do reload.
+
+2) Mensagens de erro da API sempre em português
+- Nunca exiba `error.message` vindo da API (está em inglês). Crie `src/lib/api/errorMessages.ts` com `messageForError(error: unknown): string` que mapeia por `error.code`: `duplicate_name` (contexto: conta → "Já existe uma conta com esse apelido"; categoria → "Já existe uma categoria com esse nome"), `holder_required` → "Informe ao menos um titular", `category_protected` → "Categoria protegida", `reassign_required` → "Escolha a categoria de destino", `invalid_amount` → "Valor inválido", `invalid_account` → "Selecione uma conta ativa", `invalid_receipt_url` → "URL inválida", `not_found` → "Registro não encontrado. Atualize a página e tente de novo", `validation_error` → "Dados inválidos. Revise os campos", `unauthorized` → "Sua sessão expirou. Entre novamente", `internal_error` e qualquer outro código ou falha de rede → "Não foi possível concluir a operação. Tente novamente." Use `error.field` para marcar o campo quando houver. Substitua todos os usos de `reason.message`/`error.message` nas telas de contas, categorias e extrato por essa função. Teste cada código.
+
+3) Detecção de e-mail já cadastrado
+- Em `src/features/auth/emailExists.ts`, `isEmailAlreadyRegistered(result)` deve retornar true quando: (a) `result.error?.code === "user_already_exists"`; ou (b) `result.data.user?.identities` é um array vazio; ou (c) `result.data.user` tem `confirmation_sent_at` e `created_at` e a diferença `confirmation_sent_at − created_at` é de pelo menos 1000 ms (GoTrue reenvia a confirmação para o usuário existente não confirmado e devolve o usuário antigo). Testes para os três casos e para um cadastro novo (diferença menor que 1000 ms) retornando false.
+
+4) Contas: ativar e desativar com tratamento de erro
+- Em `AccountsPage`, se a chamada falhar, mantenha o diálogo aberto e mostre a mensagem de `messageForError`.
+
+5) Testes de UI do extrato (Vitest + Testing Library, API mockada), todos obrigatórios e verificados no arquivo de testes:
+- categoria inline: escolher categoria salva sem formulário; com falha forçada, restaura a anterior e mostra "Não foi possível salvar a categoria"
+- lote: marcar 2 linhas, aplicar categoria faz UMA chamada com os 2 ids; com falha, nada muda e a seleção permanece
+- switch de neutra: persiste; com falha volta ao anterior
+- busca com debounce de 300 ms (timers falsos): uma única consulta e página 1
+- filtros emitem os parâmetros certos e reiniciam a página; "Limpar filtros" restaura
+- ordenação por Valor alterna a ordem
+- estado vazio, paginação, exclusão com confirmação e cancelamento, criar e editar pelo formulário
+
+6) Dependências
+- Mantenha `yarn.lock` sincronizado com `package.json` (`yarn install` sem alterações pendentes).
+
+Ao final, `yarn test`, `yarn typecheck` e `yarn lint` devem passar em instalação limpa.
+~~~~
+

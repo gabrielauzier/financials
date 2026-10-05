@@ -114,6 +114,10 @@ Detalhes e ações em `features/auth/lovable.md` (seção "Desvios registrados")
 - **`typecheck` com `tsgo`**: ainda aberto desde o prompt 1.
 - **Mocks de categorias em uso são fixos**: o prompt de `transactions` deve ligar a exclusão com reatribuição aos mocks de transações.
 
+### Integração com a API real (2026-10-05)
+
+Front e API foram integrados localmente e testados no navegador (ver `.specs/INTEGRACAO-FRONT-BACK.md`, seção 8). Mensagem de correção ao Lovable (D1, D2, D7, testes de UI do extrato) **pendente de envio**, no mesmo arquivo. O front roda na porta 8080 e usa `web/.env.local`.
+
 ### Correções enviadas e pendentes
 
 | Prompt | Mensagem | Situação |
