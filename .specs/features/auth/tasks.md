@@ -120,10 +120,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `GET /health` returns 200 with `{ status: 'ok' }` without a token
-- [ ] `buildApp()` can be called repeatedly in tests without port binding (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `GET /health` returns 200 with `{ status: 'ok' }` without a token
+- [x] `buildApp()` can be called repeatedly in tests without port binding (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

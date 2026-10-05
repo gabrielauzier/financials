@@ -112,7 +112,7 @@ O Financials guarda dados financeiros sensíveis. O MVP é de uso pessoal, mas p
 | AUTH-03 | P1: Cadastro (confirmação do e-mail) | - | Pending |
 | AUTH-04 | P1: Cadastro (categorias semeadas) | - | Pending |
 | AUTH-05 | P1: Login | - | Pending |
-| AUTH-06 | P1: Proteção da API (JWT) | - | Pending |
+| AUTH-06 | P1: Proteção da API (JWT) | - | Implementing |
 | AUTH-07 | P1: Isolamento (user_id + RLS) | - | Implementing |
 | AUTH-08 | P1: Isolamento (404 cruzado, sem chave de serviço) | - | Pending |
 
