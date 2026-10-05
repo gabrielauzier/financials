@@ -95,8 +95,8 @@ create table public.transactions (
   neutral boolean not null default false,
   import_batch_id uuid,              -- fk adicionada na migration de importação
   created_at timestamptz not null default now(),
-  foreign key (account_id, user_id) references public.accounts(id, user_id) on delete restrict,
-  foreign key (category_id, user_id) references public.categories(id, user_id) on delete restrict
+  foreign key (account_id, user_id) references public.accounts(id, user_id) on delete no action,
+  foreign key (category_id, user_id) references public.categories(id, user_id) on delete no action
 );
 create index transactions_user_date_idx on public.transactions (user_id, occurred_at desc);
 create index transactions_account_identifier_idx on public.transactions (account_id, identifier)
