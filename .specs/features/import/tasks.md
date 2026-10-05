@@ -562,11 +562,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Re-import of the account fixture classifies all importable rows `duplicate`
-- [ ] Re-import of the invoice fixture classifies all 18 rows `duplicate`
-- [ ] Cancel path writes nothing (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Re-import of the account fixture classifies all importable rows `duplicate`
+- [x] Re-import of the invoice fixture classifies all 18 rows `duplicate`
+- [x] Cancel path writes nothing (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
