@@ -4,6 +4,7 @@ import { Type, type Static, type TUnsafe } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import { AppError } from '../../plugins/errors.js';
 import { OPENAPI_TYPE_KEY } from '../../plugins/swagger.js';
+import { registerCategoryReference } from '../categories/registry.js';
 import {
   CreditExpenseSchema,
   fromJoins,
@@ -14,6 +15,10 @@ import {
   type CreditExpenseStatus,
 } from './schema.js';
 import { assertPaidWithinTotal, parsePaidAmount, parseRecurrencyDay, parseTotalAmount } from './validation.js';
+
+// Deleting a category moves its credit expenses to the destination. Runs once, when this module is
+// first imported, so building several apps in one process does not register the table twice.
+registerCategoryReference({ table: 'public.credit_expenses', column: 'category_id' });
 
 // Ajv coerces JSON numbers to strings for `type: 'string'` (and strings to numbers for `integer`),
 // which would silently round an amount or accept `"5"` as a day. These fields therefore have no

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
+import { registerCategoryReference } from '../src/modules/categories/registry.js';
 import { cleanupTestUsers, closeAdminSql, createTestUser, getAdminSql, type TestUser } from './helpers/db.js';
 import { getLocalStack } from './helpers/stack.js';
 
@@ -673,5 +674,121 @@ describe('DELETE /credit-expenses/:id', () => {
       expect((await call(u, 'DELETE', `/credit-expenses/${id}`)).statusCode).toBe(204);
       expect((await call(u, 'PATCH', `/credit-expenses/${id}`, { name: 'Fantasma' })).statusCode).toBe(404);
     }
+  });
+});
+
+describe('DELETE /categories/:id with credit expenses (reassignment)', () => {
+  let u: TestUser;
+  let account: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Reatribuição');
+  });
+
+  async function createIn(category: string, name: string): Promise<string> {
+    const res = await call(u, 'POST', '/credit-expenses', valid({ accountId: account, categoryId: category, name }));
+    expect(res.statusCode).toBe(201);
+    return res.json<{ id: string }>().id;
+  }
+
+  async function newCategory(name: string): Promise<string> {
+    const res = await call(u, 'POST', '/categories', { name });
+    expect(res.statusCode).toBe(201);
+    return res.json<{ id: string }>().id;
+  }
+
+  async function shown(ids: string[]): Promise<{ categoryId: string; categoryName: string }[]> {
+    const items = (await call(u, 'GET', '/credit-expenses')).json<
+      { id: string; categoryId: string; categoryName: string }[]
+    >();
+    return ids.map((id) => {
+      const row = items.find((r) => r.id === id);
+      return { categoryId: row?.categoryId ?? 'missing', categoryName: row?.categoryName ?? 'missing' };
+    });
+  }
+
+  const categoryExists = async (id: string) =>
+    (await getAdminSql()`select 1 from public.categories where id = ${id}`).length === 1;
+
+  it('requires reassignTo for a category with credit expenses (422 reassign_required), keeping it and its rows', async () => {
+    const viagem = await newCategory('Viagem');
+    const ids = [await createIn(viagem, 'Hotel'), await createIn(viagem, 'Passagem')];
+
+    const res = await call(u, 'DELETE', `/categories/${viagem}`);
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toEqual({ error: { code: 'reassign_required', message: expect.any(String), field: 'reassignTo' } });
+    expect(await categoryExists(viagem)).toBe(true);
+    expect(await shown(ids)).toEqual([
+      { categoryId: viagem, categoryName: 'Viagem' },
+      { categoryId: viagem, categoryName: 'Viagem' },
+    ]);
+  });
+
+  it('moves the credit expenses to reassignTo, deletes the category and the list shows the destination name', async () => {
+    const academia = await newCategory('Academia');
+    const health = await categoryId(u, 'Healthcare');
+    const food = await categoryId(u, 'Food');
+    const moved = [await createIn(academia, 'Mensalidade'), await createIn(academia, 'Personal')];
+    const kept = await createIn(food, 'Almoço');
+
+    const res = await call(u, 'DELETE', `/categories/${academia}?reassignTo=${health}`);
+    expect(res.statusCode).toBe(204);
+    expect(await categoryExists(academia)).toBe(false);
+    expect(await shown(moved)).toEqual([
+      { categoryId: health, categoryName: 'Saúde' },
+      { categoryId: health, categoryName: 'Saúde' },
+    ]);
+    expect(await shown([kept])).toEqual([{ categoryId: food, categoryName: 'Alimentação' }]);
+  });
+
+  it('keeps the category and every credit expense unchanged when the delete fails', async () => {
+    const curso = await newCategory('Curso');
+    const ids = [await createIn(curso, 'Aula 1'), await createIn(curso, 'Aula 2')];
+    const before = [
+      { categoryId: curso, categoryName: 'Curso' },
+      { categoryId: curso, categoryName: 'Curso' },
+    ];
+
+    // Rejected destination: nothing moves.
+    const unknown = await call(u, 'DELETE', `/categories/${curso}?reassignTo=00000000-0000-4000-8000-000000000000`);
+    expect(unknown.statusCode).toBe(404);
+    expect(await shown(ids)).toEqual(before);
+
+    // Failure after the credit expenses were moved: a table registered after them raises, and the
+    // whole operation rolls back.
+    const sql = getAdminSql();
+    const probe = 'public.ce_reassign_probe_failing';
+    await sql`drop table if exists ${sql(probe)}`;
+    await sql`
+      create table ${sql(probe)} (
+        id bigint generated always as identity primary key,
+        user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+        category_id uuid not null,
+        foreign key (category_id, user_id) references public.categories (id, user_id)
+      )`;
+    await sql`alter table ${sql(probe)} enable row level security`;
+    await sql`
+      create policy probe_all on ${sql(probe)} for all to authenticated
+      using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()))`;
+    await sql`grant select, insert, update, delete on ${sql(probe)} to authenticated`;
+    await sql`
+      create or replace function public.ce_reassign_probe_fail() returns trigger
+      language plpgsql as $$ begin raise exception 'reassignment failure probe'; end $$`;
+    await sql`
+      create trigger ce_reassign_probe_fail before update on ${sql(probe)}
+      for each row execute function public.ce_reassign_probe_fail()`;
+    await sql`insert into ${sql(probe)} (user_id, category_id) values (${u.id}, ${curso})`;
+    const unregister = registerCategoryReference({ table: probe, column: 'category_id' });
+    try {
+      const res = await call(u, 'DELETE', `/categories/${curso}?reassignTo=${await categoryId(u, 'Food')}`);
+      expect(res.statusCode).toBe(500);
+    } finally {
+      unregister();
+      await sql`drop table if exists ${sql(probe)}`;
+      await sql`drop function if exists public.ce_reassign_probe_fail()`;
+    }
+    expect(await categoryExists(curso)).toBe(true);
+    expect(await shown(ids)).toEqual(before);
   });
 });

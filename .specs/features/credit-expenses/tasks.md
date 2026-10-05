@@ -225,9 +225,9 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Deleting a category with `reassignTo` moves its credit expenses (1 test)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Deleting a category with `reassignTo` moves its credit expenses (1 test)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
