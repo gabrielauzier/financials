@@ -101,12 +101,12 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Amount `0`, negative and 3-decimal values are rejected by the table
-- [ ] A transaction cannot reference another user's account or category
-- [ ] Invalid type or payment method is rejected
-- [ ] RLS isolates rows between two users (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Amount `0`, negative and 3-decimal values are rejected by the table
+- [x] A transaction cannot reference another user's account or category
+- [x] Invalid type or payment method is rejected
+- [x] RLS isolates rows between two users (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
