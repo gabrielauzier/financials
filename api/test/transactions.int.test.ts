@@ -596,3 +596,168 @@ describe('GET /transactions sorting', () => {
     expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field } });
   });
 });
+
+interface Txn {
+  id: string;
+  accountId: string;
+  accountNickname: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  type: string;
+  occurredAt: string;
+  amount: string;
+  paymentMethod: string;
+  notes: string | null;
+  receipt: string | null;
+  neutral: boolean;
+  counterpartyDocument: string | null;
+  counterpartyBank: string | null;
+}
+
+describe('PATCH /transactions/:id', () => {
+  let u: TestUser;
+  let account: string;
+  let food: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Edição');
+    food = await categoryId(u, 'Food');
+  });
+
+  async function create(over: Record<string, unknown> = {}): Promise<Txn> {
+    const res = await call(u, 'POST', '/transactions', {
+      ...valid({ accountId: account, categoryId: food, notes: 'feira', receipt: 'https://example.com/r/1' }),
+      ...over,
+    });
+    expect(res.statusCode).toBe(201);
+    return res.json<Txn>();
+  }
+
+  const patch = (id: string, body: unknown, as: TestUser = u) => call(as, 'PATCH', `/transactions/${id}`, body);
+
+  /** The row as the owner sees it in the list (persisted state, not the PATCH response). */
+  async function stored(id: string): Promise<Txn | undefined> {
+    return (await list(u, 'page=1')).items.find((r) => r.id === id) as Txn | undefined;
+  }
+
+  it('persists the edited fields and keeps every other field by value', async () => {
+    const original = await create();
+    const res = await patch(original.id, { amount: '99.9', name: '  Feira livre  ' });
+    expect(res.statusCode).toBe(200);
+    const expected = { ...original, amount: '99.90', name: 'Feira livre' };
+    expect(res.json()).toEqual(expected);
+    expect(await stored(original.id)).toEqual(expected);
+  });
+
+  it('edits each remaining editable field alone, preserving the rest', async () => {
+    const original = await create();
+    const bills = await categoryId(u, 'Bills');
+    const second = await createAccount(u, 'Segunda');
+    let expected: Txn = original;
+    for (const [body, change] of [
+      [{ type: 'Income' }, { type: 'Income' }],
+      [{ occurredAt: '2026-01-02T00:30:00+09:00' }, { occurredAt: '2026-01-01T15:30:00.000Z' }],
+      [{ paymentMethod: 'Cash' }, { paymentMethod: 'Cash' }],
+      [{ notes: 'nova nota' }, { notes: 'nova nota' }],
+      [{ receipt: 'http://example.com/novo' }, { receipt: 'http://example.com/novo' }],
+      [{ categoryId: bills }, { categoryId: bills, categoryName: 'Contas' }],
+      [{ accountId: second }, { accountId: second, accountNickname: 'Segunda' }],
+      [{ notes: null, receipt: '  ' }, { notes: null, receipt: null }],
+    ] as [Record<string, unknown>, Partial<Txn>][]) {
+      expected = { ...expected, ...change };
+      const res = await patch(original.id, body);
+      expect(res.statusCode, JSON.stringify(body)).toBe(200);
+      expect(res.json(), JSON.stringify(body)).toEqual(expected);
+    }
+    expect(await stored(original.id)).toEqual(expected);
+  });
+
+  it('returns the current row unchanged for an empty body', async () => {
+    const original = await create();
+    const res = await patch(original.id, {});
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual(original);
+    expect(await stored(original.id)).toEqual(original);
+  });
+
+  it('toggles neutral on and off and persists each value', async () => {
+    const original = await create();
+    const on = await patch(original.id, { neutral: true });
+    expect(on.statusCode).toBe(200);
+    expect(on.json()).toEqual({ ...original, neutral: true });
+    expect((await stored(original.id))?.neutral).toBe(true);
+    const off = await patch(original.id, { neutral: false });
+    expect(off.json()).toEqual(original);
+    expect(await getAdminSql()`select neutral from public.transactions where id = ${original.id}`).toEqual([{ neutral: false }]);
+  });
+
+  it('applies the create validations to any field present and changes nothing on rejection', async () => {
+    const original = await create();
+    const other = await createTestUser();
+    const foreignAccount = await createAccount(other, 'Alheia');
+    const foreignCategory = await categoryId(other, 'Food');
+    const cases: [Record<string, unknown>, number, Record<string, string>][] = [
+      [{ amount: '0' }, 422, { code: 'invalid_amount', field: 'amount' }],
+      [{ amount: '-1.00' }, 422, { code: 'invalid_amount', field: 'amount' }],
+      [{ amount: '1.234' }, 422, { code: 'invalid_amount', field: 'amount' }],
+      [{ amount: '1000000000000' }, 422, { code: 'invalid_amount', field: 'amount' }],
+      [{ name: '   ' }, 422, { code: 'validation_error', field: 'name' }],
+      [{ type: 'Transfer' }, 422, { code: 'validation_error', field: 'type' }],
+      [{ occurredAt: '2026-10-05T14:30:00' }, 422, { code: 'validation_error', field: 'occurredAt' }],
+      [{ paymentMethod: '' }, 422, { code: 'validation_error', field: 'paymentMethod' }],
+      [{ receipt: 'javascript:alert(1)' }, 422, { code: 'invalid_receipt_url', field: 'receipt' }],
+      [{ accountId: foreignAccount }, 422, { code: 'invalid_account', field: 'accountId' }],
+      [{ accountId: '00000000-0000-4000-8000-000000000000' }, 422, { code: 'invalid_account', field: 'accountId' }],
+      [{ accountId: 'nope' }, 422, { code: 'invalid_account', field: 'accountId' }],
+      [{ categoryId: foreignCategory }, 404, { code: 'not_found', field: 'categoryId' }],
+      [{ categoryId: '00000000-0000-4000-8000-000000000000' }, 404, { code: 'not_found', field: 'categoryId' }],
+      // A valid field next to an invalid one is not applied either.
+      [{ name: 'Mudou', amount: 'abc' }, 422, { code: 'invalid_amount', field: 'amount' }],
+      [{ name: 'Mudou', categoryId: 'nope' }, 404, { code: 'not_found', field: 'categoryId' }],
+    ];
+    for (const [body, status, error] of cases) {
+      const res = await patch(original.id, body);
+      expect(res.statusCode, JSON.stringify(body)).toBe(status);
+      expect(res.json(), JSON.stringify(body)).toEqual({ error: { ...error, message: expect.any(String) } });
+    }
+    expect(await stored(original.id)).toEqual(original);
+  });
+
+  it("returns 404 for an unknown, malformed or another user's id, leaving that row untouched", async () => {
+    const original = await create();
+    for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      const res = await patch(id, { name: 'X' });
+      expect(res.statusCode).toBe(404);
+      expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
+    }
+    const intruder = await createTestUser();
+    const res = await patch(original.id, { name: 'Invadido', neutral: true }, intruder);
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
+    expect(await stored(original.id)).toEqual(original);
+  });
+
+  it("edits a transaction of an inactive account, and moves a row to an inactive account (only creation is blocked)", async () => {
+    const closing = await createAccount(u, 'Encerrada');
+    const original = await create({ accountId: closing });
+    expect((await call(u, 'POST', `/accounts/${closing}/deactivate`)).statusCode).toBe(200);
+
+    const edited = await patch(original.id, { amount: '5.00', neutral: true });
+    expect(edited.statusCode).toBe(200);
+    expect(edited.json()).toEqual({ ...original, amount: '5.00', neutral: true });
+
+    const other = await create();
+    const moved = await patch(other.id, { accountId: closing });
+    expect(moved.statusCode).toBe(200);
+    expect(moved.json()).toEqual({ ...other, accountId: closing, accountNickname: 'Encerrada' });
+  });
+
+  it('requires authentication', async () => {
+    const original = await create();
+    const res = await app.inject({ method: 'PATCH', url: `/transactions/${original.id}`, payload: { name: 'X' } });
+    expect(res.statusCode).toBe(401);
+    expect(await stored(original.id)).toEqual(original);
+  });
+});

@@ -300,12 +300,12 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Edited fields persist and the others are unchanged
-- [ ] Same validations as create apply
-- [ ] Toggling `neutral` persists
-- [ ] Unknown and other user's id return 404; edits on an inactive account's transaction are allowed (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Edited fields persist and the others are unchanged
+- [x] Same validations as create apply
+- [x] Toggling `neutral` persists
+- [x] Unknown and other user's id return 404; edits on an inactive account's transaction are allowed (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

@@ -139,10 +139,10 @@ O extrato consolidado é o núcleo do produto. O usuário precisa ver todas as t
 | TXN-02 | P1: Tabela (filtros e busca) | - | Implementing |
 | TXN-03 | P1: Tabela (formatação BRL e fuso) | - | Pending |
 | TXN-04 | P1: CRUD (criar e validar) | - | Implementing |
-| TXN-05 | P1: CRUD (editar e excluir) | - | Pending |
+| TXN-05 | P1: CRUD (editar e excluir) | - | Implementing |
 | TXN-06 | P1: Edição rápida de categoria | - | Pending |
 | TXN-07 | P1: Edição em lote | - | Pending |
-| TXN-08 | P1: Neutra manual | - | Pending |
+| TXN-08 | P1: Neutra manual | - | Implementing |
 
 **Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️
 

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { Type } from '@sinclair/typebox';
+import { Type, type Static } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import type { PendingQuery, Row, TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
@@ -33,6 +33,22 @@ const CreateBody = Type.Object({
   receipt: Type.Optional(nullableString),
   neutral: Type.Optional(Type.Boolean()),
 });
+
+// Every editable field is optional; `null` clears notes/receipt. An empty body changes nothing.
+const UpdateBody = Type.Object({
+  name: Type.Optional(Type.String()),
+  type: Type.Optional(Type.String({ description: `One of: ${TYPES.join(', ')}` })),
+  occurredAt: Type.Optional(Type.String({ description: 'ISO-8601 instant with offset' })),
+  amount: Type.Optional(Type.String({ description: 'Decimal string, > 0, up to 12 integer digits and 2 decimals' })),
+  accountId: Type.Optional(Type.String({ description: 'An account of the user; inactive accounts are allowed on edit' })),
+  categoryId: Type.Optional(Type.String()),
+  paymentMethod: Type.Optional(Type.String({ description: `One of: ${PAYMENT_METHODS.join(', ')}` })),
+  notes: Type.Optional(nullableString),
+  receipt: Type.Optional(nullableString),
+  neutral: Type.Optional(Type.Boolean()),
+});
+
+const IdParams = Type.Object({ id: Type.String() });
 
 const SORTS = ['date', 'name', 'amount', 'category'] as const;
 type Sort = (typeof SORTS)[number];
@@ -209,6 +225,40 @@ function categoryNotFound(): AppError {
   return new AppError('not_found', 404, 'Category not found', 'categoryId');
 }
 
+function notFound(): AppError {
+  return new AppError('not_found', 404, 'Transaction not found');
+}
+
+interface TransactionPatch {
+  name?: string;
+  type?: TransactionType;
+  occurred_at?: Date;
+  amount?: string;
+  account_id?: string;
+  category_id?: string;
+  payment_method?: PaymentMethod;
+  notes?: string | null;
+  receipt?: string | null;
+  neutral?: boolean;
+}
+
+/** Validates only the fields present in the body, with the same rules as create. */
+function validPatch(body: Static<typeof UpdateBody>): TransactionPatch {
+  const patch: TransactionPatch = {};
+  if (body.name !== undefined) patch.name = requiredText(body.name, 'name');
+  if (body.type !== undefined) patch.type = validType(body.type);
+  if (body.occurredAt !== undefined) patch.occurred_at = validOccurredAt(body.occurredAt);
+  if (body.amount !== undefined) patch.amount = parseAmount(body.amount);
+  if (body.paymentMethod !== undefined) patch.payment_method = validPaymentMethod(body.paymentMethod);
+  if (body.notes !== undefined) patch.notes = optionalText(body.notes);
+  if (body.receipt !== undefined) {
+    const receiptText = optionalText(body.receipt);
+    patch.receipt = receiptText === null ? null : parseReceiptUrl(receiptText);
+  }
+  if (body.neutral !== undefined) patch.neutral = body.neutral;
+  return patch;
+}
+
 export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
   const routes = app.withTypeProvider<TypeBoxTypeProvider>();
 
@@ -281,6 +331,48 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
         return { rows, total: (count as { n: number }).n };
       });
       return { items: rows.map(toTransaction), total, page, pageSize: PAGE_SIZE as 50 };
+    },
+  );
+
+  routes.patch(
+    '/transactions/:id',
+    { schema: { params: IdParams, body: UpdateBody, response: { 200: TransactionSchema } } },
+    async (request) => {
+      const { id } = request.params;
+      const { accountId, categoryId } = request.body;
+      const patch = validPatch(request.body);
+      if (!UUID.test(id)) throw notFound();
+
+      const row = await request.withUser(async (tx) => {
+        // The row is checked first, so another user's id answers 404 whatever the body holds.
+        const [current] = await tx`select id from public.transactions where id = ${id}`;
+        if (!current) throw notFound();
+
+        if (accountId !== undefined) {
+          // Only creation requires an active account (spec: inactive-account rows stay editable),
+          // so any account of the user is accepted here; RLS hides foreign ones.
+          const [account] = UUID.test(accountId)
+            ? await tx<{ id: string }[]>`select id from public.accounts where id = ${accountId}`
+            : [];
+          if (!account) throw invalidAccount();
+          patch.account_id = account.id;
+        }
+        if (categoryId !== undefined) {
+          const [category] = UUID.test(categoryId)
+            ? await tx<{ id: string }[]>`select id from public.categories where id = ${categoryId}`
+            : [];
+          if (!category) throw categoryNotFound();
+          patch.category_id = category.id;
+        }
+
+        if (Object.keys(patch).length > 0) {
+          await tx`update public.transactions set ${tx(patch)} where id = ${id}`;
+        }
+        const [updated] = await tx<TransactionRow[]>`
+          select ${selectColumns(tx)} from ${fromJoins(tx)} where t.id = ${id}`;
+        return updated as TransactionRow;
+      });
+      return toTransaction(row);
     },
   );
 }
