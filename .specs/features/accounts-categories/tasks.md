@@ -451,10 +451,10 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Every mutating route returns 404 for another user's id
-- [ ] No data of user A appears in user B's lists (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Every mutating route returns 404 for another user's id
+- [x] No data of user A appears in user B's lists (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
