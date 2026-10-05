@@ -22,7 +22,7 @@ Rodar na ordem. Cada prompt depende dos anteriores (reusa componentes e o client
 | # | Prompt | Depende de | Entrega no front | Tasks substituídas |
 | - | ------ | ---------- | ---------------- | ------------------ |
 | 1 ✅ | [auth](features/auth/lovable.md) | Passo 0 | Fundação: cliente da API, mocks, formatação, layout, cadastro, login, rota protegida | auth T14–T20 |
-| 2 | [accounts-categories](features/accounts-categories/lovable.md) | 1 | `/contas`, `/categorias`, `AccountSelect`, `CategorySelect` | accounts-categories T12–T16 |
+| 2 ✅ | [accounts-categories](features/accounts-categories/lovable.md) | 1 | `/contas`, `/categorias`, `AccountSelect`, `CategorySelect` | accounts-categories T12–T16 |
 | 3 | [transactions](features/transactions/lovable.md) | 1, 2 | `/extrato` com filtros, formulário, edição inline, lote, neutra | transactions T13–T21 |
 | 4 | [import](features/import/lovable.md) | 1, 2, 3 | `/importar` com prévia obrigatória e resumo | import T19–T23 |
 | 5 | [credit-expenses](features/credit-expenses/lovable.md) | 1, 2 | `/cartao` com status manual | credit-expenses T8–T12 |
@@ -35,7 +35,7 @@ Os prompts 3, 4, 5 e 6 só dependem de 1 e 2 (e 4 também de 3 para o botão "Ve
 1. Abrir `features/<feature>/lovable.md` e colar o bloco do prompt no chat do Lovable (um prompt por vez; não juntar).
 2. Esperar o Lovable terminar e abrir o preview com `VITE_MOCK_AREAS=*`.
 3. Percorrer o **Checklist de aceite** do mesmo arquivo; o que falhar vira uma mensagem de correção curta no Lovable (citando o item do checklist).
-4. Trazer o código para `web/` e rodar localmente, dentro de `web/`, `yarn typecheck`, `yarn lint` e `yarn test`.
+4. Salvar o zip exportado do Lovable em `.lovable/codebases/` (ex.: `v3-transactions.zip`) e sincronizar com `.lovable/sync-codebase.sh --dry-run v3-transactions` seguido de `.lovable/sync-codebase.sh v3-transactions` (preserva `node_modules`, `.git`, `.env*` e `yarn.lock`; o que for sobrescrito vai para `.lovable/backups/`). Depois rodar localmente, dentro de `web/`, `yarn typecheck`, `yarn lint` e `yarn test`.
 5. Só avançar para o próximo prompt com os três comandos verdes e o checklist completo; fazer um commit por prompt.
 
 ## Troca de mocks pela API real (pontos de integração)
@@ -86,7 +86,8 @@ O prompt de uma feature pode rodar antes ou depois da API correspondente; o úni
 | # | Prompt | Situação | Verificação |
 | - | ------ | -------- | ----------- |
 | 1 | auth | Aplicado e verificado em 2026-10-04 | 7 de 9 itens do checklist ok; `typecheck` e `lint` pendentes de correção de configuração (ver `features/auth/lovable.md`) |
-| 2–6 | accounts-categories, transactions, import, credit-expenses, dashboards | Em andamento no Lovable | — |
+| 2 | accounts-categories | Aplicado e verificado em 2026-10-04 | 8 de 10 itens ok; `typecheck` (script `tsgo`) e `lint` (arquivos Prettier ausentes em `web/`) pendentes; 8 achados em `features/accounts-categories/lovable.md` |
+| 3–6 | transactions, import, credit-expenses, dashboards | Em andamento no Lovable | — |
 
 ## Desvios registrados
 
@@ -104,3 +105,10 @@ Detalhes e ações em `features/auth/lovable.md` (seção "Desvios registrados")
 | - | ------- | ------------ |
 | D3 | Aceitar TanStack Start (SSR) ou exigir SPA Vite | Aceitar se o deploy em Node for aceitável; caso contrário pedir ao Lovable a migração antes de mais telas |
 | D4 | Projeto Supabase do Lovable é o mesmo da API? | Confirmar `project_id` e usar a mesma URL/JWKS na API |
+
+### Achados que afetam as próximas etapas (prompt 2)
+
+- **Aplicar zips sempre com `.lovable/sync-codebase.sh`**: a cópia manual deixou de fora arquivos ocultos (`.prettierrc`, `.prettierignore`), o que explica os 788 erros de lint.
+- **`@testing-library/dom` ausente do `package.json`** (alta): `yarn install` limpo quebra todos os testes; declarar a dependência antes de aceitar o prompt 3.
+- **`typecheck` com `tsgo`**: ainda aberto desde o prompt 1.
+- **Mocks de categorias em uso são fixos**: o prompt de `transactions` deve ligar a exclusão com reatribuição aos mocks de transações.

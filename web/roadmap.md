@@ -6,3 +6,6 @@
 - [x] Criar cliente REST, seleção de mocks e formatadores.
 - [x] Cobrir os fluxos solicitados com testes automatizados.
 - [x] Validar a apresentação em desktop e celular.
+- [ ] Implementar contrato tipado, mocks e hooks de Contas e Categorias.
+- [ ] Implementar telas e seletores reutilizáveis de Contas e Categorias.
+- [ ] Cobrir os novos fluxos com testes e validar desktop e celular.

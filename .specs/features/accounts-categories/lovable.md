@@ -64,9 +64,28 @@ Exclusão de conta, saldo inicial, ícones/cores de categoria, subcategorias.
 
 ## Checklist de aceite
 
-- [ ] Não existe nenhuma ação de excluir conta (ACCT-02).
-- [ ] `AccountSelect` oculta contas inativas (ACCT-03).
-- [ ] As 3 categorias de sistema não têm renomear/excluir (CAT-02).
-- [ ] Exclusão em uso exige destino e só então chama a API com `reassignTo` (CAT-04).
-- [ ] Todos os nomes de categoria aparecem em português (CAT-01).
-- [ ] Mocks reproduzem os códigos de erro do contrato.
+Verificado em 2026-10-04 sobre `.lovable/codebases/v2-accounts-categories.zip` aplicado em `web/` (leitura do código das duas features e dos mocks + `yarn test`, `npx tsc --noEmit` e `eslint`).
+
+- [x] Não existe nenhuma ação de excluir conta (ACCT-02). *(`AccountsPage.tsx` só tem Editar e Desativar/Reativar; `api.ts` não tem chamada DELETE de conta; teste "não oferece exclusão…" cobre.)*
+- [x] `AccountSelect` oculta contas inativas (ACCT-03). *(Padrão `useAccounts({ active: true })`; `includeInactive` opcional marca "(inativa)"; teste cobre.)*
+- [x] As 3 categorias de sistema não têm renomear/excluir (CAT-02). *(Linhas `isSystem` mostram cadeado e tooltip "Categoria de sistema: não pode ser alterada" e nenhum botão de ação; teste cobre.)*
+- [x] Exclusão em uso exige destino e só então chama a API com `reassignTo` (CAT-04). *(Primeira chamada sem destino; em `reassign_required` abre o diálogo com `CategorySelect` sem a própria categoria e reenvia com `reassignTo`; teste cobre.)*
+- [x] Todos os nomes de categoria aparecem em português (CAT-01). *(As 17 do seed do mock conferem com a spec, inclusive "Ajuda (a terceiros)" e "Estorno (de compras)".)*
+- [x] Mocks reproduzem os códigos de erro do contrato. *(Contas: `duplicate_name` 409, `holder_required` 422, `validation` 422, 404. Categorias: `duplicate_name` 409, `category_protected` 403 em PATCH e DELETE, `reassign_required` 422, destino igual 422. Lacunas na tabela de achados.)*
+- [x] Mensagens do prompt presentes: "Informe o apelido", "Informe ao menos um titular", "Já existe uma conta com esse apelido", "Titular já informado", "Informe o nome", "Já existe uma categoria com esse nome", "Categoria protegida", textos de ajuda e estado vazio.
+- [x] `test` passa. *(9 arquivos, 26 testes: 7 novos nesta versão.)*
+- [ ] `typecheck` passa. *(`npx tsc --noEmit`: 0 erros. O script `yarn typecheck` continua falhando: usa `tsgo`, pacote ausente. Pendência do prompt 1.)*
+- [ ] `lint` passa. *(788 erros, todos Prettier. Causa: os arquivos `.prettierrc` e `.prettierignore` do zip não estão em `web/`. Com os dois aplicados: 0 erros e 7 avisos de `react-refresh/only-export-components`. Correção: rodar `.lovable/sync-codebase.sh v2-accounts-categories`, que copia esses arquivos.)*
+
+### Achados
+
+| # | Achado | Severidade | Ação |
+| - | ------ | ---------- | ---- |
+| 1 | `.prettierrc`, `.prettierignore`, `.lovable/` e o `.gitignore` atualizado do zip não chegaram a `web/` (cópia manual não levou arquivos ocultos). É a causa dos 788 erros de lint | Média | Usar `.lovable/sync-codebase.sh` para aplicar zips; já corrige o lint |
+| 2 | `@testing-library/dom` continua fora do `package.json` do zip. Os testes só passam porque `node_modules` local o tem; um `yarn install` limpo volta a quebrar os 9 arquivos de teste | Alta | Pedir ao Lovable para declarar a dependência (`devDependencies`) ou rodar `yarn add -D @testing-library/dom` e manter o ajuste ao aplicar zips (o script faz backup do `package.json` sobrescrito) |
+| 3 | `yarn typecheck` falha (script `tsgo`); `tsc` direto passa | Média | Pendente desde o prompt 1; trocar o script por `tsc --noEmit` |
+| 4 | `AccountsPage`: `changeStatus` não trata erro de ativar/desativar (`mutateAsync` sem `catch`); se a API falhar o diálogo fica aberto sem mensagem | Baixa | Pedir tratamento de erro na próxima rodada ou ajustar depois |
+| 5 | Mock de contas não valida titular duplicado na mesma conta nem banco inválido (a regra só existe no formulário). Contrato diz 422 em ambos | Baixa | Ajustar o mock ou aceitar até a API real (a API é a fonte da regra) |
+| 6 | Mock de categorias simula "em uso" só para 4 categorias fixas (Entretenimento, Alimentação, Contas, Compras) e a reatribuição não move nada | Baixa | Esperado; conectar às transações mockadas no prompt de `transactions` |
+| 7 | Comparação de nomes (conta e categoria) é sem diferenciar caixa, mas não sem acentos | Informativo | Alinhado à spec; confirmar o comportamento da API real |
+| 8 | Mock não tem rota DELETE de conta: chamada cairia no erro genérico "Mock ainda não implementado" em vez de 404 | Informativo | Sem impacto: não há UI para isso |

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RequireAuth } from "@/features/auth/RequireAuth";
 import { AppLayout } from "@/features/layout/AppLayout";
-import { PlaceholderPage } from "@/features/pages/PlaceholderPage";
+import { CategoriesPage } from "@/features/categories/CategoriesPage";
 
 export const Route = createFileRoute("/categorias")({
   head: () => ({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/categorias")({
   component: () => (
     <RequireAuth>
       <AppLayout>
-        <PlaceholderPage title="Categorias" />
+        <CategoriesPage />
       </AppLayout>
     </RequireAuth>
   ),

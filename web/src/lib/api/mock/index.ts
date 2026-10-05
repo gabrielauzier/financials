@@ -22,6 +22,10 @@ export type MockHandler = {
   handle: (request: MockRequest) => unknown | Promise<unknown>;
 };
 
+export function mockApiError(code: string, message: string, status: number, field?: string) {
+  return Object.assign(new Error(message), { code, status, ...(field ? { field } : {}) });
+}
+
 const pathAreaMap: Record<string, ApiArea> = {
   accounts: "accounts",
   categories: "categories",
