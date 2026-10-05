@@ -134,11 +134,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] BOM and no-BOM files parse identically
-- [ ] Quoted fields with commas and decimal commas are preserved
-- [ ] Empty and header-only files raise `empty_file` (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] BOM and no-BOM files parse identically
+- [x] Quoted fields with commas and decimal commas are preserved
+- [x] Empty and header-only files raise `empty_file` (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
