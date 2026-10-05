@@ -58,8 +58,10 @@ const freshEmail = () => `gotrue-${randomUUID()}@example.test`;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Detection rule for an existing *unconfirmed* account (see design.md Risks). */
-const resentToExistingUser = (user: GoTrueUser) =>
-  Date.parse(user.confirmation_sent_at ?? '') - Date.parse(user.created_at) >= 1_000;
+const resentToExistingUser = (user: GoTrueUser) => {
+  expect(user.confirmation_sent_at).toBeDefined();
+  return Date.parse(user.confirmation_sent_at ?? '') - Date.parse(user.created_at) >= 1_000;
+};
 
 describe('GoTrue sign-up with an e-mail that is already registered', () => {
   it('confirmed account: rejects with 422 user_already_exists and returns no user', async () => {

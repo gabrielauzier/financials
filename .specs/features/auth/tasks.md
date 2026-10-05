@@ -655,3 +655,4 @@ Execution is strictly sequential within each phase; cross-feature order is auth 
 - [x] F1: discriminate the auth hook 401 branches with a route that does not call withUser
 - [x] F2: record that the confirmation link marks the e-mail confirmed
 - [x] F3: enforce the 8-character minimum password in GoTrue and record it
+- [x] F4: bundled minor fixes (sub validation cases, JWKS-unreachable path, cross-user profiles UPDATE/DELETE, meaningful confirmation_sent_at assertion)

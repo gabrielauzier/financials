@@ -3,6 +3,7 @@ import {
   SignJWT,
   UnsecuredJWT,
   createLocalJWKSet,
+  errors,
   exportJWK,
   generateKeyPair,
   type JWK,
@@ -61,6 +62,13 @@ describe('verifyToken, HS256 secret mode', () => {
   });
 
   it.each([
+    ['an empty sub', ''],
+    ['a non-string sub', 123],
+  ])('rejects a token with %s', async (_label, sub) => {
+    await expectUnauthorized(verify, await hs256({ sub: sub as string, exp: now() + 60 }));
+  });
+
+  it.each([
     ['a malformed token', () => Promise.resolve('not-a-jwt')],
     ['an unsigned alg=none token', () =>
       Promise.resolve(new UnsecuredJWT({ sub: randomUUID(), exp: now() + 60 }).encode())],
@@ -103,6 +111,13 @@ describe('verifyToken, JWKS mode', () => {
     await expectUnauthorized(verify, await sign({ role: 'authenticated', exp: now() + 60 }));
   });
 
+  it.each([
+    ['an empty sub', ''],
+    ['a non-string sub', 123],
+  ])('rejects a token with %s', async (_label, sub) => {
+    await expectUnauthorized(verify, await sign({ sub: sub as string, exp: now() + 60 }));
+  });
+
   it('rejects an HS256 token (algorithm confusion), even with a matching kid', async () => {
     await expectUnauthorized(verify, await hs256({ sub: randomUUID(), exp: now() + 60 }, SECRET, kid));
   });
@@ -113,5 +128,32 @@ describe('verifyToken, JWKS mode', () => {
 
   it('rejects a malformed token', async () => {
     await expectUnauthorized(verify, 'a.b.c');
+  });
+});
+
+describe('verifyToken, JWKS endpoint unavailable', () => {
+  // The design does not define this case. Observed behaviour: it is NOT a 401 for the user;
+  // the original error propagates (the error plugin turns it into a 500 without details).
+  const failures: [string, Error][] = [
+    ['a JWKS timeout', new errors.JWKSTimeout()],
+    ['a network failure', new TypeError('fetch failed')],
+  ];
+
+  it.each(failures)('propagates %s instead of answering 401', async (_label, failure) => {
+    const verify = createTokenVerifier({
+      mode: 'jwks',
+      getKey: () => Promise.reject(failure),
+    });
+    const own = await generateKeyPair('ES256');
+    const token = await new SignJWT({ sub: randomUUID(), exp: now() + 60 })
+      .setProtectedHeader({ alg: 'ES256', kid: 'any' })
+      .sign(own.privateKey);
+
+    const error = await verify(token).then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    expect(error).toBe(failure);
+    expect(error).not.toBeInstanceOf(AppError);
   });
 });

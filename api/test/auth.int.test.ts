@@ -139,3 +139,23 @@ describe('auth hook on a route that does not call withUser', () => {
     expect(res.json()).toEqual({ userId: user.id });
   });
 });
+
+describe('auth hook when the JWKS endpoint is unreachable', () => {
+  // Not defined by the design. Observed: a valid-looking token is not blamed on the user (no 401);
+  // the API answers 500 internal_error and leaks no internal detail.
+  it('answers 500 internal_error without internal details', async () => {
+    const unreachable = await appWithSampleRoute(config({ supabaseUrl: 'http://127.0.0.1:1' }));
+    try {
+      const own = await generateKeyPair('ES256');
+      const token = await new SignJWT({ sub: randomUUID(), role: 'authenticated', exp: now() + 600 })
+        .setProtectedHeader({ alg: 'ES256', kid: 'unreachable' })
+        .sign(own.privateKey);
+      const res = await whoami(unreachable, `Bearer ${token}`);
+      expect(res.statusCode).toBe(500);
+      expect(res.json()).toEqual({ error: { code: 'internal_error', message: 'Internal server error' } });
+      expect(res.body).not.toMatch(/127\.0\.0\.1|ECONNREFUSED|fetch failed|jwks/i);
+    } finally {
+      await unreachable.close();
+    }
+  });
+});
