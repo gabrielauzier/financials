@@ -548,10 +548,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Shows the current value and the series
-- [ ] Empty data shows R$ 0,00 and the empty state (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Shows the current value and the series
+- [x] Empty data shows R$ 0,00 and the empty state (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
