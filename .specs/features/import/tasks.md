@@ -730,10 +730,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Shows imported and skipped counts
-- [ ] Failure shows the error and keeps the preview (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Shows imported and skipped counts
+- [x] Failure shows the error and keeps the preview (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
