@@ -126,12 +126,12 @@ T6 → T11
 
 **Done when**:
 
-- [ ] Picking a day calls `onChange` with the exact `YYYY-MM-DD`, including `2026-12-31` and `2027-01-01`, under a non-UTC `TZ` (AC 2 and 3)
-- [ ] "Limpar" calls `onChange("")` and only shows when there is a value (AC 1 and 4)
-- [ ] A disabled picker does not open the calendar and shows the received value; an empty value shows "Selecione a data" (AC 5 and 6)
-- [ ] An invalid string is treated as empty; the trigger keeps the `id` so `getByLabelText` finds it (edge case)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 8 tests pass (no silent deletions)
+- [x] Picking a day calls `onChange` with the exact `YYYY-MM-DD`, including `2026-12-31` and `2027-01-01`, under a non-UTC `TZ` (AC 2 and 3)
+- [x] "Limpar" calls `onChange("")` and only shows when there is a value (AC 1 and 4)
+- [x] A disabled picker does not open the calendar and shows the received value; an empty value shows "Selecione a data" (AC 5 and 6)
+- [x] An invalid string is treated as empty; the trigger keeps the `id` so `getByLabelText` finds it (edge case)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 8 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
