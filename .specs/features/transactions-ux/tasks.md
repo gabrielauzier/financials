@@ -341,11 +341,11 @@ T6 → T11
 
 **Done when**:
 
-- [ ] The mock returns `description` in list and create, trims it and stores null for blank (AC 14)
-- [ ] A PATCH with `description` leaves the stored value unchanged (AC 14)
-- [ ] `TransactionInput` and `TransactionUpdate` have no `description` and `yarn --cwd web typecheck` passes (AC 13)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 4 tests pass (no silent deletions)
+- [x] The mock returns `description` in list and create, trims it and stores null for blank (AC 14)
+- [x] A PATCH with `description` leaves the stored value unchanged (AC 14)
+- [x] `TransactionInput` and `TransactionUpdate` have no `description` and `yarn --cwd web typecheck` passes (AC 13)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 4 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

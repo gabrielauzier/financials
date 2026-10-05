@@ -50,6 +50,8 @@ export type Transaction = {
   paymentMethod: PaymentMethod;
   notes: string | null;
   receipt: string | null;
+  /** Original title (e.g. from the bank statement); read-only, so not in the input or update types. */
+  description: string | null;
   neutral: boolean;
   counterpartyDocument: string | null;
   counterpartyBank: string | null;
