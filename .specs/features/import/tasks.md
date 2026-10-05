@@ -162,11 +162,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Fixture yields 14 rows with correct date, type, amount and identifier
-- [ ] Negative value is Expense and positive is Income
-- [ ] Zero value, invalid date and non-numeric value become `invalid` with a reason (5 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Fixture yields 14 rows with correct date, type, amount and identifier
+- [x] Negative value is Expense and positive is Income
+- [x] Zero value, invalid date and non-numeric value become `invalid` with a reason (5 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

@@ -173,7 +173,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
 | IMP-01 | P1: Extrato Nubank (validação de arquivo e conta) | - | Implementing |
-| IMP-02 | P1: Extrato Nubank (data, valor, tipo) | - | Pending |
+| IMP-02 | P1: Extrato Nubank (data, valor, tipo) | - | Implementing |
 | IMP-03 | P1: Extrato Nubank (extração por descrição) | - | Pending |
 | IMP-04 | P1: Fatura Nubank (parser) | - | Pending |
 | IMP-05 | P1: Prévia (classificação e seleção) | - | Pending |
