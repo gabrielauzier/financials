@@ -329,10 +329,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Existing row is removed and no longer listed
-- [ ] Unknown and other user's id return 404 (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Existing row is removed and no longer listed
+- [x] Unknown and other user's id return 404 (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

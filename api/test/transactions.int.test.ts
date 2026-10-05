@@ -761,3 +761,68 @@ describe('PATCH /transactions/:id', () => {
     expect(await stored(original.id)).toEqual(original);
   });
 });
+
+describe('DELETE /transactions/:id', () => {
+  let u: TestUser;
+  let account: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Exclusão');
+  });
+
+  async function create(name: string): Promise<string> {
+    const res = await call(u, 'POST', '/transactions', valid({ accountId: account, name }));
+    expect(res.statusCode).toBe(201);
+    return res.json<{ id: string }>().id;
+  }
+
+  const exists = async (id: string) =>
+    (await getAdminSql()`select 1 from public.transactions where id = ${id}`).length === 1;
+
+  it('removes the row for good (204), so it is no longer listed, and keeps the others', async () => {
+    const gone = await create('Apagar');
+    const kept = await create('Manter');
+
+    const res = await call(u, 'DELETE', `/transactions/${gone}`);
+    expect(res.statusCode).toBe(204);
+    expect(res.body).toBe('');
+    expect(await exists(gone)).toBe(false);
+    const body = await list(u);
+    expect(body.items.map((r) => r.id)).toEqual([kept]);
+    expect(body.total).toBe(1);
+
+    const again = await call(u, 'DELETE', `/transactions/${gone}`);
+    expect(again.statusCode).toBe(404);
+    expect(again.json()).toMatchObject({ error: { code: 'not_found' } });
+  });
+
+  it("returns 404 for an unknown, malformed or another user's id, deleting nothing", async () => {
+    const target = await create('Alvo');
+    for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      const res = await call(u, 'DELETE', `/transactions/${id}`);
+      expect(res.statusCode).toBe(404);
+      expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
+    }
+    const intruder = await createTestUser();
+    const res = await call(intruder, 'DELETE', `/transactions/${target}`);
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
+    expect(await exists(target)).toBe(true);
+  });
+
+  it('deletes a transaction of an inactive account', async () => {
+    const closing = await createAccount(u, 'Encerrando');
+    const res = await call(u, 'POST', '/transactions', valid({ accountId: closing }));
+    const id = res.json<{ id: string }>().id;
+    expect((await call(u, 'POST', `/accounts/${closing}/deactivate`)).statusCode).toBe(200);
+    expect((await call(u, 'DELETE', `/transactions/${id}`)).statusCode).toBe(204);
+    expect(await exists(id)).toBe(false);
+  });
+
+  it('requires authentication', async () => {
+    const id = await create('Protegida');
+    expect((await app.inject({ method: 'DELETE', url: `/transactions/${id}` })).statusCode).toBe(401);
+    expect(await exists(id)).toBe(true);
+  });
+});
