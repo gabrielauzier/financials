@@ -409,10 +409,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Guard passes on the current tree
-- [ ] Guard fails when a sample file with a duplicated rule is introduced in a temporary directory (2 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Guard passes on the current tree
+- [x] Guard fails when a sample file with a duplicated rule is introduced in a temporary directory (2 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
