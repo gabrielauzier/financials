@@ -656,6 +656,11 @@
                     "type": "string",
                     "nullable": true
                   },
+                  "description": {
+                    "description": "Original title, at most 500 characters after trimming; blank is stored as null. Only accepted on creation",
+                    "type": "string",
+                    "nullable": true
+                  },
                   "neutral": {
                     "type": "boolean"
                   }
@@ -684,6 +689,7 @@
                     "paymentMethod",
                     "notes",
                     "receipt",
+                    "description",
                     "neutral",
                     "counterpartyDocument",
                     "counterpartyBank"
@@ -743,6 +749,11 @@
                       "nullable": true
                     },
                     "receipt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "description": {
+                      "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
                       "type": "string",
                       "nullable": true
                     },
@@ -886,6 +897,7 @@
                           "paymentMethod",
                           "notes",
                           "receipt",
+                          "description",
                           "neutral",
                           "counterpartyDocument",
                           "counterpartyBank"
@@ -945,6 +957,11 @@
                             "nullable": true
                           },
                           "receipt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "description": {
+                            "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
                             "type": "string",
                             "nullable": true
                           },
@@ -1063,6 +1080,7 @@
                     "paymentMethod",
                     "notes",
                     "receipt",
+                    "description",
                     "neutral",
                     "counterpartyDocument",
                     "counterpartyBank"
@@ -1122,6 +1140,11 @@
                       "nullable": true
                     },
                     "receipt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "description": {
+                      "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
                       "type": "string",
                       "nullable": true
                     },

@@ -4,7 +4,7 @@ import { Type, type Static, type TUnsafe } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import type { PendingQuery, Row, TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
-import { OPENAPI_TYPE_KEY } from '../../plugins/swagger.js';
+import { OPENAPI_NULLABLE_KEY, OPENAPI_TYPE_KEY } from '../../plugins/swagger.js';
 import { registerCategoryReference } from '../categories/registry.js';
 import {
   fromJoins,
@@ -32,6 +32,8 @@ const AmountInput: TUnsafe<string> = Type.Unsafe<string>({ description: AMOUNT_D
 
 const nullableString = Type.Union([Type.String(), Type.Null()]);
 
+const MAX_DESCRIPTION = 500;
+
 // Enumerated and ISO fields are plain strings here and checked in the handler so every semantic
 // error answers 422 with a field, like the other modules.
 const CreateBody = Type.Object({
@@ -44,6 +46,14 @@ const CreateBody = Type.Object({
   paymentMethod: Type.String({ description: `One of: ${PAYMENT_METHODS.join(', ')}` }),
   notes: Type.Optional(nullableString),
   receipt: Type.Optional(nullableString),
+  // No `type`, like the amount: Ajv would coerce a number or boolean to text. The handler answers 400.
+  description: Type.Optional(
+    Type.Unsafe<string | null>({
+      description: `Original title, at most ${MAX_DESCRIPTION} characters after trimming; blank is stored as null. Only accepted on creation`,
+      [OPENAPI_TYPE_KEY]: 'string',
+      [OPENAPI_NULLABLE_KEY]: true,
+    }),
+  ),
   neutral: Type.Optional(Type.Boolean()),
 });
 
@@ -137,6 +147,18 @@ function validOccurredAt(value: string): Date {
 function optionalText(value: string | null | undefined): string | null {
   const text = value?.trim() ?? '';
   return text === '' ? null : text;
+}
+
+/** Trimmed description, null when blank; over the limit after trimming is a semantic error (422). */
+function validDescription(value: unknown): string | null {
+  if (value !== undefined && value !== null && typeof value !== 'string') {
+    throw new AppError('validation_error', 400, 'description must be a string or null', 'description');
+  }
+  const text = optionalText(value);
+  if (text !== null && text.length > MAX_DESCRIPTION) {
+    throw invalid(`description must have at most ${MAX_DESCRIPTION} characters`, 'description');
+  }
+  return text;
 }
 
 function validPage(value: string | undefined): number {
@@ -299,6 +321,7 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
       const amount = parseAmount(body.amount);
       const paymentMethod = validPaymentMethod(body.paymentMethod);
       const notes = optionalText(body.notes);
+      const description = validDescription(body.description);
       const receiptText = optionalText(body.receipt);
       const receipt = receiptText === null ? null : parseReceiptUrl(receiptText);
 
@@ -326,10 +349,10 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
 
         const [inserted] = await tx<{ id: string }[]>`
           insert into public.transactions
-            (account_id, category_id, name, type, occurred_at, amount, payment_method, notes, receipt, neutral)
+            (account_id, category_id, name, type, occurred_at, amount, payment_method, notes, receipt, description, neutral)
           values
             (${account.id}, ${categoryId}, ${name}, ${type}, ${occurredAt}, ${amount}, ${paymentMethod},
-             ${notes}, ${receipt}, ${body.neutral ?? false})
+             ${notes}, ${receipt}, ${description}, ${body.neutral ?? false})
           returning id`;
         const [created] = await tx<TransactionRow[]>`
           select ${selectColumns(tx)} from ${fromJoins(tx)} where t.id = ${(inserted as { id: string }).id}`;

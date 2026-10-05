@@ -9,12 +9,16 @@ import fp from 'fastify-plugin';
  */
 export const OPENAPI_TYPE_KEY = 'x-openapi-type';
 
+/** Companion of `OPENAPI_TYPE_KEY`: becomes `nullable: true` in the document (Ajv rejects `nullable` without `type`). */
+export const OPENAPI_NULLABLE_KEY = 'x-openapi-nullable';
+
 function documentTypes(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(documentTypes);
   if (node === null || typeof node !== 'object') return node;
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(node)) {
     if (key === OPENAPI_TYPE_KEY) out.type = value;
+    else if (key === OPENAPI_NULLABLE_KEY) out.nullable = value;
     else out[key] = documentTypes(value);
   }
   return out;

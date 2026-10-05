@@ -72,6 +72,7 @@ describe('POST /transactions', () => {
       paymentMethod: 'PIX',
       notes: 'feira',
       receipt: 'https://example.com/r/1',
+      description: null,
       neutral: false,
       counterpartyDocument: null,
       counterpartyBank: null,
@@ -284,7 +285,7 @@ describe('GET /transactions', () => {
     expect(Object.keys(body.items[0] ?? {}).sort()).toEqual(
       [
         'id', 'accountId', 'accountNickname', 'categoryId', 'categoryName', 'name', 'type', 'occurredAt', 'amount',
-        'paymentMethod', 'notes', 'receipt', 'neutral', 'counterpartyDocument', 'counterpartyBank',
+        'paymentMethod', 'notes', 'receipt', 'description', 'neutral', 'counterpartyDocument', 'counterpartyBank',
       ].sort(),
     );
   });
@@ -631,6 +632,7 @@ interface Txn {
   paymentMethod: string;
   notes: string | null;
   receipt: string | null;
+  description: string | null;
   neutral: boolean;
   counterpartyDocument: string | null;
   counterpartyBank: string | null;
@@ -1088,5 +1090,98 @@ describe('DELETE /categories/:id with transactions (reassignment)', () => {
     }
     expect(await categoryExists(curso)).toBe(true);
     expect(await shown(ids)).toEqual(before);
+  });
+});
+
+describe('transaction description', () => {
+  let u: TestUser;
+  let account: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Descrição');
+  });
+
+  const create = (over: Record<string, unknown> = {}, as: TestUser = u) =>
+    call(as, 'POST', '/transactions', valid({ accountId: account, ...over }));
+  const storedDescription = async (id: string) =>
+    (await getAdminSql()`select description from public.transactions where id = ${id}`)[0]?.description;
+
+  it('stores the trimmed description on create and returns it in create and list', async () => {
+    const res = await create({ name: 'Com descrição', description: '  PIX ENVIADO MARIA  ' });
+    expect(res.statusCode).toBe(201);
+    const created = res.json<Txn>();
+    expect(created.description).toBe('PIX ENVIADO MARIA');
+    expect(await storedDescription(created.id)).toBe('PIX ENVIADO MARIA');
+    const listed = await list(u, 'q=Com%20descri');
+    expect((listed.items.find((r) => r.id === created.id) as Txn | undefined)?.description).toBe('PIX ENVIADO MARIA');
+  });
+
+  it.each([
+    ['omitted', undefined],
+    ['null', null],
+    ['empty', ''],
+    ['only spaces', '   \t '],
+  ])('stores null when the description is %s', async (_label, description) => {
+    const over = description === undefined ? {} : { description };
+    const res = await create({ name: `Sem descrição ${_label}`, ...over });
+    expect(res.statusCode).toBe(201);
+    expect(res.json<Txn>().description).toBeNull();
+    expect(await storedDescription(res.json<Txn>().id)).toBeNull();
+  });
+
+  it('accepts 500 characters, also when spaces around push the raw text over the limit', async () => {
+    const text = 'a'.repeat(500);
+    const res = await create({ name: 'Limite 500', description: `  ${text}  ` });
+    expect(res.statusCode).toBe(201);
+    expect(res.json<Txn>().description).toBe(text);
+  });
+
+  it('rejects 501 characters with 422 validation_error on description and creates nothing', async () => {
+    const res = await create({ name: 'Limite 501', description: 'a'.repeat(501) });
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'description' } });
+    expect(await getAdminSql()`select id from public.transactions where name = 'Limite 501'`).toEqual([]);
+  });
+
+  it.each([['a number', '5'], ['an object', '{"v":"x"}'], ['a boolean', 'true'], ['an array', '["x"]']])(
+    'rejects %s as description with 400 validation_error and creates nothing',
+    async (_label, raw) => {
+      const name = `Tipo errado ${_label}`;
+      const body = JSON.stringify(valid({ accountId: account, name })).replace(/}$/, `,"description":${raw}}`);
+      const res = await call(u, 'POST', '/transactions', body, { 'content-type': 'application/json' });
+      expect(res.statusCode).toBe(400);
+      expect(res.json()).toMatchObject({ error: { code: 'validation_error' } });
+      expect(await getAdminSql()`select id from public.transactions where name = ${name}`).toEqual([]);
+    },
+  );
+
+  it('ignores description on PATCH (200, value unchanged), also when name changes in the same body', async () => {
+    const created = (await create({ name: 'Original', description: 'Título original' })).json<Txn>();
+    const only = await call(u, 'PATCH', `/transactions/${created.id}`, { description: 'Outro texto' });
+    expect(only.statusCode).toBe(200);
+    expect(only.json<Txn>().description).toBe('Título original');
+    const both = await call(u, 'PATCH', `/transactions/${created.id}`, { name: 'Renomeada', description: null });
+    expect(both.statusCode).toBe(200);
+    expect(both.json<Txn>()).toMatchObject({ name: 'Renomeada', description: 'Título original' });
+    expect(await storedDescription(created.id)).toBe('Título original');
+  });
+
+  it('returns description null on PATCH for a row created without one', async () => {
+    const created = (await create({ name: 'Sem texto' })).json<Txn>();
+    const res = await call(u, 'PATCH', `/transactions/${created.id}`, { description: 'Tentativa' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json<Txn>().description).toBeNull();
+  });
+
+  it('does not show the description of one user to another', async () => {
+    const other = await createTestUser();
+    const created = (await create({ name: 'Segredo descrição', description: 'Texto privado' })).json<Txn>();
+    const theirs = await list(other, 'page=1');
+    expect(theirs.items).toEqual([]);
+    expect(JSON.stringify(theirs)).not.toContain('Texto privado');
+    const patched = await call(other, 'PATCH', `/transactions/${created.id}`, { name: 'x' });
+    expect(patched.statusCode).toBe(404);
+    expect(JSON.stringify(patched.json())).not.toContain('Texto privado');
   });
 });

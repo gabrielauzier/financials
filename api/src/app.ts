@@ -14,7 +14,7 @@ import { transactionsRoutes } from './modules/transactions/routes.js';
 import { corsPlugin } from './plugins/cors.js';
 import { dbPlugin } from './plugins/db.js';
 import { errorsPlugin } from './plugins/errors.js';
-import { OPENAPI_TYPE_KEY, swaggerPlugin } from './plugins/swagger.js';
+import { OPENAPI_NULLABLE_KEY, OPENAPI_TYPE_KEY, swaggerPlugin } from './plugins/swagger.js';
 import { timezonePlugin } from './plugins/timezone.js';
 
 function tokenVerifierConfig(config: AppConfig): TokenVerifierConfig {
@@ -32,7 +32,7 @@ export function buildApp(config: AppConfig = loadConfig(), options: BuildAppOpti
   const app = Fastify({
     logger: options.logger ?? false,
     // Only registers an annotation keyword with Ajv; coercion and the other defaults stay as they are.
-    ajv: { plugins: [(ajv) => ajv.addKeyword(OPENAPI_TYPE_KEY)] },
+    ajv: { plugins: [(ajv) => ajv.addKeyword(OPENAPI_TYPE_KEY).addKeyword(OPENAPI_NULLABLE_KEY)] },
   }).withTypeProvider<TypeBoxTypeProvider>();
 
   void app.register(errorsPlugin);

@@ -307,14 +307,14 @@ T6 → T11
 
 **Done when**:
 
-- [ ] `description` is present (string or null) in list, create and edit responses and the response shape test lists it (AC 3)
-- [ ] POST trims it, stores null for blank, whitespace-only and null, and null when omitted; 500 characters are accepted and 501 returns 422 `validation_error` with field `description` without creating the row (AC 4, 5, 6 and edge cases)
-- [ ] POST with a number returns 400 `validation_error` (AC 7)
-- [ ] PATCH with `description` returns 200, leaves the stored value unchanged also when `name` changes in the same body (AC 8)
-- [ ] Another user cannot read the `description` of the first user (AC 9)
-- [ ] `api/openapi.json` regenerated: `description` in Transaction and POST body, not in the PATCH body, `swagger.int.test.ts` passes (AC 10)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: 9 tests pass (no silent deletions)
+- [x] `description` is present (string or null) in list, create and edit responses and the response shape test lists it (AC 3)
+- [x] POST trims it, stores null for blank, whitespace-only and null, and null when omitted; 500 characters are accepted and 501 returns 422 `validation_error` with field `description` without creating the row (AC 4, 5, 6 and edge cases)
+- [x] POST with a number returns 400 `validation_error` (AC 7)
+- [x] PATCH with `description` returns 200, leaves the stored value unchanged also when `name` changes in the same body (AC 8)
+- [x] Another user cannot read the `description` of the first user (AC 9)
+- [x] `api/openapi.json` regenerated: `description` in Transaction and POST body, not in the PATCH body, `swagger.int.test.ts` passes (AC 10)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: 9 tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
