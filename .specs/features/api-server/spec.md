@@ -58,6 +58,7 @@ A API só existe como fábrica `buildApp()` usada nos testes: não há ponto de 
 4. IF `SUPABASE_URL` ou `DATABASE_URL` está ausente THEN o sistema SHALL encerrar o processo com código diferente de zero e mensagem que cita a variável.
 5. WHEN o processo recebe SIGTERM ou SIGINT THEN o sistema SHALL parar de aceitar conexões, fechar o pool do banco e encerrar com código 0.
 6. The sistema SHALL registrar cada requisição em log JSON sem incluir o cabeçalho `Authorization` nem o token.
+7. The sistema SHALL registrar apenas o caminho de cada requisição, sem a query string, para que token ou texto de busca passados ali por engano não cheguem aos logs.
 
 **Independent Test**: Subir o processo, chamar `GET /health`, enviar SIGTERM e ver saída 0.
 
@@ -97,16 +98,16 @@ A API só existe como fábrica `buildApp()` usada nos testes: não há ponto de 
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| SRV-01 | P1: Subir a API (escuta e health) | - | Implementing |
-| SRV-02 | P1: Subir a API (configuração do ambiente) | - | Implementing |
-| SRV-03 | P1: Subir a API (encerramento limpo) | - | Implementing |
-| SRV-04 | P1: Subir a API (logs sem token) | - | Implementing |
-| CORS-01 | P1: CORS (preflight sem token) | - | Implementing |
-| CORS-02 | P1: CORS (cabeçalhos permitidos e cache) | - | Implementing |
-| CORS-03 | P1: CORS (respostas reais e 401 legível) | - | Implementing |
-| CORS-04 | P1: CORS (origens negadas, vazia, sem curinga) | - | Implementing |
+| SRV-01 | P1: Subir a API (escuta e health) | - | Verified |
+| SRV-02 | P1: Subir a API (configuração do ambiente) | - | Verified |
+| SRV-03 | P1: Subir a API (encerramento limpo) | - | Verified |
+| SRV-04 | P1: Subir a API (logs sem token) | - | Verified |
+| CORS-01 | P1: CORS (preflight sem token) | - | Verified |
+| CORS-02 | P1: CORS (cabeçalhos permitidos e cache) | - | Verified |
+| CORS-03 | P1: CORS (respostas reais e 401 legível) | - | Verified |
+| CORS-04 | P1: CORS (origens negadas, vazia, sem curinga) | - | Verified |
 
-**Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️
+**Coverage:** 8 total, todos Verified (a conferência ponta a ponta com o front fica no critério de sucesso e na integração).
 
 ---
 

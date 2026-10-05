@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 7,
+  "next_id": 9,
   "lessons": [
     {
       "id": "L-001",
@@ -112,6 +112,42 @@
       ],
       "created": "2026-10-05T06:22:46Z",
       "last_seen": "2026-10-05T06:22:46Z"
+    },
+    {
+      "id": "L-007",
+      "key": "surviving_mutant::prove a resource is released with a direct check such as a failing call after close not with a log line printed by the code under test",
+      "text": "Prove a resource is released with a direct check, such as a failing call after close, not with a log line printed by the code under test",
+      "signal": "surviving_mutant",
+      "scope": "shutdown",
+      "status": "candidate",
+      "features": [
+        "api-server"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M24 shutdown without server.close() (validation iteration 1) (shutdown)"
+      ],
+      "created": "2026-10-05T07:01:39Z",
+      "last_seen": "2026-10-05T07:01:39Z"
+    },
+    {
+      "id": "L-008",
+      "key": "spec_precision_gap::validate configured origins as url origins and define accepted formats for numeric environment variables",
+      "text": "Validate configured origins as URL origins and define accepted formats for numeric environment variables",
+      "signal": "spec_precision_gap",
+      "scope": "config",
+      "status": "candidate",
+      "features": [
+        "api-server"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "origin shape and PORT parsing gaps (validation.md) (config)"
+      ],
+      "created": "2026-10-05T07:01:40Z",
+      "last_seen": "2026-10-05T07:01:40Z"
     }
   ]
 }

@@ -50,6 +50,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: spec-precision gaps (validation.md): status for blank vs missing required fields (validation)
 - last seen: 2026-10-05T06:22:46Z
 
+### L-007 - Prove a resource is released with a direct check, such as a failing call after close, not with a log line printed by the code under test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `shutdown` · harmful: 0
+- features: api-server
+- evidence: M24 shutdown without server.close() (validation iteration 1) (shutdown)
+- last seen: 2026-10-05T07:01:39Z
+
+### L-008 - Validate configured origins as URL origins and define accepted formats for numeric environment variables
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `config` · harmful: 0
+- features: api-server
+- evidence: origin shape and PORT parsing gaps (validation.md) (config)
+- last seen: 2026-10-05T07:01:40Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
