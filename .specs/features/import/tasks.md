@@ -275,11 +275,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Account and invoice headers are recognized
-- [ ] Unknown header returns null
-- [ ] Format with a non-Nubank account raises `bank_mismatch` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Account and invoice headers are recognized
+- [x] Unknown header returns null
+- [x] Format with a non-Nubank account raises `bank_mismatch` (3 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
