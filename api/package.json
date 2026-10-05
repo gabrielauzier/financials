@@ -12,12 +12,15 @@
     "test": "pnpm test:unit && pnpm test:int",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "openapi:export": "tsx src/export-openapi.ts",
     "db:start": "npx supabase --workdir .. start",
     "db:stop": "npx supabase --workdir .. stop",
     "db:reset": "npx supabase --workdir .. db reset",
     "db:status": "npx supabase --workdir .. status"
   },
   "dependencies": {
+    "@fastify/swagger": "^9.9.1",
+    "@fastify/swagger-ui": "^6.1.1",
     "@fastify/type-provider-typebox": "^6.1.0",
     "@sinclair/typebox": "^0.34.52",
     "fastify": "^5.12.5",
@@ -31,6 +34,7 @@
     "@types/luxon": "^3.7.6",
     "@types/node": "^26.6.4",
     "eslint": "^10.12.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
     "vitest": "^5.0.3"

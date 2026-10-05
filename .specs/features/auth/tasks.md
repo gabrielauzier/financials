@@ -401,10 +401,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `GET /docs/json` returns a valid OpenAPI document that lists `/health`
-- [ ] `pnpm -C api openapi:export` writes `api/openapi.json` (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `GET /docs/json` returns a valid OpenAPI document that lists `/health`
+- [x] `pnpm -C api openapi:export` writes `api/openapi.json` (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

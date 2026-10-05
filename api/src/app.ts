@@ -6,6 +6,7 @@ import { loadConfig, type AppConfig } from './config.js';
 import { authPlugin, createTokenVerifier, type TokenVerifierConfig } from './plugins/auth.js';
 import { dbPlugin } from './plugins/db.js';
 import { errorsPlugin } from './plugins/errors.js';
+import { swaggerPlugin } from './plugins/swagger.js';
 import { timezonePlugin } from './plugins/timezone.js';
 
 function tokenVerifierConfig(config: AppConfig): TokenVerifierConfig {
@@ -18,15 +19,19 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
   const app = Fastify().withTypeProvider<TypeBoxTypeProvider>();
 
   void app.register(errorsPlugin);
+  void app.register(swaggerPlugin);
   void app.register(dbPlugin, { databaseUrl: config.databaseUrl });
   void app.register(authPlugin, { verifyToken: createTokenVerifier(tokenVerifierConfig(config)) });
   void app.register(timezonePlugin);
 
-  app.get(
-    '/health',
-    { schema: { response: { 200: Type.Object({ status: Type.Literal('ok') }) } } },
-    () => ({ status: 'ok' as const }),
-  );
+  // Routes go in a registered plugin so they load after swagger and appear in the document.
+  void app.register(async (routes) => {
+    routes.get(
+      '/health',
+      { schema: { security: [], response: { 200: Type.Object({ status: Type.Literal('ok') }) } } },
+      () => ({ status: 'ok' as const }),
+    );
+  });
 
   return app;
 }
