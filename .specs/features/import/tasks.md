@@ -246,12 +246,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Fixture yields 18 Expense rows and 1 ignored row (`Pagamento recebido`)
-- [ ] `Prado Som Car - Parcela 3/6` keeps its full name and amount 343.72
-- [ ] Amount `1.335,61` parses to `1335.61`; identifier is null on every row
-- [ ] Invalid date or amount becomes `invalid` (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Fixture yields 18 Expense rows and 1 ignored row (`Pagamento recebido`)
+- [x] `Prado Som Car - Parcela 3/6` keeps its full name and amount 343.72
+- [x] Amount `1.335,61` parses to `1335.61`; identifier is null on every row
+- [x] Invalid date or amount becomes `invalid` (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
