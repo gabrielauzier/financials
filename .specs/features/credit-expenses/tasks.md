@@ -251,9 +251,9 @@ T11 → T12
 
 **Done when**:
 
-- [ ] User B gets 404 on every mutation of user A's rows and never lists them (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] User B gets 404 on every mutation of user A's rows and never lists them (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
