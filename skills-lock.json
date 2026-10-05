@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "prd-generator": {
+      "source": "smithery.ai",
+      "sourceUrl": "https://smithery.ai/skills/jamesrochabrun/prd-generator",
+      "sourceType": "well-known",
+      "computedHash": "ce4db0011a0dbea1f2b6474738031c094c9f96de93fa09e7917c9c66f8c7024b",
+      "wellKnownDigest": "sha256:1e1b2549ff2a136caf73a34eaf73b1b556e5c5183e88a533d752213299f10b9f"
+    }
+  }
+}
