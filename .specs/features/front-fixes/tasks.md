@@ -169,11 +169,11 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] An `invalid_amount` with `field: amount` is shown on the amount field in Portuguese
-- [ ] A `not_found` on the bulk call and a failed delete show Portuguese texts
-- [ ] No `error.message` or `reason.message` is read in the transactions feature (3 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] An `invalid_amount` with `field: amount` is shown on the amount field in Portuguese
+- [x] A `not_found` on the bulk call and a failed delete show Portuguese texts
+- [x] No `error.message` or `reason.message` is read in the transactions feature (3 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/api/client";
+import { GENERIC_ERROR } from "@/lib/api/errorMessages";
 import { mockRequest } from "@/lib/api/mock";
 import type {
   Account,
@@ -28,6 +30,20 @@ const category: Category = {
   isSystem: true,
 };
 
+const failures = vi.hoisted(() => new Map<string, unknown>());
+vi.mock("@/lib/api/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/client")>()),
+  apiRequest: async (path: string, options: { method?: string; body?: unknown } = {}) => {
+    const method = options.method?.toUpperCase() ?? "GET";
+    const key = path
+      .split("?")[0]
+      ?.replace(/^\/transactions\/(?!category$)[^/]+/, "/transactions/:id");
+    const failure = failures.get(`${method} ${key}`);
+    if (failure) throw failure;
+    return mockRequest({ method, path, body: options.body });
+  },
+}));
+
 function renderQuery(ui: React.ReactNode, client?: QueryClient) {
   const queryClient =
     client ??
@@ -39,6 +55,7 @@ function renderQuery(ui: React.ReactNode, client?: QueryClient) {
 
 afterEach(() => {
   cleanup();
+  failures.clear();
   vi.useRealTimers();
 });
 
@@ -235,5 +252,102 @@ describe("extrato", () => {
       body: {},
     });
     expect(unchanged.categoryId).toBe(target);
+  });
+
+  describe("erros da API em português", () => {
+    const seeded = () => {
+      const client = new QueryClient({
+        defaultOptions: {
+          queries: { retry: false, staleTime: Infinity },
+          mutations: { retry: false },
+        },
+      });
+      client.setQueryData(["accounts", { active: true }], [account]);
+      client.setQueryData(["categories"], [category]);
+      return client;
+    };
+    const fillAndSubmit = async () => {
+      fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Mercado" } });
+      fireEvent.change(screen.getByLabelText("Valor"), { target: { value: "10,00" } });
+      fireEvent.click(screen.getByLabelText("Conta"));
+      fireEvent.click(await screen.findByRole("option", { name: "Nubank pessoal" }));
+      fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    };
+
+    it("mostra no campo valor a mensagem de invalid_amount com field amount", async () => {
+      renderQuery(<TransactionForm open onOpenChange={vi.fn()} />, seeded());
+      failures.set(
+        "POST /transactions",
+        new ApiError("invalid_amount", "Amount must be positive", 422, "amount"),
+      );
+      await fillAndSubmit();
+      const alert = await screen.findByText("Valor inválido");
+      expect(alert).toHaveAttribute("id", "transaction-amount-error");
+      expect(screen.queryByText("Amount must be positive")).not.toBeInTheDocument();
+    });
+
+    it("mostra invalid_account no campo conta e occurredAt no campo data", async () => {
+      renderQuery(<TransactionForm open onOpenChange={vi.fn()} />, seeded());
+      failures.set(
+        "POST /transactions",
+        new ApiError("invalid_account", "Inactive account", 422, "accountId"),
+      );
+      await fillAndSubmit();
+      expect(await screen.findByText("Selecione uma conta ativa")).toHaveAttribute(
+        "id",
+        "transaction-account-error",
+      );
+      failures.set(
+        "POST /transactions",
+        new ApiError("validation_error", "Bad date", 422, "occurredAt"),
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+      expect(await screen.findByText("Dados inválidos. Revise os campos")).toHaveAttribute(
+        "id",
+        "transaction-date-error",
+      );
+    });
+
+    it("mostra no alerta do formulário o erro sem campo e o texto genérico", async () => {
+      renderQuery(<TransactionForm open onOpenChange={vi.fn()} />, seeded());
+      failures.set("POST /transactions", new ApiError("unauthorized", "Token expired", 401));
+      await fillAndSubmit();
+      expect(await screen.findByText("Sua sessão expirou. Entre novamente")).toHaveAttribute(
+        "role",
+        "alert",
+      );
+      failures.set("POST /transactions", new ApiError("brand_new_code", "Kaboom", 500));
+      fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+      expect(await screen.findByText(GENERIC_ERROR)).toBeInTheDocument();
+      expect(screen.queryByText("Kaboom")).not.toBeInTheDocument();
+    });
+
+    it("mostra not_found em português quando a atualização em lote falha", async () => {
+      renderQuery(<TransactionsPage />);
+      await screen.findByLabelText("Selecionar todas da página");
+      // let the initial search debounce (300 ms) settle: it resets the selection
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      fireEvent.click(screen.getByLabelText("Selecionar todas da página"));
+      const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
+      fireEvent.click(within(bar).getByRole("combobox"));
+      fireEvent.click((await screen.findAllByRole("option"))[0] as HTMLElement);
+      failures.set("PATCH /transactions/category", new ApiError("not_found", "Missing ids", 404));
+      fireEvent.click(within(bar).getByRole("button", { name: "Aplicar categoria" }));
+      expect(
+        await screen.findByText("Registro não encontrado. Atualize a página e tente de novo"),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Missing ids")).not.toBeInTheDocument();
+    });
+
+    it("mostra em português a falha ao excluir", async () => {
+      renderQuery(<TransactionsPage />);
+      const [firstDelete] = await screen.findAllByRole("button", { name: /^Excluir / });
+      fireEvent.click(firstDelete as HTMLElement);
+      failures.set("DELETE /transactions/:id", new ApiError("internal_error", "DB down", 500));
+      const dialog = await screen.findByRole("alertdialog");
+      fireEvent.click(within(dialog).getByRole("button", { name: "Excluir" }));
+      expect(await screen.findByText(GENERIC_ERROR)).toBeInTheDocument();
+      expect(screen.queryByText("DB down")).not.toBeInTheDocument();
+    });
   });
 });

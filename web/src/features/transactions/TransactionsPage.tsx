@@ -34,6 +34,7 @@ import {
 import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { CategorySelect } from "@/features/categories/CategorySelect";
 import { formatBRL, formatDateLocal } from "@/lib/format";
+import { messageForError } from "@/lib/api/errorMessages";
 import type { Transaction, TransactionFilters } from "@/lib/api/types";
 import {
   useDeleteTransaction,
@@ -104,11 +105,11 @@ export function TransactionsPage() {
     setActionError("");
     try {
       await update.mutateAsync({ id, input });
-    } catch {
+    } catch (reason) {
       setActionError(
         input.categoryId
           ? "Não foi possível salvar a categoria"
-          : "Não foi possível salvar a alteração",
+          : messageForError(reason, "transaction"),
       );
     }
   };
@@ -120,9 +121,7 @@ export function TransactionsPage() {
       setSelected(new Set());
       setBulkCategory("");
     } catch (reason) {
-      setActionError(
-        reason instanceof Error ? reason.message : "Não foi possível aplicar a categoria",
-      );
+      setActionError(messageForError(reason, "transaction"));
     }
   };
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 50));
@@ -384,11 +383,7 @@ export function TransactionsPage() {
                   await remove.mutateAsync(deleting.id);
                   setDeleting(undefined);
                 } catch (reason) {
-                  setActionError(
-                    reason instanceof Error
-                      ? reason.message
-                      : "Não foi possível excluir a transação",
-                  );
+                  setActionError(messageForError(reason, "transaction"));
                 }
               }}
             >

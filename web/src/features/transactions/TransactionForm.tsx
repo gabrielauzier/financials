@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { CategorySelect } from "@/features/categories/CategorySelect";
 import { useCategories } from "@/features/categories/hooks";
+import { fieldForError, messageForError } from "@/lib/api/errorMessages";
 import type {
   PaymentMethod,
   Transaction,
@@ -52,6 +53,17 @@ const initial = {
   receipt: "",
   neutral: false,
 };
+
+const formFields = new Set([
+  "name",
+  "type",
+  "date",
+  "amount",
+  "accountId",
+  "paymentMethod",
+  "categoryId",
+  "receipt",
+]);
 
 type Props = { open: boolean; onOpenChange: (open: boolean) => void; transaction?: Transaction };
 export function TransactionForm({ open, onOpenChange, transaction }: Props) {
@@ -115,21 +127,10 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
       else await create.mutateAsync(input);
       onOpenChange(false);
     } catch (reason) {
-      const field =
-        typeof reason === "object" && reason && "field" in reason ? String(reason.field) : "form";
-      const code =
-        typeof reason === "object" && reason && "code" in reason ? String(reason.code) : "";
+      const apiField = fieldForError(reason);
+      const field = apiField === "occurredAt" ? "date" : apiField;
       setErrors({
-        [field]:
-          code === "invalid_amount"
-            ? "Valor inválido"
-            : code === "invalid_account"
-              ? "Conta inválida"
-              : code === "invalid_receipt_url"
-                ? "URL inválida"
-                : reason instanceof Error
-                  ? reason.message
-                  : "Não foi possível salvar a transação",
+        [field && formFields.has(field) ? field : "form"]: messageForError(reason, "transaction"),
       });
     }
   };
@@ -208,7 +209,7 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Categoria" id="transaction-category">
+          <Field label="Categoria" id="transaction-category" error={errors["categoryId"]}>
             <CategorySelect
               id="transaction-category"
               value={
