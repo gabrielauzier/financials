@@ -72,6 +72,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: gap 4 (validation.md): 500 log carried Postgres detail with row values (logging)
 - last seen: 2026-10-05T10:26:44Z
 
+### L-011 - Test the rollback of an optimistic update with the refetch also failing, so only the rollback can restore the previous state
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `optimistic-updates` · harmful: 0
+- features: front-fixes
+- evidence: M14 (validation iteration 2): rollback removal not observable while the refetch succeeds (optimistic-updates)
+- last seen: 2026-10-05T15:08:23Z
+
+### L-012 - Start every reset-to-default test from a non-default state that nothing else resets
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: front-fixes
+- evidence: M17 (validation iteration 1): clear filters never tested from page 2 (tests)
+- last seen: 2026-10-05T15:08:23Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 11,
+  "next_id": 13,
   "lessons": [
     {
       "id": "L-001",
@@ -186,6 +186,42 @@
       ],
       "created": "2026-10-05T10:26:44Z",
       "last_seen": "2026-10-05T10:26:44Z"
+    },
+    {
+      "id": "L-011",
+      "key": "surviving_mutant::test the rollback of an optimistic update with the refetch also failing so only the rollback can restore the previous state",
+      "text": "Test the rollback of an optimistic update with the refetch also failing, so only the rollback can restore the previous state",
+      "signal": "surviving_mutant",
+      "scope": "optimistic-updates",
+      "status": "candidate",
+      "features": [
+        "front-fixes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M14 (validation iteration 2): rollback removal not observable while the refetch succeeds (optimistic-updates)"
+      ],
+      "created": "2026-10-05T15:08:23Z",
+      "last_seen": "2026-10-05T15:08:23Z"
+    },
+    {
+      "id": "L-012",
+      "key": "surviving_mutant::start every reset to default test from a non default state that nothing else resets",
+      "text": "Start every reset-to-default test from a non-default state that nothing else resets",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "front-fixes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M17 (validation iteration 1): clear filters never tested from page 2 (tests)"
+      ],
+      "created": "2026-10-05T15:08:23Z",
+      "last_seen": "2026-10-05T15:08:23Z"
     }
   ]
 }

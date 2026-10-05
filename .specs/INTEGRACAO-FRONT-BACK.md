@@ -160,3 +160,9 @@ Feature `import` concluída no backend e no front (implementado direto em `web/`
 
 Observação de ambiente: o launcher do preview não conseguiu abrir `/Volumes/MacOnlySSD` após o reinício do app (erro `getcwd: Operation not permitted`); API e front foram subidos pelo shell. Rodar `pnpm -C api dev` e `yarn --cwd web dev` manualmente funciona.
 
+### Correções do front (2026-10-05)
+
+Feature `front-fixes` concluída (**PASS na iteração 3 do Verifier**, 135 testes no `web/`): D1 (limpar observações e recibo ao editar), D2 (mensagens da API sempre em português por um módulo único), D7 (e-mail já cadastrado e não confirmado), erro ao ativar ou desativar conta, aviso de período invertido no extrato, receitas em verde, 14 testes de interface do extrato e `yarn.lock` sincronizado. A mensagem de correção ao Lovable da seção 8 **não é mais necessária** (o front é feito aqui).
+
+Pendências menores: o rollback entre várias visões de lista em cache não tem teste (variantes M14a), a lista não é conferida quanto a atualização após salvar com sucesso (M14d), esperas reais de 350 a 400 ms em testes do extrato (risco de lentidão em CI) e `invalid_account` na edição diz "Selecione uma conta ativa" (a API aceita conta inativa na edição).
+
