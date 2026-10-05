@@ -159,7 +159,7 @@ Com o front integrado à API real, aparecem falhas de uso: editar uma transaçã
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| FIX-01 | P1: Mensagens de erro em português | - | Pending |
+| FIX-01 | P1: Mensagens de erro em português | - | Implementing |
 | FIX-02 | P1: Editar transação limpa observações e recibo | - | Pending |
 | FIX-03 | P1: Cadastro com e-mail já usado | - | Pending |
 | FIX-04 | P2: Contas, período e aparência | - | Pending |

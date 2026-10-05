@@ -84,12 +84,12 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] Each code (`duplicate_name` per context, `holder_required`, `category_protected`, `reassign_required`, `invalid_amount`, `invalid_account`, `invalid_receipt_url`, `not_found`, `validation_error`, `unauthorized`) returns its Portuguese text
-- [ ] Unknown code, `TypeError` and non-error values return `GENERIC_ERROR`
-- [ ] The API `message` is never part of the result
-- [ ] `fieldForError` returns the API `field` (7 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Each code (`duplicate_name` per context, `holder_required`, `category_protected`, `reassign_required`, `invalid_amount`, `invalid_account`, `invalid_receipt_url`, `not_found`, `validation_error`, `unauthorized`) returns its Portuguese text
+- [x] Unknown code, `TypeError` and non-error values return `GENERIC_ERROR`
+- [x] The API `message` is never part of the result
+- [x] `fieldForError` returns the API `field` (7 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
