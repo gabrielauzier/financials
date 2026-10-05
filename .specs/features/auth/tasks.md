@@ -231,11 +231,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `createTestUser()` returns `{ id, token }` for a user present in `auth.users`
-- [ ] Two calls produce two distinct users
-- [ ] Cleanup removes created users (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `createTestUser()` returns `{ id, token }` for a user present in `auth.users`
+- [x] Two calls produce two distinct users
+- [x] Cleanup removes created users (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
