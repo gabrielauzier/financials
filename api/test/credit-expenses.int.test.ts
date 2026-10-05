@@ -602,3 +602,76 @@ describe('PATCH /credit-expenses/:id', () => {
     }
   });
 });
+
+describe('DELETE /credit-expenses/:id', () => {
+  let u: TestUser;
+  let account: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Exclusão');
+  });
+
+  async function create(name: string, over: Record<string, unknown> = {}): Promise<string> {
+    const res = await call(u, 'POST', '/credit-expenses', valid({ accountId: account, name, ...over }));
+    expect(res.statusCode).toBe(201);
+    return res.json<{ id: string }>().id;
+  }
+
+  const ids = async () =>
+    (await call(u, 'GET', '/credit-expenses')).json<{ id: string }[]>().map((r) => r.id);
+  const storedIds = async () =>
+    (await getAdminSql()`select id from public.credit_expenses where user_id = ${u.id}`).map((r) => r.id as string);
+
+  it('deletes an existing row (204, empty body), only that row, definitively', async () => {
+    const target = await create('Apagar');
+    const kept = await create('Manter');
+    const res = await call(u, 'DELETE', `/credit-expenses/${target}`);
+    expect(res.statusCode).toBe(204);
+    expect(res.body).toBe('');
+    expect(await ids()).not.toContain(target);
+    expect(await ids()).toContain(kept);
+    expect(await storedIds()).not.toContain(target);
+    expect(await storedIds()).toContain(kept);
+  });
+
+  it('answers 404 not_found for an unknown id and for a malformed id, deleting nothing', async () => {
+    const kept = await create('Intacta');
+    const before = await storedIds();
+    for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      const res = await call(u, 'DELETE', `/credit-expenses/${id}`);
+      expect({ id, status: res.statusCode }).toEqual({ id, status: 404 });
+      expect(res.json()).toEqual({ error: { code: 'not_found', message: expect.any(String) } });
+    }
+    expect(await storedIds()).toEqual(before);
+    expect(await ids()).toContain(kept);
+  });
+
+  it('answers 404 when deleting the same row twice', async () => {
+    const target = await create('Duas vezes');
+    expect((await call(u, 'DELETE', `/credit-expenses/${target}`)).statusCode).toBe(204);
+    const again = await call(u, 'DELETE', `/credit-expenses/${target}`);
+    expect(again.statusCode).toBe(404);
+    expect(again.json()).toMatchObject({ error: { code: 'not_found' } });
+  });
+
+  it("answers 404 for another user's row and leaves it in place", async () => {
+    const mine = await create('Minha');
+    const other = await createTestUser();
+    const res = await call(other, 'DELETE', `/credit-expenses/${mine}`);
+    expect(res.statusCode).toBe(404);
+    expect(await storedIds()).toContain(mine);
+  });
+
+  it('deletes a row of an inactive account and a row of any status, and a patch afterwards answers 404', async () => {
+    const own = await createAccount(u, 'Inativa p/ exclusão');
+    const inactiveRow = await create('Em conta inativa', { accountId: own });
+    expect((await call(u, 'POST', `/accounts/${own}/deactivate`)).statusCode).toBe(200);
+    expect((await call(u, 'DELETE', `/credit-expenses/${inactiveRow}`)).statusCode).toBe(204);
+    for (const status of ['Once', 'Active', 'Inactive', 'Canceled', 'ToCancel']) {
+      const id = await create(`Status ${status}`, { status, paidAmount: '600.00' });
+      expect((await call(u, 'DELETE', `/credit-expenses/${id}`)).statusCode).toBe(204);
+      expect((await call(u, 'PATCH', `/credit-expenses/${id}`, { name: 'Fantasma' })).statusCode).toBe(404);
+    }
+  });
+});

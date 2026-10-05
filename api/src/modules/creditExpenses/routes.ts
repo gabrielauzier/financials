@@ -259,4 +259,16 @@ export async function creditExpensesRoutes(app: FastifyInstance): Promise<void> 
       return toCreditExpense(row);
     },
   );
+
+  routes.delete(
+    '/credit-expenses/:id',
+    { schema: { params: IdParams, response: { 204: Type.Null({ description: 'Deleted' }) } } },
+    async (request, reply) => {
+      const { id } = request.params;
+      if (!UUID.test(id)) throw notFound();
+      const deleted = await request.withUser((tx) => tx`delete from public.credit_expenses where id = ${id}`);
+      if (deleted.count === 0) throw notFound();
+      return reply.status(204).send(null);
+    },
+  );
 }

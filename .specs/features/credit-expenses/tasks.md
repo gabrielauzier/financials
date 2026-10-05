@@ -198,10 +198,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Existing row is deleted
-- [ ] Unknown and foreign ids return 404 (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Existing row is deleted
+- [x] Unknown and foreign ids return 404 (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
