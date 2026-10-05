@@ -165,11 +165,11 @@ T3 → T4
 
 **Done when**:
 
-- [ ] `pnpm -C api build` succeeds and `node api/dist/server.js` with the example variables serves `/health`
-- [ ] `api/.env.example` lists every variable with a comment and local development values
-- [ ] README explains the startup order: `db:start`, API, front
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `pnpm -C api build` succeeds and `node api/dist/server.js` with the example variables serves `/health`
+- [x] `api/.env.example` lists every variable with a comment and local development values
+- [x] README explains the startup order: `db:start`, API, front
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build
