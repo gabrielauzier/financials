@@ -107,10 +107,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Types compile and are exported
-- [ ] No runtime code in the file
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Types compile and are exported
+- [x] No runtime code in the file
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build
