@@ -618,11 +618,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] A `FormData` body reaches `fetch` unchanged and with no `Content-Type` header
-- [ ] A JSON body is still serialized with `Content-Type: application/json`
-- [ ] The Bearer and `X-Timezone` headers are still sent and a 401 still signs the user out (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] A `FormData` body reaches `fetch` unchanged and with no `Content-Type` header
+- [x] A JSON body is still serialized with `Content-Type: application/json`
+- [x] The Bearer and `X-Timezone` headers are still sent and a 401 still signs the user out (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

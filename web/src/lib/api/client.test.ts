@@ -54,4 +54,45 @@ describe("apiRequest", () => {
       status: 422,
     });
   });
+  it("envia FormData sem alterar o corpo e sem Content-Type", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 })),
+    );
+    const form = new FormData();
+    form.append("accountId", "abc");
+    await apiRequest("/imports/preview", { method: "POST", body: form });
+    const init = vi.mocked(fetch).mock.calls[0]?.[1];
+    expect(init?.body).toBe(form);
+    const headers = new Headers(init?.headers);
+    expect(headers.has("Content-Type")).toBe(false);
+    expect(headers.get("Authorization")).toBe("Bearer token");
+    expect(headers.get("X-Timezone")).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
+  it("mantém o corpo JSON serializado com Content-Type application/json", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 })),
+    );
+    await apiRequest("/accounts", { method: "POST", body: { nickname: "x" } });
+    const init = vi.mocked(fetch).mock.calls[0]?.[1];
+    expect(init?.body).toBe(JSON.stringify({ nickname: "x" }));
+    expect(new Headers(init?.headers).get("Content-Type")).toBe("application/json");
+  });
+  it("encerra a sessão em 401 também com FormData", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ error: { code: "unauthorized", message: "x" } }), {
+            status: 401,
+          }),
+        ),
+    );
+    await expect(
+      apiRequest("/imports/preview", { method: "POST", body: new FormData() }),
+    ).rejects.toBeInstanceOf(ApiError);
+    expect(authMocks.signOut).toHaveBeenCalled();
+  });
 });

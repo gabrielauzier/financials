@@ -37,14 +37,15 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   if (data.session?.access_token)
     headers.set("Authorization", `Bearer ${data.session.access_token}`);
   headers.set("X-Timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);
-  if (body !== undefined) headers.set("Content-Type", "application/json");
+  const isFormData = body instanceof FormData;
+  if (body !== undefined && !isFormData) headers.set("Content-Type", "application/json");
 
   const requestInit: RequestInit = {
     ...fetchOptions,
     method,
     headers,
   };
-  if (body !== undefined) requestInit.body = JSON.stringify(body);
+  if (body !== undefined) requestInit.body = isFormData ? body : JSON.stringify(body);
   const response = await fetch(`${import.meta.env["VITE_API_URL"] ?? ""}${path}`, requestInit);
 
   if (response.status === 401) {
