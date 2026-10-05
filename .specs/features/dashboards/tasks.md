@@ -125,11 +125,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Fixed dataset with one row of each special case yields exactly the spec totals: neutral, CreditCard, Investments, Reversal Income (abates expense), Reversal Expense (normal expense), future-dated, inactive-account rows
-- [ ] Income and expense totals exclude each special case as specified
-- [ ] Net value counts the Reversal as positive and the invoice payment as expense (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Fixed dataset with one row of each special case yields exactly the spec totals: neutral, CreditCard, Investments, Reversal Income (abates expense), Reversal Expense (normal expense), future-dated, inactive-account rows
+- [x] Income and expense totals exclude each special case as specified
+- [x] Net value counts the Reversal as positive and the invoice payment as expense (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
