@@ -96,14 +96,14 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Creating a user seeds 17 categories with the identifiers and pt-BR names from the spec; exactly 3 have `is_system`
-- [ ] Updating or deleting a system category as `authenticated` affects 0 rows
-- [ ] Deleting from `accounts` as `authenticated` fails
-- [ ] Duplicate account nickname or category name (any case) violates the unique index
-- [ ] RLS isolates both tables between two users
-- [ ] Running the seed twice does not duplicate categories (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Creating a user seeds 17 categories with the identifiers and pt-BR names from the spec; exactly 3 have `is_system`
+- [x] Updating or deleting a system category as `authenticated` affects 0 rows
+- [x] Deleting from `accounts` as `authenticated` fails
+- [x] Duplicate account nickname or category name (any case) violates the unique index
+- [x] RLS isolates both tables between two users
+- [x] Running the seed twice does not duplicate categories (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
