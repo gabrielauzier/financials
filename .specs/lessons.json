@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 14,
+  "next_id": 19,
   "lessons": [
     {
       "id": "L-001",
@@ -231,17 +231,109 @@
       "text": "Test the failure path of every destructive action and every conditional option list, asserting the Portuguese text and the visible options",
       "signal": "surviving_mutant",
       "scope": "ui-tests",
+      "status": "confirmed",
+      "features": [
+        "credit-expenses",
+        "dashboards"
+      ],
+      "recurrence": 2,
+      "harmful": 0,
+      "evidence": [
+        "W2c and W9a/W9b (validation.md): delete failure text and account selector rules untested (ui-tests)",
+        "mutant W27 (validation.md): inactive account option untested (ui-tests)"
+      ],
+      "created": "2026-10-05T16:31:15Z",
+      "last_seen": "2026-10-05T19:28:15Z"
+    },
+    {
+      "id": "L-014",
+      "key": "surviving_mutant::seed rows on the first and last period boundaries oldest month first day of a month exact local midnight so a window shifted by one period or one day changes the result",
+      "text": "Seed rows on the first and last period boundaries (oldest month, first day of a month, exact local midnight) so a window shifted by one period or one day changes the result",
+      "signal": "surviving_mutant",
+      "scope": "time-windows",
       "status": "candidate",
       "features": [
-        "credit-expenses"
+        "dashboards"
       ],
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "W2c and W9a/W9b (validation.md): delete failure text and account selector rules untested (ui-tests)"
+        "mutants E6, E17, E18 (validation.md) (time-windows)"
       ],
-      "created": "2026-10-05T16:31:15Z",
-      "last_seen": "2026-10-05T16:31:15Z"
+      "created": "2026-10-05T19:28:15Z",
+      "last_seen": "2026-10-05T19:28:15Z"
+    },
+    {
+      "id": "L-015",
+      "key": "surviving_mutant::test every aggregate endpoint with only future dated rows not past data plus future noise to prove its empty path",
+      "text": "Test every aggregate endpoint with only future-dated rows, not past data plus future noise, to prove its empty path",
+      "signal": "surviving_mutant",
+      "scope": "aggregates",
+      "status": "candidate",
+      "features": [
+        "dashboards"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutants E16, E24 (validation.md) (aggregates)"
+      ],
+      "created": "2026-10-05T19:28:15Z",
+      "last_seen": "2026-10-05T19:28:15Z"
+    },
+    {
+      "id": "L-016",
+      "key": "surviving_mutant::test clearing an optional field on edit and assert the request sends null not that the field is omitted",
+      "text": "Test clearing an optional field on edit and assert the request sends null, not that the field is omitted",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "dashboards"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant W19 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-05T19:28:15Z",
+      "last_seen": "2026-10-05T19:28:15Z"
+    },
+    {
+      "id": "L-017",
+      "key": "spec_precision_gap::state in the spec the display name and the zero total behavior of every derived group row",
+      "text": "State in the spec the display name and the zero-total behavior of every derived group row",
+      "signal": "spec_precision_gap",
+      "scope": "spec-outcomes",
+      "status": "candidate",
+      "features": [
+        "dashboards"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPG-1, SPG-5 (validation.md): Estorno display name, zero-net card category (spec-outcomes)"
+      ],
+      "created": "2026-10-05T19:28:16Z",
+      "last_seen": "2026-10-05T19:28:16Z"
+    },
+    {
+      "id": "L-018",
+      "key": "spec_precision_gap::state in the spec the format decimals and sign of every computed percentage shown to the user",
+      "text": "State in the spec the format (decimals and sign) of every computed percentage shown to the user",
+      "signal": "spec_precision_gap",
+      "scope": "formatting",
+      "status": "candidate",
+      "features": [
+        "dashboards"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPG-2 (validation.md): percentage format (formatting)"
+      ],
+      "created": "2026-10-05T19:28:16Z",
+      "last_seen": "2026-10-05T19:28:16Z"
     }
   ]
 }

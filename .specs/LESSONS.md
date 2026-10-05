@@ -20,6 +20,12 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: spec-precision gaps (validation.md): status for blank vs missing required fields (validation) (+1 more)
 - last seen: 2026-10-05T16:31:15Z
 
+### L-013 - Test the failure path of every destructive action and every conditional option list, asserting the Portuguese text and the visible options
+- signal: `surviving_mutant` · recurrence: 2 feature(s) · scope: `ui-tests` · harmful: 0
+- features: credit-expenses, dashboards
+- evidence: W2c and W9a/W9b (validation.md): delete failure text and account selector rules untested (ui-tests) (+1 more)
+- last seen: 2026-10-05T19:28:15Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
@@ -84,11 +90,35 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: M17 (validation iteration 1): clear filters never tested from page 2 (tests)
 - last seen: 2026-10-05T15:08:23Z
 
-### L-013 - Test the failure path of every destructive action and every conditional option list, asserting the Portuguese text and the visible options
+### L-014 - Seed rows on the first and last period boundaries (oldest month, first day of a month, exact local midnight) so a window shifted by one period or one day changes the result
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `time-windows` · harmful: 0
+- features: dashboards
+- evidence: mutants E6, E17, E18 (validation.md) (time-windows)
+- last seen: 2026-10-05T19:28:15Z
+
+### L-015 - Test every aggregate endpoint with only future-dated rows, not past data plus future noise, to prove its empty path
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `aggregates` · harmful: 0
+- features: dashboards
+- evidence: mutants E16, E24 (validation.md) (aggregates)
+- last seen: 2026-10-05T19:28:15Z
+
+### L-016 - Test clearing an optional field on edit and assert the request sends null, not that the field is omitted
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
-- features: credit-expenses
-- evidence: W2c and W9a/W9b (validation.md): delete failure text and account selector rules untested (ui-tests)
-- last seen: 2026-10-05T16:31:15Z
+- features: dashboards
+- evidence: mutant W19 (validation.md) (ui-tests)
+- last seen: 2026-10-05T19:28:15Z
+
+### L-017 - State in the spec the display name and the zero-total behavior of every derived group row
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: dashboards
+- evidence: SPG-1, SPG-5 (validation.md): Estorno display name, zero-net card category (spec-outcomes)
+- last seen: 2026-10-05T19:28:16Z
+
+### L-018 - State in the spec the format (decimals and sign) of every computed percentage shown to the user
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `formatting` · harmful: 0
+- features: dashboards
+- evidence: SPG-2 (validation.md): percentage format (formatting)
+- last seen: 2026-10-05T19:28:16Z
 
 ## Quarantined (failed when applied - ignore)
 
