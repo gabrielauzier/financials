@@ -369,11 +369,11 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] Confirming removes the row and cancelling keeps it
-- [ ] Creating sends the converted amount and the chosen account; editing sends the changed fields
-- [ ] An inactive account is not offered in the form (4 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Confirming removes the row and cancelling keeps it
+- [x] Creating sends the converted amount and the chosen account; editing sends the changed fields
+- [x] An inactive account is not offered in the form (4 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
