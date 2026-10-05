@@ -647,3 +647,9 @@ Phase 1 → Phase 2 → Phase 3
 ```
 
 Execution is strictly sequential within each phase; cross-feature order is auth → accounts-categories → transactions → import → credit-expenses → dashboards.
+
+---
+
+## Fix tasks (Verifier iteration 1)
+
+- [x] F1: discriminate the auth hook 401 branches with a route that does not call withUser

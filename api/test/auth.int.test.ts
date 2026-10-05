@@ -24,6 +24,8 @@ async function appWithSampleRoute(cfg: AppConfig): Promise<FastifyInstance> {
     );
     return { userId: request.user?.id, dbUid: row?.uid };
   });
+  // Does NOT call request.withUser: only the onRequest hook can answer 401 here.
+  app.get('/test/whoami', async (request) => ({ userId: request.user?.id ?? null }));
   await app.ready();
   return app;
 }
@@ -89,5 +91,51 @@ describe('auth hook on a protected route', () => {
     expect(res.statusCode).toBe(200);
     // request.withUser runs the query under the same identity.
     expect(res.json()).toEqual({ userId: user.id, dbUid: user.id });
+  });
+});
+
+const whoami = (app: FastifyInstance, authorization?: string) =>
+  app.inject({
+    method: 'GET',
+    url: '/test/whoami',
+    headers: authorization === undefined ? {} : { authorization },
+  });
+
+/** AUTH-06: the hook itself rejects, even when the route handler never asks for the user. */
+describe('auth hook on a route that does not call withUser', () => {
+  it.each([
+    ['no Authorization header', undefined],
+    ['a non-Bearer scheme', 'Basic dXNlcjpwYXNz'],
+    ['a malformed Bearer token', 'Bearer not-a-jwt'],
+    ['an empty Bearer token', 'Bearer '],
+  ])('returns 401 with %s', async (_label, header) => {
+    expectUnauthorized(await whoami(jwksApp, header));
+  });
+
+  it('returns 401 with an expired token', async () => {
+    const hsApp = await appWithSampleRoute(config({ jwtSecret: HS256_SECRET }));
+    try {
+      const expired = await new SignJWT({ sub: randomUUID(), role: 'authenticated', exp: now() - 60 })
+        .setProtectedHeader({ alg: 'HS256' })
+        .sign(new TextEncoder().encode(HS256_SECRET));
+      expectUnauthorized(await whoami(hsApp, `Bearer ${expired}`));
+    } finally {
+      await hsApp.close();
+    }
+  });
+
+  it('returns 401 with a forged ES256 signature', async () => {
+    const foreign = await generateKeyPair('ES256');
+    const forged = await new SignJWT({ sub: randomUUID(), role: 'authenticated', exp: now() + 600 })
+      .setProtectedHeader({ alg: 'ES256' })
+      .sign(foreign.privateKey);
+    expectUnauthorized(await whoami(jwksApp, `Bearer ${forged}`));
+  });
+
+  it('returns 200 with the token subject for a real token', async () => {
+    const user = await createTestUser();
+    const res = await whoami(jwksApp, `Bearer ${user.token}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ userId: user.id });
   });
 });
