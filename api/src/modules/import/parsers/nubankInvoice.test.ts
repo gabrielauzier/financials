@@ -108,3 +108,14 @@ describe('parseNubankInvoice dates and resilience', () => {
     expect(parseNubankInvoice('﻿' + text.replace(/\r?\n/g, '\r\n'))).toEqual(parseNubankInvoice(text));
   });
 });
+
+describe('blank titles (a row that could not be saved)', () => {
+  it.each(['', '   '])('marks an empty title %j as invalid with the reason', (title) => {
+    expect(one(`2026-09-30,"${title}","19,90"`)).toMatchObject({
+      status: 'invalid',
+      reason: 'Empty title',
+      localDate: '2026-09-30',
+    });
+  });
+});
+

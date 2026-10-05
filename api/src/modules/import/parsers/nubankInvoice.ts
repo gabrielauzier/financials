@@ -48,6 +48,8 @@ function parseRecord(record: string[], index: number): ParsedRow {
   if (parsed === null) {
     return invalidRow(index, `Invalid or zero amount "${rawAmount}"`, { ...base, localDate });
   }
+  // `transactions.name` cannot be blank: an empty title would fail the whole import at insert.
+  if (title.trim() === '') return invalidRow(index, 'Empty title', { ...base, localDate });
   const row: ParsedRow = {
     index,
     localDate,

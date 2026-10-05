@@ -105,3 +105,29 @@ describe('unexpected errors', () => {
     expect(res.json().error.code).toBe('not_found');
   });
 });
+
+describe('500 logging', () => {
+  it('logs the error code but never the Postgres detail with the offending row values', async () => {
+    const lines: string[] = [];
+    const app = Fastify({ logger: { level: 'error', stream: { write: (line: string) => void lines.push(line) } } });
+    await app.register(errorsPlugin);
+    app.get('/db-fail', () => {
+      throw Object.assign(new Error('new row for relation "transactions" violates check constraint'), {
+        code: '23514',
+        constraint_name: 'transactions_name_check',
+        detail: 'Failing row contains (secret-name, 123.456.789-00, Banco X)',
+      });
+    });
+    await app.ready();
+
+    const res = await app.inject({ method: 'GET', url: '/db-fail' });
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toEqual({ error: { code: 'internal_error', message: 'Internal server error' } });
+    const logged = lines.join('');
+    expect(logged).toContain('23514');
+    expect(logged).toContain('transactions_name_check');
+    expect(logged).not.toContain('secret-name');
+    expect(logged).not.toContain('123.456.789-00');
+  });
+});
+

@@ -234,3 +234,15 @@ describe('parseNubankAccount non-Pix descriptions (real sample)', () => {
     expect(rows.filter((r) => r.status === 'unrecognized')).toEqual([]);
   });
 });
+
+describe('blank descriptions (a row that could not be saved)', () => {
+  it.each(['', '   '])('marks an empty description %j as invalid with the reason', (description) => {
+    expect(one(`02/07/2026,-10.00,id-1,${description}`)).toMatchObject({
+      status: 'invalid',
+      reason: 'Empty description',
+      identifier: 'id-1',
+      localDate: '2026-07-02',
+    });
+  });
+});
+

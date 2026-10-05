@@ -72,6 +72,28 @@ describe('POST /imports/confirm idempotency', () => {
     expect(await importState(o.user.id)).toEqual(ONE_IMPORT);
   });
 
+  it('the key alone decides a replay: another account, another file or bad selections still return the stored summary', async () => {
+    const o = await owner();
+    const key = randomUUID();
+    const first = await confirm(o, key);
+    expect(first.statusCode).toBe(201);
+    const summary = first.json();
+
+    const body = multipart(
+      { accountId: randomUUID(), idempotencyKey: key, selections: JSON.stringify([{ index: 999, neutral: false }]) },
+      [{ filename: 'outro.csv', content: 'not,a,known,header\n1,2,3,4\n' }],
+    );
+    const replay = await app.inject({
+      method: 'POST',
+      url: '/imports/confirm',
+      headers: { authorization: `Bearer ${o.user.token}`, ...body.headers },
+      payload: body.payload,
+    });
+    expect(replay.statusCode).toBe(200);
+    expect(replay.json()).toEqual(summary);
+    expect(await importState(o.user.id)).toEqual(ONE_IMPORT);
+  });
+
   it('concurrent confirms with one key end with exactly one batch, one set of transactions and one file', async () => {
     const o = await owner();
     const key = randomUUID();

@@ -64,6 +64,10 @@ function parseRecord(record: string[], index: number): ParsedRow {
       name: description,
     });
   }
+  // `transactions.name` cannot be blank: an empty description would fail the whole import at insert.
+  if (description.trim() === '') {
+    return invalidRow(index, 'Empty description', { localDate, identifier, name: description });
+  }
   return {
     index,
     localDate,

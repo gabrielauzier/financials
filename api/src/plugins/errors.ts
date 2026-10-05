@@ -47,7 +47,21 @@ export const errorsPlugin = fp(async (app: FastifyInstance) => {
     if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
       return reply.status(error.statusCode).send(body('bad_request', error.message));
     }
-    request.log.error(error);
+    // Never log the raw error: Postgres errors carry `detail` with the offending row's values.
+    request.log.error({ err: safeErrorFields(error) }, 'unhandled error');
     return reply.status(500).send(body('internal_error', 'Internal server error'));
   });
 });
+
+/** Error fields that are safe to log: no `detail`, `where`, query text or parameters. */
+function safeErrorFields(error: FastifyError): Record<string, unknown> {
+  const fields = error as unknown as Record<string, unknown>;
+  return {
+    type: error.name,
+    message: error.message,
+    code: fields.code,
+    constraint: fields.constraint_name,
+    table: fields.table_name,
+    stack: error.stack,
+  };
+}
