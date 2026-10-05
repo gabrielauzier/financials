@@ -416,3 +416,10 @@ Phase 1 → Phase 2 → Phase 3
 ```
 
 Execution is strictly sequential within each phase; cross-feature order is auth → accounts-categories → transactions → import → credit-expenses → dashboards.
+
+## Fix tasks (Verifier iteration 1)
+
+- [x] F1: test that "Limpar filtros" returns to page 1 starting from page 2 (kills the survivor that kept the current page)
+- [x] F2: assert that the duplicate nickname error lands on `#account-error` and the missing holder error on `#holder-error`
+- [x] F3: assert the exact Portuguese text of the neutral switch failure and that the API text is absent
+

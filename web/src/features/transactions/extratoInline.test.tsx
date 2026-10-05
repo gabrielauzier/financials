@@ -206,7 +206,9 @@ describe("extrato: categoria, lote e neutra", () => {
     const row = await rowOf(item.name);
     failures.set("PATCH /transactions/:id", new Error("boom"));
     fireEvent.click(within(row).getByRole("switch", { name: `Marcar ${item.name} como neutra` }));
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Não foi possível concluir a operação. Tente novamente.");
+    expect(alert).not.toHaveTextContent("boom");
     expect(singlePatches()[0]?.body).toEqual({ neutral: true });
     await waitFor(async () => {
       const current = await rowOf(item.name);

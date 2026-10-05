@@ -120,6 +120,15 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
     expect(lastList()).toBe(DEFAULT_QUERY);
   });
 
+  it("'Limpar filtros' volta à página 1 mesmo quando o usuário está na página 2 sem nenhuma busca pendente", async () => {
+    await renderLoaded();
+    await goToPageTwo();
+    clickButton("Limpar filtros");
+    expect(await screen.findByText(/Página 1 de 3/)).toBeInTheDocument();
+    await waitFor(() => expect(lastList()).toBe(DEFAULT_QUERY));
+    expect(lastList()).not.toContain("page=2");
+  });
+
   it("clicar em 'Valor' duas vezes pede ordem crescente e depois decrescente, nessa sequência", async () => {
     await renderLoaded();
     const before = listPaths().length;

@@ -143,10 +143,18 @@ describe("contas", () => {
     fireEvent.change(screen.getByLabelText("Titulares"), { target: { value: "Gabriel" } });
     failures.set("POST /accounts", new ApiError("duplicate_name", "Nickname exists", 409));
     fireEvent.click(screen.getByRole("button", { name: "Salvar conta" }));
-    expect(await screen.findByText("Já existe uma conta com esse apelido")).toBeInTheDocument();
+    // duplicate nickname belongs to the nickname field (#account-error)
+    expect(await screen.findByText("Já existe uma conta com esse apelido")).toHaveAttribute(
+      "id",
+      "account-error",
+    );
     failures.set("POST /accounts", new ApiError("holder_required", "Holder required", 422));
     fireEvent.click(screen.getByRole("button", { name: "Salvar conta" }));
-    expect(await screen.findByText("Informe ao menos um titular")).toBeInTheDocument();
+    // a missing holder belongs to the holders field (#holder-error), not to the nickname
+    expect(await screen.findByText("Informe ao menos um titular")).toHaveAttribute(
+      "id",
+      "holder-error",
+    );
     expect(screen.queryByText("Nickname exists")).not.toBeInTheDocument();
   });
 });
