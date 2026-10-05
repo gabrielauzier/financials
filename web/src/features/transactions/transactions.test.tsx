@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
 import { GENERIC_ERROR } from "@/lib/api/errorMessages";
 import { mockRequest } from "@/lib/api/mock";
@@ -33,6 +34,10 @@ const category: Category = {
 
 const failures = vi.hoisted(() => new Map<string, unknown>());
 const requests = vi.hoisted(() => [] as Array<{ method: string; path: string; body: unknown }>);
+vi.mock("sonner", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("sonner")>()),
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest: async (path: string, options: { method?: string; body?: unknown } = {}) => {
@@ -61,6 +66,8 @@ afterEach(() => {
   failures.clear();
   requests.length = 0;
   vi.useRealTimers();
+  vi.mocked(toast.success).mockClear();
+  vi.mocked(toast.error).mockClear();
 });
 
 describe("extrato", () => {
@@ -326,7 +333,7 @@ describe("extrato", () => {
       expect(screen.queryByText("Kaboom")).not.toBeInTheDocument();
     });
 
-    it("mostra not_found em português quando a atualização em lote falha", async () => {
+    it("emite o toast not_found em português quando a atualização em lote falha", async () => {
       renderQuery(<TransactionsPage />);
       await screen.findByLabelText("Selecionar todas da página");
       // let the initial search debounce (300 ms) settle: it resets the selection
@@ -337,21 +344,32 @@ describe("extrato", () => {
       fireEvent.click((await screen.findAllByRole("option"))[0] as HTMLElement);
       failures.set("PATCH /transactions/category", new ApiError("not_found", "Missing ids", 404));
       fireEvent.click(within(bar).getByRole("button", { name: "Aplicar categoria" }));
-      expect(
-        await screen.findByText("Registro não encontrado. Atualize a página e tente de novo"),
-      ).toBeInTheDocument();
-      expect(screen.queryByText("Missing ids")).not.toBeInTheDocument();
+      await waitFor(() =>
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+          "Registro não encontrado. Atualize a página e tente de novo",
+        ),
+      );
+      expect(toast.error).not.toHaveBeenCalledWith("Missing ids");
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(screen.getByText(/selecionada\(s\)/)).toBeInTheDocument();
     });
 
-    it("mostra em português a falha ao excluir", async () => {
+    it("emite o toast em português na falha ao excluir e mantém a transação na lista", async () => {
       renderQuery(<TransactionsPage />);
       const [firstDelete] = await screen.findAllByRole("button", { name: /^Excluir / });
+      const deletedName = (firstDelete as HTMLElement)
+        .getAttribute("aria-label")
+        ?.slice("Excluir ".length);
       fireEvent.click(firstDelete as HTMLElement);
       failures.set("DELETE /transactions/:id", new ApiError("internal_error", "DB down", 500));
       const dialog = await screen.findByRole("alertdialog");
       fireEvent.click(within(dialog).getByRole("button", { name: "Excluir" }));
-      expect(await screen.findByText(GENERIC_ERROR)).toBeInTheDocument();
-      expect(screen.queryByText("DB down")).not.toBeInTheDocument();
+      await waitFor(() => expect(toast.error).toHaveBeenCalledExactlyOnceWith(GENERIC_ERROR));
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalledWith("DB down");
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      // the failed delete keeps the transaction in the list
+      expect(screen.getAllByText(deletedName as string).length).toBeGreaterThan(0);
     });
   });
 

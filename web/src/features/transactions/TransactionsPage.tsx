@@ -35,7 +35,7 @@ import {
 import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { CategorySelect } from "@/features/categories/CategorySelect";
 import { formatBRL, formatDateLocal } from "@/lib/format";
-import { messageForError } from "@/lib/api/errorMessages";
+import { notifyError, notifySuccess } from "@/lib/notify";
 import type { Transaction, TransactionFilters } from "@/lib/api/types";
 import {
   useDeleteTransaction,
@@ -78,7 +78,6 @@ export function TransactionsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleting, setDeleting] = useState<Transaction>();
   const [quick, setQuick] = useState<QuickMonth>({});
-  const [actionError, setActionError] = useState("");
   const quickActive = quick.year !== undefined && quick.month !== undefined;
   const invalidPeriod = Boolean(filters.from && filters.to && filters.from > filters.to);
   const { data, isLoading, isError, refetch } = useTransactions(filters, !invalidPeriod);
@@ -146,26 +145,27 @@ export function TransactionsPage() {
       return next;
     });
   const saveInline = async (id: string, input: { categoryId?: string; neutral?: boolean }) => {
-    setActionError("");
     try {
       await update.mutateAsync({ id, input });
+      if (input.categoryId) notifySuccess("Categoria atualizada");
     } catch (reason) {
-      setActionError(
-        input.categoryId
-          ? "Não foi possível salvar a categoria"
-          : messageForError(reason, "transaction"),
-      );
+      notifyError(reason, "transaction");
     }
   };
   const applyBulk = async () => {
     if (!bulkCategory || selected.size === 0) return;
-    setActionError("");
+    const count = selected.size;
     try {
       await bulk.mutateAsync({ ids: [...selected], categoryId: bulkCategory });
       setSelected(new Set());
       setBulkCategory("");
+      notifySuccess(
+        count === 1
+          ? "Categoria aplicada a 1 transação"
+          : `Categoria aplicada a ${count} transações`,
+      );
     } catch (reason) {
-      setActionError(messageForError(reason, "transaction"));
+      notifyError(reason, "transaction");
     }
   };
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 50));
@@ -326,11 +326,6 @@ export function TransactionsPage() {
           </Button>
         </div>
       )}
-      {actionError && (
-        <p role="alert" className="my-4 text-sm text-destructive">
-          {actionError}
-        </p>
-      )}
       {isLoading && <p className="py-10 text-sm text-muted-foreground">Carregando transações…</p>}
       {isError && (
         <div className="flex items-center gap-3 py-10">
@@ -461,8 +456,9 @@ export function TransactionsPage() {
                 try {
                   await remove.mutateAsync(deleting.id);
                   setDeleting(undefined);
+                  notifySuccess("Transação excluída");
                 } catch (reason) {
-                  setActionError(messageForError(reason, "transaction"));
+                  notifyError(reason, "transaction");
                 }
               }}
             >

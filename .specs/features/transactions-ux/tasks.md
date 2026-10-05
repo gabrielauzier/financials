@@ -216,13 +216,13 @@ T6 → T11
 
 **Done when**:
 
-- [ ] Bulk success emits "Categoria aplicada a 1 transação" for one row and "Categoria aplicada a N transações" for more; bulk failure emits the mapped error and keeps the selection and categories (AC 4 and 5)
-- [ ] Single-row category success emits "Categoria atualizada"; failure restores the previous category and emits the mapped error text (AC 6 and 7)
-- [ ] A failing neutral switch goes back and emits the mapped error (AC 8)
-- [ ] Delete success emits "Transação excluída" and failure keeps the row and emits the mapped error text; cancel emits nothing (AC 12 and 13)
-- [ ] No `role="alert"` action error remains on the page (AC 14); `sonner` is mocked and the exact Portuguese text is asserted for each failure
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 9 tests added or updated pass (no silent deletions)
+- [x] Bulk success emits "Categoria aplicada a 1 transação" for one row and "Categoria aplicada a N transações" for more; bulk failure emits the mapped error and keeps the selection and categories (AC 4 and 5)
+- [x] Single-row category success emits "Categoria atualizada"; failure restores the previous category and emits the mapped error text (AC 6 and 7)
+- [x] A failing neutral switch goes back and emits the mapped error (AC 8)
+- [x] Delete success emits "Transação excluída" and failure keeps the row and emits the mapped error text; cancel emits nothing (AC 12 and 13)
+- [x] No `role="alert"` action error remains on the page (AC 14); `sonner` is mocked and the exact Portuguese text is asserted for each failure
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 9 tests added or updated pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

@@ -1,10 +1,16 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
+import { GENERIC_ERROR } from "@/lib/api/errorMessages";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, Transaction } from "@/lib/api/types";
 import { failures, renderWithQuery, requests, resetSpy } from "@/test/apiSpy";
 import { TransactionsPage } from "./TransactionsPage";
 
+vi.mock("sonner", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("sonner")>()),
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest: (await import("@/test/apiSpy")).spiedApiRequest,
@@ -13,6 +19,8 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
 afterEach(() => {
   cleanup();
   resetSpy();
+  vi.mocked(toast.success).mockClear();
+  vi.mocked(toast.error).mockClear();
 });
 
 const patches = (pattern: RegExp) =>
@@ -77,10 +85,14 @@ describe("extrato: categoria, lote e neutra", () => {
         target.name,
       ),
     );
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledExactlyOnceWith("Categoria atualizada"),
+    );
+    expect(toast.error).not.toHaveBeenCalled();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("restaura a categoria anterior e mostra 'Não foi possível salvar a categoria' quando o PATCH falha", async () => {
+  it("restaura a categoria anterior e emite o toast de erro em português quando o PATCH falha", async () => {
     const {
       items: [item],
       categories,
@@ -92,7 +104,10 @@ describe("extrato: categoria, lote e neutra", () => {
     expect(within(row).getAllByRole("combobox")[0]).toHaveTextContent(item.categoryName);
     failures.set("PATCH /transactions/:id", new Error("boom"));
     await chooseCategoryIn(row, target.name);
-    expect(await screen.findByText("Não foi possível salvar a categoria")).toBeInTheDocument();
+    await waitFor(() => expect(toast.error).toHaveBeenCalledExactlyOnceWith(GENERIC_ERROR));
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText("boom")).not.toBeInTheDocument();
     expect(singlePatches()[0]?.body).toEqual({ categoryId: target.id });
     await waitFor(async () =>
       expect(within(await rowOf(item.name)).getAllByRole("combobox")[0]).toHaveTextContent(
@@ -138,9 +153,33 @@ describe("extrato: categoria, lote e neutra", () => {
       );
     }
     await waitFor(() => expect(screen.queryByText(/selecionada\(s\)/)).not.toBeInTheDocument());
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith("Categoria aplicada a 2 transações");
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it("mantém a seleção e as categorias antigas e mostra erro em português quando o lote falha", async () => {
+  it("aplica a categoria a uma única linha e emite o texto no singular", async () => {
+    const {
+      items: [item],
+      categories,
+    } = await seed("Inline lote único");
+    if (!item) throw new Error("seed");
+    const target = categories.find((c) => c.id !== item.categoryId) as Category;
+    renderWithQuery(<TransactionsPage />);
+    await rowOf(item.name);
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    fireEvent.click(within(await rowOf(item.name)).getByRole("checkbox"));
+    const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
+    expect(within(bar).getByText("1 selecionada(s)")).toBeInTheDocument();
+    fireEvent.click(within(bar).getByRole("combobox"));
+    fireEvent.click(await screen.findByRole("option", { name: target.name }));
+    fireEvent.click(within(bar).getByRole("button", { name: "Aplicar categoria" }));
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledExactlyOnceWith("Categoria aplicada a 1 transação"),
+    );
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("mantém a seleção e as categorias antigas e emite o toast de erro em português quando o lote falha", async () => {
     const {
       items: [first, second],
       categories,
@@ -157,9 +196,13 @@ describe("extrato: categoria, lote e neutra", () => {
     fireEvent.click(within(bar).getByRole("combobox"));
     fireEvent.click(await screen.findByRole("option", { name: target.name }));
     fireEvent.click(within(bar).getByRole("button", { name: "Aplicar categoria" }));
-    expect(
-      await screen.findByText("Registro não encontrado. Atualize a página e tente de novo"),
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+        "Registro não encontrado. Atualize a página e tente de novo",
+      ),
+    );
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(patches(/^\/transactions\/category$/)).toHaveLength(1);
     expect(screen.getByText("2 selecionada(s)")).toBeInTheDocument();
     for (const [item, name] of [
@@ -195,6 +238,8 @@ describe("extrato: categoria, lote e neutra", () => {
         name: `Marcar ${item.name} como neutra`,
       }),
     ).toBeChecked();
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it("reverte a chave neutra e o selo quando o PATCH falha", async () => {
@@ -206,9 +251,9 @@ describe("extrato: categoria, lote e neutra", () => {
     const row = await rowOf(item.name);
     failures.set("PATCH /transactions/:id", new Error("boom"));
     fireEvent.click(within(row).getByRole("switch", { name: `Marcar ${item.name} como neutra` }));
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Não foi possível concluir a operação. Tente novamente.");
-    expect(alert).not.toHaveTextContent("boom");
+    await waitFor(() => expect(toast.error).toHaveBeenCalledExactlyOnceWith(GENERIC_ERROR));
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(singlePatches()[0]?.body).toEqual({ neutral: true });
     await waitFor(async () => {
       const current = await rowOf(item.name);
@@ -233,7 +278,7 @@ describe("extrato: categoria, lote e neutra", () => {
     failures.set("PATCH /transactions/:id", new TypeError("Failed to fetch"));
     failures.set("GET /transactions", new TypeError("Failed to fetch"));
     await chooseCategoryIn(row, target.name);
-    expect(await screen.findByText("Não foi possível salvar a categoria")).toBeInTheDocument();
+    await waitFor(() => expect(toast.error).toHaveBeenCalledExactlyOnceWith(GENERIC_ERROR));
     await waitFor(async () =>
       expect(within(await rowOf(item.name)).getAllByRole("combobox")[0]).toHaveTextContent(
         item.categoryName,
@@ -254,9 +299,8 @@ describe("extrato: categoria, lote e neutra", () => {
     failures.set("PATCH /transactions/:id", new TypeError("Failed to fetch"));
     failures.set("GET /transactions", new TypeError("Failed to fetch"));
     fireEvent.click(within(row).getByRole("switch", { name: `Marcar ${item.name} como neutra` }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Não foi possível concluir a operação. Tente novamente.",
-    );
+    await waitFor(() => expect(toast.error).toHaveBeenCalledExactlyOnceWith(GENERIC_ERROR));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await waitFor(async () => {
       const current = await rowOf(item.name);
       expect(

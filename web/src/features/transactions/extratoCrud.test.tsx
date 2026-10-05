@@ -1,10 +1,15 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, Transaction } from "@/lib/api/types";
 import { renderWithQuery, requests, resetSpy } from "@/test/apiSpy";
 import { TransactionsPage } from "./TransactionsPage";
 
+vi.mock("sonner", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("sonner")>()),
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest: (await import("@/test/apiSpy")).spiedApiRequest,
@@ -13,6 +18,8 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
 afterEach(() => {
   cleanup();
   resetSpy();
+  vi.mocked(toast.success).mockClear();
+  vi.mocked(toast.error).mockClear();
 });
 
 const callsTo = (method: string, pattern: RegExp) =>
@@ -52,6 +59,8 @@ describe("extrato: exclusão, criação e edição", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
     expect(callsTo("DELETE", /^\/transactions\//)).toHaveLength(0);
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
     expect(await rowOf(keep.name)).toBeInTheDocument();
 
     fireEvent.click(within(await rowOf(drop.name)).getByRole("button", { name: /^Excluir / }));
@@ -61,6 +70,10 @@ describe("extrato: exclusão, criação e edição", () => {
     expect(callsTo("DELETE", /^\/transactions\//).map((call) => call.path)).toEqual([
       `/transactions/${drop.id}`,
     ]);
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledExactlyOnceWith("Transação excluída"),
+    );
+    expect(toast.error).not.toHaveBeenCalled();
     expect(await rowOf(keep.name)).toBeInTheDocument();
   });
 
