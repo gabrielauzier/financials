@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
+import type { PendingQuery, Row, TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
 import {
   fromJoins,
@@ -36,6 +37,12 @@ const CreateBody = Type.Object({
 const PAGE_SIZE = 50 as const;
 
 const ListQuery = Type.Object({
+  from: Type.Optional(Type.String({ description: 'Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included' })),
+  to: Type.Optional(Type.String({ description: 'Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included' })),
+  accountId: Type.Optional(Type.String()),
+  categoryId: Type.Optional(Type.String()),
+  type: Type.Optional(Type.String({ description: `One of: ${TYPES.join(', ')}` })),
+  neutral: Type.Optional(Type.String({ description: 'true or false' })),
   page: Type.Optional(Type.String({ description: 'Page number, starting at 1 (50 rows per page)' })),
 });
 
@@ -91,6 +98,59 @@ function validPage(value: string | undefined): number {
   const page = /^[1-9]\d{0,8}$/.test(value) ? Number(value) : 0;
   if (page < 1) throw invalid('page must be an integer greater than or equal to 1', 'page');
   return page;
+}
+
+const LOCAL_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Start of the local day `value` (YYYY-MM-DD) in `zone`, as an instant; `plusDays` shifts the day first. */
+function localDayStart(value: string, zone: string, field: string, plusDays = 0): Date {
+  const day = LOCAL_DATE.test(value) ? DateTime.fromISO(value, { zone }) : DateTime.invalid('format');
+  if (!day.isValid) throw invalid(`${field} must be a valid date in the format YYYY-MM-DD`, field);
+  return day.plus({ days: plusDays }).startOf('day').toJSDate();
+}
+
+function validUuidFilter(value: string, field: string): string {
+  if (!UUID.test(value)) throw invalid(`${field} must be a valid uuid`, field);
+  return value;
+}
+
+function validBoolean(value: string, field: string): boolean {
+  if (value !== 'true' && value !== 'false') throw invalid(`${field} must be true or false`, field);
+  return value === 'true';
+}
+
+interface Filters {
+  from?: string;
+  to?: string;
+  accountId?: string;
+  categoryId?: string;
+  type?: string;
+  neutral?: string;
+}
+
+/** WHERE clause for the list: every filter given is combined with AND. `from`/`to` are local days. */
+function whereClause(tx: TransactionSql, filters: Filters, zone: string): PendingQuery<Row[]> {
+  let condition = tx`true`;
+  if (filters.from !== undefined) {
+    condition = tx`${condition} and t.occurred_at >= ${localDayStart(filters.from, zone, 'from')}`;
+  }
+  if (filters.to !== undefined) {
+    // Exclusive start of the next local day, so the whole `to` day is included.
+    condition = tx`${condition} and t.occurred_at < ${localDayStart(filters.to, zone, 'to', 1)}`;
+  }
+  if (filters.accountId !== undefined) {
+    condition = tx`${condition} and t.account_id = ${validUuidFilter(filters.accountId, 'accountId')}`;
+  }
+  if (filters.categoryId !== undefined) {
+    condition = tx`${condition} and t.category_id = ${validUuidFilter(filters.categoryId, 'categoryId')}`;
+  }
+  if (filters.type !== undefined) {
+    condition = tx`${condition} and t.type = ${validType(filters.type)}`;
+  }
+  if (filters.neutral !== undefined) {
+    condition = tx`${condition} and t.neutral = ${validBoolean(filters.neutral, 'neutral')}`;
+  }
+  return tx`where ${condition}`;
 }
 
 function invalidAccount(): AppError {
@@ -161,9 +221,11 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
     async (request) => {
       const page = validPage(request.query.page);
       const { rows, total } = await request.withUser(async (tx) => {
-        const [count] = await tx<{ n: number }[]>`select count(*)::int as n from public.transactions t`;
+        const where = whereClause(tx, request.query, request.tz);
+        const [count] = await tx<{ n: number }[]>`select count(*)::int as n from ${fromJoins(tx)} ${where}`;
         const rows = await tx<TransactionRow[]>`
           select ${selectColumns(tx)} from ${fromJoins(tx)}
+          ${where}
           order by t.occurred_at desc, t.id desc
           limit ${PAGE_SIZE} offset ${(page - 1) * PAGE_SIZE}`;
         return { rows, total: (count as { n: number }).n };

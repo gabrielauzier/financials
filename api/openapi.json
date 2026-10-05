@@ -771,6 +771,58 @@
               "type": "string"
             },
             "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "accountId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "categoryId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "description": "One of: Income, Expense"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "neutral",
+            "required": false,
+            "description": "true or false"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
             "name": "page",
             "required": false,
             "description": "Page number, starting at 1 (50 rows per page)"

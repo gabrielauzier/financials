@@ -136,7 +136,7 @@ O extrato consolidado é o núcleo do produto. O usuário precisa ver todas as t
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
 | TXN-01 | P1: Tabela (listagem, ordenação, paginação) | - | Implementing |
-| TXN-02 | P1: Tabela (filtros e busca) | - | Pending |
+| TXN-02 | P1: Tabela (filtros e busca) | - | Implementing |
 | TXN-03 | P1: Tabela (formatação BRL e fuso) | - | Pending |
 | TXN-04 | P1: CRUD (criar e validar) | - | Implementing |
 | TXN-05 | P1: CRUD (editar e excluir) | - | Pending |

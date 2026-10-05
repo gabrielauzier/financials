@@ -216,11 +216,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Each filter alone and combined returns only matching rows
-- [ ] `from`/`to` include the whole local day at both edges in `America/Sao_Paulo`
-- [ ] `neutral=true` and `neutral=false` filter correctly (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Each filter alone and combined returns only matching rows
+- [x] `from`/`to` include the whole local day at both edges in `America/Sao_Paulo`
+- [x] `neutral=true` and `neutral=false` filter correctly (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

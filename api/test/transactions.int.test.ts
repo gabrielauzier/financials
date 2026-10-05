@@ -314,3 +314,140 @@ describe('GET /transactions', () => {
     expect((await app.inject({ method: 'GET', url: '/transactions' })).statusCode).toBe(401);
   });
 });
+
+describe('GET /transactions filters', () => {
+  let u: TestUser;
+  let acc1: string;
+  let acc2: string;
+  let food: string;
+  let bills: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    acc1 = await createAccount(u, 'Conta 1');
+    acc2 = await createAccount(u, 'Conta 2');
+    food = await categoryId(u, 'Food');
+    bills = await categoryId(u, 'Bills');
+    await seed(u, acc1, [
+      { name: 'A1 food expense', occurredAt: '2026-05-10T12:00:00Z', accountId: acc1, categoryId: food, type: 'Expense', neutral: false },
+      { name: 'A1 bills income', occurredAt: '2026-05-11T12:00:00Z', accountId: acc1, categoryId: bills, type: 'Income', neutral: false },
+      { name: 'A2 food neutral', occurredAt: '2026-05-12T12:00:00Z', accountId: acc2, categoryId: food, type: 'Expense', neutral: true },
+      { name: 'A2 bills neutral income', occurredAt: '2026-05-13T12:00:00Z', accountId: acc2, categoryId: bills, type: 'Income', neutral: true },
+    ]);
+  });
+
+  const names = async (query: string) => (await list(u, query)).items.map((r) => r.name).sort();
+
+  it('filters by account, by category and by type, each alone', async () => {
+    expect(await names(`accountId=${acc1}`)).toEqual(['A1 bills income', 'A1 food expense']);
+    expect(await names(`categoryId=${bills}`)).toEqual(['A1 bills income', 'A2 bills neutral income']);
+    expect(await names('type=Income')).toEqual(['A1 bills income', 'A2 bills neutral income']);
+    expect(await names('type=Expense')).toEqual(['A1 food expense', 'A2 food neutral']);
+    expect((await list(u, `accountId=${acc2}`)).total).toBe(2);
+  });
+
+  it('filters neutral=true and neutral=false', async () => {
+    expect(await names('neutral=true')).toEqual(['A2 bills neutral income', 'A2 food neutral']);
+    expect(await names('neutral=false')).toEqual(['A1 bills income', 'A1 food expense']);
+  });
+
+  it('combines every filter with AND', async () => {
+    expect(await names(`accountId=${acc2}&categoryId=${food}&type=Expense&neutral=true`)).toEqual(['A2 food neutral']);
+    expect(await names(`accountId=${acc1}&neutral=true`)).toEqual([]);
+    expect(await names(`categoryId=${food}&type=Income`)).toEqual([]);
+    expect(await names('from=2026-05-11&to=2026-05-12&type=Expense')).toEqual(['A2 food neutral']);
+    const combined = await list(u, `accountId=${acc2}&neutral=true`);
+    expect(combined.total).toBe(2);
+  });
+
+  it('filters by period using whole local days, including both edges', async () => {
+    expect(await names('from=2026-05-11&to=2026-05-12')).toEqual(['A1 bills income', 'A2 food neutral']);
+    expect(await names('from=2026-05-12')).toEqual(['A2 bills neutral income', 'A2 food neutral']);
+    expect(await names('to=2026-05-10')).toEqual(['A1 food expense']);
+    expect(await names('from=2026-05-14')).toEqual([]);
+  });
+
+  it('rejects malformed filters with 422 validation_error naming the field', async () => {
+    for (const [query, field] of [
+      ['from=10/05/2026', 'from'],
+      ['to=2026-13-01', 'to'],
+      ['from=2026-02-30', 'from'],
+      ['accountId=nope', 'accountId'],
+      ['categoryId=nope', 'categoryId'],
+      ['type=Transfer', 'type'],
+      ['neutral=yes', 'neutral'],
+    ] as const) {
+      const res = await call(u, 'GET', `/transactions?${query}`);
+      expect(res.statusCode, query).toBe(422);
+      expect(res.json(), query).toMatchObject({ error: { code: 'validation_error', field } });
+    }
+  });
+});
+
+describe('GET /transactions period edges depend on X-Timezone', () => {
+  let u: TestUser;
+  const stamps = [
+    '2026-03-09T14:59:59Z',
+    '2026-03-09T15:00:00Z',
+    '2026-03-10T02:59:59Z',
+    '2026-03-10T03:00:00Z',
+    '2026-03-10T14:59:59Z',
+    '2026-03-10T15:00:00Z',
+    '2026-03-11T02:59:59Z',
+    '2026-03-11T03:00:00Z',
+  ];
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    const a = await createAccount(u, 'Bordas');
+    await seed(u, a, stamps.map((occurredAt) => ({ occurredAt })));
+  });
+
+  const instants = async (query: string, tz?: string) =>
+    (await list(u, query, tz === undefined ? {} : { 'x-timezone': tz })).items.map((r) => r.occurredAt.replace('.000Z', 'Z')).sort();
+
+  it('America/Sao_Paulo (UTC-3): 2026-03-10 spans 03:00Z of the day to 02:59:59Z of the next', async () => {
+    expect(await instants('from=2026-03-10&to=2026-03-10', 'America/Sao_Paulo')).toEqual([
+      '2026-03-10T03:00:00Z',
+      '2026-03-10T14:59:59Z',
+      '2026-03-10T15:00:00Z',
+      '2026-03-11T02:59:59Z',
+    ]);
+  });
+
+  it('uses America/Sao_Paulo when no X-Timezone is sent', async () => {
+    expect(await instants('from=2026-03-10&to=2026-03-10')).toEqual(await instants('from=2026-03-10&to=2026-03-10', 'America/Sao_Paulo'));
+  });
+
+  it('Asia/Tokyo (UTC+9): 2026-03-10 spans 15:00Z of the previous day to 14:59:59Z', async () => {
+    expect(await instants('from=2026-03-10&to=2026-03-10', 'Asia/Tokyo')).toEqual([
+      '2026-03-09T15:00:00Z',
+      '2026-03-10T02:59:59Z',
+      '2026-03-10T03:00:00Z',
+      '2026-03-10T14:59:59Z',
+    ]);
+  });
+
+  it('UTC: 2026-03-10 is exactly the UTC day', async () => {
+    expect(await instants('from=2026-03-10&to=2026-03-10', 'UTC')).toEqual([
+      '2026-03-10T02:59:59Z',
+      '2026-03-10T03:00:00Z',
+      '2026-03-10T14:59:59Z',
+      '2026-03-10T15:00:00Z',
+    ]);
+  });
+
+  it('from alone starts at local midnight and to alone ends at the next local midnight (exclusive)', async () => {
+    expect(await instants('from=2026-03-11', 'America/Sao_Paulo')).toEqual(['2026-03-11T03:00:00Z']);
+    expect(await instants('to=2026-03-09', 'America/Sao_Paulo')).toEqual([
+      '2026-03-09T14:59:59Z',
+      '2026-03-09T15:00:00Z',
+      '2026-03-10T02:59:59Z',
+    ]);
+  });
+
+  it('rejects an invalid X-Timezone with 400', async () => {
+    const res = await call(u, 'GET', '/transactions?from=2026-03-10', undefined, { 'x-timezone': 'Mars/Base' });
+    expect(res.statusCode).toBe(400);
+  });
+});
