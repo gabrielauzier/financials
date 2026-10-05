@@ -112,70 +112,6 @@ T12 → T16
 
 ---
 
-### Phase 2: Accounts API
-
-```
-T3 → T4
-T3 → T5
-T3 → T6
-```
-
-### Phase 3: Categories API
-
-```
-T7 → T8
-T7 → T9
-T7 → T10
-T8 → T11
-T9 → T11
-T10 → T11
-```
-
-### Phase 4: Web: accounts and categories (substituída pelo Lovable, ver lovable.md)
-```
-T12 → T13
-T12 → T14
-T12 → T15
-T12 → T16
-```
-
----
-
-## Task Breakdown
-
-### Phase 1: Schema, seed and helpers
-
-### T1: Create the accounts and categories migration
-
-**What**: Migration `0002`: `accounts` and `categories` with composite uniques, case-insensitive unique names, RLS (system categories blocked from insert/update/delete), `revoke delete on accounts`, `seed_categories` with the 17 pt-BR rows, and `create or replace` of `handle_new_user` to call the seed.
-**Where**: `supabase/migrations/0002_accounts_categories.sql`
-**Depends on**: None
-**Reuses**: -
-**Requirement**: CAT-01
-
-**Tools**:
-
-- MCP: NONE
-- Skill: supabase, supabase-postgres-best-practices
-
-**Done when**:
-
-- [x] Creating a user seeds 17 categories with the identifiers and pt-BR names from the spec; exactly 3 have `is_system`
-- [x] Updating or deleting a system category as `authenticated` affects 0 rows
-- [x] Deleting from `accounts` as `authenticated` fails
-- [x] Duplicate account nickname or category name (any case) violates the unique index
-- [x] RLS isolates both tables between two users
-- [x] Running the seed twice does not duplicate categories (6 tests)
-- [x] Gate check passes: `pnpm -C api test`
-- [x] Test count: all tests listed above pass, no silent deletions or skips
-
-**Tests**: integration
-**Gate**: full
-
-**Commit**: `feat(accounts-categories): create the accounts and categories migration`
-
----
-
 ### T2: Create the name normalization helper
 
 **What**: `normalizeName` (NFD, strip diacritics, lowercase, collapse spaces, trim) and `collapseSpaces`, shared by accounts and import.
@@ -191,11 +127,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Accents, case and repeated spaces normalize to the same string
-- [ ] Empty and whitespace-only input yields an empty string
-- [ ] `collapseSpaces` keeps case and accents (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Accents, case and repeated spaces normalize to the same string
+- [x] Empty and whitespace-only input yields an empty string
+- [x] `collapseSpaces` keeps case and accents (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
