@@ -12,6 +12,12 @@ const DATE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
  * `unrecognized`); the document may be masked (`•••.224.672-••`).
  */
 const PIX = /^Transferência (recebida|enviada) pelo Pix - ((?:(?! - ).)+) - ([\d./•*-]+) - (.+?) Agência:/;
+/** Non-Pix descriptions, matched exactly (after trimming); the type always comes from the sign. */
+const KNOWN: Record<string, Pick<ParsedRow, 'paymentMethod' | 'categoryKey'> | undefined> = {
+  'Débito em conta': { paymentMethod: 'DebitCard', categoryKey: 'Uncategorized' },
+  'Pagamento de fatura': { paymentMethod: 'BankTransfer', categoryKey: 'Uncategorized' },
+  'Dinheiro guardado com resgate planejado': { paymentMethod: 'BankTransfer', categoryKey: 'Investments' },
+};
 const SIGNED_AMOUNT = /^(-)?(\d+)(?:\.(\d*))?$/;
 
 /** Parses `dd/mm/aaaa` into `YYYY-MM-DD`, or null when malformed or not a real date. */
@@ -86,12 +92,14 @@ function describe(description: string): Described {
       status: 'new',
     };
   }
+  const known = KNOWN[description.trim()];
   return {
     name: description,
-    paymentMethod: 'BankTransfer',
-    categoryKey: 'Uncategorized',
+    paymentMethod: known?.paymentMethod ?? 'BankTransfer',
+    categoryKey: known?.categoryKey ?? 'Uncategorized',
     counterpartyDocument: null,
     counterpartyBank: null,
-    status: 'new',
+    // Anything else is still importable, but flagged "unrecognized" for the preview.
+    status: known ? 'new' : 'unrecognized',
   };
 }

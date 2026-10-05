@@ -98,7 +98,7 @@ describe('parseNubankAccount amounts and dates', () => {
 
 describe('parseNubankAccount resilience', () => {
   it('keeps the other rows and their indexes when one row is invalid', () => {
-    const text = [HEADER, `02/07/2026,-1.00,a,X`, `31/02/2026,-2.00,b,X`, `04/07/2026,3.00,c,X`, ''].join('\n');
+    const text = [HEADER, `02/07/2026,-1.00,a,Débito em conta`, `31/02/2026,-2.00,b,Débito em conta`, `04/07/2026,3.00,c,Débito em conta`, ''].join('\n');
     const { rows } = parseNubankAccount(text);
     expect(rows.map((r) => [r.index, r.status])).toEqual([
       [0, 'new'],
@@ -168,5 +168,69 @@ describe('parseNubankAccount Pix extraction (real sample)', () => {
   it('does not treat a name containing " - " as Pix (documented limitation)', () => {
     const row = one(`02/07/2026,-1.00,x,Transferência enviada pelo Pix - A - B - 12.345.678/0001-90 - BANCO X (001) Agência: 1 Conta: 2`);
     expect(row.paymentMethod).not.toBe('PIX');
+  });
+});
+
+describe('parseNubankAccount non-Pix descriptions (real sample)', () => {
+  const { rows } = parseNubankAccount(fixture('nubank_account.csv'));
+
+  it('maps "Débito em conta" to DebitCard / Uncategorized with name = description', () => {
+    expect(rows[0]).toMatchObject({
+      name: 'Débito em conta',
+      paymentMethod: 'DebitCard',
+      categoryKey: 'Uncategorized',
+      status: 'new',
+    });
+  });
+
+  it('maps "Pagamento de fatura" to BankTransfer / Uncategorized, Expense by sign', () => {
+    expect(rows[7]).toMatchObject({
+      name: 'Pagamento de fatura',
+      paymentMethod: 'BankTransfer',
+      categoryKey: 'Uncategorized',
+      type: 'Expense',
+      status: 'new',
+    });
+  });
+
+  it('maps the planned savings redemption to BankTransfer / Investments', () => {
+    expect(rows[1]).toMatchObject({
+      name: 'Dinheiro guardado com resgate planejado',
+      paymentMethod: 'BankTransfer',
+      categoryKey: 'Investments',
+      status: 'new',
+    });
+  });
+
+  it('leaves the counterparty fields null on every non-Pix row', () => {
+    const others = rows.filter((r) => r.paymentMethod !== 'PIX');
+    expect(others.map((r) => r.index)).toEqual([0, 1, 7]);
+    for (const row of others) {
+      expect(row.counterpartyDocument).toBeNull();
+      expect(row.counterpartyBank).toBeNull();
+    }
+  });
+
+  it('flags an unknown description as unrecognized but still importable data', () => {
+    const row = one(`02/07/2026,-10.00,x,Compra no débito - LOJA`);
+    expect(row).toMatchObject({
+      status: 'unrecognized',
+      name: 'Compra no débito - LOJA',
+      paymentMethod: 'BankTransfer',
+      categoryKey: 'Uncategorized',
+      type: 'Expense',
+      amount: '10.00',
+      counterpartyDocument: null,
+      counterpartyBank: null,
+    });
+    expect(row.reason).toBeUndefined();
+  });
+
+  it('keeps the sign-based type for known descriptions with a positive value', () => {
+    expect(one('02/07/2026,50.00,x,Débito em conta')).toMatchObject({ type: 'Income', status: 'new' });
+  });
+
+  it('keeps no known description unrecognized: the whole sample has none', () => {
+    expect(rows.filter((r) => r.status === 'unrecognized')).toEqual([]);
   });
 });
