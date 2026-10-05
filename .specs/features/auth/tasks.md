@@ -374,10 +374,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Query over `pg_class`/`information_schema` fails when a user-data table has RLS disabled
-- [ ] Test passes for the tables existing now (1 test)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Query over `pg_class`/`information_schema` fails when a user-data table has RLS disabled
+- [x] Test passes for the tables existing now (1 test)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
