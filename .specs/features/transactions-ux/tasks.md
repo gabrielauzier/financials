@@ -98,11 +98,11 @@ T6 → T11
 
 **Done when**:
 
-- [ ] `notifySuccess` calls `toast.success` with the exact text and `notifyError` calls `toast.error` with `messageForError(error, context)` (AC 2)
-- [ ] An unknown code, a network error and a non-ApiError value show "Não foi possível concluir a operação. Tente novamente." and the API `message` is never used (AC 3)
-- [ ] `RootComponent` in `web/src/routes/__root.tsx` renders `<Toaster />` once; a test renders it and finds exactly one "Notifications" region (AC 1)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 5 tests pass (no silent deletions)
+- [x] `notifySuccess` calls `toast.success` with the exact text and `notifyError` calls `toast.error` with `messageForError(error, context)` (AC 2)
+- [x] An unknown code, a network error and a non-ApiError value show "Não foi possível concluir a operação. Tente novamente." and the API `message` is never used (AC 3)
+- [x] `RootComponent` in `web/src/routes/__root.tsx` renders `<Toaster />` once; a test renders it and finds exactly one "Notifications" region (AC 1)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 5 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
