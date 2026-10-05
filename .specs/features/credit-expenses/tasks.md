@@ -332,10 +332,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Shows remaining amount per row
-- [ ] Status filter emits the chosen status (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Shows remaining amount per row
+- [x] Status filter emits the chosen status (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
