@@ -575,10 +575,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Both sections render with totals
-- [ ] Empty period shows the empty state (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Both sections render with totals
+- [x] Empty period shows the empty state (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
