@@ -1,4 +1,4 @@
-export type ErrorContext = "account" | "category" | "transaction" | "import";
+export type ErrorContext = "account" | "category" | "transaction" | "import" | "creditExpense";
 
 export const GENERIC_ERROR = "Não foi possível concluir a operação. Tente novamente.";
 
@@ -7,11 +7,18 @@ const messages: Record<string, string> = {
   category_protected: "Categoria protegida",
   reassign_required: "Escolha a categoria de destino",
   invalid_amount: "Valor inválido",
+  invalid_paid_amount: "Valor pago inválido",
+  invalid_day: "Dia inválido (use de 1 a 31)",
+  invalid_status: "Status inválido",
   invalid_account: "Selecione uma conta ativa",
   invalid_receipt_url: "URL inválida",
   not_found: "Registro não encontrado. Atualize a página e tente de novo",
   validation_error: "Dados inválidos. Revise os campos",
   unauthorized: "Sua sessão expirou. Entre novamente",
+};
+
+const amountMessages: Partial<Record<ErrorContext, string>> = {
+  creditExpense: "Valor total inválido",
 };
 
 const duplicateNameMessages: Partial<Record<ErrorContext, string>> = {
@@ -31,6 +38,9 @@ export function messageForError(error: unknown, context?: ErrorContext): string 
   if (code === undefined) return GENERIC_ERROR;
   if (code === "duplicate_name") {
     return (context && duplicateNameMessages[context]) ?? GENERIC_ERROR;
+  }
+  if (code === "invalid_amount" && context && amountMessages[context]) {
+    return amountMessages[context];
   }
   return messages[code] ?? GENERIC_ERROR;
 }

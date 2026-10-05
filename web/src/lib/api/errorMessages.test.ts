@@ -31,6 +31,28 @@ describe("messageForError", () => {
     expect(messageForError(api(code), "transaction")).toBe(text);
   });
 
+  it.each([
+    ["invalid_paid_amount", "Valor pago inválido"],
+    ["invalid_day", "Dia inválido (use de 1 a 31)"],
+    ["invalid_status", "Status inválido"],
+  ])("maps the credit expense code %s to its Portuguese text", (code, text) => {
+    expect(messageForError(api(code), "creditExpense")).toBe(text);
+  });
+
+  it("reads invalid_amount as the total only in the creditExpense context", () => {
+    expect(messageForError(api("invalid_amount"), "creditExpense")).toBe("Valor total inválido");
+    expect(messageForError(api("invalid_amount"), "transaction")).toBe("Valor inválido");
+    expect(messageForError(api("invalid_amount"))).toBe("Valor inválido");
+  });
+
+  it("keeps generic codes unchanged in the creditExpense context without leaking the API message", () => {
+    expect(messageForError(api("not_found"), "creditExpense")).toBe(
+      "Registro não encontrado. Atualize a página e tente de novo",
+    );
+    expect(messageForError(api("duplicate_name"), "creditExpense")).toBe(GENERIC_ERROR);
+    expect(messageForError(api("invalid_day"), "creditExpense")).not.toContain("Technical English");
+  });
+
   it("returns the generic text for unknown codes, TypeError and non-error values", () => {
     expect(messageForError(api("something_new"))).toBe(GENERIC_ERROR);
     expect(messageForError(new TypeError("Failed to fetch"))).toBe(GENERIC_ERROR);

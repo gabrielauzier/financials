@@ -278,10 +278,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Each new code returns its Portuguese text and `invalid_amount` reads "Valor total inválido" only in the `creditExpense` context
-- [ ] The API `message` is still never returned and existing codes and contexts are unchanged (4 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Each new code returns its Portuguese text and `invalid_amount` reads "Valor total inválido" only in the `creditExpense` context
+- [x] The API `message` is still never returned and existing codes and contexts are unchanged (4 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
