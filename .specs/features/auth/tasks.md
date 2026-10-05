@@ -261,11 +261,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Creating an `auth.users` row creates a `profiles` row with name and nickname
-- [ ] A user reads only their own profile; another user reads none
-- [ ] `handle_new_user` uses `set search_path = public` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Creating an `auth.users` row creates a `profiles` row with name and nickname
+- [x] A user reads only their own profile; another user reads none
+- [x] `handle_new_user` uses `set search_path = public` (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
