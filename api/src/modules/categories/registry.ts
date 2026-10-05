@@ -3,8 +3,9 @@
  * category first. Each referencing table needs the composite FK `(column, user_id)` to
  * `categories (id, user_id)` with `on delete restrict`, and RLS like any user-data table.
  *
- * Empty until the transactions and credit-expenses features register their tables. Names are
- * code-defined constants, never user input; queries still quote them as identifiers.
+ * Features register their tables when their module loads (`public.transactions` from the
+ * transactions routes). Names are code-defined constants, never user input; queries still quote
+ * them as identifiers.
  */
 export interface CategoryReference {
   /** Schema-qualified table, e.g. `public.transactions`. */

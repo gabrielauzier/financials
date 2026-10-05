@@ -4,6 +4,7 @@ import { Type, type Static } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import type { PendingQuery, Row, TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
+import { registerCategoryReference } from '../categories/registry.js';
 import {
   fromJoins,
   PAYMENT_METHODS,
@@ -16,6 +17,10 @@ import {
   type TransactionType,
 } from './schema.js';
 import { parseAmount, parseReceiptUrl } from './validation.js';
+
+// Deleting a category moves its transactions to the destination. Runs once, when this module is
+// first imported, so building several apps in one process does not register the table twice.
+registerCategoryReference({ table: 'public.transactions', column: 'category_id' });
 
 const nullableString = Type.Union([Type.String(), Type.Null()]);
 

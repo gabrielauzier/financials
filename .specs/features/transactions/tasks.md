@@ -384,10 +384,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Deleting a category with `reassignTo` moves its transactions to the destination and the table shows the destination name
-- [ ] Failure keeps rows unchanged (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Deleting a category with `reassignTo` moves its transactions to the destination and the table shows the destination name
+- [x] Failure keeps rows unchanged (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
