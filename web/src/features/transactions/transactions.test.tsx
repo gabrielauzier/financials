@@ -447,4 +447,53 @@ describe("extrato", () => {
       expect(body).not.toHaveProperty("receipt");
     });
   });
+
+  describe("período do filtro", () => {
+    const listPaths = () =>
+      requests
+        .filter((r) => r.method === "GET" && r.path.startsWith("/transactions?"))
+        .map((r) => r.path);
+    const setPeriod = (from: string, to: string) => {
+      fireEvent.change(screen.getByLabelText("De"), { target: { value: from } });
+      fireEvent.change(screen.getByLabelText("Até"), { target: { value: to } });
+    };
+
+    it("avisa e não consulta a API quando a data inicial é depois da final", async () => {
+      renderQuery(<TransactionsPage />);
+      await screen.findByLabelText("Selecionar todas da página");
+      setPeriod("2026-10-10", "2026-10-01");
+      expect(
+        await screen.findByText("A data inicial deve ser anterior à final"),
+      ).toBeInTheDocument();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(
+        listPaths().filter(
+          (path) => path.includes("from=2026-10-10") && path.includes("to=2026-10-01"),
+        ),
+      ).toEqual([]);
+    });
+
+    it("consulta normalmente com datas iguais e com um período válido", async () => {
+      renderQuery(<TransactionsPage />);
+      await screen.findByLabelText("Selecionar todas da página");
+      setPeriod("2026-10-05", "2026-10-05");
+      await waitFor(() =>
+        expect(
+          listPaths().some((p) => p.includes("from=2026-10-05") && p.includes("to=2026-10-05")),
+        ).toBe(true),
+      );
+      expect(
+        screen.queryByText("A data inicial deve ser anterior à final"),
+      ).not.toBeInTheDocument();
+      setPeriod("2026-10-01", "2026-10-31");
+      await waitFor(() =>
+        expect(
+          listPaths().some((p) => p.includes("from=2026-10-01") && p.includes("to=2026-10-31")),
+        ).toBe(true),
+      );
+      expect(
+        screen.queryByText("A data inicial deve ser anterior à final"),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

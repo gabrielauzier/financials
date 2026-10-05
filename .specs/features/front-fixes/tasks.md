@@ -257,10 +257,10 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] From after to shows the message and sends no list request with that period
-- [ ] Equal dates and a valid period query normally (2 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] From after to shows the message and sends no list request with that period
+- [x] Equal dates and a valid period query normally (2 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

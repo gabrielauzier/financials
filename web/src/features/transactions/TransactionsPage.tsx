@@ -57,7 +57,8 @@ export function TransactionsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleting, setDeleting] = useState<Transaction>();
   const [actionError, setActionError] = useState("");
-  const { data, isLoading, isError, refetch } = useTransactions(filters);
+  const invalidPeriod = Boolean(filters.from && filters.to && filters.from > filters.to);
+  const { data, isLoading, isError, refetch } = useTransactions(filters, !invalidPeriod);
   const update = useUpdateTransaction();
   const remove = useDeleteTransaction();
   const bulk = useUpdateTransactionCategories();
@@ -234,6 +235,14 @@ export function TransactionsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        {invalidPeriod && (
+          <p
+            role="alert"
+            className="text-sm text-destructive sm:col-span-2 lg:col-span-4 xl:col-span-7"
+          >
+            A data inicial deve ser anterior à final
+          </p>
+        )}
       </section>
       {selected.size > 0 && (
         <div className="my-4 flex flex-col gap-3 border-y bg-muted/40 px-4 py-3 sm:flex-row sm:items-center">
