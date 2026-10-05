@@ -139,3 +139,75 @@ describe('classify: duplicates by external identifier', () => {
     ]);
   });
 });
+
+/** An invoice row: no identifier, like every `nubankInvoice` row. */
+const invoiceRow = (index: number, over: Partial<ParsedRow> = {}): ParsedRow =>
+  row(index, { identifier: null, paymentMethod: 'CreditCard', name: 'Padaria Real', amount: '23.50', ...over });
+
+describe('classify: duplicates by name, local day, amount and type (rows without identifier)', () => {
+  it('marks a row with the same name, day, amount and type as duplicate', async () => {
+    const o = await owner();
+    const acc = await account(o);
+    // 2026-07-02 00:00 in America/Sao_Paulo (UTC-3); stored amount 23.5 equals the row's "23.50".
+    await existing(o, acc, { name: 'Padaria Real', amount: '23.5', occurredAt: '2026-07-02T03:00:00Z' });
+
+    const result = await run(o, [
+      invoiceRow(0),
+      invoiceRow(1, { status: 'unrecognized', reason: 'r' }),
+      // Same content but with an identifier: only the identifier rule applies to it.
+      row(2, { identifier: 'brand-new', name: 'Padaria Real', amount: '23.50' }),
+    ], acc);
+
+    expect(statuses(result)).toEqual([[0, 'duplicate'], [1, 'duplicate'], [2, 'new']]);
+    expect(result[1]?.reason).toBe('r');
+  });
+
+  it('keeps a row as new when amount, type, day or the exact name differ', async () => {
+    const o = await owner();
+    const acc = await account(o);
+    await existing(o, acc, { name: 'Padaria Real', amount: '23.50', type: 'Expense', occurredAt: '2026-07-02T15:00:00Z' });
+    // Another account of the same user with the very same transaction does not count either.
+    await existing(o, await account(o), { name: 'Padaria Real', amount: '99.00', occurredAt: '2026-07-02T15:00:00Z' });
+
+    const result = await run(o, [
+      invoiceRow(0, { amount: '23.51' }),
+      invoiceRow(1, { type: 'Income' }),
+      invoiceRow(2, { localDate: '2026-07-03' }),
+      // Names are compared by exact equality (case and accents included).
+      invoiceRow(3, { name: 'PADARIA REAL' }),
+      invoiceRow(4, { amount: '99.00' }),
+    ], acc);
+
+    expect(statuses(result)).toEqual([[0, 'new'], [1, 'new'], [2, 'new'], [3, 'new'], [4, 'new']]);
+  });
+
+  it('compares the day in the user\'s time zone near midnight', async () => {
+    const o = await owner();
+    const acc = await account(o);
+    // 2026-07-02 23:30 in Sao Paulo (UTC-3) = 2026-07-03 02:30 UTC = 2026-07-03 03:30 in Lisbon (UTC+1).
+    await existing(o, acc, { name: 'Padaria Real', amount: '23.50', occurredAt: '2026-07-03T02:30:00Z' });
+    const rows = [invoiceRow(0, { localDate: '2026-07-02' }), invoiceRow(1, { localDate: '2026-07-03' })];
+
+    expect(statuses(await run(o, rows, acc, SAO_PAULO))).toEqual([[0, 'duplicate'], [1, 'new']]);
+    expect(statuses(await run(o, rows, acc, 'Europe/Lisbon'))).toEqual([[0, 'new'], [1, 'duplicate']]);
+    expect(statuses(await run(o, rows, acc, 'UTC'))).toEqual([[0, 'new'], [1, 'duplicate']]);
+  });
+
+  it('keeps two identical invoice rows as new on a first import and marks both duplicate on re-import', async () => {
+    const o = await owner();
+    const acc = await account(o);
+    const rows = [invoiceRow(0), invoiceRow(1), invoiceRow(2, { name: 'Posto Shell', amount: '150.00' })];
+
+    expect(statuses(await run(o, rows, acc))).toEqual([[0, 'new'], [1, 'new'], [2, 'new']]);
+
+    // What a confirmation stores: one transaction per row at local midnight of its date.
+    for (const r of rows) {
+      await getAdminSql()`
+        insert into public.transactions (user_id, account_id, category_id, name, type, occurred_at, amount, payment_method)
+        values (${o.user.id}, ${acc}, ${o.categoryId}, ${r.name}, ${r.type},
+                ${r.localDate}::timestamp at time zone ${SAO_PAULO}, ${r.amount}, 'CreditCard')`;
+    }
+
+    expect(statuses(await run(o, rows, acc))).toEqual([[0, 'duplicate'], [1, 'duplicate'], [2, 'duplicate']]);
+  });
+});

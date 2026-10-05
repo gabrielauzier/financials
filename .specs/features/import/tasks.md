@@ -362,12 +362,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Same name, day, amount and type is `duplicate`
-- [ ] Different amount or type is `new`
-- [ ] Day comparison uses the user's timezone near midnight
-- [ ] Two identical invoice rows on a first import are both `new`; on re-import both are `duplicate` (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Same name, day, amount and type is `duplicate`
+- [x] Different amount or type is `new`
+- [x] Day comparison uses the user's timezone near midnight
+- [x] Two identical invoice rows on a first import are both `new`; on re-import both are `duplicate` (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
