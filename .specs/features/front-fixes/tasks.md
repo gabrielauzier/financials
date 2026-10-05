@@ -228,12 +228,12 @@ T9 T10 T11 T12
 
 **Done when**:
 
-- [ ] Error code `user_already_exists` returns true
-- [ ] Empty `identities` returns true
-- [ ] A gap of 1000 ms or more returns true and a gap below 1000 ms returns false
-- [ ] The sign-up form shows 'E-mail já cadastrado' on the e-mail field for the unconfirmed case (5 tests)
-- [ ] Gate check passes: `pnpm -C web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Error code `user_already_exists` returns true
+- [x] Empty `identities` returns true
+- [x] A gap of 1000 ms or more returns true and a gap below 1000 ms returns false
+- [x] The sign-up form shows 'E-mail já cadastrado' on the e-mail field for the unconfirmed case (5 tests)
+- [x] Gate check passes: `pnpm -C web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
