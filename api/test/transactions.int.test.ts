@@ -109,6 +109,26 @@ describe('POST /transactions', () => {
     expect(res.json()).toEqual({ error: { code: 'invalid_amount', message: expect.any(String), field: 'amount' } });
   });
 
+  // Raw JSON text: a JS number literal would already have lost digits before it is serialized.
+  it.each(['10.5', '0.1', '1e2', '12345678901.239999999', 'true', 'null', '{"v":"1.00"}', '["1.00"]'])(
+    'rejects the non-string JSON amount %s with 422 invalid_amount and stores nothing',
+    async (raw) => {
+      const name = `json-amount-${raw}`;
+      const body = JSON.stringify(valid({ name })).replace(/"amount":"[^"]*"/, `"amount":${raw}`);
+      expect(body).toContain(`"amount":${raw}`);
+      const res = await call(user, 'POST', '/transactions', body, { 'content-type': 'application/json' });
+      expect(res.statusCode).toBe(422);
+      expect(res.json()).toEqual({ error: { code: 'invalid_amount', message: expect.any(String), field: 'amount' } });
+      expect(await getAdminSql()`select id from public.transactions where name = ${name}`).toEqual([]);
+    },
+  );
+
+  it('still accepts a decimal string and stores it in canonical form', async () => {
+    const res = await call(user, 'POST', '/transactions', valid({ amount: '10.5' }));
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ amount: '10.50' });
+  });
+
   it.each(['name', 'type', 'occurredAt', 'paymentMethod'])('rejects an empty %s with 422 and the field', async (field) => {
     const res = await call(user, 'POST', '/transactions', valid({ [field]: '   ' }));
     expect(res.statusCode).toBe(422);
@@ -724,6 +744,28 @@ describe('PATCH /transactions/:id', () => {
       expect(res.json(), JSON.stringify(body)).toEqual({ error: { ...error, message: expect.any(String) } });
     }
     expect(await stored(original.id)).toEqual(original);
+  });
+
+  it.each(['10.5', '0.1', '1e2', '12345678901.239999999', 'true', 'null', '{"v":"1.00"}', '["1.00"]'])(
+    'rejects the non-string JSON amount %s with 422 invalid_amount and changes nothing',
+    async (raw) => {
+      const original = await create();
+      const res = await call(u, 'PATCH', `/transactions/${original.id}`, `{"name":"Mudou","amount":${raw}}`, {
+        'content-type': 'application/json',
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json()).toEqual({ error: { code: 'invalid_amount', message: expect.any(String), field: 'amount' } });
+      expect(
+        await getAdminSql()`select name, amount::text as amount from public.transactions where id = ${original.id}`,
+      ).toEqual([{ name: original.name, amount: original.amount }]);
+    },
+  );
+
+  it('still accepts a decimal string amount on edit', async () => {
+    const original = await create();
+    const res = await patch(original.id, { amount: '10.5' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ ...original, amount: '10.50' });
   });
 
   it("returns 404 for an unknown, malformed or another user's id, leaving that row untouched", async () => {

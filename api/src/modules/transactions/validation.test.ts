@@ -13,6 +13,10 @@ function rejection(fn: () => unknown): AppError {
 }
 
 describe('parseAmount', () => {
+  it.each([10.5, 0, true, null, undefined, {}, ['1.00']])('rejects the non-string %j with invalid_amount', (value) => {
+    expect(rejection(() => parseAmount(value))).toMatchObject({ code: 'invalid_amount', status: 422, field: 'amount' });
+  });
+
   it('accepts valid amounts, including 0.01 and 12-digit integers, in canonical 2-decimal form', () => {
     expect(parseAmount('0.01')).toBe('0.01');
     expect(parseAmount('1234.56')).toBe('1234.56');

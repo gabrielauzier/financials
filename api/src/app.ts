@@ -9,7 +9,7 @@ import { categoriesRoutes } from './modules/categories/routes.js';
 import { transactionsRoutes } from './modules/transactions/routes.js';
 import { dbPlugin } from './plugins/db.js';
 import { errorsPlugin } from './plugins/errors.js';
-import { swaggerPlugin } from './plugins/swagger.js';
+import { OPENAPI_TYPE_KEY, swaggerPlugin } from './plugins/swagger.js';
 import { timezonePlugin } from './plugins/timezone.js';
 
 function tokenVerifierConfig(config: AppConfig): TokenVerifierConfig {
@@ -19,7 +19,10 @@ function tokenVerifierConfig(config: AppConfig): TokenVerifierConfig {
 }
 
 export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
-  const app = Fastify().withTypeProvider<TypeBoxTypeProvider>();
+  const app = Fastify({
+    // Only registers an annotation keyword with Ajv; coercion and the other defaults stay as they are.
+    ajv: { plugins: [(ajv) => ajv.addKeyword(OPENAPI_TYPE_KEY)] },
+  }).withTypeProvider<TypeBoxTypeProvider>();
 
   void app.register(errorsPlugin);
   void app.register(swaggerPlugin);

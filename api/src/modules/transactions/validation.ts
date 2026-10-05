@@ -7,8 +7,11 @@ const AMOUNT = /^(\d{1,12})(?:\.(\d{1,2}))?$/;
  * and no leading zeros (`"10"` becomes `"10.00"`, `"7.5"` becomes `"7.50"`). Works on the string
  * only, so no float is involved. Input is not trimmed: surrounding spaces are invalid.
  * Accepts up to 12 integer digits and 2 decimals (fits `numeric(14,2)`), strictly greater than zero.
+ * Anything that is not a string (a JSON number, boolean, null, object) is invalid: the request
+ * schema does not coerce `amount`, so a number never reaches here as a string.
  */
-export function parseAmount(value: string): string {
+export function parseAmount(value: unknown): string {
+  if (typeof value !== 'string') throw invalidAmount();
   const match = AMOUNT.exec(value);
   if (!match) throw invalidAmount();
   const integer = (match[1] as string).replace(/^0+(?=\d)/, '');

@@ -1,9 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { Type, type Static } from '@sinclair/typebox';
+import { Type, type Static, type TUnsafe } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import type { PendingQuery, Row, TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
+import { OPENAPI_TYPE_KEY } from '../../plugins/swagger.js';
 import { registerCategoryReference } from '../categories/registry.js';
 import {
   fromJoins,
@@ -22,6 +23,13 @@ import { parseAmount, parseReceiptUrl } from './validation.js';
 // first imported, so building several apps in one process does not register the table twice.
 registerCategoryReference({ table: 'public.transactions', column: 'category_id' });
 
+// Ajv coerces JSON numbers to strings for `type: 'string'`, which would silently round
+// `12345678901.239999999`. The schema therefore has no `type` (the handler rejects non-strings with
+// 422 invalid_amount) and carries `x-openapi-type`, which the swagger transform turns back into
+// `type: string` so the document still describes a decimal string.
+const AMOUNT_DESCRIPTION = 'Decimal string, > 0, up to 12 integer digits and 2 decimals';
+const AmountInput: TUnsafe<string> = Type.Unsafe<string>({ description: AMOUNT_DESCRIPTION, [OPENAPI_TYPE_KEY]: 'string' });
+
 const nullableString = Type.Union([Type.String(), Type.Null()]);
 
 // Enumerated and ISO fields are plain strings here and checked in the handler so every semantic
@@ -30,7 +38,7 @@ const CreateBody = Type.Object({
   name: Type.String(),
   type: Type.String({ description: `One of: ${TYPES.join(', ')}` }),
   occurredAt: Type.String({ description: 'ISO-8601 instant with offset, e.g. 2026-10-05T14:30:00-03:00' }),
-  amount: Type.String({ description: 'Decimal string, > 0, up to 12 integer digits and 2 decimals' }),
+  amount: AmountInput,
   accountId: Type.String(),
   categoryId: Type.Optional(Type.String()),
   paymentMethod: Type.String({ description: `One of: ${PAYMENT_METHODS.join(', ')}` }),
@@ -44,7 +52,7 @@ const UpdateBody = Type.Object({
   name: Type.Optional(Type.String()),
   type: Type.Optional(Type.String({ description: `One of: ${TYPES.join(', ')}` })),
   occurredAt: Type.Optional(Type.String({ description: 'ISO-8601 instant with offset' })),
-  amount: Type.Optional(Type.String({ description: 'Decimal string, > 0, up to 12 integer digits and 2 decimals' })),
+  amount: Type.Optional(AmountInput),
   accountId: Type.Optional(Type.String({ description: 'An account of the user; inactive accounts are allowed on edit' })),
   categoryId: Type.Optional(Type.String()),
   paymentMethod: Type.Optional(Type.String({ description: `One of: ${PAYMENT_METHODS.join(', ')}` })),
@@ -261,7 +269,7 @@ interface TransactionPatch {
 }
 
 /** Validates only the fields present in the body, with the same rules as create. */
-function validPatch(body: Static<typeof UpdateBody>): TransactionPatch {
+function validPatch(body: Omit<Static<typeof UpdateBody>, 'amount'> & { amount?: unknown }): TransactionPatch {
   const patch: TransactionPatch = {};
   if (body.name !== undefined) patch.name = requiredText(body.name, 'name');
   if (body.type !== undefined) patch.type = validType(body.type);
