@@ -496,4 +496,48 @@ describe("extrato", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe("cores dos valores", () => {
+    const create = (name: string, type: "Income" | "Expense") =>
+      mockRequest<Transaction>({
+        method: "POST",
+        path: "/transactions",
+        body: {
+          name,
+          type,
+          occurredAt: "2030-01-01T12:00:00Z",
+          amount: "123.45",
+          accountId: account.id,
+          categoryId: category.id,
+          paymentMethod: "PIX",
+        },
+      });
+
+    it("mostra receita em verde e despesa em destrutivo com sinal de menos, na tabela e nos cards", async () => {
+      await create("Receita colorida", "Income");
+      await create("Despesa colorida", "Expense");
+      renderQuery(<TransactionsPage />);
+      const incomeName = await screen.findAllByText("Receita colorida");
+      const expenseName = await screen.findAllByText("Despesa colorida");
+      const amountOf = (container: HTMLElement) => within(container).getByText(/R\$/);
+      // each name renders twice: table cell (inside a row) and card heading (inside an article)
+      const rowOf = (nodes: HTMLElement[]) =>
+        nodes.find((node) => node.closest("tr"))?.closest("tr") as HTMLElement;
+      const cardOf = (nodes: HTMLElement[]) =>
+        nodes.find((node) => node.closest("article"))?.closest("article") as HTMLElement;
+
+      for (const container of [rowOf(incomeName), cardOf(incomeName)]) {
+        const amount = amountOf(container);
+        expect(amount).toHaveClass("text-emerald-700", "dark:text-emerald-400");
+        expect(amount).not.toHaveClass("text-destructive");
+        expect(amount.textContent).not.toMatch(/^-/);
+      }
+      for (const container of [rowOf(expenseName), cardOf(expenseName)]) {
+        const amount = amountOf(container);
+        expect(amount).toHaveClass("text-destructive");
+        expect(amount).not.toHaveClass("text-emerald-700");
+        expect(amount.textContent).toMatch(/^-/);
+      }
+    });
+  });
 });

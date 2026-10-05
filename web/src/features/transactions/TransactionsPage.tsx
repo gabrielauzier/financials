@@ -497,7 +497,7 @@ function TransactionRow({
       <TableCell>{paymentMethodLabels[item.paymentMethod]}</TableCell>
       <TableCell>{transactionTypeLabels[item.type]}</TableCell>
       <TableCell
-        className={`whitespace-nowrap font-semibold ${item.type === "Expense" ? "text-destructive" : "text-primary"}`}
+        className={`whitespace-nowrap font-semibold ${item.type === "Expense" ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"}`}
       >
         {item.type === "Expense" ? `-${formatBRL(item.amount)}` : formatBRL(item.amount)}
       </TableCell>
@@ -549,7 +549,7 @@ function TransactionCard(props: RowProps) {
           </div>
         </div>
         <span
-          className={`font-semibold ${item.type === "Expense" ? "text-destructive" : "text-primary"}`}
+          className={`font-semibold ${item.type === "Expense" ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"}`}
         >
           {item.type === "Expense" ? `-${formatBRL(item.amount)}` : formatBRL(item.amount)}
         </span>
