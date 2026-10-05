@@ -2,7 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type } from '@sinclair/typebox';
 import { COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, rule } from './rules.js';
-import { last12Months, last30DaysWindow, previous30DaysWindow } from './time.js';
+import { AppError } from '../../plugins/errors.js';
+import { currentMonthWindow, last12Months, last30DaysWindow, periodWindow, previous30DaysWindow, type Window } from './time.js';
 
 const Money = (description: string) => Type.String({ description });
 
@@ -25,6 +26,35 @@ const TrendSchema = Type.Object({
     { description: 'Always 12 points, oldest first: the 11 previous months and the current one' },
   ),
 });
+
+const PeriodQuery = Type.Object({
+  from: Type.Optional(Type.String({ description: 'First local day, YYYY-MM-DD, inclusive; give both from and to or neither' })),
+  to: Type.Optional(Type.String({ description: 'Last local day, YYYY-MM-DD, inclusive' })),
+});
+
+const CategoriesSchema = Type.Object({
+  items: Type.Array(
+    Type.Object({
+      categoryId: Type.String({ format: 'uuid' }),
+      name: Type.String({ description: 'Category name in Portuguese' }),
+      total: Money('Expense of the category in the period, decimal string with 2 decimals; negative for Estorno'),
+    }),
+    { description: 'Largest first; categories whose total is zero are omitted; the sum equals the total expense of the period' },
+  ),
+});
+
+/** Period of `from`/`to` (local dates, inclusive) or the current local month when both are absent. */
+function requestedPeriod(query: { from?: string; to?: string }, zone: string): Window {
+  const { from, to } = query;
+  if (from === undefined && to === undefined) return currentMonthWindow(new Date(), zone);
+  if (from === undefined || to === undefined) {
+    throw new AppError('invalid_period', 422, 'from and to must be given together', from === undefined ? 'from' : 'to');
+  }
+  const window = periodWindow(from, to, zone);
+  if (window) return window;
+  const bad = periodWindow(from, from, zone) === null ? 'from' : periodWindow(to, to, zone) === null ? 'to' : 'from';
+  throw new AppError('invalid_period', 422, 'from and to must be valid YYYY-MM-DD dates with from not after to', bad);
+}
 
 export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
   const routes = app.withTypeProvider<TypeBoxTypeProvider>();
@@ -83,6 +113,22 @@ export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
         group by m.month
         order by m.month`);
       return { points: rows.map((r) => ({ month: r.month, income: r.income, expense: r.expense, balance: r.balance })) };
+    },
+  );
+
+  routes.get(
+    '/dashboard/categories',
+    { schema: { querystring: PeriodQuery, response: { 200: CategoriesSchema } } },
+    async (request) => {
+      const period = requestedPeriod(request.query, request.tz);
+      const rows = await request.withUser((tx) => tx<{ category_id: string; name: string; total: string }[]>`
+        select c.id as category_id, c.name, sum(${rule(tx, EXPENSE_VALUE)})::text as total
+        from ${rule(tx, FROM_TRANSACTIONS)}
+        where ${rule(tx, COUNTABLE)} and t.occurred_at >= ${period.from} and t.occurred_at < ${period.to}
+        group by c.id, c.name
+        having sum(${rule(tx, EXPENSE_VALUE)}) <> 0
+        order by sum(${rule(tx, EXPENSE_VALUE)}) desc, c.name`);
+      return { items: rows.map((r) => ({ categoryId: r.category_id, name: r.name, total: r.total })) };
     },
   );
 }

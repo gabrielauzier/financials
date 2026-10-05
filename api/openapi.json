@@ -1682,6 +1682,73 @@
         }
       }
     },
+    "/dashboard/categories": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "First local day, YYYY-MM-DD, inclusive; give both from and to or neither"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Last local day, YYYY-MM-DD, inclusive"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "description": "Largest first; categories whose total is zero are omitted; the sum equals the total expense of the period",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "categoryId",
+                          "name",
+                          "total"
+                        ],
+                        "properties": {
+                          "categoryId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Category name in Portuguese",
+                            "type": "string"
+                          },
+                          "total": {
+                            "description": "Expense of the category in the period, decimal string with 2 decimals; negative for Estorno",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {

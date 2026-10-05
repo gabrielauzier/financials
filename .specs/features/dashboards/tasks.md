@@ -239,11 +239,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Sum of all rows equals the total expense for the same period
-- [ ] Estorno appears as a negative row
-- [ ] Default period is the current local month; empty period returns an empty list; `from > to` returns 422 (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Sum of all rows equals the total expense for the same period
+- [x] Estorno appears as a negative row
+- [x] Default period is the current local month; empty period returns an empty list; `from > to` returns 422 (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
