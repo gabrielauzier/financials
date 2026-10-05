@@ -101,10 +101,10 @@ A API só existe como fábrica `buildApp()` usada nos testes: não há ponto de 
 | SRV-02 | P1: Subir a API (configuração do ambiente) | - | Implementing |
 | SRV-03 | P1: Subir a API (encerramento limpo) | - | Pending |
 | SRV-04 | P1: Subir a API (logs sem token) | - | Pending |
-| CORS-01 | P1: CORS (preflight sem token) | - | Pending |
-| CORS-02 | P1: CORS (cabeçalhos permitidos e cache) | - | Pending |
-| CORS-03 | P1: CORS (respostas reais e 401 legível) | - | Pending |
-| CORS-04 | P1: CORS (origens negadas, vazia, sem curinga) | - | Pending |
+| CORS-01 | P1: CORS (preflight sem token) | - | Implementing |
+| CORS-02 | P1: CORS (cabeçalhos permitidos e cache) | - | Implementing |
+| CORS-03 | P1: CORS (respostas reais e 401 legível) | - | Implementing |
+| CORS-04 | P1: CORS (origens negadas, vazia, sem curinga) | - | Implementing |
 
 **Coverage:** 8 total, 0 mapped to tasks, 8 unmapped ⚠️
 

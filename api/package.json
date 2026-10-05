@@ -19,6 +19,7 @@
     "db:status": "npx supabase --workdir .. status"
   },
   "dependencies": {
+    "@fastify/cors": "^11.3.0",
     "@fastify/swagger": "^9.9.1",
     "@fastify/swagger-ui": "^6.1.1",
     "@fastify/type-provider-typebox": "^6.1.0",

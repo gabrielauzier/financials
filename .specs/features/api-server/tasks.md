@@ -105,12 +105,12 @@ T3 → T4
 
 **Done when**:
 
-- [ ] Preflight from an allowed origin asking PATCH with authorization, content-type and x-timezone answers 204 without a token and with the allow-origin, allow-methods, allow-headers and max-age 600 headers
-- [ ] Actual requests from an allowed origin carry allow-origin and `Vary: Origin`; a protected route without a token answers 401 with the standard error body and the allow-origin header
-- [ ] A non-listed origin, a missing `Origin` header and an empty `CORS_ORIGINS` produce no `Access-Control-*` header
-- [ ] `Access-Control-Allow-Credentials` is never sent and `PUT` is not advertised (8 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Preflight from an allowed origin asking PATCH with authorization, content-type and x-timezone answers 204 without a token and with the allow-origin, allow-methods, allow-headers and max-age 600 headers
+- [x] Actual requests from an allowed origin carry allow-origin and `Vary: Origin`; a protected route without a token answers 401 with the standard error body and the allow-origin header
+- [x] A non-listed origin, a missing `Origin` header and an empty `CORS_ORIGINS` produce no `Access-Control-*` header
+- [x] `Access-Control-Allow-Credentials` is never sent and `PUT` is not advertised (8 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

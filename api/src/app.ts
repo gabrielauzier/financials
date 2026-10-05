@@ -7,6 +7,7 @@ import { authPlugin, createTokenVerifier, type TokenVerifierConfig } from './plu
 import { accountsRoutes } from './modules/accounts/routes.js';
 import { categoriesRoutes } from './modules/categories/routes.js';
 import { transactionsRoutes } from './modules/transactions/routes.js';
+import { corsPlugin } from './plugins/cors.js';
 import { dbPlugin } from './plugins/db.js';
 import { errorsPlugin } from './plugins/errors.js';
 import { OPENAPI_TYPE_KEY, swaggerPlugin } from './plugins/swagger.js';
@@ -25,6 +26,8 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
   }).withTypeProvider<TypeBoxTypeProvider>();
 
   void app.register(errorsPlugin);
+  // Before auth: the preflight carries no token and must be answered first.
+  void app.register(corsPlugin, { origins: config.corsOrigins ?? [] });
   void app.register(swaggerPlugin);
   void app.register(dbPlugin, { databaseUrl: config.databaseUrl });
   void app.register(authPlugin, { verifyToken: createTokenVerifier(tokenVerifierConfig(config)) });
