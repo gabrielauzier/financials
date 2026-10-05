@@ -451,3 +451,54 @@ describe('GET /transactions period edges depend on X-Timezone', () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe('GET /transactions name search (q)', () => {
+  let u: TestUser;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    const a = await createAccount(u, 'Busca');
+    await seed(u, a, [
+      { name: 'Café Central', occurredAt: '2026-06-01T12:00:00Z', type: 'Expense' },
+      { name: 'CAFE', occurredAt: '2026-06-02T12:00:00Z', type: 'Income' },
+      { name: 'Padaria São João', occurredAt: '2026-06-03T12:00:00Z' },
+      { name: 'Promo 100% off', occurredAt: '2026-06-04T12:00:00Z' },
+      { name: 'Promo 1000 itens', occurredAt: '2026-06-05T12:00:00Z' },
+      { name: 'snake_case', occurredAt: '2026-06-06T12:00:00Z' },
+      { name: 'snakeXcase', occurredAt: '2026-06-07T12:00:00Z' },
+      { name: 'caminho\\arquivo', occurredAt: '2026-06-08T12:00:00Z' },
+    ]);
+  });
+
+  const names = async (q: string, extra = '') =>
+    (await list(u, `q=${encodeURIComponent(q)}${extra}`)).items.map((r) => r.name).sort();
+
+  it('matches "cafe" against "Café Central" and "CAFE" (ignoring case and accents)', async () => {
+    expect(await names('cafe')).toEqual(['CAFE', 'Café Central']);
+  });
+
+  it('ignores accents and case in the typed text too, and matches inside the name', async () => {
+    expect(await names('CAFÉ')).toEqual(['CAFE', 'Café Central']);
+    expect(await names('sao joao')).toEqual(['Padaria São João']);
+    expect(await names('central')).toEqual(['Café Central']);
+  });
+
+  it('returns an empty page with total 0 when nothing matches', async () => {
+    const body = await list(u, 'q=inexistente');
+    expect(body).toEqual({ items: [], total: 0, page: 1, pageSize: 50 });
+  });
+
+  it('treats %, _ and backslash in the text literally', async () => {
+    expect(await names('100%')).toEqual(['Promo 100% off']);
+    expect(await names('%')).toEqual(['Promo 100% off']);
+    expect(await names('snake_')).toEqual(['snake_case']);
+    expect(await names('_')).toEqual(['snake_case']);
+    expect(await names('\\')).toEqual(['caminho\\arquivo']);
+  });
+
+  it('combines with the other filters and counts only matches; a blank q means no search', async () => {
+    expect(await names('cafe', '&type=Income')).toEqual(['CAFE']);
+    expect((await list(u, 'q=cafe')).total).toBe(2);
+    expect((await list(u, `q=${encodeURIComponent('   ')}`)).total).toBe(8);
+  });
+});

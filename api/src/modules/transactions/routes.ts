@@ -43,6 +43,7 @@ const ListQuery = Type.Object({
   categoryId: Type.Optional(Type.String()),
   type: Type.Optional(Type.String({ description: `One of: ${TYPES.join(', ')}` })),
   neutral: Type.Optional(Type.String({ description: 'true or false' })),
+  q: Type.Optional(Type.String({ description: 'Name contains this text, ignoring case and accents' })),
   page: Type.Optional(Type.String({ description: 'Page number, starting at 1 (50 rows per page)' })),
 });
 
@@ -126,6 +127,12 @@ interface Filters {
   categoryId?: string;
   type?: string;
   neutral?: string;
+  q?: string;
+}
+
+/** LIKE pattern matching `text` anywhere; `%`, `_` and `\` in the user's text are literal. */
+function containsPattern(text: string): string {
+  return `%${text.replace(/[\\%_]/g, '\\$&')}%`;
 }
 
 /** WHERE clause for the list: every filter given is combined with AND. `from`/`to` are local days. */
@@ -149,6 +156,12 @@ function whereClause(tx: TransactionSql, filters: Filters, zone: string): Pendin
   }
   if (filters.neutral !== undefined) {
     condition = tx`${condition} and t.neutral = ${validBoolean(filters.neutral, 'neutral')}`;
+  }
+  const search = filters.q?.trim() ?? '';
+  if (search !== '') {
+    // unaccent lives in the `extensions` schema; SET ROLE does not apply the role's search_path.
+    condition = tx`${condition} and extensions.unaccent(lower(t.name))
+      like extensions.unaccent(lower(${containsPattern(search)})) escape '\\'`;
   }
   return tx`where ${condition}`;
 }

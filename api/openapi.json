@@ -823,6 +823,15 @@
               "type": "string"
             },
             "in": "query",
+            "name": "q",
+            "required": false,
+            "description": "Name contains this text, ignoring case and accents"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
             "name": "page",
             "required": false,
             "description": "Page number, starting at 1 (50 rows per page)"

@@ -244,10 +244,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `cafe` matches `Café Central` and `CAFE`
-- [ ] Non-matching text returns an empty page (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `cafe` matches `Café Central` and `CAFE`
+- [x] Non-matching text returns an empty page (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
