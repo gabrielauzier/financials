@@ -155,7 +155,7 @@ export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
       if (!UUID.test(id)) throw notFound();
       if (reassignTo !== undefined && !UUID.test(reassignTo)) throw invalidDestination('reassignTo must be a category id');
       // A row added concurrently after the usage check makes the delete fail on the FK (on delete
-      // restrict), so the transaction rolls back and nothing is lost.
+      // no action), so the transaction rolls back and nothing is lost.
       await request.withUser(async (tx) => {
         await assertEditable(tx, id);
         if (reassignTo === undefined) {

@@ -1,7 +1,7 @@
 /**
  * Tables whose rows point at a category. Deleting a category moves these rows to the destination
  * category first. Each referencing table needs the composite FK `(column, user_id)` to
- * `categories (id, user_id)` with `on delete restrict`, and RLS like any user-data table.
+ * `categories (id, user_id)` with `on delete no action`, and RLS like any user-data table.
  *
  * Features register their tables when their module loads (`public.transactions` from the
  * transactions routes). Names are code-defined constants, never user input; queries still quote

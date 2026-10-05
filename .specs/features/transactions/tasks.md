@@ -358,7 +358,7 @@ T20 → T21
 
 - [x] All listed rows get the category in one operation
 - [x] One unknown or foreign id returns 404 and no row changes
-- [x] Unknown category returns 422 (3 tests)
+- [x] Unknown category returns 404 `not_found` on `categoryId`, consistent with create and edit (3 tests)
 - [x] Gate check passes: `pnpm -C api test`
 - [x] Test count: all tests listed above pass, no silent deletions or skips
 
