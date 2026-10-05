@@ -653,3 +653,4 @@ Execution is strictly sequential within each phase; cross-feature order is auth 
 ## Fix tasks (Verifier iteration 1)
 
 - [x] F1: discriminate the auth hook 401 branches with a route that does not call withUser
+- [x] F2: record that the confirmation link marks the e-mail confirmed

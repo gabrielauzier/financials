@@ -120,3 +120,52 @@ describe('GoTrue password sign-in errors', () => {
     expect(unknownEmail.body).toEqual(expected);
   });
 });
+
+/** Local mail catcher (Mailpit, supabase/config.toml [inbucket] port). */
+const MAIL_URL = process.env.TEST_MAIL_URL ?? 'http://127.0.0.1:55324';
+
+/** Polls the mail catcher for the confirmation e-mail sent to `email` and returns its link. */
+async function confirmationLink(email: string): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const search = await fetch(`${MAIL_URL}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`);
+    const { messages } = (await search.json()) as { messages: { ID: string }[] };
+    const first = messages[0];
+    if (first) {
+      const message = (await (await fetch(`${MAIL_URL}/api/v1/message/${first.ID}`)).json()) as { Text: string };
+      const link = /\(\s*(http\S*\/auth\/v1\/verify\?\S+)\s*\)/.exec(message.Text)?.[1];
+      if (link) return link;
+    }
+    await sleep(250);
+  }
+  throw new Error(`No confirmation e-mail for ${email} in ${MAIL_URL}`);
+}
+
+describe('GoTrue e-mail confirmation link', () => {
+  it('marks the e-mail as confirmed and lets the user sign in', async () => {
+    const email = freshEmail();
+    const password = `pw-${randomUUID()}`;
+    const created = await post<GoTrueUser>('/signup', { email, password, data: { name: 'U', nickname: 'u' } });
+    expect(created.status).toBe(200);
+    signedUpIds.add(created.body.id);
+
+    const before = await getAdminSql()`select email_confirmed_at from auth.users where id = ${created.body.id}`;
+    expect(before[0]?.email_confirmed_at).toBeNull();
+    expect((await signIn(email, password)).body).toMatchObject({ error_code: 'email_not_confirmed' });
+
+    // The very link the user receives by e-mail; GoTrue answers with a redirect to redirect_to.
+    const verify = await fetch(await confirmationLink(email), { redirect: 'manual' });
+    expect(verify.status).toBe(303);
+
+    const after = await getAdminSql()`select email_confirmed_at from auth.users where id = ${created.body.id}`;
+    expect(after[0]?.email_confirmed_at).toBeInstanceOf(Date);
+
+    const { apiUrl, anonKey } = getLocalStack();
+    const login = await fetch(`${apiUrl}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { apikey: anonKey, 'content-type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    expect(login.status).toBe(200);
+    expect(((await login.json()) as { access_token?: string }).access_token).toEqual(expect.any(String));
+  });
+});
