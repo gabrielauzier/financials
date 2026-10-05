@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { cleanupTestUsers, closeAdminSql, createTestUser, getAdminSql, type TestUser } from './helpers/db.js';
-import { seedAccount, send, startApp, type ReturnJson } from './helpers/dashboards.js';
+import { get, seedAccount, send, startApp, type ReturnJson } from './helpers/dashboards.js';
 
 let app: FastifyInstance;
 let user: TestUser;
@@ -115,6 +115,59 @@ describe('POST /investment-returns (DASH-06.1, DASH-06.2)', () => {
 
   it('answers 401 without a token', async () => {
     const res = await app.inject({ method: 'POST', url: '/investment-returns', payload: valid() });
+    expect(res.statusCode).toBe(401);
+  });
+});
+
+interface ListJson {
+  items: ReturnJson[];
+  lastDate: string | null;
+}
+
+async function list(as: TestUser): Promise<ListJson> {
+  const res = await get(app, as, '/investment-returns');
+  expect(res.statusCode).toBe(200);
+  return res.json<ListJson>();
+}
+
+describe('GET /investment-returns (DASH-06.4, DASH-06.6)', () => {
+  it('returns an empty list with lastDate null for a user without returns', async () => {
+    const fresh = await createTestUser();
+    expect(await list(fresh)).toEqual({ items: [], lastDate: null });
+  });
+
+  it('orders by date descending and lastDate is the newest date, whatever the insertion order', async () => {
+    const u = await createTestUser();
+    const acc = await seedAccount(u, 'Cofre');
+    for (const [occurredOn, amount] of [['2026-03-10', '10.00'], ['2026-09-30', '-5.00'], ['2026-01-02', '1.50']] as const) {
+      const res = await send(app, u, 'POST', '/investment-returns', { occurredOn, amount, accountId: acc });
+      expect(res.statusCode).toBe(201);
+    }
+    const { items, lastDate } = await list(u);
+    expect(items.map((r) => [r.occurredOn, r.amount])).toEqual([
+      ['2026-09-30', '-5.00'],
+      ['2026-03-10', '10.00'],
+      ['2026-01-02', '1.50'],
+    ]);
+    expect(items[0]).toMatchObject({ accountId: acc, accountNickname: 'Cofre', notes: null });
+    expect(lastDate).toBe('2026-09-30');
+  });
+
+  it('keeps lastDate when several returns share the newest date, newest created first among ties', async () => {
+    const u = await createTestUser();
+    const acc = await seedAccount(u);
+    const first = await send(app, u, 'POST', '/investment-returns', { occurredOn: '2026-05-05', amount: '1.00', accountId: acc });
+    const second = await send(app, u, 'POST', '/investment-returns', { occurredOn: '2026-05-05', amount: '2.00', accountId: acc });
+    await send(app, u, 'POST', '/investment-returns', { occurredOn: '2026-04-04', amount: '3.00', accountId: acc });
+    const { items, lastDate } = await list(u);
+    expect(lastDate).toBe('2026-05-05');
+    expect(items.map((r) => r.id).slice(0, 2)).toEqual([second.json<ReturnJson>().id, first.json<ReturnJson>().id]);
+  });
+
+  it('lists only the caller returns and answers 401 without a token', async () => {
+    const mine = (await list(user)).items.map((r) => r.accountId);
+    expect(mine).not.toContain(otherAccountId);
+    const res = await app.inject({ method: 'GET', url: '/investment-returns' });
     expect(res.statusCode).toBe(401);
   });
 });

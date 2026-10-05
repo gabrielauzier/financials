@@ -354,10 +354,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Rows are ordered by date descending and `lastDate` is the newest date
-- [ ] Empty list returns `lastDate` null (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Rows are ordered by date descending and `lastDate` is the newest date
+- [x] Empty list returns `lastDate` null (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

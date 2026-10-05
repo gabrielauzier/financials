@@ -1958,6 +1958,71 @@
             }
           }
         }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "lastDate"
+                  ],
+                  "properties": {
+                    "items": {
+                      "description": "Newest date first",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "accountId",
+                          "accountNickname",
+                          "occurredOn",
+                          "amount",
+                          "notes"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountNickname": {
+                            "type": "string"
+                          },
+                          "occurredOn": {
+                            "description": "Calendar date, YYYY-MM-DD",
+                            "type": "string"
+                          },
+                          "amount": {
+                            "description": "Signed decimal string with 2 decimals, never zero, e.g. \"50.00\" or \"-20.00\"",
+                            "type": "string"
+                          },
+                          "notes": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "lastDate": {
+                      "description": "Date of the newest return (YYYY-MM-DD), null when there are none",
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/imports/preview": {

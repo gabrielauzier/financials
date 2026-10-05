@@ -17,6 +17,13 @@ const InvestmentReturnSchema = Type.Object({
   notes: nullableString,
 });
 
+const ListSchema = Type.Object({
+  items: Type.Array(InvestmentReturnSchema, { description: 'Newest date first' }),
+  lastDate: Type.Union([Type.String(), Type.Null()], {
+    description: 'Date of the newest return (YYYY-MM-DD), null when there are none',
+  }),
+});
+
 // No `type` so Ajv cannot coerce a JSON number into a string; the handler rejects it with 422.
 const AmountInput: TUnsafe<string> = Type.Unsafe<string>({
   description: 'Signed decimal string, never zero, up to 12 integer digits and 2 decimals',
@@ -100,6 +107,17 @@ export async function investmentReturnsRoutes(app: FastifyInstance): Promise<voi
         return created as ReturnRow;
       });
       return reply.status(201).send(toReturn(row));
+    },
+  );
+
+  routes.get(
+    '/investment-returns',
+    { schema: { response: { 200: ListSchema } } },
+    async (request) => {
+      const rows = await request.withUser((tx) => tx<ReturnRow[]>`
+        select ${columns(tx)} from ${fromJoins(tx)}
+        order by r.occurred_on desc, r.created_at desc, r.id`);
+      return { items: rows.map(toReturn), lastDate: rows[0]?.occurred_on ?? null };
     },
   );
 }
