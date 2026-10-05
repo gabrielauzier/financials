@@ -171,3 +171,126 @@ describe('GET /investment-returns (DASH-06.4, DASH-06.6)', () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+const patch = (as: TestUser, id: string, payload: unknown) => send(app, as, 'PATCH', `/investment-returns/${id}`, payload);
+const del = (as: TestUser, id: string) => send(app, as, 'DELETE', `/investment-returns/${id}`);
+
+async function netWorth(as: TestUser): Promise<string> {
+  const res = await get(app, as, '/dashboard/net-worth');
+  expect(res.statusCode).toBe(200);
+  return res.json<{ current: string }>().current;
+}
+
+async function createReturn(as: TestUser, acc: string, over: Record<string, unknown> = {}): Promise<ReturnJson> {
+  const res = await send(app, as, 'POST', '/investment-returns', { occurredOn: '2026-01-10', amount: '50.00', accountId: acc, ...over });
+  expect(res.statusCode).toBe(201);
+  return res.json<ReturnJson>();
+}
+
+describe('PATCH /investment-returns/:id (DASH-06.3)', () => {
+  it('persists an edit and the net worth reflects it on the next read', async () => {
+    const u = await createTestUser();
+    const acc = await seedAccount(u, 'A');
+    const r = await createReturn(u, acc);
+    expect(await netWorth(u)).toBe('50.00');
+
+    const res = await patch(u, r.id, { amount: '-20.5', occurredOn: '2026-02-11', notes: 'ajuste' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ ...r, amount: '-20.50', occurredOn: '2026-02-11', notes: 'ajuste' });
+    expect((await list(u)).items[0]).toEqual(res.json());
+    expect(await netWorth(u)).toBe('-20.50');
+  });
+
+  it('edits only the given fields, clears notes with null and can move to another own account (even inactive)', async () => {
+    const u = await createTestUser();
+    const acc = await seedAccount(u, 'A');
+    const inactive = await seedAccount(u, 'Velha', false);
+    const r = await createReturn(u, acc, { notes: 'x' });
+    const cleared = await patch(u, r.id, { notes: null });
+    expect(cleared.json()).toEqual({ ...r, notes: null });
+    const moved = await patch(u, r.id, { accountId: inactive });
+    expect(moved.statusCode).toBe(200);
+    expect(moved.json()).toMatchObject({ accountId: inactive, accountNickname: 'Velha', amount: '50.00' });
+  });
+
+  it('with an empty body changes nothing and answers 200 with the row', async () => {
+    const u = await createTestUser();
+    const r = await createReturn(u, await seedAccount(u));
+    const res = await patch(u, r.id, {});
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual(r);
+    expect((await list(u)).items).toEqual([r]);
+  });
+
+  it('applies the creation validations: zero, 3 decimals, JSON number, bad date, foreign account', async () => {
+    const u = await createTestUser();
+    const acc = await seedAccount(u);
+    const r = await createReturn(u, acc);
+    const cases: [Record<string, unknown>, string, string][] = [
+      [{ amount: '0' }, 'invalid_amount', 'amount'],
+      [{ amount: '-0.00' }, 'invalid_amount', 'amount'],
+      [{ amount: '1.234' }, 'invalid_amount', 'amount'],
+      [{ amount: 5 }, 'invalid_amount', 'amount'],
+      [{ occurredOn: '2026-02-30' }, 'invalid_date', 'occurredOn'],
+      [{ accountId: otherAccountId }, 'invalid_account', 'accountId'],
+      [{ accountId: 'nope' }, 'invalid_account', 'accountId'],
+    ];
+    for (const [payload, code, field] of cases) {
+      const res = await patch(u, r.id, payload);
+      expect({ payload, status: res.statusCode }).toEqual({ payload, status: 422 });
+      expect(res.json()).toMatchObject({ error: { code, field } });
+    }
+    expect((await list(u)).items).toEqual([r]);
+  });
+
+  it('answers 404 for an unknown id, a malformed id and another user\'s id', async () => {
+    const u = await createTestUser();
+    const mine = await createReturn(u, await seedAccount(u));
+    for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      const res = await patch(u, id, { amount: '1.00' });
+      expect({ id, status: res.statusCode }).toEqual({ id, status: 404 });
+      expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
+    }
+    const foreign = await patch(other, mine.id, { amount: '999.00' });
+    expect(foreign.statusCode).toBe(404);
+    expect((await list(u)).items).toEqual([mine]);
+  });
+
+  it('answers 401 without a token', async () => {
+    const res = await app.inject({ method: 'PATCH', url: '/investment-returns/00000000-0000-4000-8000-000000000000', payload: {} });
+    expect(res.statusCode).toBe(401);
+  });
+});
+
+describe('DELETE /investment-returns/:id (DASH-06.3)', () => {
+  it('removes the row (204) and the net worth reflects it on the next read', async () => {
+    const u = await createTestUser();
+    const acc = await seedAccount(u);
+    const plus = await createReturn(u, acc, { amount: '50.00' });
+    await createReturn(u, acc, { amount: '-20.00', occurredOn: '2026-01-11' });
+    expect(await netWorth(u)).toBe('30.00');
+
+    const res = await del(u, plus.id);
+    expect(res.statusCode).toBe(204);
+    expect(res.body).toBe('');
+    expect((await list(u)).items.map((r) => r.amount)).toEqual(['-20.00']);
+    expect(await netWorth(u)).toBe('-20.00');
+    expect((await del(u, plus.id)).statusCode).toBe(404);
+  });
+
+  it('answers 404 for an unknown id, a malformed id and another user\'s id, deleting nothing', async () => {
+    const u = await createTestUser();
+    const mine = await createReturn(u, await seedAccount(u));
+    for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+      const res = await del(u, id);
+      expect({ id, status: res.statusCode }).toEqual({ id, status: 404 });
+    }
+    expect((await del(other, mine.id)).statusCode).toBe(404);
+    expect((await list(u)).items).toEqual([mine]);
+  });
+
+  it('answers 401 without a token', async () => {
+    const res = await app.inject({ method: 'DELETE', url: '/investment-returns/00000000-0000-4000-8000-000000000000' });
+    expect(res.statusCode).toBe(401);
+  });
+});

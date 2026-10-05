@@ -37,6 +37,16 @@ const CreateBody = Type.Object({
   notes: Type.Optional(nullableString),
 });
 
+// Every field is optional; `null` clears notes. An empty body changes nothing.
+const UpdateBody = Type.Object({
+  occurredOn: Type.Optional(Type.String({ description: 'Calendar date, YYYY-MM-DD' })),
+  amount: Type.Optional(AmountInput),
+  accountId: Type.Optional(Type.String({ description: 'Any account of the user, active or not' })),
+  notes: Type.Optional(nullableString),
+});
+
+const IdParams = Type.Object({ id: Type.String() });
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface ReturnRow {
@@ -73,6 +83,7 @@ function optionalText(value: string | null | undefined): string | null {
 }
 
 const invalidAccount = () => new AppError('invalid_account', 422, 'Select an account of yours', 'accountId');
+const notFound = () => new AppError('not_found', 404, 'Investment return not found');
 
 /** RLS hides foreign accounts, so "not visible" covers both unknown and foreign ids. */
 async function assertOwnAccount(tx: TransactionSql, accountId: string): Promise<string> {
@@ -118,6 +129,47 @@ export async function investmentReturnsRoutes(app: FastifyInstance): Promise<voi
         select ${columns(tx)} from ${fromJoins(tx)}
         order by r.occurred_on desc, r.created_at desc, r.id`);
       return { items: rows.map(toReturn), lastDate: rows[0]?.occurred_on ?? null };
+    },
+  );
+
+  routes.patch(
+    '/investment-returns/:id',
+    { schema: { params: IdParams, body: UpdateBody, response: { 200: InvestmentReturnSchema } } },
+    async (request) => {
+      const { id } = request.params;
+      const body = request.body;
+      const patch: { occurred_on?: string; amount?: string; account_id?: string; notes?: string | null } = {};
+      if (body.amount !== undefined) patch.amount = parseSignedAmount(body.amount);
+      if (body.occurredOn !== undefined) patch.occurred_on = parseDate(body.occurredOn);
+      if (body.notes !== undefined) patch.notes = optionalText(body.notes);
+      if (!UUID.test(id)) throw notFound();
+
+      const row = await request.withUser(async (tx) => {
+        // Checked first so another user's id answers 404 whatever the body holds.
+        const [current] = await tx<{ id: string }[]>`
+          select id from public.investment_returns where id = ${id} for update`;
+        if (!current) throw notFound();
+        if (body.accountId !== undefined) patch.account_id = await assertOwnAccount(tx, body.accountId);
+        if (Object.keys(patch).length > 0) {
+          await tx`update public.investment_returns set ${tx(patch)} where id = ${id}`;
+        }
+        const [updated] = await tx<ReturnRow[]>`
+          select ${columns(tx)} from ${fromJoins(tx)} where r.id = ${id}`;
+        return updated as ReturnRow;
+      });
+      return toReturn(row);
+    },
+  );
+
+  routes.delete(
+    '/investment-returns/:id',
+    { schema: { params: IdParams, response: { 204: Type.Null({ description: 'Deleted' }) } } },
+    async (request, reply) => {
+      const { id } = request.params;
+      if (!UUID.test(id)) throw notFound();
+      const deleted = await request.withUser((tx) => tx`delete from public.investment_returns where id = ${id}`);
+      if (deleted.count === 0) throw notFound();
+      return reply.status(204).send(null);
     },
   );
 }
