@@ -211,11 +211,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Transactions in 3 months leave the other 9 at 0.00
-- [ ] Balance equals income minus expense each month
-- [ ] A transaction at 23:30 local on the last day of a month belongs to that month (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Transactions in 3 months leave the other 9 at 0.00
+- [x] Balance equals income minus expense each month
+- [x] A transaction at 23:30 local on the last day of a month belongs to that month (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

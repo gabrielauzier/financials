@@ -1630,6 +1630,58 @@
         }
       }
     },
+    "/dashboard/trend": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "points"
+                  ],
+                  "properties": {
+                    "points": {
+                      "description": "Always 12 points, oldest first: the 11 previous months and the current one",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "month",
+                          "income",
+                          "expense",
+                          "balance"
+                        ],
+                        "properties": {
+                          "month": {
+                            "description": "Local calendar month, YYYY-MM",
+                            "type": "string"
+                          },
+                          "income": {
+                            "description": "Income of the month, decimal string with 2 decimals",
+                            "type": "string"
+                          },
+                          "expense": {
+                            "description": "Expense of the month (Reversal abates it), decimal string with 2 decimals",
+                            "type": "string"
+                          },
+                          "balance": {
+                            "description": "income minus expense, decimal string with 2 decimals (may be negative)",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {
