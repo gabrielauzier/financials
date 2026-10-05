@@ -36,7 +36,7 @@ graph TD
 
 ### `api/src/config.ts` (estendido)
 
-- **Interfaces**: `AppConfig` ganha `port: number`, `host: string`, `corsOrigins: string[]`, `logLevel: string`. `parseCorsOrigins(raw)` normaliza (trim, remove barra final, descarta vazios, rejeita `*`). `PORT` inválida lança erro citando `PORT`.
+- **Interfaces**: `AppConfig` ganha `corsOrigins?: string[]` (presente só quando a variável lista origens) e um novo `ServerConfig extends AppConfig` traz `port`, `host` e `logLevel`, lidos por `loadServerConfig(env)` (assim os chamadores de `buildApp` nos testes não mudam). `parseCorsOrigins(raw)` normaliza (trim, remove barra final, descarta vazios, rejeita `*`). `PORT` inválida lança erro citando `PORT`.
 
 ### `api/src/plugins/cors.ts`
 

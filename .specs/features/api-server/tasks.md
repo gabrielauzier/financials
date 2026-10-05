@@ -75,13 +75,13 @@ T3 → T4
 
 **Done when**:
 
-- [ ] Defaults apply when the variables are absent
-- [ ] An invalid `PORT` (0, 70000, `abc`, `3001.5`) is rejected with a message citing `PORT`
-- [ ] `CORS_ORIGINS` with spaces and trailing slashes normalizes to exact origins and drops empty entries
-- [ ] `CORS_ORIGINS` containing `*` is rejected with a message citing `CORS_ORIGINS`
-- [ ] Missing `SUPABASE_URL` or `DATABASE_URL` is rejected citing the variable (6 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Defaults apply when the variables are absent
+- [x] An invalid `PORT` (0, 70000, `abc`, `3001.5`) is rejected with a message citing `PORT`
+- [x] `CORS_ORIGINS` with spaces and trailing slashes normalizes to exact origins and drops empty entries
+- [x] `CORS_ORIGINS` containing `*` is rejected with a message citing `CORS_ORIGINS`
+- [x] Missing `SUPABASE_URL` or `DATABASE_URL` is rejected citing the variable (6 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
