@@ -396,11 +396,11 @@ T6 → T11
 
 **Done when**:
 
-- [ ] Editing a transaction with `description` shows it as plain text under the title and there is no input or textarea for it (AC 12)
-- [ ] Editing one without `description` and creating a new one show the default subtitle and no description element (AC 12)
-- [ ] The PATCH and POST bodies sent by the form have no `description` key (AC 13)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 3 tests pass (no silent deletions)
+- [x] Editing a transaction with `description` shows it as plain text under the title and there is no input or textarea for it (AC 12)
+- [x] Editing one without `description` and creating a new one show the default subtitle and no description element (AC 12)
+- [x] The PATCH and POST bodies sent by the form have no `description` key (AC 13)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 3 tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

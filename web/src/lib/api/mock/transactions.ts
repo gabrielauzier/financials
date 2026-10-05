@@ -71,7 +71,10 @@ let transactions: Transaction[] = Array.from({ length: 120 }, (_, index) => {
     paymentMethod,
     notes: index % 5 === 0 ? "Pagamento mensal" : null,
     receipt: null,
-    description: index % 4 === 0 ? `${name.toUpperCase()} - COMPRA ${String(index + 1).padStart(3, "0")}` : null,
+    description:
+      index % 4 === 0
+        ? `${name.toUpperCase()} - COMPRA ${String(index + 1).padStart(3, "0")}`
+        : null,
     neutral: index % 17 === 0,
     counterpartyDocument: null,
     counterpartyBank: null,

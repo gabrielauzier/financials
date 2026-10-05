@@ -152,7 +152,13 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{transaction ? "Editar transação" : "Nova transação"}</DialogTitle>
-          <DialogDescription>Preencha os dados do lançamento.</DialogDescription>
+          {transaction?.description ? (
+            <DialogDescription data-testid="transaction-description">
+              {transaction.description}
+            </DialogDescription>
+          ) : (
+            <DialogDescription>Preencha os dados do lançamento.</DialogDescription>
+          )}
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2" noValidate>
           <Field label="Nome" id="transaction-name" error={errors["name"]}>

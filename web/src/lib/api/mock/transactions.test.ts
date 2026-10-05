@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Transaction, TransactionInput, TransactionsPage } from "../types";
 import { mockRequest } from "./index";
 
-const accountsList = () =>
-  mockRequest<{ id: string }[]>({ method: "GET", path: "/accounts" });
+const accountsList = () => mockRequest<{ id: string }[]>({ method: "GET", path: "/accounts" });
 
 async function validInput(over: Record<string, unknown> = {}) {
   const accounts = await accountsList();
@@ -25,16 +24,25 @@ const create = async (over: Record<string, unknown> = {}) =>
 describe("transactions mock follows the API for description", () => {
   it("returns description (string or null) on every listed transaction, with some seeded", async () => {
     const page = await mockRequest<TransactionsPage>({ method: "GET", path: "/transactions" });
-    expect(page.items.every((item) => item.description === null || typeof item.description === "string")).toBe(true);
-    expect(page.items.some((item) => typeof item.description === "string" && item.description !== "")).toBe(true);
+    expect(
+      page.items.every((item) => item.description === null || typeof item.description === "string"),
+    ).toBe(true);
+    expect(
+      page.items.some((item) => typeof item.description === "string" && item.description !== ""),
+    ).toBe(true);
     expect(page.items.some((item) => item.description === null)).toBe(true);
   });
 
   it("keeps the trimmed description on create and returns it in the list", async () => {
     const created = await create({ name: "Com texto", description: "  PIX ENVIADO MARIA  " });
     expect(created.description).toBe("PIX ENVIADO MARIA");
-    const page = await mockRequest<TransactionsPage>({ method: "GET", path: "/transactions?q=Com%20texto" });
-    expect(page.items.find((item) => item.id === created.id)?.description).toBe("PIX ENVIADO MARIA");
+    const page = await mockRequest<TransactionsPage>({
+      method: "GET",
+      path: "/transactions?q=Com%20texto",
+    });
+    expect(page.items.find((item) => item.id === created.id)?.description).toBe(
+      "PIX ENVIADO MARIA",
+    );
   });
 
   it("stores null when the description is omitted, null, empty or only spaces", async () => {
