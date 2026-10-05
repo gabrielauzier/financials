@@ -40,7 +40,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 | Linha "Pagamento recebido" da fatura | Ignorada, listada na prévia como ignorada | PRD 5.5.2 | n |
 | Linha de extrato não reconhecida | Importável com nome = descrição, categoria *Sem categoria*, método BankTransfer, sinalizada na prévia | PRD: nome = descrição completa e sinalizar | n |
 | Tipo da linha de extrato | Valor negativo = Expense, positivo = Income | PRD 5.5.1 | n |
-| Linha com Valor 0,00 | Não reconhecida; vai para "não reconhecida" | Valor zero é inválido em Transactions | n |
+| Linha com Valor 0,00, data impossível ou valor não numérico | Status `invalid` (badge "Inválida"), sem caixa de seleção, nunca importada; "não reconhecida" (`unrecognized`) fica só para descrição sem padrão conhecido, que continua importável | Valor zero é inválido em Transactions; alinha a spec ao design | n |
 | Neutra automática na fatura | Mesma regra de nomes de titular | Regra única por spec; não afeta compras comuns | n |
 | Abrangência de nomes de titular | Contas ativas e inativas do usuário | Alinhado à spec `accounts-categories` | n |
 | Data sem hora | Meia-noite no fuso local do usuário | PRD 5.5.1 | n |
@@ -138,7 +138,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 4. IF nenhum nome de titular coincide THEN o sistema SHALL manter a linha como não neutra.
 5. The sistema SHALL não aplicar heurísticas de valor ou data para marcar neutras.
 
-**Independent Test**: Com titular "Gabriel Vasconcelos Auzier" cadastrado, os 5 Pix enviados a esse nome no exemplo ficam neutros na prévia.
+**Independent Test**: Com titular "Gabriel Vasconcelos Auzier" cadastrado, as 6 linhas Pix do extrato de exemplo (índices 3, 4, 5, 8, 12 e 13) ligadas a esse nome ficam neutros na prévia.
 
 ---
 
@@ -162,7 +162,7 @@ Extratos de bancos diferentes chegam em CSV sem categoria. O usuário precisa im
 ## Edge Cases
 
 - IF o arquivo está vazio ou só tem cabeçalho THEN o sistema SHALL rejeitá-lo com mensagem de arquivo sem linhas.
-- IF uma linha tem data inválida ou valor não numérico THEN o sistema SHALL classificá-la como não reconhecida e excluí-la da seleção.
+- IF uma linha tem data inválida ou valor não numérico THEN o sistema SHALL classificá-la como inválida e excluí-la da seleção.
 - WHEN o arquivo contém duas linhas com o mesmo `identifier` THEN o sistema SHALL classificar a segunda como duplicada.
 - IF o armazenamento do anexo falha THEN o sistema SHALL reverter a importação e informar o erro.
 
