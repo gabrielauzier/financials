@@ -158,12 +158,12 @@ T6 → T11
 
 **Done when**:
 
-- [ ] The first query has no `from` or `to` and De/Até show "Selecione a data"; the same after "Limpar filtros" (AC 7 and 8 of the DatePicker story)
-- [ ] Choosing a day in De or Até queries with `from`/`to` equal to that string and goes back to page 1 (AC 9)
-- [ ] No "Tipo" column header or cell in the table and no Tipo field in the mobile card; the Tipo filter still sends `type` (AC 1 and 2 of the quick-filter story)
-- [ ] The browser check against the local API is recorded in the commit body (cause of the filled inputs)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing filter tests plus 4 new ones pass (no silent deletions)
+- [x] The first query has no `from` or `to` and De/Até show "Selecione a data"; the same after "Limpar filtros" (AC 7 and 8 of the DatePicker story)
+- [x] Choosing a day in De or Até queries with `from`/`to` equal to that string and goes back to page 1 (AC 9)
+- [x] No "Tipo" column header or cell in the table and no Tipo field in the mobile card; the Tipo filter still sends `type` (AC 1 and 2 of the quick-filter story)
+- [x] The browser check against the local API is recorded in the commit body (cause of the filled inputs)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing filter tests plus 4 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

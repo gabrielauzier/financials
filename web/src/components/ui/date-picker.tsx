@@ -52,6 +52,11 @@ export function DatePicker({
           mode="single"
           locale={ptBR}
           captionLayout="dropdown"
+          formatters={{ formatMonthDropdown: (month) => format(month, "LLL", { locale: ptBR }) }}
+          labels={{
+            labelMonthDropdown: () => "Escolher o mês",
+            labelYearDropdown: () => "Escolher o ano",
+          }}
           startMonth={new Date(2000, 0)}
           endMonth={new Date(thisYear + 5, 11)}
           {...(date ? { selected: date, defaultMonth: date } : {})}

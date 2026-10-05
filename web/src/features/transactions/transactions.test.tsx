@@ -14,6 +14,7 @@ import { TransactionForm } from "./TransactionForm";
 import { TransactionsPage } from "./TransactionsPage";
 import { parseBRLToDecimal, toLocalDateInput } from "./utils";
 import { formatDateLocal } from "@/lib/format";
+import { pickDate } from "@/test/datePicker";
 
 const account: Account = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -454,8 +455,8 @@ describe("extrato", () => {
         .filter((r) => r.method === "GET" && r.path.startsWith("/transactions?"))
         .map((r) => r.path);
     const setPeriod = (from: string, to: string) => {
-      fireEvent.change(screen.getByLabelText("De"), { target: { value: from } });
-      fireEvent.change(screen.getByLabelText("Até"), { target: { value: to } });
+      pickDate("De", from);
+      pickDate("Até", to);
     };
 
     it("avisa e não consulta a API quando a data inicial é depois da final", async () => {

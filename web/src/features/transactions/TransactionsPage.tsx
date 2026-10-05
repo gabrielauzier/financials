@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -42,7 +43,7 @@ import {
   useUpdateTransaction,
   useUpdateTransactionCategories,
 } from "./hooks";
-import { paymentMethodLabels, transactionTypeLabels } from "./labels";
+import { paymentMethodLabels } from "./labels";
 import { TransactionForm } from "./TransactionForm";
 
 type Sort = NonNullable<TransactionFilters["sort"]>;
@@ -152,19 +153,17 @@ export function TransactionsPage() {
         className="grid gap-4 border-b py-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
       >
         <Filter label="De" id="filter-from">
-          <Input
+          <DatePicker
             id="filter-from"
-            type="date"
             value={filters.from ?? ""}
-            onChange={(e) => changeFilter("from", e.target.value)}
+            onChange={(value) => changeFilter("from", value)}
           />
         </Filter>
         <Filter label="Até" id="filter-to">
-          <Input
+          <DatePicker
             id="filter-to"
-            type="date"
             value={filters.to ?? ""}
-            onChange={(e) => changeFilter("to", e.target.value)}
+            onChange={(value) => changeFilter("to", value)}
           />
         </Filter>
         <Filter label="Conta" id="filter-account">
@@ -292,7 +291,6 @@ export function TransactionsPage() {
                   <TableHead>Conta</TableHead>
                   <Sortable label="Categoria" name="category" filters={filters} onSort={sortBy} />
                   <TableHead>Método de pagamento</TableHead>
-                  <TableHead>Tipo</TableHead>
                   <Sortable label="Valor" name="amount" filters={filters} onSort={sortBy} />
                   <TableHead>Neutra</TableHead>
                   <TableHead>Observações</TableHead>
@@ -495,7 +493,6 @@ function TransactionRow({
         <CategorySelect value={item.categoryId} onChange={onCategory} />
       </TableCell>
       <TableCell>{paymentMethodLabels[item.paymentMethod]}</TableCell>
-      <TableCell>{transactionTypeLabels[item.type]}</TableCell>
       <TableCell
         className={`whitespace-nowrap font-semibold ${item.type === "Expense" ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"}`}
       >
@@ -558,10 +555,6 @@ function TransactionCard(props: RowProps) {
         <div>
           <dt className="text-muted-foreground">Método</dt>
           <dd>{paymentMethodLabels[item.paymentMethod]}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Tipo</dt>
-          <dd>{transactionTypeLabels[item.type]}</dd>
         </div>
       </dl>
       <CategorySelect value={item.categoryId} onChange={props.onCategory} />

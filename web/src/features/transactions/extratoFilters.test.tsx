@@ -4,6 +4,7 @@ import { formatBRL } from "@/lib/format";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, TransactionsPage as Page } from "@/lib/api/types";
 import { renderWithQuery, requests, resetSpy } from "@/test/apiSpy";
+import { pickDate } from "@/test/datePicker";
 import { TransactionsPage } from "./TransactionsPage";
 
 vi.mock("@/lib/api/client", async (importOriginal) => ({
@@ -76,21 +77,13 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
       await mockRequest<Category[]>({ method: "GET", path: "/categories" })
     ).slice(-1);
     if (!account || !category) throw new Error("seed");
-    const cases: Array<[string, () => Promise<void> | boolean, string]> = [
+    const cases: Array<[string, () => Promise<void> | boolean | void, string]> = [
       ["tipo", () => chooseOption("Tipo", "Receita"), "type=Income"],
       ["neutra", () => chooseOption("Neutra", "Sim"), "neutral=true"],
       ["conta", () => chooseOption("Conta", account.nickname), `accountId=${account.id}`],
       ["categoria", () => chooseOption("Categoria", category.name), `categoryId=${category.id}`],
-      [
-        "data inicial",
-        () => fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-04-01" } }),
-        "from=2026-04-01",
-      ],
-      [
-        "data final",
-        () => fireEvent.change(screen.getByLabelText("Até"), { target: { value: "2026-12-31" } }),
-        "to=2026-12-31",
-      ],
+      ["data inicial", () => pickDate("De", "2026-04-01"), "from=2026-04-01"],
+      ["data final", () => pickDate("Até", "2026-12-31"), "to=2026-12-31"],
     ];
     await renderLoaded();
     for (const [, apply, param] of cases) {
@@ -106,7 +99,7 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
   it("'Limpar filtros' restaura a consulta padrão: sem filtros, data decrescente, página 1", async () => {
     await renderLoaded();
     await chooseOption("Tipo", "Despesa");
-    fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-01-01" } });
+    pickDate("De", "2026-01-01");
     fireEvent.change(screen.getByLabelText("Buscar por nome"), { target: { value: "Farmácia" } });
     await waitFor(() => expect(lastList()).toContain("q=Farm"));
     expect(lastList()).toContain("type=Expense");
@@ -114,7 +107,7 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
     clickButton("Limpar filtros");
     await waitFor(() => expect(lastList()).toBe(DEFAULT_QUERY));
     expect(screen.getByLabelText("Buscar por nome")).toHaveValue("");
-    expect(screen.getByLabelText("De")).toHaveValue("");
+    expect(screen.getByLabelText("De")).toHaveTextContent("Selecione a data");
     expect(screen.getByLabelText("Tipo")).toHaveTextContent("Todos");
     await sleep(400);
     expect(lastList()).toBe(DEFAULT_QUERY);
@@ -127,6 +120,48 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
     expect(await screen.findByText(/Página 1 de 3/)).toBeInTheDocument();
     await waitFor(() => expect(lastList()).toBe(DEFAULT_QUERY));
     expect(lastList()).not.toContain("page=2");
+  });
+
+  it("abre com a primeira consulta sem from nem to e com De e Até mostrando 'Selecione a data'", async () => {
+    await renderLoaded();
+    expect(listPaths()[0]).toBe(DEFAULT_QUERY);
+    expect(listPaths().some((path) => /[?&](from|to)=/.test(path))).toBe(false);
+    expect(screen.getByLabelText("De")).toHaveTextContent("Selecione a data");
+    expect(screen.getByLabelText("Até")).toHaveTextContent("Selecione a data");
+  });
+
+  it("'Limpar filtros' esvazia De e Até e consulta sem from nem to, saindo de datas escolhidas", async () => {
+    await renderLoaded();
+    pickDate("De", "2026-04-01");
+    pickDate("Até", "2026-12-31");
+    await waitFor(() => expect(lastList()).toContain("to=2026-12-31"));
+    expect(screen.getByLabelText("De")).toHaveTextContent("01/04/2026");
+    expect(screen.getByLabelText("Até")).toHaveTextContent("31/12/2026");
+    clickButton("Limpar filtros");
+    await waitFor(() => expect(lastList()).toBe(DEFAULT_QUERY));
+    expect(screen.getByLabelText("De")).toHaveTextContent("Selecione a data");
+    expect(screen.getByLabelText("Até")).toHaveTextContent("Selecione a data");
+  });
+
+  it("não tem a coluna Tipo na tabela: nem cabeçalho nem célula com Receita ou Despesa", async () => {
+    await renderLoaded();
+    const headers = screen.getAllByRole("columnheader").map((header) => header.textContent ?? "");
+    expect(headers.some((text) => /Tipo/.test(text))).toBe(false);
+    expect(headers.some((text) => /Valor/.test(text))).toBe(true);
+    const cells = within(screen.getByRole("table")).getAllByRole("cell");
+    expect(cells.length).toBeGreaterThan(0);
+    expect(cells.some((cell) => /^(Receita|Despesa)$/.test(cell.textContent ?? ""))).toBe(false);
+  });
+
+  it("o cartão móvel não tem o campo Tipo, e o filtro Tipo continua na tela", async () => {
+    await renderLoaded();
+    const cards = screen.getAllByRole("article");
+    expect(cards.length).toBeGreaterThan(0);
+    for (const card of cards) {
+      expect(within(card).queryByText("Tipo")).not.toBeInTheDocument();
+      expect(within(card).getByText("Método")).toBeInTheDocument();
+    }
+    expect(screen.getByLabelText("Tipo")).toHaveTextContent("Todos");
   });
 
   it("clicar em 'Valor' duas vezes pede ordem crescente e depois decrescente, nessa sequência", async () => {
