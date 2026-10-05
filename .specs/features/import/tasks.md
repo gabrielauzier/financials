@@ -674,10 +674,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] File over 5 MB is blocked with the message
-- [ ] Server `unsupported_format` and `bank_mismatch` errors are shown (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] File over 5 MB is blocked with the message
+- [x] Server `unsupported_format` and `bank_mismatch` errors are shown (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
