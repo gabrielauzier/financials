@@ -4,13 +4,15 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/client";
 import { listMockCategories } from "@/lib/api/mock/categories";
-import type { ImportPreview, PreviewRow } from "@/lib/api/types";
+import type { ImportedFile, ImportPreview, PreviewRow } from "@/lib/api/types";
 import { ImportPage } from "./ImportPage";
 
 const apiRequest = vi.hoisted(() => vi.fn());
+const apiRequestBlob = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest,
+  apiRequestBlob,
 }));
 vi.mock("@/features/accounts/AccountSelect", () => ({
   AccountSelect: ({
@@ -71,8 +73,10 @@ const bodyOf = (path: string, position = 0) => {
 beforeEach(() => {
   confirmResponses = [];
   apiRequest.mockReset();
+  apiRequestBlob.mockReset();
   apiRequest.mockImplementation((path: string) => {
     if (path === "/categories") return Promise.resolve(listMockCategories());
+    if (path === "/imports") return Promise.resolve([]);
     if (path === "/imports/preview") return Promise.resolve(preview);
     if (path === "/imports/confirm") {
       const next = confirmResponses.shift();
@@ -178,8 +182,10 @@ describe("página de importação", () => {
   });
 
   it("mostra o erro da prévia em português e permanece no primeiro passo", async () => {
-    apiRequest.mockImplementation(() =>
-      Promise.reject(new ApiError("bank_mismatch", "Bank mismatch", 422)),
+    apiRequest.mockImplementation((path: string) =>
+      path === "/imports"
+        ? Promise.resolve([])
+        : Promise.reject(new ApiError("bank_mismatch", "Bank mismatch", 422)),
     );
     renderPage();
     fireEvent.change(screen.getByLabelText("Conta"), { target: { value: "acc-1" } });
@@ -223,6 +229,7 @@ describe("página de importação: confirmação de duplicadas (IMPIMP-06)", () 
   it("mostra a contagem no plural com 3 duplicadas selecionadas", async () => {
     apiRequest.mockImplementation((path: string) => {
       if (path === "/categories") return Promise.resolve(listMockCategories());
+      if (path === "/imports") return Promise.resolve([]);
       if (path === "/imports/preview")
         return Promise.resolve({
           rows: [row(0, "duplicate"), row(1, "duplicate"), row(2, "duplicate")],
@@ -380,6 +387,7 @@ describe("página de importação: transferências próprias neutras (IMPFIX-10)
   beforeEach(() => {
     apiRequest.mockImplementation((path: string) => {
       if (path === "/categories") return Promise.resolve(listMockCategories());
+      if (path === "/imports") return Promise.resolve([]);
       if (path === "/imports/preview") return Promise.resolve(neutralPreview);
       if (path === "/imports/confirm")
         return Promise.resolve({ batchId: "b1", imported: 3, skipped: 0 });
@@ -424,5 +432,162 @@ describe("página de importação: transferências próprias neutras (IMPFIX-10)
       { index: 1, neutral: true, categoryId: UNCATEGORIZED },
       { index: 2, neutral: false, categoryId: UNCATEGORIZED },
     ]);
+  });
+});
+
+describe("página de importação: arquivos importados e reimportação (IMPIMP-11, IMPIMP-12, IMPIMP-13)", () => {
+  const stored = (over: Partial<ImportedFile> = {}): ImportedFile => ({
+    id: "aaaaaaaa-0000-4000-8000-000000000001",
+    filename: "extrato-marco.csv",
+    mimeType: "text/csv",
+    sizeBytes: 3,
+    bank: "Nubank",
+    account: { id: "acc-1", nickname: "Nubank pessoal" },
+    createdAt: "2026-03-05T12:00:00.000Z",
+    rowCount: 3,
+    importedCount: 2,
+    skippedCount: 1,
+    ...over,
+  });
+  let files: ImportedFile[];
+
+  beforeEach(() => {
+    files = [stored()];
+    apiRequestBlob.mockReset();
+    apiRequestBlob.mockResolvedValue(new Blob(["a,b"], { type: "text/csv" }));
+    apiRequest.mockImplementation((path: string) => {
+      if (path === "/categories") return Promise.resolve(listMockCategories());
+      if (path === "/imports") return Promise.resolve([...files]);
+      if (path === "/imports/preview") return Promise.resolve(preview);
+      if (path === "/imports/confirm") {
+        files = [
+          stored({ id: "bbbbbbbb-0000-4000-8000-000000000002", filename: "novo.csv" }),
+          ...files,
+        ];
+        return Promise.resolve({ batchId: "b1", imported: 1, skipped: 2 });
+      }
+      return Promise.reject(new Error(`unexpected ${path}`));
+    });
+  });
+
+  const reimportButton = async () => screen.findByRole("button", { name: "Reimportar" });
+  const currentStep = () => screen.getByRole("listitem", { current: "step" });
+
+  it("mostra a seção Arquivos importados só no passo Conta e arquivo", async () => {
+    renderPage();
+    expect(await screen.findByText("extrato-marco.csv")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Arquivos importados" })).toBeInTheDocument();
+    await goToPreview();
+    expect(screen.queryByRole("heading", { name: "Arquivos importados" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reimportar" })).not.toBeInTheDocument();
+  });
+
+  it("Reimportar baixa o arquivo, envia o File original ao preview normal e leva ao passo Prévia", async () => {
+    renderPage();
+    fireEvent.click(await reimportButton());
+    await screen.findByRole("button", { name: "Confirmar importação" });
+    expect(apiRequestBlob).toHaveBeenCalledWith(
+      "/imports/aaaaaaaa-0000-4000-8000-000000000001/file",
+    );
+    const body = bodyOf("/imports/preview");
+    const sent = body.get("file") as File;
+    expect(sent).toBeInstanceOf(File);
+    expect(sent.name).toBe("extrato-marco.csv");
+    expect(sent.type).toBe("text/csv");
+    expect(body.get("accountId")).toBe("acc-1");
+    expect(currentStep()).toHaveTextContent("2. Prévia");
+    // Rows imported before come back as duplicates and start unselected; the default selection is unchanged.
+    expect(screen.getByRole("checkbox", { name: "Selecionar Linha 1" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Selecionar Linha 0" })).toBeChecked();
+    // Back at the start step the batch's account and file are filled in.
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(await screen.findByLabelText("Conta")).toHaveValue("acc-1");
+    expect(screen.getByText("extrato-marco.csv", { selector: "p" })).toBeInTheDocument();
+  });
+
+  it("confirma o mesmo File pelo caminho normal com uma chave de idempotência nova a cada reimportação", async () => {
+    renderPage();
+    fireEvent.click(await reimportButton());
+    fireEvent.click(await screen.findByRole("button", { name: "Confirmar importação" }));
+    await screen.findByRole("status");
+    const confirmBody = bodyOf("/imports/confirm", 0);
+    expect(confirmBody.get("file")).toBe(bodyOf("/imports/preview", 0).get("file"));
+    expect(confirmBody.get("accountId")).toBe("acc-1");
+    expect(JSON.parse(confirmBody.get("selections") as string)).toEqual([
+      { index: 0, neutral: false, categoryId: UNCATEGORIZED },
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Importar outro arquivo" }));
+    fireEvent.click(await reimportButton());
+    fireEvent.click(await screen.findByRole("button", { name: "Confirmar importação" }));
+    await waitFor(() => expect(callsTo("/imports/confirm")).toHaveLength(2));
+    const first = confirmBody.get("idempotencyKey");
+    const second = bodyOf("/imports/confirm", 1).get("idempotencyKey");
+    expect(second).toMatch(/^[0-9a-f-]{36}$/);
+    expect(second).not.toBe(first);
+  });
+
+  it("aceita um arquivo guardado cujo nome não termina em .csv", async () => {
+    files = [stored({ filename: "extrato-sem-extensao", mimeType: "application/octet-stream" })];
+    renderPage();
+    fireEvent.click(await reimportButton());
+    await screen.findByRole("button", { name: "Confirmar importação" });
+    const sent = bodyOf("/imports/preview").get("file") as File;
+    expect(sent.name).toBe("extrato-sem-extensao");
+  });
+
+  it("falha no download mantém o passo inicial com o alerta da lista e não gera prévia", async () => {
+    apiRequestBlob.mockRejectedValue(new ApiError("storage_error", "S3 exploded", 502));
+    renderPage();
+    fireEvent.click(await reimportButton());
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(
+      "Não foi possível acessar o arquivo guardado. Tente novamente.",
+    );
+    expect(alert).not.toHaveTextContent("S3 exploded");
+    expect(callsTo("/imports/preview")).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "Gerar prévia" })).toBeInTheDocument();
+    expect(currentStep()).toHaveTextContent("1. Conta e arquivo");
+    expect(screen.getByRole("button", { name: "Reimportar" })).toBeEnabled();
+  });
+
+  it("falha no preview (conta inativa) mantém o passo inicial com conta e arquivo preenchidos e a mensagem no formulário", async () => {
+    const base = apiRequest.getMockImplementation() as (path: string) => Promise<unknown>;
+    apiRequest.mockImplementation((path: string) =>
+      path === "/imports/preview"
+        ? Promise.reject(new ApiError("invalid_account", "Select an active account", 422))
+        : base(path),
+    );
+    renderPage();
+    fireEvent.click(await reimportButton());
+    expect(await screen.findByText("Selecione uma conta ativa")).toBeInTheDocument();
+    expect(screen.getByLabelText("Conta")).toHaveValue("acc-1");
+    expect(screen.getByText("extrato-marco.csv", { selector: "p" })).toBeInTheDocument();
+    expect(currentStep()).toHaveTextContent("1. Conta e arquivo");
+    expect(screen.queryByRole("button", { name: "Confirmar importação" })).not.toBeInTheDocument();
+  });
+
+  it("depois de confirmar com sucesso, voltar ao passo inicial mostra o novo lote", async () => {
+    renderPage();
+    await screen.findByText("extrato-marco.csv");
+    expect(screen.queryByText("novo.csv")).not.toBeInTheDocument();
+    await goToPreview();
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar importação" }));
+    await screen.findByRole("status");
+    fireEvent.click(screen.getByRole("button", { name: "Importar outro arquivo" }));
+    expect(await screen.findByText("novo.csv")).toBeInTheDocument();
+    expect(screen.getByText("extrato-marco.csv")).toBeInTheDocument();
+  });
+
+  it("os botões da linha ficam desabilitados enquanto o arquivo é baixado para reimportar", async () => {
+    let release: (blob: Blob) => void = () => {};
+    apiRequestBlob.mockReturnValue(new Promise<Blob>((resolve) => (release = resolve)));
+    renderPage();
+    fireEvent.click(await reimportButton());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Reimportar" })).toBeDisabled());
+    expect(screen.getByRole("button", { name: "Baixar" })).toBeDisabled();
+    release(new Blob(["a,b"], { type: "text/csv" }));
+    await screen.findByRole("button", { name: "Confirmar importação" });
+    expect(callsTo("/imports/preview")).toHaveLength(1);
   });
 });

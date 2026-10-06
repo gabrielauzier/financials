@@ -49,7 +49,7 @@ VITE_SUPABASE_URL=http://127.0.0.1:55321
 VITE_SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY from `pnpm -C api db:status`>
 VITE_API_URL=http://127.0.0.1:3001
 # Areas still without a backend keep their mocks (comma separated; `*` mocks everything):
-VITE_MOCK_AREAS=import,creditExpenses,dashboard,investmentReturns
+VITE_MOCK_AREAS=imports,creditExpenses,dashboard,investmentReturns
 ```
 
 - Sign-up e-mails land in Inbucket (http://127.0.0.1:55324); the confirmation link redirects to `http://localhost:8080`, the origin configured in `supabase/config.toml` (`site_url` and `additional_redirect_urls`).

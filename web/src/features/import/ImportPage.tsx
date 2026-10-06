@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { ImportConfirmResult, ImportPreview } from "@/lib/api/types";
+import type { ImportConfirmResult, ImportedFile, ImportPreview } from "@/lib/api/types";
 import { DuplicateConfirmDialog } from "./DuplicateConfirmDialog";
+import { ImportedFilesList } from "./ImportedFilesList";
 import { ImportPreviewTable } from "./ImportPreviewTable";
 import { ImportStartStep } from "./ImportStartStep";
 import { ImportFailure, ImportSuccess } from "./ImportSummary";
@@ -12,7 +13,12 @@ import {
   selectedPayload,
   type PreviewSelection,
 } from "./previewSelection";
-import { useIdempotencyKey, useImportConfirm, useImportPreview } from "./useImport";
+import {
+  useIdempotencyKey,
+  useImportConfirm,
+  useImportPreview,
+  useReimportFile,
+} from "./useImport";
 
 type Step = "start" | "preview" | "summary";
 const steps: Array<[Step, string]> = [
@@ -27,29 +33,45 @@ export function ImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreview>();
   const [selection, setSelection] = useState<PreviewSelection>({});
+  const [reimportingId, setReimportingId] = useState<string>();
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const [result, setResult] = useState<ImportConfirmResult>();
   const { key: idempotencyKey, renew } = useIdempotencyKey();
   const previewRequest = useImportPreview();
   const confirmRequest = useImportConfirm();
+  const reimportRequest = useReimportFile();
 
   const payload = preview ? selectedPayload(preview.rows, selection) : [];
   const duplicateCount = preview ? selectedDuplicateCount(preview.rows, selection) : 0;
 
-  const generatePreview = () => {
-    if (!file || !accountId) return;
-    previewRequest.mutate(
-      { file, accountId },
-      {
-        onSuccess: (data) => {
-          renew();
-          confirmRequest.reset();
-          setPreview(data);
-          setSelection(initialSelection(data.rows));
-          setStep("preview");
-        },
+  const generatePreview = (input?: { file: File; accountId: string }) => {
+    const source = input ?? (file && accountId ? { file, accountId } : undefined);
+    if (!source) return;
+    previewRequest.mutate(source, {
+      onSettled: () => setReimportingId(undefined),
+      onSuccess: (data) => {
+        renew();
+        confirmRequest.reset();
+        setPreview(data);
+        setSelection(initialSelection(data.rows));
+        setStep("preview");
       },
-    );
+    });
+  };
+
+  // Reimport: the stored file goes through the same preview and confirm as an uploaded one.
+  const reimport = (item: ImportedFile) => {
+    if (reimportRequest.isPending || previewRequest.isPending) return;
+    previewRequest.reset();
+    setReimportingId(item.id);
+    reimportRequest.mutate(item, {
+      onError: () => setReimportingId(undefined),
+      onSuccess: (stored) => {
+        setAccountId(item.account.id);
+        setFile(stored);
+        generatePreview({ file: stored, accountId: item.account.id });
+      },
+    });
   };
 
   // Retries reuse the same session key: the server replays instead of importing twice.
@@ -112,9 +134,16 @@ export function ImportPage() {
           file={file}
           onAccountChange={setAccountId}
           onFileChange={setFile}
-          onSubmit={generatePreview}
+          onSubmit={() => generatePreview()}
           isPending={previewRequest.isPending}
           error={previewRequest.error}
+        />
+      ) : null}
+      {step === "start" ? (
+        <ImportedFilesList
+          onReimport={reimport}
+          reimportingId={reimportingId}
+          reimportError={reimportRequest.error}
         />
       ) : null}
       {step === "preview" && preview ? (

@@ -439,15 +439,15 @@ T12 → T13
 
 **Done when**:
 
-- [ ] List test: each file shows its filename, the account nickname, the date as `dd/mm/aaaa`, "N importadas · M ignoradas" with singular and plural, and the buttons "Reimportar" and "Baixar"; the section is shown only in the "Conta e arquivo" step (AC 1)
-- [ ] List test: while loading it shows 3 skeleton rows; with no files it shows "Nenhum arquivo importado ainda." and no buttons; on a list error it shows the Portuguese message from `messageForError(error, "import")` (storage and generic cases) and "Tentar novamente" refetches (AC 2, 3 and 4, L-013)
-- [ ] Download test: "Baixar" requests `GET /imports/:id/file` with the authenticated client, creates an object URL, triggers an anchor with `download` equal to the original filename and revokes the URL; no token or Storage path appears in the URL; the row buttons are disabled while it runs; a failure shows the Portuguese alert without the API text (AC 5, 6 and 7)
-- [ ] Reimport test: "Reimportar" downloads the file, posts `/imports/preview` with a `File` of the original name and type and the batch's `accountId`, and shows the "Prévia" step with the account selected; the preview's duplicates start unselected; confirming posts the same `File` to `/imports/confirm` with a new idempotency key and the `selections` payload (AC 8 and 9)
-- [ ] Reimport failure tests: a failed download keeps the start step and shows the list alert with no preview request (AC 10); a preview failure (`invalid_account`) keeps the start step with the account and file filled and shows "Selecione uma conta ativa" in the form (AC 11, L-013); a file name without `.csv` is accepted (edge case)
-- [ ] After a successful confirm, returning to the start step shows the new batch (the `["imports"]` query is invalidated and refetched) (AC 12)
-- [ ] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
+- [x] List test: each file shows its filename, the account nickname, the date as `dd/mm/aaaa`, "N importadas · M ignoradas" with singular and plural, and the buttons "Reimportar" and "Baixar"; the section is shown only in the "Conta e arquivo" step (AC 1)
+- [x] List test: while loading it shows 3 skeleton rows; with no files it shows "Nenhum arquivo importado ainda." and no buttons; on a list error it shows the Portuguese message from `messageForError(error, "import")` (storage and generic cases) and "Tentar novamente" refetches (AC 2, 3 and 4, L-013)
+- [x] Download test: "Baixar" requests `GET /imports/:id/file` with the authenticated client, creates an object URL, triggers an anchor with `download` equal to the original filename and revokes the URL; no token or Storage path appears in the URL; the row buttons are disabled while it runs; a failure shows the Portuguese alert without the API text (AC 5, 6 and 7)
+- [x] Reimport test: "Reimportar" downloads the file, posts `/imports/preview` with a `File` of the original name and type and the batch's `accountId`, and shows the "Prévia" step with the account selected; the preview's duplicates start unselected; confirming posts the same `File` to `/imports/confirm` with a new idempotency key and the `selections` payload (AC 8 and 9)
+- [x] Reimport failure tests: a failed download keeps the start step and shows the list alert with no preview request (AC 10); a preview failure (`invalid_account`) keeps the start step with the account and file filled and shows "Selecione uma conta ativa" in the form (AC 11, L-013); a file name without `.csv` is accepted (edge case)
+- [x] After a successful confirm, returning to the start step shows the new batch (the `["imports"]` query is invalidated and refetched) (AC 12)
+- [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
 - [ ] Browser check against the local API recorded in the commit body: import a file, see it in "Arquivos importados", "Baixar" saves an identical CSV, "Reimportar" opens the preview in the right account with the rows as "Duplicada", "Selecionar todas" then "Confirmar importação" shows the duplicates dialog, and category, value colors and the missing "Tipo" column are as specified
-- [ ] Test count: the existing web tests plus about 16 new ones pass (no silent deletions)
+- [x] Test count: the existing web tests plus about 16 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: build
