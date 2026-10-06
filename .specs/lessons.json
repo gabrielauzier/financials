@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 27,
+  "next_id": 29,
   "lessons": [
     {
       "id": "L-001",
@@ -478,6 +478,42 @@
       ],
       "created": "2026-10-06T00:12:53Z",
       "last_seen": "2026-10-06T00:12:53Z"
+    },
+    {
+      "id": "L-027",
+      "key": "gate_fail::budget heavy jsdom component tests so the suite stays green when a second suite or ci job shares the machine measure a two suite run and keep the slowest test under half of testtimeout",
+      "text": "Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.",
+      "signal": "gate_fail",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)"
+      ],
+      "created": "2026-10-06T01:07:31Z",
+      "last_seen": "2026-10-06T01:07:31Z"
+    },
+    {
+      "id": "L-028",
+      "key": "surviving_mutant::when a fix adds a pending disabled guard to a destructive action double submit assert the disabled state while the request is in flight not only the failure path",
+      "text": "When a fix adds a pending/disabled guard to a destructive action (double-submit), assert the disabled state while the request is in flight, not only the failure path.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant M12 (validation.md iteration 2) (ui-tests)"
+      ],
+      "created": "2026-10-06T01:07:31Z",
+      "last_seen": "2026-10-06T01:07:31Z"
     }
   ]
 }

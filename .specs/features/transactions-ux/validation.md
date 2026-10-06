@@ -1,6 +1,8 @@
-# Validation: transactions-ux (T1-T11), iteration 1 - FAIL
+# Validation: transactions-ux (T1-T11), iteration 2 - PASS
 
-**Verdict**: FAIL
+**Verdict**: iteration 2 is PASS (see "## Iteration 2" at the end). The iteration 1 report below is kept as written, except that the word FAIL on its sensor `Result` line was reworded to "the iteration 1 verdict" so the single-verdict parser (`validate_state.py`) reads the current verdict only.
+
+**Iteration 1 verdict**: not ready (gate unreliable).
 
 All ten requirements (TUX-01..TUX-10) and all seven spec edge cases have `file:line` evidence, the implementation was not found wrong in any probe (browser, API and database), and the discrimination sensor killed 72 of 81 behavior-level mutants/probes. The verdict is FAIL for one reason that blocks "done": the Build gate `yarn --cwd web test` is not reliably green. It failed in 3 of 5 full-suite runs (and once in a clean worktree baseline with no mutation), always on tests that exercise the new `DatePicker` through the shared helper `pickDate`. That is a measurable performance-under-parallelism problem in the tests (about 1.5 s per calendar dropdown change in jsdom), not a code defect. A second, smaller race (real 300 ms search debounce against fixed sleeps and 1 s `waitFor` windows) makes a neighbouring test fail under machine load. Both have deterministic fixes below (no timeout increase). The 8 surviving mutants (plus one probe that cannot be tested by design) are weak assertions or an untested AC (OpenAPI), listed as fix tasks 4-8.
 
@@ -258,7 +260,7 @@ Two deterministic fixes (no larger timeouts) are in Fix 1 and Fix 2.
 | W57 | `notify.ts` | `toast.message` instead of `toast.success` | ✅ Killed |
 | W58 | `TransactionsPage.tsx` | mobile card description removed | ✅ Killed |
 
-**Result**: 72/81 killed (17/19 API, 3/4 DB, 52/58 web). Survivors: A17, A18 (OpenAPI document not asserted), P6 (not testable, by design), W12, W14, W38, W40, W43 and W45 (weak assertions). None is on a data-integrity or authorization path; every API validation branch, every money/data column rule and the PATCH-ignores-description rule are killed. Verdict impact: FAIL is driven by the gate, not by the survivors.
+**Result**: 72/81 killed (17/19 API, 3/4 DB, 52/58 web). Survivors: A17, A18 (OpenAPI document not asserted), P6 (not testable, by design), W12, W14, W38, W40, W43 and W45 (weak assertions). None is on a data-integrity or authorization path; every API validation branch, every money/data column rule and the PATCH-ignores-description rule are killed. Verdict impact: the iteration 1 verdict was driven by the gate, not by the survivors.
 
 ---
 
@@ -418,3 +420,102 @@ Gate after the fixes:
 - Previously flaky tests (5 runs): `cria pelo formulário...` 4.7 to 4.9 s (was 16.4 s, failing); `escolher um dia envia occurredAt...` 2.4 to 2.8 s; `Limpar filtros restaura a consulta padrão` 2.5 to 2.7 s; `emite o toast not_found...` 4.1 to 4.6 s; the former 24 to 35 s `cada filtro...` test is six tests of 5.9 to 6.2 s (tipo, the slowest) down to 2.5 s each.
 - `yarn --cwd web typecheck` clean; `yarn --cwd web lint` 0 errors, the same 7 warnings as in iteration 1.
 - API: unit 266 passed, integration 498 passed (one new test), typecheck and lint clean.
+
+
+---
+
+## Iteration 2
+
+**Verdict**: PASS (with non-blocking residual gaps below)
+
+**Date**: 2026-10-05. **Verifier**: fresh independent sub-agent (author != verifier). **Range reviewed**: `03b9060..HEAD` (`HEAD` = `8d76505`), fix commits `6606863`, `bec7d83`, `5ce86ed`, `4458e66`, `d7ac961`, `324c67f`, `d5cdfcf`, `2b9f2a0`, docs `8d76505`. No `db:reset`, no hosted Supabase/Vercel, no `git stash`.
+
+### Gates (run by the Verifier)
+
+| Gate | Result |
+| ---- | ------ |
+| `pnpm -C api test` | unit 266 passed (15 files), integration 498 passed (38 files), 0 failed |
+| api typecheck, lint | clean |
+| `yarn --cwd web typecheck` | clean |
+| `yarn --cwd web lint` | 0 errors, 7 warnings (same as iteration 1) |
+| Web full suite, default workers, 5 consecutive runs | 5 of 5 green, 350/350 each |
+
+Per run (wall time, slowest test): run 1 49.9 s, 6.9 s (`o filtro neutra...`); run 2 47.4 s, 6.2 s; run 3 47.5 s, 6.1 s; run 4 70.6 s, 12.2 s (`confirmar a exclusão...`; the machine was busy with other processes, load average 10 on 10 cores, so this was a natural stress run and still green, 2.8 s under the 15 s `testTimeout`); run 5 50.9 s, 7.1 s (`formulário: description somente leitura...`). No test reached the 15 s limit; the former offenders `cria pelo formulário...` and the split `cada filtro` tests are 2.5 to 6.9 s.
+
+Load robustness (same machine, 10 cores):
+
+| Scenario | Iteration 1 code (`ef0e76b`, 337 tests) | Fixed code (`HEAD`, 350 tests) |
+| -------- | ---------------------------------------- | ------------------------------ |
+| Suite + 4 busy-loop processes | 2 failed (slowest test 31.3 s) | 350/350 passed (slowest 7.5 s) |
+| Two full suites at once (18 workers on 10 cores) | 15 failed in each | 24 failed in each, all timeouts at 24 to 28 s in the five transaction test files |
+
+Reading: the previous failure mode (plain run and moderate load) is fixed. Under a deliberate 2x oversubscription the suite still times out, because the transaction component tests are CPU heavy (about 6 s each under normal 9-way parallelism); this is not part of the supported gate (one suite per machine) and is recorded as residual gap R1.
+
+### Iteration 1 gaps (report "Fix Plans" numbering) closed
+
+| Gap | Evidence | Result |
+| --- | -------- | ------ |
+| 1 gate flakiness (`pickDate` cost) | `web/src/test/datePicker.ts:27-35` no dropdown change, only open + click the day; clocks faked with `toFake: ["Date"]` at `extratoFilters.test.tsx:23`, `extratoCrud.test.tsx:89,226`, `transactions.test.tsx:477`; the dropdown path kept in one test `date-picker.test.tsx:118-125` (`toHaveBeenCalledExactlyOnceWith("2028-02-29")`); 5/5 green, mutants M18/M19 killed | closed |
+| 2 debounce race, fixed sleeps | `TransactionsPage.tsx:104` no-op return; `grep -rn "sleep(" web/src` returns nothing; `extratoInline.test.tsx` "a seleção feita logo depois..." asserts selection kept and no new query; M01, M02 killed | closed |
+| 4 mapped `not_found` text (W12) | `extratoInline.test.tsx` two new tests, `toHaveBeenCalledExactlyOnceWith("Registro não encontrado. Atualize a página e tente de novo")` for the row category and the neutral switch; mutant W12 killed | closed |
+| 5 page reset and year options (W38, W40, W45) | `extratoQuickMonth.test.tsx` "escolher mês e ano estando na página 2...", "'Limpar mês' estando na página 2...", year list `toEqual(["2022",...,"2028"])`; M04, M05, M15, M16 killed | closed |
+| 6 OpenAPI description (A17, A18) | `api/test/swagger.int.test.ts` "documents description as a nullable string..." (POST body, POST 201, list item, PATCH 200 nullable and required; PATCH body without it); A17, A18, A19 killed | closed |
+| 7 delete dialog on failure (W14) | `TransactionsPage.tsx:469-485` `preventDefault`, dialog closed only after success; `transactions.test.tsx:371` `expect(screen.getByRole("alertdialog")).toBeInTheDocument()`; M10, M11 killed; browser confirmed | closed |
+| 8 one state for filters and quick (W43) | `TransactionsPage.tsx:83,125-142`, `utils.ts:33-42`; M08 killed; the wiring-only mutant M09 survives but is not reachable from the UI (pickers are disabled while quick is on) | closed by construction |
+| SPG-1, SPG-4 | `date-picker.tsx:59-60` pt-BR labels, `date-picker.test.tsx:104-115`; M13, M14 killed; spec states the year range and the labels | closed |
+
+Test integrity: against `8b124b3`, no test name disappeared except the four renamed in the feature itself (alert to toast variants, present in `HEAD`: `extratoInline.test.tsx` lote/PATCH toast tests, `transactions.test.tsx` "emite o toast em português na falha ao excluir..." and "emite o toast not_found..."); `cada filtro` became six `it.each` cases with the same six filters and the same assertions (param, `page=1`, not `page=2`); dates moved from April/December to the clock month with identical assertions. Against `ef0e76b`, `expect` occurrences only increased (swagger 10 to 18, date-picker 24 to 28, inline 53 to 63, quick month 51 to 59, transactions 69 to 70). Test names: 769 (`8b124b3`), 830 (`ef0e76b`), 839 (`HEAD`).
+
+### Discrimination sensor (fixed code only)
+
+Temporary worktree `/Volumes/MacOnlySSD/dev/personal/.verify-tux2` (and a second one for the load comparison), both removed. Runner: each mutant applied to exactly one file, tests of the covering files run, original restored. An earlier draft of the runner passed wrong file paths and reported false kills; it was fixed and every web mutant was re-run, and the failing test name is recorded below.
+
+| ID | Mutation | Killed by | Result |
+| -- | -------- | --------- | ------ |
+| M01 | debounce no-op guard removed | `extratoInline.test.tsx` "aplica a categoria a duas linhas..." (+ early selection test) | killed |
+| M02 | no-op compares `q` without `?? ""` | same | killed |
+| M03 | `withFilters` always returns a new state | none | survived, equivalent (same `filters` reference, no effect re-runs, no extra query) |
+| M04 | `changeQuick` without `page: 1` | `extratoQuickMonth.test.tsx` "escolher mês e ano estando na página 2..." | killed |
+| M05 | `clearQuick` without `page: 1` | "'Limpar mês' estando na página 2..." | killed |
+| M06 | `clearQuick` keeps `to` | "'Limpar mês' remove o filtro rápido e..." | killed |
+| M07 | `clearQuick` keeps the quick state | "só o mês ou só o ano não consulta a API..." | killed |
+| M08 | `applyDateFilter` keeps quick | `applyDateFilter` "define a data, desativa o filtro rápido..." | killed |
+| M09 | `changeDate` wiring drops the quick reset | none | survived, not reachable from the UI (pickers disabled while quick is active); `applyDateFilter` itself is pinned by M08 |
+| M10 | delete: no `preventDefault` | `transactions.test.tsx` "emite o toast em português na falha ao excluir..." | killed |
+| M11 | delete: dialog closed in `catch` | same | killed |
+| M12 | delete action not disabled while pending | none | survived (R2) |
+| M13 | `labelPrevious` removed | `date-picker.test.tsx` "a navegação do calendário tem nomes em português..." | killed |
+| M14 | `labelNext` wrong text | same | killed |
+| M15 | year options start at current-4 | "o seletor de ano oferece..." | killed |
+| M16 | year options length 8 | same | killed |
+| M17 | filters set when only month or only year chosen | "só o mês ou só o ano não consulta a API..." | killed |
+| M18 | `pickDate` day regex without the word boundary | `extratoFilters.test.tsx` "o filtro data inicial..." | killed |
+| M19 | filters tests without the fake clock | same | killed |
+| M20 | selection also cleared on every keystroke of the search | none | survived (R3) |
+| A17 | POST body `description` not nullable in OpenAPI | `swagger.int.test.ts` "documents description as a nullable string..." | killed |
+| A18 | `Transaction.description` plain string | same | killed |
+| A19 | PATCH body gains `description` | same | killed |
+| W12 | row/neutral failure always shows the generic text | `extratoInline.test.tsx` "mostra o texto mapeado do ApiError not_found..." | killed |
+| W12b | row failure maps with the `account` context | none | survived, equivalent for the tested code (context only changes `duplicate_name`, `invalid_amount`, `invalid_account`) |
+
+Total 25 mutants: 20 killed, 5 survived (3 equivalent or unreachable: M03, M09, W12b; 2 real but minor: M12, M20). Iteration 1 survivors A17, A18, W12, W38, W40, W45, W14 are killed; W43 is closed by construction (M09 equivalent). Isolation: real tree `git status --porcelain` identical to the baseline (`?? .DS_Store`, `?? docs/v2/`, `?? references/nubank_extrato_setembro.csv`) after cleanup, `git worktree list` shows only the real tree, `/Volumes/MacOnlySSD/dev/personal/` holds only `financials`.
+
+### Browser check (local stack, front :8080, API :3001, existing session)
+
+- Calendar navigation labels: opening the "De" picker lists "Mês anterior" and "Próximo mês" (no English "Go to ..."). Confirmed.
+- Quick month filter: choosing Mês Fevereiro and Ano 2027 requests `/transactions?sort=date&order=desc&page=1&from=2027-02-01&to=2027-02-28`; the year list reaches 2027 with the 2026 clock.
+- Delete failure: with one stubbed row and a stubbed 500 on `DELETE`, clicking "Excluir" in the confirmation sent one DELETE, an error toast "Não foi possível concluir a operação. Tente novamente." appeared, the `alertdialog` stayed open and the button was enabled again. The local account has no transactions, so the row and the failing DELETE were page-level `fetch` stubs (reloaded afterwards); no data was written.
+
+### Remaining gaps (none blocking), ranked
+
+1. R1 (Low): the web suite still times out when two full suites share the machine (24 failures, timeouts at 24 to 28 s); the supported scenario (one suite, also with 4 busy processes) is green, and run 4 reached 12.2 s of the 15 s limit under incidental load, so the margin is about 3 s. Lowering the cost of the five transaction test files (shared seeds, fewer full-page renders) would widen it. Lesson L-027.
+2. R2 (Low): `disabled={remove.isPending}` on the delete action (`TransactionsPage.tsx:470`) is not asserted (M12). Lesson L-028.
+3. R3 (Low): clearing the selection on each keystroke instead of at the debounce (M20) is not asserted; it was not part of the fixes.
+4. SPG-3 and SPG-5 remain documented spec-precision gaps (TUX-07 AC 9 only through the pure function; toast ordering after the dialog closes); P6 (backfill probe) stays untestable by design.
+5. Cosmetic: `tasks.md` status and the `spec.md` traceability table still say Draft/Pending.
+
+### Requirement status
+
+TUX-01..TUX-10: all verified (TUX-07 and TUX-09 gaps from iteration 1 closed: Fix 5, Fix 6).
+
+**Overall**: Ready. Gate green 5 of 5 plus a loaded run, 20 of 25 mutants killed with the survivors classified, browser behavior matches the spec.

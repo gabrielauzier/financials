@@ -168,6 +168,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SPG-2 (validation.md) (spec-outcomes)
 - last seen: 2026-10-06T00:12:53Z
 
+### L-027 - Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux
+- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)
+- last seen: 2026-10-06T01:07:31Z
+
+### L-028 - When a fix adds a pending/disabled guard to a destructive action (double-submit), assert the disabled state while the request is in flight, not only the failure path.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux
+- evidence: mutant M12 (validation.md iteration 2) (ui-tests)
+- last seen: 2026-10-06T01:07:31Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
