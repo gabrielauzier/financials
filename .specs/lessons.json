@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 19,
+  "next_id": 27,
   "lessons": [
     {
       "id": "L-001",
@@ -334,6 +334,150 @@
       ],
       "created": "2026-10-05T19:28:16Z",
       "last_seen": "2026-10-05T19:28:16Z"
+    },
+    {
+      "id": "L-019",
+      "key": "gate_fail::pick dates in jsdom tests through the month the calendar already shows fake clock not through dropdown navigation each calendar dropdown change costs about 1 5 s and the test times out under parallel load",
+      "text": "Pick dates in jsdom tests through the month the calendar already shows (fake clock), not through dropdown navigation: each Calendar dropdown change costs about 1.5 s and the test times out under parallel load",
+      "signal": "gate_fail",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "Gate Check runs 1,4 (extratoCrud.test.tsx:83, extratoFilters.test.tsx:74) (ui-tests)"
+      ],
+      "created": "2026-10-06T00:12:52Z",
+      "last_seen": "2026-10-06T00:12:52Z"
+    },
+    {
+      "id": "L-020",
+      "key": "gate_fail::wait for a debounce with fake timers or the recorded request never with fixed real sleeps or default waitfor windows",
+      "text": "Wait for a debounce with fake timers or the recorded request, never with fixed real sleeps or default waitFor windows",
+      "signal": "gate_fail",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "Gate Check, extratoFilters.test.tsx:99 and sleeps at extratoInline.test.tsx:123 (ui-tests)"
+      ],
+      "created": "2026-10-06T00:12:52Z",
+      "last_seen": "2026-10-06T00:12:52Z"
+    },
+    {
+      "id": "L-021",
+      "key": "surviving_mutant::start every filter reset test from page 2 and assert the next query is page 1 for every control that changes the query",
+      "text": "Start every filter-reset test from page 2 and assert the next query is page 1, for every control that changes the query",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutants W38, W40 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T00:12:52Z",
+      "last_seen": "2026-10-06T00:12:52Z"
+    },
+    {
+      "id": "L-022",
+      "key": "surviving_mutant::on every error toast path assert the text mapped from an apierror code not only the generic fallback",
+      "text": "On every error-toast path assert the text mapped from an ApiError code, not only the generic fallback",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant W12 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T00:12:52Z",
+      "last_seen": "2026-10-06T00:12:52Z"
+    },
+    {
+      "id": "L-023",
+      "key": "surviving_mutant::assert the content of the openapi document for every field the spec names not only that the committed file equals a fresh export",
+      "text": "Assert the content of the OpenAPI document for every field the spec names, not only that the committed file equals a fresh export",
+      "signal": "surviving_mutant",
+      "scope": "openapi",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutants A17, A18 (validation.md) (openapi)"
+      ],
+      "created": "2026-10-06T00:12:53Z",
+      "last_seen": "2026-10-06T00:12:53Z"
+    },
+    {
+      "id": "L-024",
+      "key": "surviving_mutant::assert the exact option list of a select whose range the spec derives from a rule",
+      "text": "Assert the exact option list of a select whose range the spec derives from a rule",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant W45 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T00:12:53Z",
+      "last_seen": "2026-10-06T00:12:53Z"
+    },
+    {
+      "id": "L-025",
+      "key": "spec_precision_gap::write spec examples that are reachable with the real clock when an input range is derived from the current date",
+      "text": "Write spec examples that are reachable with the real clock when an input range is derived from the current date",
+      "signal": "spec_precision_gap",
+      "scope": "spec-outcomes",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPG-1 (validation.md) (spec-outcomes)"
+      ],
+      "created": "2026-10-06T00:12:53Z",
+      "last_seen": "2026-10-06T00:12:53Z"
+    },
+    {
+      "id": "L-026",
+      "key": "spec_precision_gap::state in the spec the dialog state after a failed confirm action not only the toast",
+      "text": "State in the spec the dialog state after a failed confirm action, not only the toast",
+      "signal": "spec_precision_gap",
+      "scope": "spec-outcomes",
+      "status": "candidate",
+      "features": [
+        "transactions-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPG-2 (validation.md) (spec-outcomes)"
+      ],
+      "created": "2026-10-06T00:12:53Z",
+      "last_seen": "2026-10-06T00:12:53Z"
     }
   ]
 }

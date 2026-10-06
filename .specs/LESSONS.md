@@ -120,6 +120,54 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SPG-2 (validation.md): percentage format (formatting)
 - last seen: 2026-10-05T19:28:16Z
 
+### L-019 - Pick dates in jsdom tests through the month the calendar already shows (fake clock), not through dropdown navigation: each Calendar dropdown change costs about 1.5 s and the test times out under parallel load
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux
+- evidence: Gate Check runs 1,4 (extratoCrud.test.tsx:83, extratoFilters.test.tsx:74) (ui-tests)
+- last seen: 2026-10-06T00:12:52Z
+
+### L-020 - Wait for a debounce with fake timers or the recorded request, never with fixed real sleeps or default waitFor windows
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux
+- evidence: Gate Check, extratoFilters.test.tsx:99 and sleeps at extratoInline.test.tsx:123 (ui-tests)
+- last seen: 2026-10-06T00:12:52Z
+
+### L-021 - Start every filter-reset test from page 2 and assert the next query is page 1, for every control that changes the query
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux
+- evidence: mutants W38, W40 (validation.md) (ui-tests)
+- last seen: 2026-10-06T00:12:52Z
+
+### L-022 - On every error-toast path assert the text mapped from an ApiError code, not only the generic fallback
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux
+- evidence: mutant W12 (validation.md) (ui-tests)
+- last seen: 2026-10-06T00:12:52Z
+
+### L-023 - Assert the content of the OpenAPI document for every field the spec names, not only that the committed file equals a fresh export
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `openapi` · harmful: 0
+- features: transactions-ux
+- evidence: mutants A17, A18 (validation.md) (openapi)
+- last seen: 2026-10-06T00:12:53Z
+
+### L-024 - Assert the exact option list of a select whose range the spec derives from a rule
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux
+- evidence: mutant W45 (validation.md) (ui-tests)
+- last seen: 2026-10-06T00:12:53Z
+
+### L-025 - Write spec examples that are reachable with the real clock when an input range is derived from the current date
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: transactions-ux
+- evidence: SPG-1 (validation.md) (spec-outcomes)
+- last seen: 2026-10-06T00:12:53Z
+
+### L-026 - State in the spec the dialog state after a failed confirm action, not only the toast
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: transactions-ux
+- evidence: SPG-2 (validation.md) (spec-outcomes)
+- last seen: 2026-10-06T00:12:53Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
