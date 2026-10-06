@@ -297,16 +297,66 @@ describe("extrato: quando o 'x' de cada filtro aparece", () => {
     expect(lastParams()["from"]).toBeUndefined();
   });
 
-  it("estando na página 2, limpar um filtro consulta a página 1", async () => {
-    await renderLoaded();
-    pickDate("De", "2026-06-01");
-    await screen.findByText(/Página 1 de 3/);
-    fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
-    await screen.findByText(/Página 2 de 3/);
-    expect(lastParams()["page"]).toBe("2");
-    fireEvent.click(clearButton("De"));
-    await waitFor(() => expect(lastParams()).toMatchObject({ page: "1" }));
-    expect(lastParams()["from"]).toBeUndefined();
-    await screen.findByText(/Página 1 de 3/);
-  });
+  // Each filter is applied, the list goes to page 2 and the filter's "x" must bring it back to page 1
+  // (and drop only its own parameter). Timers are faked (see the top of the file): nothing sleeps.
+  const PAGE_TWO: { label: string; key: string[]; apply: () => Promise<void> | void }[] = [
+    {
+      label: "Busca",
+      key: ["q"],
+      apply: async () => {
+        fireEvent.change(screen.getByLabelText("Buscar por nome"), { target: { value: "Farm" } });
+        await advance(300);
+        await waitFor(() => expect(lastParams()["q"]).toBe("Farm"));
+      },
+    },
+    { label: "Tipo", key: ["type"], apply: () => chooseOption("Tipo", "Receita") },
+    {
+      label: "Conta",
+      key: ["accountId"],
+      apply: async () => {
+        const [account] = await mockRequest<Account[]>({ method: "GET", path: "/accounts" });
+        if (!account) throw new Error("seed");
+        await chooseOption("Conta", account.nickname);
+      },
+    },
+    {
+      label: "Categoria",
+      key: ["categoryId"],
+      apply: async () => {
+        const [category] = (
+          await mockRequest<Category[]>({ method: "GET", path: "/categories" })
+        ).slice(-1);
+        if (!category) throw new Error("seed");
+        await chooseOption("Categoria", category.name);
+      },
+    },
+    { label: "Neutra", key: ["neutral"], apply: () => chooseOption("Neutra", "Sim") },
+    { label: "De", key: ["from"], apply: () => pickDate("De", "2026-06-01") },
+    { label: "Até", key: ["to"], apply: () => pickDate("Até", "2026-06-30") },
+    {
+      label: "Mês rápido",
+      key: ["from", "to"],
+      apply: async () => {
+        await chooseOption("Mês", "Junho");
+        await chooseOption("Ano", "2026");
+      },
+    },
+  ];
+
+  it.each(PAGE_TWO)(
+    "estando na página 2, limpar $label consulta a página 1 e remove só o seu parâmetro",
+    async ({ label, key, apply }) => {
+      await renderLoaded();
+      await apply();
+      await waitFor(() => key.forEach((name) => expect(lastParams()[name]).toBeDefined()));
+      await screen.findByText(/Página 1 de 3/);
+      fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
+      await screen.findByText(/Página 2 de 3/);
+      expect(lastParams()["page"]).toBe("2");
+      fireEvent.click(clearButton(label));
+      await waitFor(() => expect(lastParams()["page"]).toBe("1"));
+      for (const name of key) expect(lastParams()[name]).toBeUndefined();
+      await screen.findByText(/Página 1 de 3/);
+    },
+  );
 });
