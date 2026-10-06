@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (typecheck, lint, unit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: api/pnpm-lock.yaml
+      - run: pnpm -C api install --frozen-lockfile
+      - run: pnpm -C api typecheck
+      - run: pnpm -C api lint
+      - run: pnpm -C api test:unit
+
+  api-integration:
+    name: API (integration, local Supabase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: api/pnpm-lock.yaml
+      - run: pnpm -C api install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.119.0
+      # Applies supabase/migrations and starts Auth, Storage and the mail catcher the tests use.
+      - name: Start the local Supabase stack
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
+      - name: Export the stack settings for the tests
+        run: |
+          supabase status -o env > /tmp/supabase.env
+          get() { grep "^$1=" /tmp/supabase.env | cut -d= -f2- | tr -d '"'; }
+          {
+            echo "TEST_SUPABASE_URL=$(get API_URL)"
+            echo "TEST_DATABASE_URL=$(get DB_URL)"
+            echo "TEST_SUPABASE_ANON_KEY=$(get ANON_KEY)"
+            echo "TEST_SUPABASE_PUBLISHABLE_KEY=$(get PUBLISHABLE_KEY)"
+            echo "TEST_SUPABASE_SERVICE_ROLE_KEY=$(get SERVICE_ROLE_KEY)"
+            echo "TEST_SUPABASE_JWT_SECRET=$(get JWT_SECRET)"
+          } >> "$GITHUB_ENV"
+      - run: pnpm -C api test:int
+      - name: Stack logs on failure
+        if: failure()
+        run: docker ps -a && docker logs supabase_auth_financials 2>&1 | tail -80
+      - if: always()
+        run: supabase stop --no-backup
+
+  web:
+    name: Web (typecheck, lint, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: web/yarn.lock
+      - run: yarn --cwd web install --frozen-lockfile
+      - run: yarn --cwd web typecheck
+      - run: yarn --cwd web lint
+      - run: yarn --cwd web test
