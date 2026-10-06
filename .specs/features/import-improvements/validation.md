@@ -293,3 +293,23 @@ Manual steps for the owner (local stack up, `pnpm -C api dev`, `yarn --cwd web d
 | 7 | FT6 | `tasks.md` Status Draft and `spec.md` traceability Pending | Cosmetic | Update on closing |
 
 Loads: the web suite is fragile when a second suite shares the machine (pre-existing extrato files, 13 failures at `ba3bd99` against 21 to 23 now); not caused by this feature (L-027), but any CI job running two suites at once would be red.
+
+---
+
+## Gaps closed
+
+Date: 2026-10-05. Fix tasks FT1 to FT5 are closed by commits `f4c9eb4` (`test(api)`) and `fff63be` (`test(web)`); FT6 (spec traceability and tasks Status) by the docs commit that carries this addendum. The verdict above is unchanged and stays CONDITIONAL PASS: the T13 browser check (FT0) was NOT performed, its box in `tasks.md` is still open, `tasks.md` Status is "Pending browser check", and the browser-only success criteria remain pending for the owner. A `validate_state.py` exit 0 does not mean the browser check is done.
+
+| Id | Closed by | Proof (temporary git worktree on the external volume, removed; real tree untouched, no stash) |
+| -- | --------- | ------ |
+| FT1 | `ImportPage.test.tsx` "Reimportar com outra conta escolhida no formulário usa a conta do lote no preview e no confirm": account B selected, Reimportar on a batch of A, preview and confirm bodies carry A | W39 (`accountId ?? item.account.id`) now fails it |
+| FT2 | `ImportedFilesList.test.tsx` "mostra zero no plural": "0 importadas · 0 ignoradas" | W48 (`count <= 1`) now fails it |
+| FT4 | Code changed to the spec text (the spec wording was the requested one; "no extrato" added nothing): "... Importar mesmo assim cria transações repetidas."; `DuplicateConfirmDialog.test.tsx` asserts the full accessible description for singular and plural | restoring "no extrato." fails both tests |
+| FT3 (web) | `CategoryOptionLabel` moved to its own module (`CategoryOptionLabel.tsx`, behaviour unchanged); `CategorySelect.test.tsx` mocks it and asserts every option and the displayed value render through it | W27 (inline `{category.name}`) now fails it |
+| FT3 (api) | The code already strips the scheme case-insensitively (`/^Bearer /i`, as in the confirm route); `imports-file.int.test.ts` "accepts a lowercase bearer scheme" downloads with `bearer <jwt>` and expects the bytes | A52 (case-sensitive strip) now fails it |
+| FT5 | `ImportPage.test.tsx`: two reimports in a row without confirming give two previews and a new idempotency key; reimport with all duplicates selected opens the dialog ("3 linhas selecionadas já foram importadas antes") and "Importar mesmo assim" creates a new batch on the batch account. `imports-file.int.test.ts`: download of a batch with two attachments serves the earliest | renew() removed fails the two-reimports test; skipping the dialog on a reimported file fails the reimport-to-dialog test; ordering `created_at desc` on the download query fails the attachments test |
+
+Gates after the fixes: `yarn --cwd web test` 54 files, 480 tests, three runs green; web typecheck exit 0, lint 0 errors (7 pre-existing warnings); `pnpm -C api test` 368 unit and 569 integration green; api typecheck and lint exit 0. Mutants of this round were run on the touched suites only (web: `src/features/import`, `src/features/categories`; api: `imports-file.int.test.ts`).
+
+Remaining: FT0 only (owner browser check, step 7 should start with a different account preselected to exercise FT1 in a real browser).
+

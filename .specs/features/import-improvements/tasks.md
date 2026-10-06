@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/import-improvements/design.md`
-**Status**: Draft
+**Status**: Pending browser check
 
 **Feature prerequisites**: import-fixes complete (parser table, `Other` method, `description`, neutrals); migrations 0001 to 0007 applied (`pnpm -C api db:reset`; the local Supabase stack must be running for integration tests, `pnpm -C api db:start`). Branch `feat/import-improvements`, stacked on `feat/import-fixes`; no new migration and no push. The Storage bucket `imports` and its policy come from migration 0004 and are not changed.
 

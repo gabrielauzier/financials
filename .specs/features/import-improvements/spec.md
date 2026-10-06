@@ -329,21 +329,23 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| IMPIMP-01 | P1: Categoria por linha na API | In Tasks | Pending |
-| IMPIMP-02 | P1: Categoria por linha na API | In Tasks | Pending |
-| IMPIMP-03 | P1: Categoria por linha no preview | In Tasks | Pending |
-| IMPIMP-04 | P2: Selecionar todas as linhas | In Tasks | Pending |
-| IMPIMP-05 | P2: Preview com Valor colorido e sem a coluna Tipo | In Tasks | Pending |
-| IMPIMP-06 | P2: Confirmação de duplicadas | In Tasks | Pending |
-| IMPIMP-07 | P1: Lista de arquivos importados (API) | In Tasks | Pending |
-| IMPIMP-08 | P1: Download do arquivo importado (API) | In Tasks | Pending |
-| IMPIMP-09 | P1: Preview único para upload e reimportação | In Tasks | Pending |
-| IMPIMP-10 | P1: Isolamento e autenticação das rotas de arquivos | In Tasks | Pending |
-| IMPIMP-11 | P1: Arquivos importados na tela de importação | In Tasks | Pending |
-| IMPIMP-12 | P1: Arquivos importados na tela de importação | In Tasks | Pending |
-| IMPIMP-13 | P1: Arquivos importados na tela de importação | In Tasks | Pending |
-| IMPIMP-14 | P1: Contrato: OpenAPI, tipos, mocks e mensagens | In Tasks | Pending |
-| IMPIMP-15 | P1: Contrato: OpenAPI, tipos, mocks e mensagens | In Tasks | Pending |
+| IMPIMP-01 | P1: Categoria por linha na API | In Tasks | Verified |
+| IMPIMP-02 | P1: Categoria por linha na API | In Tasks | Verified |
+| IMPIMP-03 | P1: Categoria por linha no preview | In Tasks | Verified |
+| IMPIMP-04 | P2: Selecionar todas as linhas | In Tasks | Verified |
+| IMPIMP-05 | P2: Preview com Valor colorido e sem a coluna Tipo | In Tasks | Verified |
+| IMPIMP-06 | P2: Confirmação de duplicadas | In Tasks | Verified |
+| IMPIMP-07 | P1: Lista de arquivos importados (API) | In Tasks | Verified |
+| IMPIMP-08 | P1: Download do arquivo importado (API) | In Tasks | Verified |
+| IMPIMP-09 | P1: Preview único para upload e reimportação | In Tasks | Verified |
+| IMPIMP-10 | P1: Isolamento e autenticação das rotas de arquivos | In Tasks | Verified |
+| IMPIMP-11 | P1: Arquivos importados na tela de importação | In Tasks | Verified |
+| IMPIMP-12 | P1: Arquivos importados na tela de importação | In Tasks | Verified |
+| IMPIMP-13 | P1: Arquivos importados na tela de importação | In Tasks | Verified |
+| IMPIMP-14 | P1: Contrato: OpenAPI, tipos, mocks e mensagens | In Tasks | Verified |
+| IMPIMP-15 | P1: Contrato: OpenAPI, tipos, mocks e mensagens | In Tasks | Verified |
+
+**Verified means the automated tests and the mutation sensor, not the browser.** The T13 browser verification is PENDING for the owner (steps in `validation.md`, section Browser Check). The success criteria that need a browser stay unproven until the owner records the outcome: select changes the stored category, indeterminate on partial selection, colors without the Tipo column, duplicates dialog with "Voltar" keeping the selection, list shows the new file, "Baixar" saves an identical CSV, "Reimportar" opens the preview in the right account with "Duplicada" rows.
 
 **Coverage:** 15 total, 15 mapped to tasks, 0 unmapped
 
