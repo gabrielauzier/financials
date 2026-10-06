@@ -103,8 +103,9 @@ describe("importErrorMessage", () => {
     ["invalid_account", "Selecione uma conta ativa"],
     ["invalid_selection", "Há linhas selecionadas que não podem ser importadas"],
     ["validation_error", "Dados inválidos. Revise o arquivo e a conta"],
-    ["storage_error", "Não foi possível concluir a importação. Tente novamente."],
-    ["storage_not_configured", "Não foi possível concluir a importação. Tente novamente."],
+    ["invalid_category", "Há linhas com categoria inválida. Gere a prévia de novo."],
+    ["storage_error", "Não foi possível acessar o arquivo guardado. Tente novamente."],
+    ["storage_not_configured", "O armazenamento de arquivos não está disponível no momento."],
     ["internal_error", "Não foi possível concluir a importação. Tente novamente."],
     ["something_new", "Não foi possível concluir a importação. Tente novamente."],
   ])("traduz o código %s sem exibir a mensagem em inglês", (code, expected) => {

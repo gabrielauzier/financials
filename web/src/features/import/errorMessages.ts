@@ -10,9 +10,10 @@ const messages: Record<string, string> = {
   file_too_large: "Arquivo excede 5 MB",
   invalid_selection: "Há linhas selecionadas que não podem ser importadas",
   validation_error: "Dados inválidos. Revise o arquivo e a conta",
+  invalid_category: "Há linhas com categoria inválida. Gere a prévia de novo.",
 };
 
-const sharedCodes = new Set(["invalid_account"]);
+const sharedCodes = new Set(["invalid_account", "storage_error", "storage_not_configured"]);
 
 export function importErrorMessage(error: unknown): string {
   if (!(error instanceof ApiError)) return GENERIC_IMPORT_ERROR;

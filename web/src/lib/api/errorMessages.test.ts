@@ -27,6 +27,8 @@ describe("messageForError", () => {
     ["not_found", "Registro não encontrado. Atualize a página e tente de novo"],
     ["validation_error", "Dados inválidos. Revise os campos"],
     ["unauthorized", "Sua sessão expirou. Entre novamente"],
+    ["storage_error", "Não foi possível acessar o arquivo guardado. Tente novamente."],
+    ["storage_not_configured", "O armazenamento de arquivos não está disponível no momento."],
   ])("maps %s to its Portuguese text", (code, text) => {
     expect(messageForError(api(code), "transaction")).toBe(text);
   });
@@ -116,5 +118,17 @@ describe("fieldForError", () => {
     expect(fieldForError(api("not_found"))).toBeUndefined();
     expect(fieldForError(new Error("x"))).toBeUndefined();
     expect(fieldForError(null)).toBeUndefined();
+  });
+});
+
+describe("messageForError no contexto de importação (IMPIMP-15)", () => {
+  it.each([
+    ["storage_error", "Não foi possível acessar o arquivo guardado. Tente novamente."],
+    ["storage_not_configured", "O armazenamento de arquivos não está disponível no momento."],
+  ])("traduz %s sem cair no texto genérico nem expor a mensagem da API", (code, text) => {
+    const message = messageForError(api(code), "import");
+    expect(message).toBe(text);
+    expect(message).not.toBe(GENERIC_ERROR);
+    expect(message).not.toContain("Technical English");
   });
 });

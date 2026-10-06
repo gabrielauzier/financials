@@ -29,10 +29,33 @@ describe("resumo da importação", () => {
     expect(onImportAnother).toHaveBeenCalledTimes(1);
   });
 
+  it("falha de armazenamento mostra a mensagem própria em português (IMPIMP-15)", () => {
+    render(
+      <ImportFailure error={new ApiError("storage_error", "S3 exploded", 502)} onRetry={vi.fn()} />,
+    );
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent(
+      "Não foi possível acessar o arquivo guardado. Tente novamente.",
+    );
+    expect(alert).not.toHaveTextContent("S3 exploded");
+  });
+
+  it("categoria inválida pede para gerar a prévia de novo (IMPIMP-15)", () => {
+    render(
+      <ImportFailure error={new ApiError("invalid_category", "Row 1", 422)} onRetry={vi.fn()} />,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Há linhas com categoria inválida. Gere a prévia de novo.",
+    );
+  });
+
   it("falha mostra 'Nada foi importado' com o motivo em português e permite tentar de novo", () => {
     const onRetry = vi.fn();
     render(
-      <ImportFailure error={new ApiError("storage_error", "S3 exploded", 500)} onRetry={onRetry} />,
+      <ImportFailure
+        error={new ApiError("internal_error", "S3 exploded", 500)}
+        onRetry={onRetry}
+      />,
     );
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("Nada foi importado. Tente novamente.");

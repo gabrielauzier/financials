@@ -379,13 +379,13 @@ T12 → T13
 
 **Done when**:
 
-- [ ] `apiRequestBlob` sends the bearer token and `X-Timezone`, returns the response `Blob` on 200, throws `ApiError` with the API code on an error body, throws `unexpected_error` on a non-JSON error, and signs the user out on 401 like `apiRequest` (client test) (AC 2 of the contract story)
-- [ ] `listImports` calls `GET /imports`, `downloadImportFile` calls `GET /imports/:id/file` through `apiRequestBlob`, `fileFromBlob` returns a `File` with the original name and mime type and the blob's bytes
-- [ ] `useImportedFiles` loads the list under the `["imports"]` key; a successful confirm invalidates `["imports"]` and `["transactions"]` (hook tests)
-- [ ] `messageForError` returns "Não foi possível acessar o arquivo guardado. Tente novamente." for `storage_error` and "O armazenamento de arquivos não está disponível no momento." for `storage_not_configured` in the `import` context; `importErrorMessage` returns "Há linhas com categoria inválida. Gere a prévia de novo." for `invalid_category` and the shared messages for the storage codes; none falls to the generic text and none returns the API `message` (AC 4 and 5)
-- [ ] `yarn --cwd web typecheck` passes with `ImportedFile`, `PreviewRow.categoryId` and `ImportSelection.categoryId` matching `api/openapi.json`
-- [ ] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 12 new ones pass (no silent deletions)
+- [x] `apiRequestBlob` sends the bearer token and `X-Timezone`, returns the response `Blob` on 200, throws `ApiError` with the API code on an error body, throws `unexpected_error` on a non-JSON error, and signs the user out on 401 like `apiRequest` (client test) (AC 2 of the contract story)
+- [x] `listImports` calls `GET /imports`, `downloadImportFile` calls `GET /imports/:id/file` through `apiRequestBlob`, `fileFromBlob` returns a `File` with the original name and mime type and the blob's bytes
+- [x] `useImportedFiles` loads the list under the `["imports"]` key; a successful confirm invalidates `["imports"]` and `["transactions"]` (hook tests)
+- [x] `messageForError` returns "Não foi possível acessar o arquivo guardado. Tente novamente." for `storage_error` and "O armazenamento de arquivos não está disponível no momento." for `storage_not_configured` in the `import` context; `importErrorMessage` returns "Há linhas com categoria inválida. Gere a prévia de novo." for `invalid_category` and the shared messages for the storage codes; none falls to the generic text and none returns the API `message` (AC 4 and 5)
+- [x] `yarn --cwd web typecheck` passes with `ImportedFile`, `PreviewRow.categoryId` and `ImportSelection.categoryId` matching `api/openapi.json`
+- [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 12 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

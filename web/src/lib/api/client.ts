@@ -27,11 +27,10 @@ function isApiErrorPayload(value: unknown): value is ApiErrorPayload {
   );
 }
 
-export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+/** Sends an authenticated request and returns the response, throwing `ApiError` for any error. */
+async function send(path: string, options: ApiRequestOptions): Promise<Response> {
   const { body, ...fetchOptions } = options;
   const method = fetchOptions.method?.toUpperCase() ?? "GET";
-  if (shouldMock(path)) return mockRequest<T>({ method, path, body });
-
   const { data } = await supabase.auth.getSession();
   const headers = new Headers(fetchOptions.headers);
   if (data.session?.access_token)
@@ -77,7 +76,20 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       response.status,
     );
   }
+  return response;
+}
 
+export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const method = options.method?.toUpperCase() ?? "GET";
+  if (shouldMock(path)) return mockRequest<T>({ method, path, body: options.body });
+  const response = await send(path, options);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+/** Same request path as `apiRequest` (token, `X-Timezone`, 401 and error mapping) but returns the body as a `Blob`. */
+export async function apiRequestBlob(path: string, options: ApiRequestOptions = {}): Promise<Blob> {
+  const method = options.method?.toUpperCase() ?? "GET";
+  if (shouldMock(path)) return mockRequest<Blob>({ method, path, body: options.body });
+  return (await send(path, options)).blob();
 }

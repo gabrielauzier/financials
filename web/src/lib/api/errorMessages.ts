@@ -18,6 +18,8 @@ const messages: Record<string, string> = {
   not_found: "Registro não encontrado. Atualize a página e tente de novo",
   validation_error: "Dados inválidos. Revise os campos",
   unauthorized: "Sua sessão expirou. Entre novamente",
+  storage_error: "Não foi possível acessar o arquivo guardado. Tente novamente.",
+  storage_not_configured: "O armazenamento de arquivos não está disponível no momento.",
 };
 
 const amountMessages: Partial<Record<ErrorContext, string>> = {

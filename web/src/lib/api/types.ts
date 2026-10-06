@@ -123,6 +123,20 @@ export type ImportPreview = {
 
 export type ImportSelection = { index: number; neutral: boolean; categoryId?: string };
 
+/** One item of `GET /imports`: a stored import file and its batch counts. */
+export type ImportedFile = {
+  id: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  bank: string;
+  account: { id: string; nickname: string };
+  createdAt: string;
+  rowCount: number;
+  importedCount: number;
+  skippedCount: number;
+};
+
 export type ImportConfirmResult = { batchId: string; imported: number; skipped: number };
 
 export type CreditExpenseStatus = "Once" | "Active" | "Inactive" | "Canceled" | "ToCancel";
