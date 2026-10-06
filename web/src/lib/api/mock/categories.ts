@@ -4,23 +4,23 @@ import { mockApiError, type MockHandler } from "./index";
 import { categoryHasTransactions, reassignCategoryTransactions } from "./transactionRelations";
 
 const seed: Array<[string, string, boolean, ColorKey]> = [
-  ["Entertainment", "Entretenimento", false, "purple-600"],
-  ["Food", "Alimentação", false, "orange-600"],
-  ["Salaries", "Salários", false, "emerald-600"],
-  ["Healthcare", "Saúde", false, "rose-600"],
-  ["Utilities", "Utilidades", false, "sky-600"],
+  ["Entertainment", "Entretenimento", false, "purple-400"],
+  ["Food", "Alimentação", false, "orange-400"],
+  ["Salaries", "Salários", false, "emerald-400"],
+  ["Healthcare", "Saúde", false, "rose-400"],
+  ["Utilities", "Utilidades", false, "sky-400"],
   ["Unknown", "Desconhecida", false, "zinc-400"],
-  ["Transport", "Transporte", false, "blue-600"],
-  ["Help", "Ajuda (a terceiros)", false, "pink-600"],
-  ["PJ", "PJ", false, "indigo-600"],
-  ["Bills", "Contas", false, "amber-600"],
-  ["Emergency", "Emergência", false, "red-600"],
+  ["Transport", "Transporte", false, "blue-400"],
+  ["Help", "Ajuda (a terceiros)", false, "pink-400"],
+  ["PJ", "PJ", false, "indigo-400"],
+  ["Bills", "Contas", false, "amber-400"],
+  ["Emergency", "Emergência", false, "red-400"],
   ["Uncategorized", "Sem categoria", true, "slate-400"],
-  ["Wishes", "Desejos", false, "fuchsia-600"],
-  ["Reversal", "Estorno (de compras)", true, "teal-600"],
-  ["Shopping", "Compras", false, "lime-600"],
-  ["Pets", "Pets", false, "yellow-600"],
-  ["Investments", "Investimentos", true, "green-900"],
+  ["Wishes", "Desejos", false, "fuchsia-400"],
+  ["Reversal", "Estorno (de compras)", true, "teal-400"],
+  ["Shopping", "Compras", false, "lime-400"],
+  ["Pets", "Pets", false, "yellow-400"],
+  ["Investments", "Investimentos", true, "green-400"],
 ];
 
 let categories: Category[] = seed.map(([key, name, isSystem, color], index) => ({

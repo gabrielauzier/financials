@@ -10,10 +10,10 @@ beforeEach(() => apiRequest.mockClear());
 
 describe("clients send color", () => {
   it("createCategory sends name and color in the POST body", async () => {
-    await createCategory({ name: "Viagens", color: "rose-900" });
+    await createCategory({ name: "Viagens", color: "rose-400" });
     expect(apiRequest).toHaveBeenCalledWith("/categories", {
       method: "POST",
-      body: { name: "Viagens", color: "rose-900" },
+      body: { name: "Viagens", color: "rose-400" },
     });
   });
 
@@ -32,18 +32,18 @@ describe("clients send color", () => {
       body: { name: "Bichos", color: "teal-400" },
     });
     apiRequest.mockClear();
-    await updateCategory({ id: "abc", color: "red-600" });
+    await updateCategory({ id: "abc", color: "red-400" });
     expect(apiRequest).toHaveBeenCalledWith("/categories/abc", {
       method: "PATCH",
-      body: { color: "red-600" },
+      body: { color: "red-400" },
     });
   });
 
   it("createAccount and updateAccount send color in the body", async () => {
-    await createAccount({ bank: "Neon", nickname: "Neon", holderNames: ["A"], color: "sky-600" });
+    await createAccount({ bank: "Neon", nickname: "Neon", holderNames: ["A"], color: "sky-400" });
     expect(apiRequest).toHaveBeenCalledWith("/accounts", {
       method: "POST",
-      body: { bank: "Neon", nickname: "Neon", holderNames: ["A"], color: "sky-600" },
+      body: { bank: "Neon", nickname: "Neon", holderNames: ["A"], color: "sky-400" },
     });
     apiRequest.mockClear();
     await updateAccount({ id: "xyz", input: { color: "lime-400" } });

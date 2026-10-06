@@ -79,7 +79,7 @@ describe("categorias", () => {
           key: "Healthcare",
           name: "Saúde",
           isSystem: false,
-          color: "rose-600",
+          color: "rose-400",
         },
       ],
     );

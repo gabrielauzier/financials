@@ -9,7 +9,7 @@ let accounts: Account[] = [
     nickname: "Nubank pessoal",
     holderNames: ["Gabriel Vasconcelos Auzier"],
     active: true,
-    color: "purple-600",
+    color: "purple-400",
     createdAt: "2026-01-10T12:00:00.000Z",
   },
   {
@@ -18,7 +18,7 @@ let accounts: Account[] = [
     nickname: "Nubank PJ",
     holderNames: ["Gabriel Vasconcelos Auzier LTDA"],
     active: true,
-    color: "purple-600",
+    color: "purple-400",
     createdAt: "2026-02-03T12:00:00.000Z",
   },
 ];

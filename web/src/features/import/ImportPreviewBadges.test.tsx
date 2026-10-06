@@ -16,8 +16,8 @@ afterEach(() => {
   resetSpy();
 });
 
-const FOOD = "30000000-0000-4000-8000-000000000002"; // Alimentação, orange-600
-const TRANSPORT = "30000000-0000-4000-8000-000000000007"; // Transporte, blue-600
+const FOOD = "30000000-0000-4000-8000-000000000002"; // Alimentação, orange-400
+const TRANSPORT = "30000000-0000-4000-8000-000000000007"; // Transporte, blue-400
 const UNKNOWN = "99999999-9999-4999-8999-999999999999";
 
 const row = (
@@ -65,18 +65,21 @@ describe("prévia do import: badge de categoria (COLOR-10 AC 5, 6, 8)", () => {
     renderTable();
     const trigger = await screen.findByRole("combobox", { name: "Categoria de Linha 0" });
     await waitFor(() => expect(trigger).toHaveTextContent("Alimentação"));
-    expect(within(trigger).getByText("Alimentação")).toHaveClass("bg-orange-600", "text-black");
+    expect(within(trigger).getByText("Alimentação")).toHaveClass(
+      "bg-orange-400",
+      "text-orange-800",
+    );
     fireEvent.click(trigger);
     const option = await screen.findByRole("option", { name: "Transporte" });
-    expect(within(option).getByText("Transporte")).toHaveClass("bg-blue-600", "text-white");
+    expect(within(option).getByText("Transporte")).toHaveClass("bg-blue-400", "text-blue-800");
   });
 
   it("linha ignorada ou inválida mostra o badge com o nome do preview e a cor da categoria com o mesmo id", async () => {
     renderTable();
     await waitFor(() =>
       expect(within(categoryCell("Linha 1")).getByText("Nome do preview")).toHaveClass(
-        "bg-blue-600",
-        "text-white",
+        "bg-blue-400",
+        "text-blue-800",
         "ring-inset",
       ),
     );
@@ -87,7 +90,7 @@ describe("prévia do import: badge de categoria (COLOR-10 AC 5, 6, 8)", () => {
     renderTable();
     await waitFor(() =>
       expect(within(categoryCell("Linha 1")).getByText("Nome do preview")).toHaveClass(
-        "bg-blue-600",
+        "bg-blue-400",
       ),
     );
     const cell = categoryCell("Linha 2");

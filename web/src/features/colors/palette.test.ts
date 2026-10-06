@@ -6,7 +6,7 @@ import {
   COLOR_CLASSES,
   COLOR_FAMILIES,
   COLOR_KEYS,
-  COLOR_SHADES,
+  COLOR_SHADE,
   DEFAULT_COLOR,
   colorClasses,
   colorLabel,
@@ -38,46 +38,33 @@ const FAMILIES = [
   "neutral",
   "stone",
 ];
-const BLACK_TEXT_AT_600 = [
-  "orange",
-  "amber",
-  "yellow",
-  "lime",
-  "green",
-  "emerald",
-  "teal",
-  "cyan",
-  "sky",
-];
-const split = (key: ColorKey) => key.split("-") as [string, string];
-
 describe("palette keys", () => {
-  it("has 66 distinct keys: 22 families times 400, 600 and 900, family by family", () => {
+  it("has 22 distinct keys, one per family, always shade 400, in family order", () => {
     expect([...COLOR_FAMILIES]).toEqual(FAMILIES);
-    expect([...COLOR_SHADES]).toEqual([400, 600, 900]);
-    expect(COLOR_KEYS).toHaveLength(66);
-    expect(new Set(COLOR_KEYS).size).toBe(66);
-    expect([...COLOR_KEYS]).toEqual(
-      FAMILIES.flatMap((f) => [400, 600, 900].map((s) => `${f}-${s}`)),
-    );
+    expect(COLOR_SHADE).toBe(400);
+    expect(COLOR_KEYS).toHaveLength(22);
+    expect(new Set(COLOR_KEYS).size).toBe(22);
+    expect([...COLOR_KEYS]).toEqual(FAMILIES.map((f) => `${f}-400`));
   });
 
-  it("matches the API order of the first and last keys", () => {
-    expect(COLOR_KEYS.slice(0, 4)).toEqual(["red-400", "red-600", "red-900", "orange-400"]);
-    expect(COLOR_KEYS.at(-1)).toBe("stone-900");
-    expect(DEFAULT_COLOR).toBe("slate-600");
+  it("matches the API order of the first and last keys and the default", () => {
+    expect(COLOR_KEYS.slice(0, 3)).toEqual(["red-400", "orange-400", "amber-400"]);
+    expect(COLOR_KEYS.at(-1)).toBe("stone-400");
+    expect(DEFAULT_COLOR).toBe("slate-400");
   });
 
-  it("accepts every key and rejects case, whitespace and unknown values", () => {
+  it("accepts every key and rejects other shades, case, whitespace and unknown values", () => {
     for (const key of COLOR_KEYS) expect(isColorKey(key)).toBe(true);
     for (const value of [
       "",
       "blue",
       "blue-500",
-      "Blue-600",
-      " blue-600",
-      "blue-600 ",
-      "#2563eb",
+      "blue-600",
+      "blue-900",
+      "Blue-400",
+      " blue-400",
+      "blue-400 ",
+      "#60a5fa",
       undefined,
       null,
       5,
@@ -88,31 +75,46 @@ describe("palette keys", () => {
 });
 
 describe("colorLabel", () => {
-  it("gives 66 distinct Portuguese names", () => {
+  it("gives the 22 exact Portuguese family names, all distinct", () => {
     const labels = COLOR_KEYS.map(colorLabel);
-    expect(new Set(labels).size).toBe(66);
-    expect(colorLabel("blue-600")).toBe("Azul 600");
-    expect(colorLabel("teal-400")).toBe("Verde-azulado 400");
-    expect(colorLabel("rose-900")).toBe("Rosê 900");
-    expect(colorLabel("slate-600")).toBe("Ardósia 600");
-    expect(colorLabel("stone-900")).toBe("Pedra 900");
+    expect(labels).toEqual([
+      "Vermelho",
+      "Laranja",
+      "Âmbar",
+      "Amarelo",
+      "Lima",
+      "Verde",
+      "Esmeralda",
+      "Verde-azulado",
+      "Ciano",
+      "Céu",
+      "Azul",
+      "Índigo",
+      "Violeta",
+      "Roxo",
+      "Fúcsia",
+      "Rosa",
+      "Rosê",
+      "Ardósia",
+      "Cinza",
+      "Zinco",
+      "Neutro",
+      "Pedra",
+    ]);
+    expect(new Set(labels).size).toBe(22);
   });
 });
 
 describe("COLOR_CLASSES", () => {
-  it("has bg exactly bg-<family>-<shade> and the text of the rule, for every key", () => {
+  it("has bg-<family>-400 and text-<family>-800 of the same family, for every key", () => {
     expect(Object.keys(COLOR_CLASSES).sort()).toEqual([...COLOR_KEYS].sort());
     for (const key of COLOR_KEYS) {
-      const [family, shade] = split(key);
-      const text =
-        shade === "400"
-          ? `text-${family}-950`
-          : shade === "900"
-            ? "text-white"
-            : BLACK_TEXT_AT_600.includes(family)
-              ? "text-black"
-              : "text-white";
-      expect({ key, ...COLOR_CLASSES[key] }).toEqual({ key, bg: `bg-${family}-${shade}`, text });
+      const [family] = key.split("-");
+      expect({ key, ...COLOR_CLASSES[key] }).toEqual({
+        key,
+        bg: `bg-${family}-400`,
+        text: `text-${family}-800`,
+      });
     }
   });
 
@@ -125,15 +127,16 @@ describe("COLOR_CLASSES", () => {
     const block = source.slice(start, end);
     expect(block).not.toContain("${");
     expect(block).not.toContain("`");
-    expect(block.match(/bg: "bg-[a-z]+-(400|600|900)"/g)).toHaveLength(66);
+    expect(block.match(/bg: "bg-[a-z]+-400"/g)).toHaveLength(22);
+    expect(block.match(/text: "text-[a-z]+-800"/g)).toHaveLength(22);
   });
 
-  it("falls back to slate-600 for an unknown value, undefined and the empty string", () => {
-    const fallback = COLOR_CLASSES["slate-600"];
-    for (const value of ["blue-500", "Blue-600", undefined, ""]) {
+  it("falls back to slate-400 for an unknown value, undefined and the empty string", () => {
+    const fallback = COLOR_CLASSES["slate-400"];
+    for (const value of ["blue-500", "blue-600", "Blue-400", undefined, ""]) {
       expect(colorClasses(value)).toEqual(fallback);
     }
-    expect(colorClasses("rose-900")).toEqual(COLOR_CLASSES["rose-900"]);
+    expect(colorClasses("rose-400")).toEqual(COLOR_CLASSES["rose-400"]);
   });
 });
 
@@ -169,6 +172,26 @@ function colorOf(utility: string): number {
   return luminance(oklchOf(name));
 }
 
+/** Families whose 800 on 400 is below 4.5:1 with the Tailwind v4 theme (see spec COLOR-02, known deviation). */
+const KNOWN_LOW_CONTRAST_FAMILIES = [
+  "red",
+  "orange",
+  "amber",
+  "yellow",
+  "green",
+  "emerald",
+  "teal",
+  "cyan",
+  "sky",
+  "blue",
+  "indigo",
+  "violet",
+  "purple",
+  "fuchsia",
+  "pink",
+  "rose",
+];
+
 const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
 describe("palette contrast", () => {
@@ -177,13 +200,20 @@ describe("palette contrast", () => {
     expect(luminance(oklchOf("neutral-400"))).toBeGreaterThan(0.3);
   });
 
-  it("is at least 4.5:1 for text on background in every one of the 66 entries", () => {
-    const low: string[] = [];
-    for (const key of COLOR_KEYS) {
+  it("sees the real ratios: slate 800 on 400 passes and red 800 on 400 does not", () => {
+    const ratio = (family: string) =>
+      contrast(colorOf(`bg-${family}-400`), colorOf(`text-${family}-800`));
+    expect(ratio("slate")).toBeGreaterThan(5);
+    expect(ratio("red")).toBeLessThan(3);
+  });
+
+  it("holds 4.5:1 (WCAG AA, threshold unchanged) for text-800 on bg-400 except the known deviation", () => {
+    const failing = COLOR_KEYS.filter((key) => {
       const { bg, text } = COLOR_CLASSES[key];
-      const ratio = contrast(colorOf(bg), colorOf(text));
-      if (ratio < 4.5) low.push(`${key}: ${ratio.toFixed(2)}`);
-    }
-    expect(low).toEqual([]);
+      return contrast(colorOf(bg), colorOf(text)) < 4.5;
+    }).map((key) => key.split("-")[0]);
+    // Owner mandate: text-800 on bg-400 of the same family. These families do not reach 4.5:1
+    // with it; the list is asserted both ways so it can neither hide a new failure nor go stale.
+    expect(failing).toEqual(KNOWN_LOW_CONTRAST_FAMILIES);
   });
 });

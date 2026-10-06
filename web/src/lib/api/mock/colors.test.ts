@@ -4,23 +4,23 @@ import { mockRequest } from "./index";
 
 // The design table "Tabela de cores semeadas".
 const SEEDED_COLORS: Record<string, string> = {
-  Entertainment: "purple-600",
-  Food: "orange-600",
-  Salaries: "emerald-600",
-  Healthcare: "rose-600",
-  Utilities: "sky-600",
+  Entertainment: "purple-400",
+  Food: "orange-400",
+  Salaries: "emerald-400",
+  Healthcare: "rose-400",
+  Utilities: "sky-400",
   Unknown: "zinc-400",
-  Transport: "blue-600",
-  Help: "pink-600",
-  PJ: "indigo-600",
-  Bills: "amber-600",
-  Emergency: "red-600",
+  Transport: "blue-400",
+  Help: "pink-400",
+  PJ: "indigo-400",
+  Bills: "amber-400",
+  Emergency: "red-400",
   Uncategorized: "slate-400",
-  Wishes: "fuchsia-600",
-  Reversal: "teal-600",
-  Shopping: "lime-600",
-  Pets: "yellow-600",
-  Investments: "green-900",
+  Wishes: "fuchsia-400",
+  Reversal: "teal-400",
+  Shopping: "lime-400",
+  Pets: "yellow-400",
+  Investments: "green-400",
 };
 
 const accounts = () => mockRequest<Account[]>({ method: "GET", path: "/accounts" });
@@ -39,14 +39,14 @@ describe("mock seeds", () => {
   it("seeds the two accounts with the Nubank color and returns color on every item", async () => {
     const list = await accounts();
     expect(list).toHaveLength(2);
-    expect(list.map((item) => item.color)).toEqual(["purple-600", "purple-600"]);
+    expect(list.map((item) => item.color)).toEqual(["purple-400", "purple-400"]);
     const active = await mockRequest<Account[]>({ method: "GET", path: "/accounts?active=true" });
     expect(active.every((item) => typeof item.color === "string")).toBe(true);
   });
 });
 
 describe("accounts mock", () => {
-  it("stores and returns a valid color on POST and PATCH, defaulting to slate-600", async () => {
+  it("stores and returns a valid color on POST and PATCH, defaulting to slate-400", async () => {
     const created = await mockRequest<Account>({
       method: "POST",
       path: "/accounts",
@@ -58,18 +58,18 @@ describe("accounts mock", () => {
       path: "/accounts",
       body: input("Sem cor"),
     });
-    expect(plain.color).toBe("slate-600");
+    expect(plain.color).toBe("slate-400");
 
     const patched = await mockRequest<Account>({
       method: "PATCH",
       path: `/accounts/${plain.id}`,
-      body: { color: "rose-900" },
+      body: { color: "rose-400" },
     });
-    expect(patched).toMatchObject({ color: "rose-900", nickname: "Sem cor", bank: "XP" });
-    expect((await accounts()).find((item) => item.id === plain.id)?.color).toBe("rose-900");
+    expect(patched).toMatchObject({ color: "rose-400", nickname: "Sem cor", bank: "XP" });
+    expect((await accounts()).find((item) => item.id === plain.id)?.color).toBe("rose-400");
   });
 
-  it.each(["", "blue-500", "Blue-600"])(
+  it.each(["", "blue-500", "Blue-400", "blue-600"])(
     "rejects the color %j with a 422 validation_error on field color",
     async (color) => {
       await expect(
@@ -83,25 +83,25 @@ describe("accounts mock", () => {
       await expect(
         mockRequest({ method: "PATCH", path: `/accounts/${first?.id}`, body: { color } }),
       ).rejects.toMatchObject(colorError);
-      expect((await accounts())[0]?.color).toBe("purple-600");
+      expect((await accounts())[0]?.color).toBe("purple-400");
     },
   );
 });
 
 describe("categories mock", () => {
-  it("stores and returns a valid color on POST, defaulting to slate-600", async () => {
+  it("stores and returns a valid color on POST, defaulting to slate-400", async () => {
     const chosen = await mockRequest<Category>({
       method: "POST",
       path: "/categories",
-      body: { name: "Viagens", color: "rose-900" },
+      body: { name: "Viagens", color: "rose-400" },
     });
-    expect(chosen).toMatchObject({ name: "Viagens", color: "rose-900", isSystem: false });
+    expect(chosen).toMatchObject({ name: "Viagens", color: "rose-400", isSystem: false });
     const plain = await mockRequest<Category>({
       method: "POST",
       path: "/categories",
       body: { name: "Sem cor" },
     });
-    expect(plain.color).toBe("slate-600");
+    expect(plain.color).toBe("slate-400");
   });
 
   it("PATCH with name and color updates both; with only color keeps the name", async () => {
@@ -109,9 +109,9 @@ describe("categories mock", () => {
     const both = await mockRequest<Category>({
       method: "PATCH",
       path: `/categories/${pets?.id}`,
-      body: { name: "Bichos", color: "stone-900" },
+      body: { name: "Bichos", color: "stone-400" },
     });
-    expect(both).toMatchObject({ name: "Bichos", color: "stone-900" });
+    expect(both).toMatchObject({ name: "Bichos", color: "stone-400" });
     const onlyColor = await mockRequest<Category>({
       method: "PATCH",
       path: `/categories/${pets?.id}`,
@@ -124,7 +124,7 @@ describe("categories mock", () => {
     });
   });
 
-  it.each(["", "blue-500", "Blue-600"])(
+  it.each(["", "blue-500", "Blue-400", "blue-600"])(
     "rejects the color %j with a 422 validation_error on field color",
     async (color) => {
       await expect(
@@ -138,7 +138,7 @@ describe("categories mock", () => {
       await expect(
         mockRequest({ method: "PATCH", path: `/categories/${food?.id}`, body: { color } }),
       ).rejects.toMatchObject(colorError);
-      expect((await categories()).find((item) => item.key === "Food")?.color).toBe("orange-600");
+      expect((await categories()).find((item) => item.key === "Food")?.color).toBe("orange-400");
     },
   );
 

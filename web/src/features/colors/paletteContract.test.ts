@@ -40,8 +40,8 @@ describe("palette contract with api/openapi.json", () => {
     "keeps the color enum of GET %s equal to COLOR_KEYS",
     (path) => {
       const api = colorEnum(path);
-      expect(api).toHaveLength(66);
-      expect(new Set(api).size).toBe(66);
+      expect(api).toHaveLength(22);
+      expect(new Set(api).size).toBe(22);
       expect(difference(api, COLOR_KEYS)).toBe("");
       expect([...api].sort()).toEqual([...COLOR_KEYS].sort());
     },

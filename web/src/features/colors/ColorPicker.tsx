@@ -24,7 +24,7 @@ type ColorPickerProps = {
   ariaLabel?: string;
 };
 
-/** Trigger plus popover with the 66-color palette as a radio group (2D arrow-key navigation). */
+/** Trigger plus popover with the 22-color palette as a radio group (2D arrow-key navigation). */
 export function ColorPicker({ value, onChange, id, disabled, ariaLabel }: ColorPickerProps) {
   const [open, setOpen] = useState(false);
   const selectedIndex = isColorKey(value) ? COLOR_KEYS.indexOf(value) : -1;

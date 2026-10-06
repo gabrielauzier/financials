@@ -31,7 +31,7 @@ afterEach(() => {
 const RING = ["ring-1", "ring-inset", "ring-black/10", "dark:ring-white/25"];
 
 describe("CategoryBadge (COLOR-09)", () => {
-  it("renders the name with the bg and text classes of each of the 66 keys plus the ring (AC 4)", () => {
+  it("renders the name with the bg and text classes of each of the 22 keys plus the ring (AC 4)", () => {
     for (const key of COLOR_KEYS) {
       const { unmount } = render(<CategoryBadge name={`Cat ${key}`} color={key} />);
       const badge = screen.getByText(`Cat ${key}`);
@@ -40,12 +40,12 @@ describe("CategoryBadge (COLOR-09)", () => {
     }
   });
 
-  it("falls back to the slate-600 classes for a color outside the palette (AC 5)", () => {
-    for (const color of ["banana", "", undefined, "Blue-600"]) {
+  it("falls back to the slate-400 classes for a color outside the palette (AC 5)", () => {
+    for (const color of ["banana", "", undefined, "Blue-400", "blue-600"]) {
       const { unmount } = render(<CategoryBadge name="Mercado" color={color} />);
       expect(screen.getByText("Mercado")).toHaveClass(
-        COLOR_CLASSES["slate-600"].bg,
-        COLOR_CLASSES["slate-600"].text,
+        COLOR_CLASSES["slate-400"].bg,
+        COLOR_CLASSES["slate-400"].text,
       );
       unmount();
     }
@@ -53,7 +53,7 @@ describe("CategoryBadge (COLOR-09)", () => {
 
   it("truncates a long name and keeps the full name in the title (AC 6)", () => {
     const name = "Uma categoria com um nome realmente muito longo para caber no select";
-    render(<CategoryBadge name={name} color="rose-900" />);
+    render(<CategoryBadge name={name} color="rose-400" />);
     const badge = screen.getByText(name);
     expect(badge).toHaveClass("truncate", "max-w-full");
     expect(badge).toHaveAttribute("title", name);

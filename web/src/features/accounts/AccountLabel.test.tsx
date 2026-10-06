@@ -34,7 +34,7 @@ const account = (over: Partial<Account>): Account => ({
   nickname: "Nubank pessoal",
   holderNames: ["G"],
   active: true,
-  color: "purple-600",
+  color: "purple-400",
   createdAt: "2026-01-01",
   ...over,
 });
@@ -50,7 +50,7 @@ describe("AccountLabel (ICON-03 AC 1, ICON-04 AC 7)", () => {
     const { container } = render(<AccountLabel account={account({})} />);
     expect(container.querySelector("img")).toHaveAttribute("src", nubank);
     expect(screen.getByText("Nubank pessoal")).toBeInTheDocument();
-    expect(dotOf(container)).toHaveClass("bg-purple-600");
+    expect(dotOf(container)).toHaveClass("bg-purple-400");
   });
 
   it("hides the dot and the icon from the accessibility tree; the nickname is the text", () => {
@@ -60,9 +60,9 @@ describe("AccountLabel (ICON-03 AC 1, ICON-04 AC 7)", () => {
     expect(container).toHaveTextContent(/^Nubank pessoal$/);
   });
 
-  it("uses the slate-600 dot for a color outside the palette", () => {
+  it("uses the slate-400 dot for a color outside the palette", () => {
     const { container } = render(<AccountLabel account={account({ color: "banana" as never })} />);
-    expect(dotOf(container)).toHaveClass("bg-slate-600");
+    expect(dotOf(container)).toHaveClass("bg-slate-400");
   });
 
   it("appends (inativa) in the same text node only when asked and inactive", () => {
@@ -87,7 +87,7 @@ describe("AccountSelect with labels (ICON-03 AC 1, 2, 6)", () => {
     const neonOption = screen.getByRole("option", { name: "Neon reserva (inativa)" });
     expect(screen.getAllByRole("option")).toHaveLength(2);
     expect(nubankOption.querySelector("img")).toHaveAttribute("src", nubank);
-    expect(dotOf(nubankOption)).toHaveClass("bg-purple-600");
+    expect(dotOf(nubankOption)).toHaveClass("bg-purple-400");
     expect(neonOption.querySelector("img")).toHaveAttribute("src", neon);
     expect(dotOf(neonOption)).toHaveClass("bg-sky-400");
   });

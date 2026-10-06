@@ -35,30 +35,30 @@ async function failFor(method: string, name: string, error: ApiError) {
 const createForm = () => screen.getByLabelText("Nova categoria").closest("form") as HTMLFormElement;
 
 describe("category create form color (COLOR-08 AC 3)", () => {
-  it("sends the default slate-600 when no color is picked", async () => {
+  it("sends the default slate-400 when no color is picked", async () => {
     renderWithQuery(<CategoriesPage />);
     await screen.findByText("Alimentação");
-    expect(screen.getByLabelText("Cor")).toHaveTextContent("Ardósia 600");
+    expect(screen.getByLabelText("Cor")).toHaveTextContent("Ardósia");
     fireEvent.change(screen.getByLabelText("Nova categoria"), { target: { value: "Padrão" } });
     fireEvent.submit(createForm());
     await waitFor(() => expect(lastRequest("POST")).toBeDefined());
-    expect(lastRequest("POST")?.body).toEqual({ name: "Padrão", color: "slate-600" });
+    expect(lastRequest("POST")?.body).toEqual({ name: "Padrão", color: "slate-400" });
   });
 
   it("sends name and chosen color, then clears the name and resets the color", async () => {
     renderWithQuery(<CategoriesPage />);
     await screen.findByText("Alimentação");
     fireEvent.change(screen.getByLabelText("Nova categoria"), { target: { value: "Mercado" } });
-    await pickColor("Cor", "Verde 600");
-    expect(screen.getByLabelText("Cor")).toHaveTextContent("Verde 600");
+    await pickColor("Cor", "Verde");
+    expect(screen.getByLabelText("Cor")).toHaveTextContent("Verde");
     fireEvent.submit(createForm());
     await waitFor(() =>
-      expect(lastRequest("POST")?.body).toEqual({ name: "Mercado", color: "green-600" }),
+      expect(lastRequest("POST")?.body).toEqual({ name: "Mercado", color: "green-400" }),
     );
     await waitFor(() => expect(screen.getByLabelText("Nova categoria")).toHaveValue(""));
-    expect(screen.getByLabelText("Cor")).toHaveTextContent("Ardósia 600");
+    expect(screen.getByLabelText("Cor")).toHaveTextContent("Ardósia");
     const badge = await screen.findByText("Mercado");
-    expect(badge).toHaveClass("bg-green-600");
+    expect(badge).toHaveClass("bg-green-400");
   });
 
   it("a 422 on color shows the palette message and keeps the typed name (AC 5)", async () => {
@@ -82,19 +82,19 @@ describe("category edit form color (COLOR-08 AC 4, 5, 6)", () => {
   it("shows the name and the picker with the current color", async () => {
     await startEdit("Pets");
     expect(screen.getByLabelText("Nome da categoria")).toHaveValue("Pets");
-    expect(screen.getByLabelText("Cor da categoria")).toHaveTextContent("Amarelo 600");
+    expect(screen.getByLabelText("Cor da categoria")).toHaveTextContent("Amarelo");
   });
 
   it("Salvar categoria sends one PATCH with name and color and shows the new badge", async () => {
     await startEdit("Pets");
     fireEvent.change(screen.getByLabelText("Nome da categoria"), { target: { value: "Bichos" } });
-    await pickColor("Cor da categoria", "Rosê 900");
+    await pickColor("Cor da categoria", "Rosê");
     fireEvent.click(screen.getByRole("button", { name: "Salvar categoria" }));
     const badge = await screen.findByText("Bichos");
-    expect(badge).toHaveClass("bg-rose-900");
+    expect(badge).toHaveClass("bg-rose-400");
     const patches = requests.filter((r) => r.method === "PATCH");
     expect(patches).toHaveLength(1);
-    expect(patches[0]?.body).toEqual({ name: "Bichos", color: "rose-900" });
+    expect(patches[0]?.body).toEqual({ name: "Bichos", color: "rose-400" });
     expect(screen.queryByLabelText("Nome da categoria")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Salvar nome" })).not.toBeInTheDocument();
   });
@@ -121,8 +121,8 @@ describe("category list badges (COLOR-10 AC 7, 4; COLOR-08 AC 7)", () => {
   it("shows each row as a badge with its color and keeps the button names", async () => {
     renderWithQuery(<CategoriesPage />);
     const food = await screen.findByText("Alimentação");
-    expect(food).toHaveClass("bg-orange-600", "text-black");
-    expect(screen.getByText("Entretenimento")).toHaveClass("bg-purple-600");
+    expect(food).toHaveClass("bg-orange-400", "text-orange-800");
+    expect(screen.getByText("Entretenimento")).toHaveClass("bg-purple-400");
     expect(screen.getByRole("button", { name: "Renomear Alimentação" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Excluir Alimentação" })).toBeInTheDocument();
   });
@@ -150,7 +150,7 @@ describe("category list badges (COLOR-10 AC 7, 4; COLOR-08 AC 7)", () => {
     await waitFor(() => expect(trigger).toBeEnabled());
     fireEvent.click(trigger);
     const option = await screen.findByRole("option", { name: "Alimentação" });
-    expect(within(option).getByText("Alimentação")).toHaveClass("bg-orange-600");
+    expect(within(option).getByText("Alimentação")).toHaveClass("bg-orange-400");
     expect(screen.queryByRole("option", { name: "Entretenimento" })).not.toBeInTheDocument();
   });
 });

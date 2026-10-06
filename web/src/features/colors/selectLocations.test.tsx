@@ -46,7 +46,7 @@ async function expectAccountOption() {
 
 async function expectFoodBadge() {
   const option = await screen.findByRole("option", { name: "Alimentação" });
-  expect(within(option).getByText("Alimentação")).toHaveClass("bg-orange-600");
+  expect(within(option).getByText("Alimentação")).toHaveClass("bg-orange-400");
 }
 
 describe("select locations outside the extrato page", () => {

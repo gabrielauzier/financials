@@ -23,7 +23,7 @@ const account: Account = {
   nickname: "Nubank pessoal",
   holderNames: ["Gabriel"],
   active: true,
-  color: "purple-600",
+  color: "purple-400",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 const category: Category = {

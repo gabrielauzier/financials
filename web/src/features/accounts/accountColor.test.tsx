@@ -25,7 +25,7 @@ const base: Account = {
   nickname: "Nubank pessoal",
   holderNames: ["Gabriel"],
   active: true,
-  color: "purple-600",
+  color: "purple-400",
   createdAt: "2026-01-01",
 };
 
@@ -39,14 +39,14 @@ const barOf = (article: HTMLElement) =>
   article.querySelector("span[aria-hidden='true'].w-1\\.5") as HTMLElement;
 
 describe("AccountForm color (COLOR-08)", () => {
-  it("a new account opens with Ardósia 600 and the edit form with the account color (AC 1)", () => {
+  it("a new account opens with Ardósia and the edit form with the account color (AC 1)", () => {
     const { unmount } = renderWithQuery(<AccountForm open onOpenChange={vi.fn()} />);
-    expect(screen.getByLabelText("Cor")).toHaveTextContent("Ardósia 600");
+    expect(screen.getByLabelText("Cor")).toHaveTextContent("Ardósia");
     unmount();
     renderWithQuery(
       <AccountForm open onOpenChange={vi.fn()} account={{ ...base, color: "teal-400" }} />,
     );
-    expect(screen.getByLabelText("Cor")).toHaveTextContent("Verde-azulado 400");
+    expect(screen.getByLabelText("Cor")).toHaveTextContent("Verde-azulado");
   });
 
   it("sends the chosen color with the other fields in the POST (AC 2)", async () => {
@@ -54,8 +54,8 @@ describe("AccountForm color (COLOR-08)", () => {
     renderWithQuery(<AccountForm open onOpenChange={onOpenChange} />);
     fireEvent.change(screen.getByLabelText("Apelido"), { target: { value: "Conta colorida" } });
     fireEvent.change(screen.getByLabelText("Titulares"), { target: { value: "Gabriel" } });
-    await pickColor("Laranja 400");
-    expect(screen.getByLabelText("Cor")).toHaveTextContent("Laranja 400");
+    await pickColor("Laranja");
+    expect(screen.getByLabelText("Cor")).toHaveTextContent("Laranja");
     fireEvent.click(screen.getByRole("button", { name: "Salvar conta" }));
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
     expect(lastRequest("POST")?.body).toEqual({
@@ -70,7 +70,7 @@ describe("AccountForm color (COLOR-08)", () => {
     const onOpenChange = vi.fn();
     responses.set("GET /accounts", [base]);
     renderWithQuery(<AccountForm open onOpenChange={onOpenChange} account={base} />);
-    await pickColor("Rosa 900");
+    await pickColor("Rosa");
     fireEvent.click(screen.getByRole("button", { name: "Salvar conta" }));
     await waitFor(() => expect(lastRequest("PATCH")).toBeDefined());
     expect(lastRequest("PATCH")?.path).toBe("/accounts/acc-1");
@@ -78,7 +78,7 @@ describe("AccountForm color (COLOR-08)", () => {
       bank: "Nubank",
       nickname: "Nubank pessoal",
       holderNames: ["Gabriel"],
-      color: "pink-900",
+      color: "pink-400",
     });
   });
 
@@ -125,7 +125,7 @@ describe("AccountsPage icon and color bar (ICON-03 AC 5, ICON-04 AC 8, 9)", () =
     expect(first.querySelector("img")).toHaveAttribute("src", nubank);
     expect(first.querySelector("img")?.closest("span")).toHaveClass("size-8");
     expect(within(first).getByText("Nubank")).toBeInTheDocument();
-    expect(barOf(first)).toHaveClass("bg-purple-600", "w-1.5");
+    expect(barOf(first)).toHaveClass("bg-purple-400", "w-1.5");
     expect(second.querySelector("img")).toHaveAttribute("src", neon);
     expect(within(second).getByText("Neon")).toBeInTheDocument();
     expect(barOf(second)).toHaveClass("bg-sky-400");
@@ -136,7 +136,7 @@ describe("AccountsPage icon and color bar (ICON-03 AC 5, ICON-04 AC 8, 9)", () =
   });
 
   it("shows Reativar and keeps opacity-55, icon and bar for an inactive account", async () => {
-    responses.set("GET /accounts", [{ ...base, active: false, color: "lime-600" }]);
+    responses.set("GET /accounts", [{ ...base, active: false, color: "lime-400" }]);
     renderWithQuery(<AccountsPage />);
     const article = (await screen.findByRole("heading", { name: "Nubank pessoal" })).closest(
       "article",
@@ -144,7 +144,7 @@ describe("AccountsPage icon and color bar (ICON-03 AC 5, ICON-04 AC 8, 9)", () =
     expect(article).toHaveClass("opacity-55");
     expect(within(article).getByRole("button", { name: "Reativar" })).toBeInTheDocument();
     expect(article.querySelector("img")).toBeInTheDocument();
-    expect(barOf(article)).toHaveClass("bg-lime-600");
+    expect(barOf(article)).toHaveClass("bg-lime-400");
   });
 
   it("after a PATCH of the color the list refetches and the bar shows the new class", async () => {
@@ -157,9 +157,9 @@ describe("AccountsPage icon and color bar (ICON-03 AC 5, ICON-04 AC 8, 9)", () =
     renderWithQuery(<AccountsPage />);
     const heading = await screen.findByRole("heading", { name: "Nubank pessoal" });
     const article = heading.closest("article") as HTMLElement;
-    expect(barOf(article)).toHaveClass("bg-purple-600");
+    expect(barOf(article)).toHaveClass("bg-purple-400");
     fireEvent.click(within(article).getByRole("button", { name: "Editar" }));
-    await pickColor("Laranja 400");
+    await pickColor("Laranja");
     fireEvent.click(screen.getByRole("button", { name: "Salvar conta" }));
     await waitFor(() => {
       const current = screen.getByRole("heading", { name: "Nubank pessoal" }).closest("article");

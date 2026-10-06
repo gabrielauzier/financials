@@ -59,7 +59,7 @@ describe("extrato: ícone e cor da conta (ICON-03 AC 3, 4)", () => {
     const second = await seedOne("Conta label B", 1);
     responses.set("GET /accounts", [
       { ...account, bank: "XP", color: "orange-400" },
-      { ...second.account, bank: "Nubank", active: false, color: "lime-600" },
+      { ...second.account, bank: "Nubank", active: false, color: "lime-400" },
     ]);
     renderWithQuery(<TransactionsPage />);
     const cell = accountCell(await rowOf(item.name));
@@ -77,13 +77,13 @@ describe("extrato: ícone e cor da conta (ICON-03 AC 3, 4)", () => {
     expect(within(rowSelect).getByText(item.categoryName)).toHaveClass("inline-block", "truncate");
     fireEvent.click(rowSelect);
     const option = await screen.findByRole("option", { name: food.name });
-    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-600");
+    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-400");
     fireEvent.keyDown(option, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("option")).not.toBeInTheDocument());
     // a transaction of an inactive account: the bank of that account, its dot, no (inativa) suffix
     const inactive = accountCell(await rowOf(second.item.name));
     await waitFor(() => expect(inactive.querySelector("img")).toHaveAttribute("src", nubank));
-    expect(dot(inactive)).toHaveClass("bg-lime-600");
+    expect(dot(inactive)).toHaveClass("bg-lime-400");
     expect(inactive).toHaveTextContent(second.item.accountNickname);
     expect(inactive).not.toHaveTextContent("(inativa)");
   });
@@ -141,7 +141,7 @@ describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 
         id: "other",
         bank: "XP",
         nickname: "XP filtro",
-        color: "zinc-900",
+        color: "zinc-400",
         active: false,
       },
     ]);
@@ -154,7 +154,7 @@ describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 
     expect(neonOption.querySelector("img")).toHaveAttribute("src", neon);
     expect(dot(neonOption)).toHaveClass("bg-sky-400");
     expect(xpOption.querySelector("img")).toHaveAttribute("src", xp);
-    expect(dot(xpOption)).toHaveClass("bg-zinc-900");
+    expect(dot(xpOption)).toHaveClass("bg-zinc-400");
   });
 
   it("the filter category select shows badges in its options", async () => {
@@ -165,7 +165,7 @@ describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 
     await waitFor(() => expect(filter).toBeEnabled());
     fireEvent.click(filter);
     const option = await screen.findByRole("option", { name: food.name });
-    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-600");
+    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-400");
   });
 
   it("the bulk-apply category select shows badges in its options and in its value", async () => {
@@ -177,11 +177,11 @@ describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 
     const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
     fireEvent.click(within(bar).getByRole("combobox"));
     const option = await screen.findByRole("option", { name: food.name });
-    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-600");
+    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-400");
     fireEvent.click(option);
     await waitFor(() =>
       expect(within(within(bar).getByRole("combobox")).getByText(food.name)).toHaveClass(
-        "bg-orange-600",
+        "bg-orange-400",
       ),
     );
   });
