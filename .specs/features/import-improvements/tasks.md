@@ -154,11 +154,11 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests with a mocked `fetch`: 200 returns the exact bytes; 400 and 404 return `null`; 401, 403, 500 and 503 throw `storage_error` 502; a network error and a timeout throw `storage_error` 502 (AC 4 and 5 of the download story)
-- [ ] The thrown error message contains the operation and the HTTP status only: no URL, token, key or path (asserted with the mocked URL and token as the forbidden strings) (AC 7)
-- [ ] The request carries `apikey` and `Authorization: Bearer <user token>` and never a service key (asserted on the mocked call) (AC 4 of the isolation story)
-- [ ] Gate check passes: `pnpm -C api test:unit` and `pnpm -C api typecheck`
-- [ ] Test count: the existing unit tests plus about 8 new ones pass (no silent deletions)
+- [x] Unit tests with a mocked `fetch`: 200 returns the exact bytes; 400 and 404 return `null`; 401, 403, 500 and 503 throw `storage_error` 502; a network error and a timeout throw `storage_error` 502 (AC 4 and 5 of the download story)
+- [x] The thrown error message contains the operation and the HTTP status only: no URL, token, key or path (asserted with the mocked URL and token as the forbidden strings) (AC 7)
+- [x] The request carries `apikey` and `Authorization: Bearer <user token>` and never a service key (asserted on the mocked call) (AC 4 of the isolation story)
+- [x] Gate check passes: `pnpm -C api test:unit` and `pnpm -C api typecheck`
+- [x] Test count: the existing unit tests plus about 8 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

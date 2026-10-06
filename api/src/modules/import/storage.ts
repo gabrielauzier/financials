@@ -85,3 +85,29 @@ export async function uploadImportFile(input: UploadImportFile): Promise<string>
 export async function removeImportFile(input: StorageAccess & { path: string }): Promise<void> {
   await send('remove', objectUrl(input.supabaseUrl, input.path), { method: 'DELETE', headers: headers(input) });
 }
+
+/**
+ * Reads one object of the user by its storage path, as the user. Returns the bytes; `null` when the
+ * object is missing or not visible to the user (Storage answers 400 with `statusCode: "404"` in the body, or
+ * 404); any other answer, a network failure or the timeout throws `storage_error` (502).
+ */
+export async function downloadImportFile(input: StorageAccess & { path: string }): Promise<Buffer | null> {
+  let res: Response;
+  try {
+    res = await fetch(objectUrl(input.supabaseUrl, input.path), {
+      method: 'GET',
+      headers: headers(input),
+      signal: AbortSignal.timeout(STORAGE_TIMEOUT_MS),
+    });
+  } catch {
+    throw storageError('read');
+  }
+  try {
+    if (res.ok) return Buffer.from(await res.arrayBuffer());
+    await res.arrayBuffer().catch(() => undefined);
+  } catch {
+    throw storageError('read');
+  }
+  if (res.status === 400 || res.status === 404) return null;
+  throw storageError('read', res.status);
+}
