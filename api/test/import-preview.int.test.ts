@@ -174,6 +174,12 @@ describe('POST /imports/preview', () => {
       expect(res.json<Preview>().rows.map((r) => r.status)).toEqual(['duplicate']);
     });
 
+    it('keeps a row with a new identifier new even when name, day, amount and type equal an existing transaction', async () => {
+      const { other, accountId } = await seed('Padaria Estrela Azul');
+      const res = await preview({ accountId }, [statement('ident-fresh', 'Compra no débito - Padaria Estrela Azul')], other);
+      expect(res.json<Preview>().rows.map((r) => [r.name, r.status])).toEqual([['Padaria Estrela Azul', 'new']]);
+    });
+
     it('keeps a row without identifier new when only the extracted name differs', async () => {
       const { other, accountId } = await seed('Padaria Estrela Azul');
       const res = await preview({ accountId }, [statement('', 'Compra no débito - Padaria Estrela Verde')], other);

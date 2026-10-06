@@ -327,4 +327,22 @@ describe('classify: neutrals with the holders of two own accounts (IMPFIX-09)', 
       [3, 'duplicate', true],
     ]);
   });
+
+  it('keeps a holder-named row without identifier neutral, as new and as a content-matched duplicate (IMPFIX-09)', async () => {
+    const o = await owner();
+    const person = await account(o, ['Maria Souza Lima']);
+    await existing(o, person, { name: 'Maria Souza Lima', amount: '25.00' });
+
+    const result = await run(o, [
+      row(0, { name: 'maria souza lima', identifier: null, amount: '99.00' }),
+      row(1, { name: 'Maria Souza Lima', identifier: null, amount: '25.00' }),
+      row(2, { name: 'Maria Souza Lima Santos', identifier: null, amount: '99.00' }),
+    ], person);
+
+    expect(result.map((r) => [r.index, r.status, r.neutral])).toEqual([
+      [0, 'new', true],
+      [1, 'duplicate', true],
+      [2, 'new', false],
+    ]);
+  });
 });

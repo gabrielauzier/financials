@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
-import { cleanupTestUsers, closeAdminSql, createTestUser, type TestUser } from './helpers/db.js';
+import { cleanupTestUsers, closeAdminSql, createTestUser, getAdminSql, type TestUser } from './helpers/db.js';
 import { fixture } from './helpers/fixtures.js';
 import { importState } from './helpers/imports.js';
 import { multipart } from './helpers/multipart.js';
@@ -54,6 +54,11 @@ function confirm(o: { user: TestUser; accountId: string }, idempotencyKey: strin
   });
 }
 
+const descriptions = async (userId: string): Promise<string[]> =>
+  (await getAdminSql()<{ description: string | null }[]>`
+    select description from public.transactions where user_id = ${userId} order by occurred_at, identifier`)
+    .map((r) => r.description ?? '<null>');
+
 const ONE_IMPORT = { transactions: 5, batches: 1, attachments: 1, objects: 1 };
 
 describe('POST /imports/confirm idempotency', () => {
@@ -70,6 +75,18 @@ describe('POST /imports/confirm idempotency', () => {
     expect(again.statusCode).toBe(200);
     expect(again.json()).toEqual(summary);
     expect(await importState(o.user.id)).toEqual(ONE_IMPORT);
+  });
+
+  it('a replay leaves the stored description of every imported row unchanged (SPG-1)', async () => {
+    const o = await owner();
+    const key = randomUUID();
+    expect((await confirm(o, key)).statusCode).toBe(201);
+    const before = await descriptions(o.user.id);
+    expect(before).toHaveLength(5);
+    expect(before.every((d) => d.length > 0 && d !== '<null>')).toBe(true);
+
+    expect((await confirm(o, key)).statusCode).toBe(200);
+    expect(await descriptions(o.user.id)).toEqual(before);
   });
 
   it('the key alone decides a replay: another account, another file or bad selections still return the stored summary', async () => {
