@@ -9,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CategoryBadge } from "@/features/categories/CategoryBadge";
 import { CategorySelect } from "@/features/categories/CategorySelect";
-import { useCategories } from "@/features/categories/hooks";
+import { useCategories, useCategoryLookup } from "@/features/categories/hooks";
 import { paymentMethodLabels } from "@/features/transactions/labels";
 import { amountClassName, formatSignedAmount } from "@/features/transactions/utils";
 import type { ImportPreview, ImportRowStatus, PreviewRow } from "@/lib/api/types";
@@ -54,6 +55,7 @@ export function ImportPreviewTable({
 }: ImportPreviewTableProps) {
   // When the categories fail to load the column shows the preview's category name as text.
   const categoriesFailed = useCategories().isError;
+  const categoryLookup = useCategoryLookup();
   const update = (row: PreviewRow, patch: Partial<RowChoice>) => {
     onSelectionChange({ ...selection, [row.index]: { ...choiceOf(row, selection), ...patch } });
   };
@@ -139,6 +141,11 @@ export function ImportPreviewTable({
                       value={choice.categoryId}
                       onChange={(categoryId) => update(row, { categoryId })}
                       ariaLabel={`Categoria de ${row.name}`}
+                    />
+                  ) : categoryLookup.ready && categoryLookup.byId.has(row.categoryId) ? (
+                    <CategoryBadge
+                      name={row.categoryName}
+                      color={categoryLookup.byId.get(row.categoryId)?.color}
                     />
                   ) : (
                     row.categoryName

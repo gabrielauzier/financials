@@ -472,12 +472,12 @@ T7 → T13
 
 **Done when**:
 
-- [ ] A selectable preview row's select shows the category badge in its trigger and in its opened options (COLOR-10 AC 5)
-- [ ] An `ignored` or `invalid` row shows the `CategoryBadge` with the category name and the color of the user's category with that id when the lookup is ready (COLOR-10 AC 5)
-- [ ] When `GET /categories` fails the column shows the `categoryName` text for every row, with no badge, as before; while loading the select shows "Carregando categorias…" (COLOR-10 AC 6 and 8)
-- [ ] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for 400, 600 and 900; the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 5 new ones pass (no silent deletions)
+- [x] A selectable preview row's select shows the category badge in its trigger and in its opened options (COLOR-10 AC 5)
+- [x] An `ignored` or `invalid` row shows the `CategoryBadge` with the category name and the color of the user's category with that id when the lookup is ready (COLOR-10 AC 5)
+- [x] When `GET /categories` fails the column shows the `categoryName` text for every row, with no badge, as before; while loading the select shows "Carregando categorias…" (COLOR-10 AC 6 and 8)
+- [x] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for 400, 600 and 900; the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 5 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: build

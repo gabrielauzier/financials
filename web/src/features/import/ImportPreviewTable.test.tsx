@@ -348,7 +348,7 @@ describe("categoria por linha (IMPIMP-03)", () => {
     ] as const) {
       const cells = within(screen.getByText(name).closest("tr")!);
       expect(cells.queryByRole("combobox")).not.toBeInTheDocument();
-      expect(cells.getByText(text, { selector: "td" })).toBeInTheDocument();
+      expect(cells.getByText(text)).toBeInTheDocument();
     }
   });
 
