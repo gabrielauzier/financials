@@ -94,10 +94,10 @@ T12 → T13
 
 **Done when**:
 
-- [ ] `preview.ts` exports `PreviewSchema`, `PreviewRowSchema`, `analyze`, `categoriesByKey`, `toPreview`, `invalidAccount`; `routes.ts` no longer defines them and the preview and confirm responses are byte-for-byte what they were (the OpenAPI export has no diff)
-- [ ] No test is changed or deleted; `pnpm -C api openapi:export` leaves `api/openapi.json` unchanged
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
-- [ ] Test count: the existing API unit and integration tests all pass, same count as before (no silent deletions)
+- [x] `preview.ts` exports `PreviewSchema`, `PreviewRowSchema`, `analyze`, `categoriesByKey`, `toPreview`, `invalidAccount`; `routes.ts` no longer defines them and the preview and confirm responses are byte-for-byte what they were (the OpenAPI export has no diff)
+- [x] No test is changed or deleted; `pnpm -C api openapi:export` leaves `api/openapi.json` unchanged
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
+- [x] Test count: the existing API unit and integration tests all pass, same count as before (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
