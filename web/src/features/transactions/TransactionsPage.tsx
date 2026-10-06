@@ -36,7 +36,6 @@ import { AccountLabel } from "@/features/accounts/AccountLabel";
 import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { useAccountLookup } from "@/features/accounts/hooks";
 import { CategorySelect } from "@/features/categories/CategorySelect";
-import { formatDateLocal } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/notify";
 import type { Transaction, TransactionFilters } from "@/lib/api/types";
 import {
@@ -47,6 +46,7 @@ import {
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
 import { ClearButton, FilterField } from "./FilterField";
+import { TransactionDate } from "./TransactionDate";
 import { TransactionForm } from "./TransactionForm";
 import {
   amountClassName,
@@ -614,7 +614,9 @@ function TransactionRow({
           onCheckedChange={(value) => onSelected(value === true)}
         />
       </TableCell>
-      <TableCell className="whitespace-nowrap">{formatDateLocal(item.occurredAt)}</TableCell>
+      <TableCell className="whitespace-nowrap">
+        <TransactionDate occurredAt={item.occurredAt} />
+      </TableCell>
       <TableCell className="min-w-40">
         <div className="font-medium">{item.name}</div>
         {item.description && (
@@ -688,9 +690,10 @@ function TransactionCard(props: RowProps) {
                 {item.description}
               </p>
             )}
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              {formatDateLocal(item.occurredAt)} · <TransactionAccount item={item} />
-            </p>
+            <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+              <TransactionDate occurredAt={item.occurredAt} /> <span aria-hidden="true">·</span>{" "}
+              <TransactionAccount item={item} />
+            </div>
           </div>
         </div>
         <span className={amountClassName(item.type)}>

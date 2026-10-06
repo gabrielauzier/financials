@@ -305,14 +305,14 @@ T6 → T8
 
 **Done when**:
 
-- [ ] The table date cell shows the formatted date and, in a second line below it, the weekday abbreviation (AC 8)
-- [ ] The mobile card shows the weekday abbreviation below the date and keeps the account after the "·" (AC 9)
-- [ ] The weekday element has `text-xs` and `text-muted-foreground` and the date element has neither (AC 10)
-- [ ] With `TZ` America/Sao_Paulo, a transaction at 2026-10-05 23:30 local shows "05/10/2026" and "Seg" in the table and in the card, and one at 2026-12-31 shows "31/12/2026" and "Qui" (AC 2, 4 and 8)
-- [ ] An invalid `occurredAt` renders no weekday element (AC 7)
-- [ ] The existing account label, description and CRUD tests keep passing without weakened assertions
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus at least 5 new pass (no silent deletions)
+- [x] The table date cell shows the formatted date and, in a second line below it, the weekday abbreviation (AC 8)
+- [x] The mobile card shows the weekday abbreviation below the date and keeps the account after the "·" (AC 9)
+- [x] The weekday element has `text-xs` and `text-muted-foreground` and the date element has neither (AC 10)
+- [x] With `TZ` America/Sao_Paulo, a transaction at 2026-10-05 23:30 local shows "05/10/2026" and "Seg" in the table and in the card, and one at 2026-12-31 shows "31/12/2026" and "Qui" (AC 2, 4 and 8)
+- [x] An invalid `occurredAt` renders no weekday element (AC 7)
+- [x] The existing account label, description and CRUD tests keep passing without weakened assertions
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 697 web tests pass (692 existing plus 5 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

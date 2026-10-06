@@ -63,7 +63,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | Período inválido | O alerta "A data inicial deve ser anterior à final" some quando o "x" de De ou de Até corrige o período | Consequência direta de remover uma das datas | n |
 | Dia da semana: fonte | `occurredAt` convertido com `new Date(iso)` e lido com `getDay()` no fuso local do navegador, o mesmo da data exibida por `formatDateLocal`; nunca por `new Date("YYYY-MM-DD")` | A data exibida e o dia da semana não podem divergir | n |
 | Dia da semana: texto | `["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]` indexado por `getDay()`; instante inválido devolve `""` e nada é renderizado | Abreviações do pedido, com acento em "Sáb" | n |
-| Dia da semana: estilo | Linha própria abaixo da data com `text-xs` e `text-muted-foreground`; a data mantém o estilo atual. No cartão móvel, a data e o dia da semana formam um bloco e a conta continua ao lado, depois do "·" | "Menor e mais clara" que a data | n |
+| Dia da semana: estilo | Linha própria abaixo da data com `text-xs` e `text-muted-foreground`; a data usa `text-foreground` (na tabela é a cor que a célula já tem; no cartão móvel, onde a linha toda era `text-muted-foreground`, a data passa a `text-foreground` para o dia da semana ficar mais claro que ela). No cartão móvel, a data e o dia da semana formam um bloco e a conta continua ao lado, depois do "·" | "Menor e mais clara" que a data | n |
 | Testes de fuso | Fixam o fuso com `process.env.TZ` (America/Sao_Paulo e UTC) e o relógio só com `Date` falso quando o relógio importa; o instante da transação vem da API, então os casos de borda usam `occurredAt` explícito | Lições de determinismo (L-027 e `transactions-ux`) | n |
 | Tamanho de `TransactionsPage.tsx` | Os componentes novos entram em arquivos próprios (`FilterField.tsx`, `TransactionDate.tsx`, `TransactionIdentifiers.tsx`); a página só os usa | Pedido: não engordar o arquivo de 717 linhas | n |
 
@@ -175,7 +175,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 7. IF `occurredAt` não é um instante válido THEN o sistema SHALL devolver texto vazio e não renderizar o dia da semana.  <!-- TUXV2-12 -->
 8. WHEN o extrato mostra uma transação na tabela THEN a célula da data SHALL mostrar o dia da semana abreviado em uma segunda linha, abaixo da data.  <!-- TUXV2-13 -->
 9. WHEN o extrato mostra uma transação no cartão móvel THEN o cartão SHALL mostrar o dia da semana abreviado abaixo da data.  <!-- TUXV2-13 -->
-10. The dia da semana SHALL ter fonte menor (`text-xs`) e cor mais clara (`text-muted-foreground`) que a data, e a data SHALL manter o estilo atual.  <!-- TUXV2-13 -->
+10. The dia da semana SHALL ter fonte menor (`text-xs`) e cor mais clara (`text-muted-foreground`) que a data, e a data SHALL não ter essas duas classes.  <!-- TUXV2-13 -->
 
 **Independent Test**: Com o fuso em America/Sao_Paulo, uma transação de 5 de outubro de 2026 às 23:30 mostra "05/10/2026" e "Seg" na tabela e no cartão.
 
@@ -210,7 +210,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | TUXV2-10 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
 | TUXV2-11 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
 | TUXV2-12 | P2: Dia da semana abaixo da data | In Tasks | Implementing |
-| TUXV2-13 | P2: Dia da semana abaixo da data | In Tasks | Pending |
+| TUXV2-13 | P2: Dia da semana abaixo da data | In Tasks | Implementing |
 
 **Coverage:** 13 total, 13 mapped to tasks, 0 unmapped
 
