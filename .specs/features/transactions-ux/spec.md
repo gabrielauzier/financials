@@ -41,6 +41,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | Textos de sucesso | Categoria em massa: "Categoria aplicada a 1 transação" (singular) ou "Categoria aplicada a N transações"; categoria numa linha: "Categoria atualizada"; edição: "Transação atualizada"; criação: "Transação criada"; exclusão: "Transação excluída" | Mensagens curtas em pt-BR, com a contagem só no lote | n |
 | Textos de erro | `messageForError(reason, "transaction")` em todos os cinco fluxos e na falha da neutra; o texto fixo "Não foi possível salvar a categoria" e o alerta `role="alert"` da página (`actionError`) deixam de existir | Um só caminho de erro; os testes da front-fixes que dependiam do texto antigo são atualizados | n |
 | Falha no formulário | O diálogo continua aberto, o erro de campo continua inline e um toast de erro é emitido também | Cada fluxo precisa emitir toast de falha sem perder a marcação do campo | n |
+| Falha ao excluir | O diálogo de confirmação continua aberto (o botão Excluir fica desabilitado enquanto a chamada está em andamento), a transação continua na lista e o toast de erro é emitido; o usuário tenta de novo ou cancela | Evita perder o contexto e permite repetir a ação, como no formulário | n |
 | Toast de sucesso do formulário | Emitido depois que o diálogo fecha; o toast de edição é "Transação atualizada" mesmo quando só `name` muda | Um texto por fluxo | n |
 | Troca da neutra | Sem toast de sucesso; falha mostra o toast de erro e o switch volta ao valor anterior | Fora dos cinco fluxos pedidos; manter o retorno visual de falha | n |
 | Formato do `DatePicker` | Valor controlado como string `YYYY-MM-DD`, ou `""` quando vazio; `onChange(value: string)` recebe `""` ao limpar; nunca usa `toISOString`, `Date.parse` de string ISO nem `new Date("YYYY-MM-DD")`; o dia é montado com `new Date(ano, mês - 1, dia)` e lido com os getters locais | Evita o deslocamento de um dia por fuso | n |
@@ -89,7 +90,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 10. WHEN a criação pelo modal conclui THEN o sistema SHALL fechar o diálogo e exibir o toast "Transação criada".  <!-- TUX-04 -->
 11. IF a edição ou a criação falha THEN o sistema SHALL manter o diálogo aberto, manter o erro de campo inline quando a API informa `field` e exibir o toast de erro.  <!-- TUX-04 -->
 12. WHEN a exclusão conclui THEN o sistema SHALL exibir o toast "Transação excluída".  <!-- TUX-04 -->
-13. IF a exclusão falha THEN o sistema SHALL manter a transação na lista e exibir o toast de erro.  <!-- TUX-04 -->
+13. IF a exclusão falha THEN o sistema SHALL manter a transação na lista, manter o diálogo de confirmação aberto e exibir o toast de erro.  <!-- TUX-04 -->
 14. The sistema SHALL NOT exibir o alerta fixo `role="alert"` de erro de ação do extrato; os erros de ação aparecem somente em toast.  <!-- TUX-04 -->
 
 **Independent Test**: Executar cada um dos cinco fluxos com sucesso e com falha forçada e conferir o texto exato emitido pelo helper.

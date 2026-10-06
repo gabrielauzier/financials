@@ -366,8 +366,9 @@ describe("extrato", () => {
       expect(toast.success).not.toHaveBeenCalled();
       expect(toast.error).not.toHaveBeenCalledWith("DB down");
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-      // the failed delete keeps the transaction in the list
+      // the failed delete keeps the transaction in the list and the confirmation open, to retry
       expect(screen.getAllByText(deletedName as string).length).toBeGreaterThan(0);
+      expect(screen.getByRole("alertdialog")).toBeInTheDocument();
     });
   });
 

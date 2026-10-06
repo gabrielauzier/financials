@@ -453,7 +453,10 @@ export function TransactionsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={async () => {
+              disabled={remove.isPending}
+              onClick={async (event) => {
+                // keep the dialog open when the delete fails, so the user can retry or cancel
+                event.preventDefault();
                 if (!deleting) return;
                 try {
                   await remove.mutateAsync(deleting.id);
