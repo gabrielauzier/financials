@@ -207,7 +207,7 @@ describe('OpenAPI contract', () => {
     }
   });
 
-  it('GET /docs/json documents color with the 66-key enum on the account responses and the key list on its bodies (COLOR-06)', async () => {
+  it('GET /docs/json documents color with the 66-key enum on the account and category responses and the key list on their bodies (COLOR-06)', async () => {
     const app = buildApp();
     try {
       const res = await app.inject({ method: 'GET', url: '/docs/json' });
@@ -241,6 +241,26 @@ describe('OpenAPI contract', () => {
         expect(colorOf(schema)?.description, label).toBe(`One of: ${COLOR_KEYS.join(', ')}`);
       }
       expect(body(create)?.required ?? []).not.toContain('color');
+
+      const categories = doc.paths['/categories'];
+      const categoryEdit = doc.paths['/categories/{id}']?.patch;
+      for (const [label, schema] of [
+        ['categories GET list item', response(categories?.get, '200')?.items],
+        ['categories POST 201', response(categories?.post, '201')],
+        ['categories PATCH 200', response(categoryEdit, '200')],
+      ] as const) {
+        expect(colorOf(schema)?.enum, label).toEqual([...COLOR_KEYS]);
+        expect(schema?.required, label).toContain('color');
+      }
+      for (const [label, schema] of [
+        ['categories POST body', body(categories?.post)],
+        ['categories PATCH body', body(categoryEdit)],
+      ] as const) {
+        expect(colorOf(schema)?.type, label).toBe('string');
+        expect(colorOf(schema)?.description, label).toBe(`One of: ${COLOR_KEYS.join(', ')}`);
+      }
+      expect(body(categories?.post)?.required).toEqual(['name']);
+      expect(body(categoryEdit)?.required ?? []).toEqual([]);
     } finally {
       await app.close();
     }

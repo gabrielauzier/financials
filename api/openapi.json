@@ -802,7 +802,8 @@
                       "id",
                       "key",
                       "name",
-                      "isSystem"
+                      "isSystem",
+                      "color"
                     ],
                     "properties": {
                       "id": {
@@ -818,6 +819,77 @@
                       },
                       "isSystem": {
                         "type": "boolean"
+                      },
+                      "color": {
+                        "type": "string",
+                        "enum": [
+                          "red-400",
+                          "red-600",
+                          "red-900",
+                          "orange-400",
+                          "orange-600",
+                          "orange-900",
+                          "amber-400",
+                          "amber-600",
+                          "amber-900",
+                          "yellow-400",
+                          "yellow-600",
+                          "yellow-900",
+                          "lime-400",
+                          "lime-600",
+                          "lime-900",
+                          "green-400",
+                          "green-600",
+                          "green-900",
+                          "emerald-400",
+                          "emerald-600",
+                          "emerald-900",
+                          "teal-400",
+                          "teal-600",
+                          "teal-900",
+                          "cyan-400",
+                          "cyan-600",
+                          "cyan-900",
+                          "sky-400",
+                          "sky-600",
+                          "sky-900",
+                          "blue-400",
+                          "blue-600",
+                          "blue-900",
+                          "indigo-400",
+                          "indigo-600",
+                          "indigo-900",
+                          "violet-400",
+                          "violet-600",
+                          "violet-900",
+                          "purple-400",
+                          "purple-600",
+                          "purple-900",
+                          "fuchsia-400",
+                          "fuchsia-600",
+                          "fuchsia-900",
+                          "pink-400",
+                          "pink-600",
+                          "pink-900",
+                          "rose-400",
+                          "rose-600",
+                          "rose-900",
+                          "slate-400",
+                          "slate-600",
+                          "slate-900",
+                          "gray-400",
+                          "gray-600",
+                          "gray-900",
+                          "zinc-400",
+                          "zinc-600",
+                          "zinc-900",
+                          "neutral-400",
+                          "neutral-600",
+                          "neutral-900",
+                          "stone-400",
+                          "stone-600",
+                          "stone-900"
+                        ]
                       }
                     }
                   }
@@ -840,6 +912,10 @@
                 "properties": {
                   "name": {
                     "type": "string"
+                  },
+                  "color": {
+                    "description": "One of: red-400, red-600, red-900, orange-400, orange-600, orange-900, amber-400, amber-600, amber-900, yellow-400, yellow-600, yellow-900, lime-400, lime-600, lime-900, green-400, green-600, green-900, emerald-400, emerald-600, emerald-900, teal-400, teal-600, teal-900, cyan-400, cyan-600, cyan-900, sky-400, sky-600, sky-900, blue-400, blue-600, blue-900, indigo-400, indigo-600, indigo-900, violet-400, violet-600, violet-900, purple-400, purple-600, purple-900, fuchsia-400, fuchsia-600, fuchsia-900, pink-400, pink-600, pink-900, rose-400, rose-600, rose-900, slate-400, slate-600, slate-900, gray-400, gray-600, gray-900, zinc-400, zinc-600, zinc-900, neutral-400, neutral-600, neutral-900, stone-400, stone-600, stone-900",
+                    "type": "string"
                   }
                 }
               }
@@ -857,7 +933,8 @@
                     "id",
                     "key",
                     "name",
-                    "isSystem"
+                    "isSystem",
+                    "color"
                   ],
                   "properties": {
                     "id": {
@@ -873,6 +950,77 @@
                     },
                     "isSystem": {
                       "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "red-600",
+                        "red-900",
+                        "orange-400",
+                        "orange-600",
+                        "orange-900",
+                        "amber-400",
+                        "amber-600",
+                        "amber-900",
+                        "yellow-400",
+                        "yellow-600",
+                        "yellow-900",
+                        "lime-400",
+                        "lime-600",
+                        "lime-900",
+                        "green-400",
+                        "green-600",
+                        "green-900",
+                        "emerald-400",
+                        "emerald-600",
+                        "emerald-900",
+                        "teal-400",
+                        "teal-600",
+                        "teal-900",
+                        "cyan-400",
+                        "cyan-600",
+                        "cyan-900",
+                        "sky-400",
+                        "sky-600",
+                        "sky-900",
+                        "blue-400",
+                        "blue-600",
+                        "blue-900",
+                        "indigo-400",
+                        "indigo-600",
+                        "indigo-900",
+                        "violet-400",
+                        "violet-600",
+                        "violet-900",
+                        "purple-400",
+                        "purple-600",
+                        "purple-900",
+                        "fuchsia-400",
+                        "fuchsia-600",
+                        "fuchsia-900",
+                        "pink-400",
+                        "pink-600",
+                        "pink-900",
+                        "rose-400",
+                        "rose-600",
+                        "rose-900",
+                        "slate-400",
+                        "slate-600",
+                        "slate-900",
+                        "gray-400",
+                        "gray-600",
+                        "gray-900",
+                        "zinc-400",
+                        "zinc-600",
+                        "zinc-900",
+                        "neutral-400",
+                        "neutral-600",
+                        "neutral-900",
+                        "stone-400",
+                        "stone-600",
+                        "stone-900"
+                      ]
                     }
                   }
                 }
@@ -890,11 +1038,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name"
-                ],
                 "properties": {
                   "name": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "description": "One of: red-400, red-600, red-900, orange-400, orange-600, orange-900, amber-400, amber-600, amber-900, yellow-400, yellow-600, yellow-900, lime-400, lime-600, lime-900, green-400, green-600, green-900, emerald-400, emerald-600, emerald-900, teal-400, teal-600, teal-900, cyan-400, cyan-600, cyan-900, sky-400, sky-600, sky-900, blue-400, blue-600, blue-900, indigo-400, indigo-600, indigo-900, violet-400, violet-600, violet-900, purple-400, purple-600, purple-900, fuchsia-400, fuchsia-600, fuchsia-900, pink-400, pink-600, pink-900, rose-400, rose-600, rose-900, slate-400, slate-600, slate-900, gray-400, gray-600, gray-900, zinc-400, zinc-600, zinc-900, neutral-400, neutral-600, neutral-900, stone-400, stone-600, stone-900",
                     "type": "string"
                   }
                 }
@@ -923,7 +1072,8 @@
                     "id",
                     "key",
                     "name",
-                    "isSystem"
+                    "isSystem",
+                    "color"
                   ],
                   "properties": {
                     "id": {
@@ -939,6 +1089,77 @@
                     },
                     "isSystem": {
                       "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "red-600",
+                        "red-900",
+                        "orange-400",
+                        "orange-600",
+                        "orange-900",
+                        "amber-400",
+                        "amber-600",
+                        "amber-900",
+                        "yellow-400",
+                        "yellow-600",
+                        "yellow-900",
+                        "lime-400",
+                        "lime-600",
+                        "lime-900",
+                        "green-400",
+                        "green-600",
+                        "green-900",
+                        "emerald-400",
+                        "emerald-600",
+                        "emerald-900",
+                        "teal-400",
+                        "teal-600",
+                        "teal-900",
+                        "cyan-400",
+                        "cyan-600",
+                        "cyan-900",
+                        "sky-400",
+                        "sky-600",
+                        "sky-900",
+                        "blue-400",
+                        "blue-600",
+                        "blue-900",
+                        "indigo-400",
+                        "indigo-600",
+                        "indigo-900",
+                        "violet-400",
+                        "violet-600",
+                        "violet-900",
+                        "purple-400",
+                        "purple-600",
+                        "purple-900",
+                        "fuchsia-400",
+                        "fuchsia-600",
+                        "fuchsia-900",
+                        "pink-400",
+                        "pink-600",
+                        "pink-900",
+                        "rose-400",
+                        "rose-600",
+                        "rose-900",
+                        "slate-400",
+                        "slate-600",
+                        "slate-900",
+                        "gray-400",
+                        "gray-600",
+                        "gray-900",
+                        "zinc-400",
+                        "zinc-600",
+                        "zinc-900",
+                        "neutral-400",
+                        "neutral-600",
+                        "neutral-900",
+                        "stone-400",
+                        "stone-600",
+                        "stone-900"
+                      ]
                     }
                   }
                 }

@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type, type Static } from '@sinclair/typebox';
 import postgres, { type TransactionSql } from 'postgres';
+import { ColorInput, ColorResponse, validColor } from '../../lib/color-field.js';
+import type { ColorKey } from '../../lib/palette.js';
 import { AppError } from '../../plugins/errors.js';
 import { categoryReferences } from './registry.js';
 
@@ -10,11 +12,15 @@ const CategorySchema = Type.Object({
   key: Type.Union([Type.String(), Type.Null()]),
   name: Type.String(),
   isSystem: Type.Boolean(),
+  color: ColorResponse,
 });
 type Category = Static<typeof CategorySchema>;
 
-// Only `name` is read: `key` and `isSystem` cannot be set by clients.
-const NameBody = Type.Object({ name: Type.String() });
+// Only `name` and `color` are read: `key` and `isSystem` cannot be set by clients.
+const CreateBody = Type.Object({ name: Type.String(), color: Type.Optional(ColorInput) });
+
+// Every field is optional; an empty body changes nothing.
+const UpdateBody = Type.Object({ name: Type.Optional(Type.String()), color: Type.Optional(ColorInput) });
 
 const IdParams = Type.Object({ id: Type.String() });
 
@@ -27,12 +33,13 @@ interface CategoryRow {
   key: string | null;
   name: string;
   is_system: boolean;
+  color: ColorKey;
 }
 
-const columns = (tx: TransactionSql) => tx`id, key, name, is_system`;
+const columns = (tx: TransactionSql) => tx`id, key, name, is_system, color`;
 
 function toCategory(row: CategoryRow): Category {
-  return { id: row.id, key: row.key, name: row.name, isSystem: row.is_system };
+  return { id: row.id, key: row.key, name: row.name, isSystem: row.is_system, color: row.color };
 }
 
 function validName(value: string): string {
@@ -106,13 +113,16 @@ export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
   );
   routes.post(
     '/categories',
-    { schema: { body: NameBody, response: { 201: CategorySchema } } },
+    { schema: { body: CreateBody, response: { 201: CategorySchema } } },
     async (request, reply) => {
       const name = validName(request.body.name);
+      // An absent color is left out of the insert so the column default (slate-600) applies.
+      const color = request.body.color === undefined ? undefined : validColor(request.body.color);
+      const values = { name, ...(color === undefined ? {} : { color }) };
       try {
         const [row] = await request.withUser(
           (tx) => tx<CategoryRow[]>`
-            insert into public.categories (name) values (${name})
+            insert into public.categories ${tx(values)}
             returning ${columns(tx)}`,
         );
         return reply.status(201).send(toCategory(row as CategoryRow));
@@ -124,18 +134,24 @@ export async function categoriesRoutes(app: FastifyInstance): Promise<void> {
   );
   routes.patch(
     '/categories/:id',
-    { schema: { params: IdParams, body: NameBody, response: { 200: CategorySchema } } },
+    { schema: { params: IdParams, body: UpdateBody, response: { 200: CategorySchema } } },
     async (request) => {
       const { id } = request.params;
-      const name = validName(request.body.name);
+      const { name, color } = request.body;
+      const patch: { name?: string; color?: ColorKey } = {};
+      if (name !== undefined) patch.name = validName(name);
+      if (color !== undefined) patch.color = validColor(color);
       if (!UUID.test(id)) throw notFound();
       try {
         const [row] = await request.withUser(async (tx) => {
           await assertEditable(tx, id);
-          return tx<CategoryRow[]>`
-            update public.categories set name = ${name}
-            where id = ${id}
-            returning ${columns(tx)}`;
+          // Both fields go in one update: a name conflict leaves the color unchanged too.
+          return Object.keys(patch).length === 0
+            ? tx<CategoryRow[]>`select ${columns(tx)} from public.categories where id = ${id}`
+            : tx<CategoryRow[]>`
+                update public.categories set ${tx(patch)}
+                where id = ${id}
+                returning ${columns(tx)}`;
         });
         if (!row) throw notFound();
         return toCategory(row);

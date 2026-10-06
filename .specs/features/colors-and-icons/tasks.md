@@ -168,14 +168,14 @@ T7 → T13
 
 **Done when**:
 
-- [ ] Integration: `GET /categories` returns `color` for each category and the 17 seeded ones carry the design table colors (COLOR-05 AC 1)
-- [ ] Integration: `POST /categories` with `name` and `color: "rose-900"` answers 201 with that color; without `color` it returns `slate-600`; an invalid string color answers 422 `validation_error` with `field: "color"` and creates nothing (COLOR-05 AC 2, 3 and 4)
-- [ ] Integration: `PATCH` with only `color` changes the color and keeps the name; with `name` and `color` both change; with a valid color and a name that conflicts answers 409 `duplicate_name` and the color is unchanged; with a valid name and an invalid color answers 422 and the name is unchanged (COLOR-05 AC 4, 5 and 6)
-- [ ] Integration: `PATCH` with an empty body answers 200 with the category unchanged (COLOR-05 AC 7)
-- [ ] Integration: `PATCH` of a system category (`Uncategorized`) with a name or a color answers 403 `category_protected` and the color stays; user B `PATCH`ing user A's category answers 404 `not_found` (COLOR-05 AC 8 and 9)
-- [ ] `api/openapi.json` regenerated (never edited by hand) lists `color` with the 66-key enum on the category schema and the key list on the POST and PATCH bodies; the swagger test passes (COLOR-06 AC 1)
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
-- [ ] Test count: the existing API tests (updated where the contract changed) plus about 14 new integration tests pass (no silent deletions)
+- [x] Integration: `GET /categories` returns `color` for each category and the 17 seeded ones carry the design table colors (COLOR-05 AC 1)
+- [x] Integration: `POST /categories` with `name` and `color: "rose-900"` answers 201 with that color; without `color` it returns `slate-600`; an invalid string color answers 422 `validation_error` with `field: "color"` and creates nothing (COLOR-05 AC 2, 3 and 4)
+- [x] Integration: `PATCH` with only `color` changes the color and keeps the name; with `name` and `color` both change; with a valid color and a name that conflicts answers 409 `duplicate_name` and the color is unchanged; with a valid name and an invalid color answers 422 and the name is unchanged (COLOR-05 AC 4, 5 and 6)
+- [x] Integration: `PATCH` with an empty body answers 200 with the category unchanged (COLOR-05 AC 7)
+- [x] Integration: `PATCH` of a system category (`Uncategorized`) with a name or a color answers 403 `category_protected` and the color stays; user B `PATCH`ing user A's category answers 404 `not_found` (COLOR-05 AC 8 and 9)
+- [x] `api/openapi.json` regenerated (never edited by hand) lists `color` with the 66-key enum on the category schema and the key list on the POST and PATCH bodies; the swagger test passes (COLOR-06 AC 1)
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
+- [x] Test count: the existing API tests (updated where the contract changed) plus about 14 new integration tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
