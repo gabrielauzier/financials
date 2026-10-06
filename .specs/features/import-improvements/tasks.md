@@ -409,13 +409,13 @@ T12 → T13
 
 **Done when**:
 
-- [ ] `areaFromPath("/imports/preview")` and `areaFromPath("/imports")` return `imports`, and with `VITE_MOCK_AREAS=imports` only the import routes are mocked (AC 3 of the contract story)
-- [ ] `GET /imports` returns the seeded batches newest first with the `ImportedFile` shape and an account nickname from the mock accounts; the mock confirm adds a new batch that the next list call returns first
-- [ ] `GET /imports/:id/file` returns a `Blob` with the CSV text; an unknown id throws a mock `not_found` error with status 404
-- [ ] `POST /imports/preview` returns an `ImportPreview` whose rows carry `categoryId` of mock categories and the 8 methods' labels remain valid; a file whose content matches a seeded batch marks those rows `duplicate`
-- [ ] `POST /imports/confirm` honors `selections` (counts imported and skipped, ignores `categoryId` validity except an unknown id, which throws `invalid_category` 422) and returns a `ImportConfirmResult`
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
+- [x] `areaFromPath("/imports/preview")` and `areaFromPath("/imports")` return `imports`, and with `VITE_MOCK_AREAS=imports` only the import routes are mocked (AC 3 of the contract story)
+- [x] `GET /imports` returns the seeded batches newest first with the `ImportedFile` shape and an account nickname from the mock accounts; the mock confirm adds a new batch that the next list call returns first
+- [x] `GET /imports/:id/file` returns a `Blob` with the CSV text; an unknown id throws a mock `not_found` error with status 404
+- [x] `POST /imports/preview` returns an `ImportPreview` whose rows carry `categoryId` of mock categories and the 8 methods' labels remain valid; a file whose content matches a seeded batch marks those rows `duplicate`
+- [x] `POST /imports/confirm` honors `selections` (counts imported and skipped, ignores `categoryId` validity except an unknown id, which throws `invalid_category` 422) and returns a `ImportConfirmResult`
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
