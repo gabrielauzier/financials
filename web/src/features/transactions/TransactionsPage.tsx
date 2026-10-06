@@ -45,7 +45,7 @@ import {
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
 import { TransactionForm } from "./TransactionForm";
-import { applyDateFilter, monthRange, type QuickMonth } from "./utils";
+import { applyDateFilter, monthRange, type FilterState } from "./utils";
 
 type Sort = NonNullable<TransactionFilters["sort"]>;
 const baseFilters: TransactionFilters = { sort: "date", order: "desc", page: 1 };
@@ -69,15 +69,24 @@ const yearOptions = () => {
   return Array.from({ length: 7 }, (_, index) => current - 5 + index);
 };
 
+const initialState: FilterState = { filters: baseFilters, quick: {} };
+/** Applies `update` to the filters of a state; the very same state comes back when they do not change. */
+const withFilters =
+  (update: (current: TransactionFilters) => TransactionFilters) =>
+  (state: FilterState): FilterState => {
+    const filters = update(state.filters);
+    return filters === state.filters ? state : { ...state, filters };
+  };
+
 export function TransactionsPage() {
-  const [filters, setFilters] = useState<TransactionFilters>(baseFilters);
+  // filters and the quick month live in one state, so no update can change one without the other
+  const [{ filters, quick }, setState] = useState<FilterState>(initialState);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkCategory, setBulkCategory] = useState("");
   const [editing, setEditing] = useState<Transaction>();
   const [formOpen, setFormOpen] = useState(false);
   const [deleting, setDeleting] = useState<Transaction>();
-  const [quick, setQuick] = useState<QuickMonth>({});
   const quickActive = quick.year !== undefined && quick.month !== undefined;
   const invalidPeriod = Boolean(filters.from && filters.to && filters.from > filters.to);
   const { data, isLoading, isError, refetch } = useTransactions(filters, !invalidPeriod);
@@ -89,53 +98,57 @@ export function TransactionsPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const query = search.trim();
-      setFilters((current) => {
-        // nothing to change (the first run, right after mount): keep the filters, and the selection
-        if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
-        const next = { ...current, page: 1 };
-        if (query) next.q = query;
-        else delete next.q;
-        return next;
-      });
+      setState(
+        withFilters((current) => {
+          // nothing to change (the first run, right after mount): keep the filters, and the selection
+          if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
+          const next = { ...current, page: 1 };
+          if (query) next.q = query;
+          else delete next.q;
+          return next;
+        }),
+      );
     }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
   useEffect(() => setSelected(new Set()), [filters]);
 
   const changeFilter = <K extends keyof TransactionFilters>(key: K, value: TransactionFilters[K]) =>
-    setFilters((current) => {
-      const next = { ...current, page: 1 };
-      if (value === undefined || value === "") delete next[key];
-      else Object.assign(next, { [key]: value });
-      return next;
+    setState(
+      withFilters((current) => {
+        const next = { ...current, page: 1 };
+        if (value === undefined || value === "") delete next[key];
+        else Object.assign(next, { [key]: value });
+        return next;
+      }),
+    );
+  const changeDate = (key: "from" | "to", value: string) =>
+    setState((state) => applyDateFilter(state, key, value));
+  const changeQuick = (part: "year" | "month", value: number) =>
+    setState((state) => {
+      const next = { ...state.quick, [part]: value };
+      if (next.year === undefined || next.month === undefined) return { ...state, quick: next };
+      return {
+        quick: next,
+        filters: { ...state.filters, ...monthRange(next.year, next.month), page: 1 },
+      };
     });
-  const changeDate = (key: "from" | "to", value: string) => {
-    const next = applyDateFilter({ filters, quick }, key, value);
-    setFilters(next.filters);
-    setQuick(next.quick);
-  };
-  const changeQuick = (part: keyof QuickMonth, value: number) => {
-    const next = { ...quick, [part]: value };
-    setQuick(next);
-    if (next.year === undefined || next.month === undefined) return;
-    setFilters((current) => ({ ...current, ...monthRange(next.year!, next.month!), page: 1 }));
-  };
-  const clearQuick = () => {
-    setQuick({});
-    setFilters((current) => {
-      const next = { ...current, page: 1 };
-      delete next.from;
-      delete next.to;
-      return next;
+  const clearQuick = () =>
+    setState((state) => {
+      const filters = { ...state.filters, page: 1 };
+      delete filters.from;
+      delete filters.to;
+      return { quick: {}, filters };
     });
-  };
   const sortBy = (sort: Sort) =>
-    setFilters((current) => ({
-      ...current,
-      sort,
-      order: current.sort === sort && current.order === "asc" ? "desc" : "asc",
-      page: 1,
-    }));
+    setState(
+      withFilters((current) => ({
+        ...current,
+        sort,
+        order: current.sort === sort && current.order === "asc" ? "desc" : "asc",
+        page: 1,
+      })),
+    );
   const allSelected = items.length > 0 && items.every((item) => selected.has(item.id));
   const toggleAll = (checked: boolean) =>
     setSelected(checked ? new Set(items.map((item) => item.id)) : new Set());
@@ -260,9 +273,8 @@ export function TransactionsPage() {
             variant="outline"
             className="w-full"
             onClick={() => {
-              setFilters(baseFilters);
+              setState(initialState);
               setSearch("");
-              setQuick({});
             }}
           >
             Limpar filtros
@@ -415,10 +427,12 @@ export function TransactionsPage() {
               size="sm"
               disabled={data.page <= 1}
               onClick={() =>
-                setFilters((current) => ({
-                  ...current,
-                  page: Math.max(1, (current.page ?? 1) - 1),
-                }))
+                setState(
+                  withFilters((current) => ({
+                    ...current,
+                    page: Math.max(1, (current.page ?? 1) - 1),
+                  })),
+                )
               }
             >
               Anterior
@@ -428,7 +442,7 @@ export function TransactionsPage() {
               size="sm"
               disabled={data.page >= pages}
               onClick={() =>
-                setFilters((current) => ({ ...current, page: (current.page ?? 1) + 1 }))
+                setState(withFilters((current) => ({ ...current, page: (current.page ?? 1) + 1 })))
               }
             >
               Próxima
