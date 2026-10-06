@@ -27,10 +27,10 @@ Corroborated across multiple features. Safe to apply as guidance.
 - last seen: 2026-10-05T19:28:15Z
 
 ### L-027 - Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.
-- signal: `gate_fail` · recurrence: 2 feature(s) · scope: `ui-tests` · harmful: 0
-- features: transactions-ux, import-improvements
-- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests) (+1 more)
-- last seen: 2026-10-06T03:46:57Z
+- signal: `gate_fail` · recurrence: 3 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux, import-improvements, colors-and-icons
+- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests) (+2 more)
+- last seen: 2026-10-06T06:33:41Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -209,6 +209,42 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: import-improvements
 - evidence: IMPIMP-06 dialog text (validation.md) (ui-tests)
 - last seen: 2026-10-06T03:46:57Z
+
+### L-034 - Replay the migration file inside a rolled-back transaction and assert domain, defaults, check and seed function there, so a stale local database cannot hide a regression in the file.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `migrations` · harmful: 0
+- features: colors-and-icons
+- evidence: mutants M01 M02 M03 M04 M08 M09 M10 (validation.md) (migrations)
+- last seen: 2026-10-06T06:33:41Z
+
+### L-035 - In a roving-tabindex widget, choose a different item, reopen it and assert the only tabbable item is the selected one.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: colors-and-icons
+- evidence: mutant K22 (validation.md) (ui-tests)
+- last seen: 2026-10-06T06:33:42Z
+
+### L-036 - Assert every label the spec fixes in full (the whole translated name list), not only distinctness and a few samples.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: colors-and-icons
+- evidence: mutant W02 (validation.md) (ui-tests)
+- last seen: 2026-10-06T06:33:42Z
+
+### L-037 - State in the spec what an arrow key does on an edge cell that is not a corner: stay or clamp to the nearest edge cell.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: colors-and-icons
+- evidence: SPG-2 COLOR-07 AC 4 (validation.md) (spec-outcomes)
+- last seen: 2026-10-06T06:33:42Z
+
+### L-038 - Keep acceptance criteria and assumption rows consistent on the OpenAPI shape of request bodies (enum or description).
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: colors-and-icons
+- evidence: SPG-1 COLOR-06 AC 1 (validation.md) (spec-outcomes)
+- last seen: 2026-10-06T06:33:42Z
+
+### L-039 - Do not tick a Done-when box that needs a manual browser check until the check is recorded; leave it open and say so.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `process` · harmful: 0
+- features: colors-and-icons
+- evidence: tasks.md:389 and tasks.md:478 (validation.md FT1) (process)
+- last seen: 2026-10-06T06:33:42Z
 
 ## Quarantined (failed when applied - ignore)
 

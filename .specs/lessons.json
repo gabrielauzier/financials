@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 34,
+  "next_id": 40,
   "lessons": [
     {
       "id": "L-001",
@@ -488,16 +488,18 @@
       "status": "confirmed",
       "features": [
         "transactions-ux",
-        "import-improvements"
+        "import-improvements",
+        "colors-and-icons"
       ],
-      "recurrence": 2,
+      "recurrence": 3,
       "harmful": 0,
       "evidence": [
         "web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)",
-        "web full suite x2 in parallel, 21-23 timeouts in extrato tests (validation.md) (ui-tests)"
+        "web full suite x2 in parallel, 21-23 timeouts in extrato tests (validation.md) (ui-tests)",
+        "web full suite x2 in parallel, extratoAccountLabel.test.tsx (validation.md FT2) (ui-tests)"
       ],
       "created": "2026-10-06T01:07:31Z",
-      "last_seen": "2026-10-06T03:46:57Z"
+      "last_seen": "2026-10-06T06:33:41Z"
     },
     {
       "id": "L-028",
@@ -606,6 +608,114 @@
       ],
       "created": "2026-10-06T03:46:57Z",
       "last_seen": "2026-10-06T03:46:57Z"
+    },
+    {
+      "id": "L-034",
+      "key": "surviving_mutant::replay the migration file inside a rolled back transaction and assert domain defaults check and seed function there so a stale local database cannot hide a regression in the file",
+      "text": "Replay the migration file inside a rolled-back transaction and assert domain, defaults, check and seed function there, so a stale local database cannot hide a regression in the file.",
+      "signal": "surviving_mutant",
+      "scope": "migrations",
+      "status": "candidate",
+      "features": [
+        "colors-and-icons"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutants M01 M02 M03 M04 M08 M09 M10 (validation.md) (migrations)"
+      ],
+      "created": "2026-10-06T06:33:41Z",
+      "last_seen": "2026-10-06T06:33:41Z"
+    },
+    {
+      "id": "L-035",
+      "key": "surviving_mutant::in a roving tabindex widget choose a different item reopen it and assert the only tabbable item is the selected one",
+      "text": "In a roving-tabindex widget, choose a different item, reopen it and assert the only tabbable item is the selected one.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "colors-and-icons"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant K22 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T06:33:42Z",
+      "last_seen": "2026-10-06T06:33:42Z"
+    },
+    {
+      "id": "L-036",
+      "key": "surviving_mutant::assert every label the spec fixes in full the whole translated name list not only distinctness and a few samples",
+      "text": "Assert every label the spec fixes in full (the whole translated name list), not only distinctness and a few samples.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "colors-and-icons"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant W02 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T06:33:42Z",
+      "last_seen": "2026-10-06T06:33:42Z"
+    },
+    {
+      "id": "L-037",
+      "key": "spec_precision_gap::state in the spec what an arrow key does on an edge cell that is not a corner stay or clamp to the nearest edge cell",
+      "text": "State in the spec what an arrow key does on an edge cell that is not a corner: stay or clamp to the nearest edge cell.",
+      "signal": "spec_precision_gap",
+      "scope": "spec-outcomes",
+      "status": "candidate",
+      "features": [
+        "colors-and-icons"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPG-2 COLOR-07 AC 4 (validation.md) (spec-outcomes)"
+      ],
+      "created": "2026-10-06T06:33:42Z",
+      "last_seen": "2026-10-06T06:33:42Z"
+    },
+    {
+      "id": "L-038",
+      "key": "spec_precision_gap::keep acceptance criteria and assumption rows consistent on the openapi shape of request bodies enum or description",
+      "text": "Keep acceptance criteria and assumption rows consistent on the OpenAPI shape of request bodies (enum or description).",
+      "signal": "spec_precision_gap",
+      "scope": "spec-outcomes",
+      "status": "candidate",
+      "features": [
+        "colors-and-icons"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPG-1 COLOR-06 AC 1 (validation.md) (spec-outcomes)"
+      ],
+      "created": "2026-10-06T06:33:42Z",
+      "last_seen": "2026-10-06T06:33:42Z"
+    },
+    {
+      "id": "L-039",
+      "key": "ac_gap::do not tick a done when box that needs a manual browser check until the check is recorded leave it open and say so",
+      "text": "Do not tick a Done-when box that needs a manual browser check until the check is recorded; leave it open and say so.",
+      "signal": "ac_gap",
+      "scope": "process",
+      "status": "candidate",
+      "features": [
+        "colors-and-icons"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tasks.md:389 and tasks.md:478 (validation.md FT1) (process)"
+      ],
+      "created": "2026-10-06T06:33:42Z",
+      "last_seen": "2026-10-06T06:33:42Z"
     }
   ]
 }
