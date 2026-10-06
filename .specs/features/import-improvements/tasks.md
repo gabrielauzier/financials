@@ -346,14 +346,14 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Unit test of `selectedDuplicateCount`: counts only selected rows with status `duplicate`; new, unrecognized and unselected duplicates do not count
-- [ ] Page test: with one duplicate selected, "Confirmar importação" opens the dialog "Importar linhas duplicadas?" with "1 linha selecionada já foi importada antes" and no confirm request is sent; with 3 it shows "3 linhas selecionadas já foram importadas antes" (AC 1 and 6)
-- [ ] Page test: with no duplicate selected, clicking the button posts `/imports/confirm` directly and no dialog appears (AC 2)
-- [ ] Page test: "Importar mesmo assim" posts the confirm exactly once with the same selections and the same idempotency key as a later retry would use (AC 3)
-- [ ] Page test: "Voltar" and the Escape key close the dialog, send nothing and keep the selection, the chosen categories and the "Neutra" switches (AC 4)
-- [ ] Page test: while the confirm is pending the "Confirmar importação" button is disabled and a second click opens no dialog and sends no second request; after a failure, "Tentar novamente" re-posts with the same key and without the dialog (AC 5 and 7)
-- [ ] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
+- [x] Unit test of `selectedDuplicateCount`: counts only selected rows with status `duplicate`; new, unrecognized and unselected duplicates do not count
+- [x] Page test: with one duplicate selected, "Confirmar importação" opens the dialog "Importar linhas duplicadas?" with "1 linha selecionada já foi importada antes" and no confirm request is sent; with 3 it shows "3 linhas selecionadas já foram importadas antes" (AC 1 and 6)
+- [x] Page test: with no duplicate selected, clicking the button posts `/imports/confirm` directly and no dialog appears (AC 2)
+- [x] Page test: "Importar mesmo assim" posts the confirm exactly once with the same selections and the same idempotency key as a later retry would use (AC 3)
+- [x] Page test: "Voltar" and the Escape key close the dialog, send nothing and keep the selection, the chosen categories and the "Neutra" switches (AC 4)
+- [x] Page test: while the confirm is pending the "Confirmar importação" button is disabled and a second click opens no dialog and sends no second request; after a failure, "Tentar novamente" re-posts with the same key and without the dialog (AC 5 and 7)
+- [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

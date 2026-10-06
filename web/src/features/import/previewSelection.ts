@@ -63,3 +63,11 @@ export function setAllSelected(
   }
   return next;
 }
+
+/** Selected rows (selectable by definition) that were already imported before. */
+export function selectedDuplicateCount(rows: PreviewRow[], selection: PreviewSelection): number {
+  return rows.filter(
+    (row) =>
+      row.status === "duplicate" && isSelectable(row.status) && selection[row.index]?.selected,
+  ).length;
+}

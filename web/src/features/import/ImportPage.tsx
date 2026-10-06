@@ -2,10 +2,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ImportConfirmResult, ImportPreview } from "@/lib/api/types";
+import { DuplicateConfirmDialog } from "./DuplicateConfirmDialog";
 import { ImportPreviewTable } from "./ImportPreviewTable";
 import { ImportStartStep } from "./ImportStartStep";
 import { ImportFailure, ImportSuccess } from "./ImportSummary";
-import { initialSelection, selectedPayload, type PreviewSelection } from "./previewSelection";
+import {
+  initialSelection,
+  selectedDuplicateCount,
+  selectedPayload,
+  type PreviewSelection,
+} from "./previewSelection";
 import { useIdempotencyKey, useImportConfirm, useImportPreview } from "./useImport";
 
 type Step = "start" | "preview" | "summary";
@@ -21,12 +27,14 @@ export function ImportPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreview>();
   const [selection, setSelection] = useState<PreviewSelection>({});
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const [result, setResult] = useState<ImportConfirmResult>();
   const { key: idempotencyKey, renew } = useIdempotencyKey();
   const previewRequest = useImportPreview();
   const confirmRequest = useImportConfirm();
 
   const payload = preview ? selectedPayload(preview.rows, selection) : [];
+  const duplicateCount = preview ? selectedDuplicateCount(preview.rows, selection) : 0;
 
   const generatePreview = () => {
     if (!file || !accountId) return;
@@ -45,7 +53,7 @@ export function ImportPage() {
   };
 
   // Retries reuse the same session key: the server replays instead of importing twice.
-  const confirm = () => {
+  const sendConfirm = () => {
     if (!file || !accountId || payload.length === 0) return;
     confirmRequest.mutate(
       { file, accountId, idempotencyKey, selections: payload },
@@ -58,7 +66,20 @@ export function ImportPage() {
     );
   };
 
+  // Selected duplicates need an explicit consent first; the retry of a failure already has it.
+  const requestConfirm = () => {
+    if (confirmRequest.isPending) return;
+    if (duplicateCount > 0) setDuplicatesOpen(true);
+    else sendConfirm();
+  };
+
+  const confirmDuplicates = () => {
+    setDuplicatesOpen(false);
+    sendConfirm();
+  };
+
   const cancel = () => {
+    setDuplicatesOpen(false);
     previewRequest.reset();
     confirmRequest.reset();
     setPreview(undefined);
@@ -101,7 +122,7 @@ export function ImportPage() {
           {confirmRequest.isError ? (
             <ImportFailure
               error={confirmRequest.error}
-              onRetry={confirm}
+              onRetry={sendConfirm}
               isRetrying={confirmRequest.isPending}
             />
           ) : null}
@@ -113,7 +134,7 @@ export function ImportPage() {
           <div className="flex gap-3">
             <Button
               type="button"
-              onClick={confirm}
+              onClick={requestConfirm}
               disabled={payload.length === 0 || confirmRequest.isPending}
             >
               {confirmRequest.isPending ? "Importando…" : "Confirmar importação"}
@@ -122,6 +143,13 @@ export function ImportPage() {
               Cancelar
             </Button>
           </div>
+          <DuplicateConfirmDialog
+            open={duplicatesOpen}
+            count={duplicateCount}
+            onConfirm={confirmDuplicates}
+            onCancel={() => setDuplicatesOpen(false)}
+            disabled={confirmRequest.isPending}
+          />
         </div>
       ) : null}
       {step === "summary" && result ? (

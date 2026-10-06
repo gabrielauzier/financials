@@ -203,6 +203,134 @@ describe("página de importação", () => {
   });
 });
 
+describe("página de importação: confirmação de duplicadas (IMPIMP-06)", () => {
+  const confirmButton = () => screen.getByRole("button", { name: "Confirmar importação" });
+  const selectDuplicate = () =>
+    fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar Linha 1" }));
+  const importAnyway = () =>
+    fireEvent.click(screen.getByRole("button", { name: "Importar mesmo assim" }));
+
+  it("com uma duplicada selecionada abre o diálogo e não envia o confirm", async () => {
+    renderPage();
+    await goToPreview();
+    selectDuplicate();
+    fireEvent.click(confirmButton());
+    expect(await screen.findByText("Importar linhas duplicadas?")).toBeInTheDocument();
+    expect(screen.getByText(/1 linha selecionada já foi importada antes/)).toBeInTheDocument();
+    expect(callsTo("/imports/confirm")).toHaveLength(0);
+  });
+
+  it("mostra a contagem no plural com 3 duplicadas selecionadas", async () => {
+    apiRequest.mockImplementation((path: string) => {
+      if (path === "/categories") return Promise.resolve(listMockCategories());
+      if (path === "/imports/preview")
+        return Promise.resolve({
+          rows: [row(0, "duplicate"), row(1, "duplicate"), row(2, "duplicate")],
+          totals: { new: 0, duplicate: 3, ignored: 0, unrecognized: 0, invalid: 0 },
+        });
+      return Promise.resolve({ batchId: "b1", imported: 3, skipped: 0 });
+    });
+    renderPage();
+    await goToPreview();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar todas as linhas" }));
+    fireEvent.click(confirmButton());
+    expect(
+      await screen.findByText(/3 linhas selecionadas já foram importadas antes/),
+    ).toBeInTheDocument();
+    expect(callsTo("/imports/confirm")).toHaveLength(0);
+  });
+
+  it("sem duplicada selecionada envia o confirm direto, sem diálogo", async () => {
+    renderPage();
+    await goToPreview();
+    fireEvent.click(confirmButton());
+    await screen.findByRole("status");
+    expect(callsTo("/imports/confirm")).toHaveLength(1);
+    expect(screen.queryByText("Importar linhas duplicadas?")).not.toBeInTheDocument();
+  });
+
+  it("Importar mesmo assim envia o confirm uma vez com as mesmas seleções", async () => {
+    renderPage();
+    await goToPreview();
+    selectDuplicate();
+    fireEvent.click(confirmButton());
+    await screen.findByText("Importar linhas duplicadas?");
+    importAnyway();
+    await screen.findByRole("status");
+    expect(callsTo("/imports/confirm")).toHaveLength(1);
+    expect(JSON.parse(bodyOf("/imports/confirm").get("selections") as string)).toEqual([
+      { index: 0, neutral: false, categoryId: UNCATEGORIZED },
+      { index: 1, neutral: false, categoryId: UNCATEGORIZED },
+    ]);
+  });
+
+  it("Voltar e Esc fecham o diálogo, não enviam nada e mantêm seleção, categorias e Neutra", async () => {
+    renderPage();
+    await goToPreview();
+    selectDuplicate();
+    fireEvent.click(screen.getByRole("switch", { name: "Marcar Linha 0 como neutra" }));
+    const trigger = await screen.findByRole("combobox", { name: "Categoria de Linha 0" });
+    await waitFor(() => expect(trigger).toHaveTextContent("Sem categoria"));
+    fireEvent.click(trigger);
+    fireEvent.click(await screen.findByRole("option", { name: "Alimentação" }));
+    await waitFor(() => expect(trigger).toHaveTextContent("Alimentação"));
+
+    for (const close of [
+      () => fireEvent.click(screen.getByRole("button", { name: "Voltar" })),
+      () => fireEvent.keyDown(screen.getByRole("alertdialog"), { key: "Escape" }),
+    ]) {
+      fireEvent.click(confirmButton());
+      await screen.findByText("Importar linhas duplicadas?");
+      close();
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      expect(callsTo("/imports/confirm")).toHaveLength(0);
+      expect(screen.getByRole("checkbox", { name: "Selecionar Linha 1" })).toBeChecked();
+      expect(screen.getByRole("switch", { name: "Marcar Linha 0 como neutra" })).toBeChecked();
+      expect(screen.getByRole("combobox", { name: "Categoria de Linha 0" })).toHaveTextContent(
+        "Alimentação",
+      );
+      expect(screen.getByText("2 linhas selecionadas")).toBeInTheDocument();
+    }
+  });
+
+  it("com o confirm em andamento o botão fica desabilitado e um segundo clique não abre diálogo nem envia", async () => {
+    let release: (value: unknown) => void = () => {};
+    confirmResponses = [() => new Promise((resolve) => (release = resolve))];
+    renderPage();
+    await goToPreview();
+    selectDuplicate();
+    fireEvent.click(confirmButton());
+    await screen.findByText("Importar linhas duplicadas?");
+    importAnyway();
+    const pending = await screen.findByRole("button", { name: "Importando…" });
+    expect(pending).toBeDisabled();
+    fireEvent.click(pending);
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(callsTo("/imports/confirm")).toHaveLength(1);
+    release({ batchId: "b1", imported: 2, skipped: 1 });
+    await screen.findByRole("status");
+  });
+
+  it("depois de uma falha, Tentar novamente reenvia com a mesma chave e sem reabrir o diálogo", async () => {
+    confirmResponses = [() => Promise.reject(new ApiError("internal_error", "x", 500))];
+    renderPage();
+    await goToPreview();
+    selectDuplicate();
+    fireEvent.click(confirmButton());
+    await screen.findByText("Importar linhas duplicadas?");
+    importAnyway();
+    await screen.findByText("Nada foi importado. Tente novamente.");
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+    await screen.findByRole("status");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    const first = bodyOf("/imports/confirm", 0);
+    const second = bodyOf("/imports/confirm", 1);
+    expect(callsTo("/imports/confirm")).toHaveLength(2);
+    expect(second.get("idempotencyKey")).toBe(first.get("idempotencyKey"));
+    expect(second.get("selections")).toBe(first.get("selections"));
+  });
+});
+
 describe("página de importação: categoria por linha (IMPIMP-03)", () => {
   it("o confirm envia a categoria escolhida para a linha alterada e a do preview para as outras", async () => {
     apiRequest.mockImplementation((path: string) => {

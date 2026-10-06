@@ -3,6 +3,7 @@ import type { ImportRowStatus, PreviewRow } from "@/lib/api/types";
 import {
   initialSelection,
   isSelectable,
+  selectedDuplicateCount,
   selectedPayload,
   selectAllState,
   setAllSelected,
@@ -157,5 +158,33 @@ describe("categoria por linha no estado e no payload (IMPIMP-03)", () => {
 
   it("uma linha fora do estado de seleção não entra no payload", () => {
     expect(selectedPayload([row(7, "new", { categoryId: FOOD, neutral: true })], {})).toEqual([]);
+  });
+});
+
+describe("selectedDuplicateCount (IMPIMP-06)", () => {
+  const mixed: PreviewRow[] = [
+    row(0, "new"),
+    row(1, "duplicate"),
+    row(2, "duplicate"),
+    row(3, "unrecognized"),
+    row(4, "duplicate"),
+  ];
+
+  it("conta só duplicadas selecionadas", () => {
+    const selection: PreviewSelection = {
+      ...initialSelection(mixed),
+      1: { selected: true, neutral: false, categoryId: UNCATEGORIZED },
+      4: { selected: true, neutral: false, categoryId: UNCATEGORIZED },
+    };
+    expect(selectedDuplicateCount(mixed, selection)).toBe(2);
+  });
+
+  it("novas e não reconhecidas selecionadas, e duplicadas desmarcadas, não contam", () => {
+    expect(selectedDuplicateCount(mixed, initialSelection(mixed))).toBe(0);
+    expect(selectedDuplicateCount(mixed, {})).toBe(0);
+  });
+
+  it("conta todas as duplicadas depois de selecionar todas", () => {
+    expect(selectedDuplicateCount(mixed, setAllSelected(mixed, {}, true))).toBe(3);
   });
 });
