@@ -130,19 +130,19 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `COUNTABLE` still yields the exact dashboard totals of the existing dataset (income `1000.00`, expense `100.00`, net `900.00`) and every existing test of the file and the dashboard suites pass unchanged
-- [ ] `INVESTMENT_ROW` with `INVESTMENT_VALUE` sums an Expense contribution as positive and an Income redemption as negative (`200.00 - 5.00 = 195.00` on the dataset) (AC 11 of the summary story)
-- [ ] `INVESTMENT_ROW` leaves out neutral, CreditCard and future-dated Investments rows and rows of any other category (AC 10)
-- [ ] No row is both `COUNTABLE` and `INVESTMENT_ROW` on the dataset (an Investments row never reaches income or expense) (AC 10)
-- [ ] The category is matched by key: an Investments category renamed by the user still counts (AC 3 of the click story, rule side)
-- [ ] `rules.guard.test.ts` passes without an allowlist (AC 17)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] `COUNTABLE` still yields the exact dashboard totals of the existing dataset (income `1000.00`, expense `100.00`, net `900.00`) and every existing test of the file and the dashboard suites pass unchanged
+- [x] `INVESTMENT_ROW` with `INVESTMENT_VALUE` sums an Expense contribution as positive and an Income redemption as negative (`200.00 - 5.00 = 195.00` on the dataset) (AC 11 of the summary story)
+- [x] `INVESTMENT_ROW` leaves out neutral, CreditCard and future-dated Investments rows and rows of any other category (AC 10)
+- [x] No row is both `COUNTABLE` and `INVESTMENT_ROW` on the dataset (an Investments row never reaches income or expense) (AC 10)
+- [x] The category is matched by key: an Investments category renamed by the user still counts (AC 3 of the click story, rule side)
+- [x] `rules.guard.test.ts` passes without an allowlist (AC 17)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: 656 integration tests (652 existing plus 4 new) and 382 unit tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
 
-**Commit**: `feat(transactions-list): add the investment fragments to the rules module`
+**Commit**: `feat(transactions-list): add the investment fragments to rules.ts`
 
 ---
 
