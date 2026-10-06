@@ -336,8 +336,6 @@ describe("extrato", () => {
     it("emite o toast not_found em português quando a atualização em lote falha", async () => {
       renderQuery(<TransactionsPage />);
       await screen.findByLabelText("Selecionar todas da página");
-      // let the initial search debounce (300 ms) settle, with margin for a loaded machine: it resets the selection
-      await new Promise((resolve) => setTimeout(resolve, 800));
       fireEvent.click(screen.getByLabelText("Selecionar todas da página"));
       const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
       fireEvent.click(within(bar).getByRole("combobox"));

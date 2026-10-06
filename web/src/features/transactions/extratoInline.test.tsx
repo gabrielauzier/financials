@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { GENERIC_ERROR } from "@/lib/api/errorMessages";
@@ -19,6 +19,7 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
 afterEach(() => {
   cleanup();
   resetSpy();
+  vi.useRealTimers();
   vi.mocked(toast.success).mockClear();
   vi.mocked(toast.error).mockClear();
 });
@@ -119,8 +120,6 @@ describe("extrato: categoria, lote e neutra", () => {
   const selectTwo = async (names: string[]) => {
     renderWithQuery(<TransactionsPage />);
     await rowOf(names[0] as string);
-    // the initial search debounce (300 ms) resets the selection: wait it out first
-    await new Promise((resolve) => setTimeout(resolve, 800));
     for (const name of names) {
       fireEvent.click(within(await rowOf(name)).getByRole("checkbox"));
     }
@@ -157,6 +156,25 @@ describe("extrato: categoria, lote e neutra", () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
+  it("a seleção feita logo depois de abrir a página sobrevive ao debounce da busca, sem consulta nova", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const {
+      items: [item],
+    } = await seed("Inline seleção cedo");
+    if (!item) throw new Error("seed");
+    renderWithQuery(<TransactionsPage />);
+    fireEvent.click(within(await rowOf(item.name)).getByRole("checkbox"));
+    expect(await screen.findByText("1 selecionada(s)")).toBeInTheDocument();
+    const listsBefore = requests.filter((request) => request.path.startsWith("/transactions?"));
+    // the 300 ms debounce armed at mount fires now, with the search still empty
+    await act(() => vi.advanceTimersByTimeAsync(400));
+    expect(screen.getByText("1 selecionada(s)")).toBeInTheDocument();
+    expect(within(await rowOf(item.name)).getByRole("checkbox")).toBeChecked();
+    expect(requests.filter((request) => request.path.startsWith("/transactions?"))).toHaveLength(
+      listsBefore.length,
+    );
+  });
+
   it("aplica a categoria a uma única linha e emite o texto no singular", async () => {
     const {
       items: [item],
@@ -166,7 +184,6 @@ describe("extrato: categoria, lote e neutra", () => {
     const target = categories.find((c) => c.id !== item.categoryId) as Category;
     renderWithQuery(<TransactionsPage />);
     await rowOf(item.name);
-    await new Promise((resolve) => setTimeout(resolve, 800));
     fireEvent.click(within(await rowOf(item.name)).getByRole("checkbox"));
     const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
     expect(within(bar).getByText("1 selecionada(s)")).toBeInTheDocument();

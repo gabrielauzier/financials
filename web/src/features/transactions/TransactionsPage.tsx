@@ -90,6 +90,8 @@ export function TransactionsPage() {
     const timer = window.setTimeout(() => {
       const query = search.trim();
       setFilters((current) => {
+        // nothing to change (the first run, right after mount): keep the filters, and the selection
+        if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
         const next = { ...current, page: 1 };
         if (query) next.q = query;
         else delete next.q;
