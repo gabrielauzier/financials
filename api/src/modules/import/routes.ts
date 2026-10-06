@@ -250,7 +250,7 @@ export async function importRoutes(app: FastifyInstance, options: ImportRoutesOp
     limits: { fileSize: MAX_FILE_BYTES, files: 1, fields: 4, parts: 5, fieldSize: MAX_FIELD_BYTES },
   });
   const routes = app.withTypeProvider<TypeBoxTypeProvider>();
-  await app.register(importedFilesRoutes);
+  await app.register(importedFilesRoutes, options);
 
   routes.post(
     '/imports/preview',

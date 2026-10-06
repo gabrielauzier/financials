@@ -186,6 +186,26 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json documents GET /imports/{id}/file with a binary 200 and the 401, 404, 502 and 503 errors (IMPIMP-14)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{ paths: Record<string, Record<string, OperationDoc>> }>();
+      const responses = doc.paths['/imports/{id}/file']?.get?.responses ?? {};
+      expect(Object.keys(responses).sort()).toEqual(['200', '401', '404', '502', '503']);
+      expect(responses['200']?.content?.['application/octet-stream']?.schema).toMatchObject({
+        type: 'string',
+        format: 'binary',
+      });
+      for (const status of ['401', '404', '502', '503']) {
+        const schema = responses[status]?.content?.['application/json']?.schema;
+        expect(schema?.properties?.error?.required, status).toEqual(expect.arrayContaining(['code', 'message']));
+      }
+    } finally {
+      await app.close();
+    }
+  });
+
   it('pnpm openapi:export writes the document, and the committed api/openapi.json is up to date', () => {
     const dir = mkdtempSync(join(tmpdir(), 'openapi-'));
     try {

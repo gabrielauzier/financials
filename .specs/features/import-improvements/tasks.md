@@ -214,16 +214,16 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests of `contentDisposition`: plain ASCII name; accents (`extrato março.csv`) give an ASCII fallback and a percent-encoded `filename*`; double quote, backslash, `;` and slash are neutralized in the fallback; CR, LF and other control characters never appear in the output; an empty name falls back to a fixed ASCII name (AC 2 of the download story)
-- [ ] Integration: download after a confirm returns bytes identical to the uploaded CSV, `Content-Type` equal to the stored mime type, `Content-Disposition` with the original filename, `Cache-Control: private, no-store` (AC 1)
-- [ ] Integration: after confirming every row of a fixture, the downloaded bytes sent to `POST /imports/preview` on the batch's account give the file's row count with every confirmed row `duplicate` (AC 2 of the shared-preview story)
-- [ ] Integration: a stored file name with accents and a quote still produces a valid response; a stored `mime_type` that is not `type/subtype` is answered as `application/octet-stream` (AC 2 and edge case)
-- [ ] Integration: non-UUID id, unknown UUID and another user's batch all answer the same 404 `not_found` and the same body; a removed Storage object answers 404 `not_found` (AC 3 and 4); Storage errors answer 502 `storage_error` without URL, token or path in the body (the Storage URL of the app is pointed at an unreachable address in this test) (AC 5)
-- [ ] Integration: an app built without `publishableKey` answers 503 `storage_not_configured` (AC 6); no response body or header contains the storage path, the Storage URL or the project key (AC 7)
-- [ ] Isolation: user B requesting user A's id gets 404 and none of A's bytes; the route answers 401 without a valid token; A downloads its own bytes even when B has a batch with the same filename (AC 1, 3 and 5 of the isolation story)
-- [ ] `api/openapi.json` regenerated documents `GET /imports/{id}/file` with 200 binary, 401, 404, 502, 503; the swagger test passes
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
-- [ ] Test count: the existing API tests plus about 7 new unit tests and 11 new integration tests pass (no silent deletions)
+- [x] Unit tests of `contentDisposition`: plain ASCII name; accents (`extrato março.csv`) give an ASCII fallback and a percent-encoded `filename*`; double quote, backslash, `;` and slash are neutralized in the fallback; CR, LF and other control characters never appear in the output; an empty name falls back to a fixed ASCII name (AC 2 of the download story)
+- [x] Integration: download after a confirm returns bytes identical to the uploaded CSV, `Content-Type` equal to the stored mime type, `Content-Disposition` with the original filename, `Cache-Control: private, no-store` (AC 1)
+- [x] Integration: after confirming every row of a fixture, the downloaded bytes sent to `POST /imports/preview` on the batch's account give the file's row count with every confirmed row `duplicate` (AC 2 of the shared-preview story)
+- [x] Integration: a stored file name with accents and a quote still produces a valid response; a stored `mime_type` that is not `type/subtype` is answered as `application/octet-stream` (AC 2 and edge case)
+- [x] Integration: non-UUID id, unknown UUID and another user's batch all answer the same 404 `not_found` and the same body; a removed Storage object answers 404 `not_found` (AC 3 and 4); Storage errors answer 502 `storage_error` without URL, token or path in the body (the Storage URL of the app is pointed at an unreachable address in this test) (AC 5)
+- [x] Integration: an app built without `publishableKey` answers 503 `storage_not_configured` (AC 6); no response body or header contains the storage path, the Storage URL or the project key (AC 7)
+- [x] Isolation: user B requesting user A's id gets 404 and none of A's bytes; the route answers 401 without a valid token; A downloads its own bytes even when B has a batch with the same filename (AC 1, 3 and 5 of the isolation story)
+- [x] `api/openapi.json` regenerated documents `GET /imports/{id}/file` with 200 binary, 401, 404, 502, 503; the swagger test passes
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
+- [x] Test count: the existing API tests plus about 7 new unit tests and 11 new integration tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
