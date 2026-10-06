@@ -14,6 +14,18 @@ interface OpenApiDoc {
   paths: Record<string, Record<string, { responses: Record<string, unknown> }>>;
 }
 
+interface SchemaDoc {
+  type?: string;
+  nullable?: boolean;
+  required?: string[];
+  properties?: Record<string, SchemaDoc>;
+  items?: SchemaDoc;
+}
+interface OperationDoc {
+  requestBody?: { content?: Record<string, { schema?: SchemaDoc }> };
+  responses?: Record<string, { content?: Record<string, { schema?: SchemaDoc }> }>;
+}
+
 describe('OpenAPI contract', () => {
   it('GET /docs/json returns a public OpenAPI 3 document that lists /health with its schema', async () => {
     const app = buildApp();
@@ -34,6 +46,43 @@ describe('OpenAPI contract', () => {
       const ui = await app.inject({ method: 'GET', url: '/docs' });
       expect(ui.statusCode).toBe(200);
       expect(ui.headers['content-type']).toContain('text/html');
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('GET /docs/json documents description as a nullable string in the POST body and in every Transaction, and not in the PATCH body (TUX-09)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{ paths: Record<string, Record<string, OperationDoc>> }>();
+      const body = (operation: OperationDoc | undefined): SchemaDoc | undefined =>
+        operation?.requestBody?.content?.['application/json']?.schema;
+      const response = (operation: OperationDoc | undefined, status: string): SchemaDoc | undefined =>
+        operation?.responses?.[status]?.content?.['application/json']?.schema;
+      const create = doc.paths['/transactions']?.post;
+      const list = doc.paths['/transactions']?.get;
+      const edit = doc.paths['/transactions/{id}']?.patch;
+
+      const post = body(create);
+      expect(post?.properties?.description).toMatchObject({ type: 'string', nullable: true });
+      expect(post?.required).not.toContain('description');
+
+      const transactions: Array<[string, SchemaDoc | undefined]> = [
+        ['POST 201', response(create, '201')],
+        ['GET list item', response(list, '200')?.properties?.items?.items],
+        ['PATCH 200', response(edit, '200')],
+      ];
+      for (const [label, schema] of transactions) {
+        expect(schema?.properties?.description, label).toMatchObject({ type: 'string', nullable: true });
+        expect(schema?.required, label).toContain('description');
+      }
+
+      const patch = body(edit);
+      expect(patch?.properties).toBeDefined();
+      expect(Object.keys(patch?.properties ?? {})).toContain('name');
+      expect(patch?.properties).not.toHaveProperty('description');
+      expect(patch?.required ?? []).not.toContain('description');
     } finally {
       await app.close();
     }
