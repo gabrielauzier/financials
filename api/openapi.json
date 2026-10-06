@@ -1107,7 +1107,16 @@
             "in": "query",
             "name": "page",
             "required": false,
-            "description": "Page number, starting at 1 (50 rows per page)"
+            "description": "Page number, starting at 1"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "description": "Rows per page: 25, 50, 100 (default 50)"
           }
         ],
         "responses": {
@@ -1237,10 +1246,13 @@
                       "type": "integer"
                     },
                     "pageSize": {
-                      "type": "number",
+                      "type": "integer",
                       "enum": [
-                        50
-                      ]
+                        25,
+                        50,
+                        100
+                      ],
+                      "description": "Rows per page used for this response"
                     }
                   }
                 }

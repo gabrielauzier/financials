@@ -121,6 +121,30 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json documents pageSize in the list query and as the 25, 50, 100 enum in the list response (TLIST-06)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{
+        paths: Record<string, Record<string, OperationDoc & { parameters?: Array<Record<string, unknown>> }>>;
+      }>();
+      const list = doc.paths['/transactions']?.get;
+      expect(list?.parameters).toContainEqual(
+        expect.objectContaining({
+          name: 'pageSize',
+          in: 'query',
+          required: false,
+          description: 'Rows per page: 25, 50, 100 (default 50)',
+        }),
+      );
+      const size = list?.responses?.['200']?.content?.['application/json']?.schema?.properties?.pageSize;
+      expect(size).toMatchObject({ type: 'integer', enum: [25, 50, 100] });
+      expect(list?.responses?.['200']?.content?.['application/json']?.schema?.required).toContain('pageSize');
+    } finally {
+      await app.close();
+    }
+  });
+
   it('GET /docs/json lists Other with the 7 other payment methods in every enum and "One of" description (IMPFIX-02)', async () => {
     const app = buildApp();
     try {

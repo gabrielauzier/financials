@@ -361,6 +361,101 @@ describe('GET /transactions', () => {
   });
 });
 
+describe('GET /transactions pageSize (TLIST-05)', () => {
+  let u: TestUser;
+  const hour = (i: number) => new Date(Date.UTC(2026, 0, 1) + i * 3_600_000).toISOString();
+  const SIZES = [25, 50, 100] as const;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    const a = await createAccount(u, 'Tamanho');
+    // 120 rows; every 10th shares its instant with the previous one (ties). Every 3rd row is an Income and
+    // the amounts are 1.00 .. 120.00, so a sorted, filtered page has a known content.
+    await seed(
+      u,
+      a,
+      Array.from({ length: 120 }, (_, i) => ({
+        name: `Linha ${i}`,
+        type: i % 3 === 0 ? ('Income' as const) : ('Expense' as const),
+        amount: `${i + 1}.00`,
+        occurredAt: hour(i % 10 === 0 ? i + 1 : i),
+      })),
+    );
+  });
+
+  async function allIds(size: number): Promise<string[]> {
+    const ids: string[] = [];
+    for (let page = 1; page <= Math.ceil(120 / size); page++) {
+      ids.push(...(await list(u, `pageSize=${size}&page=${page}`)).items.map((r) => r.id));
+    }
+    return ids;
+  }
+
+  it('returns up to 50 items and pageSize 50 when pageSize is absent', async () => {
+    const body = await list(u);
+    expect(body).toMatchObject({ total: 120, page: 1, pageSize: 50 });
+    expect(body.items).toHaveLength(50);
+  });
+
+  it.each(SIZES)('returns %i items on page 1 with the same total and the used pageSize', async (size) => {
+    const body = await list(u, `pageSize=${size}`);
+    expect(body).toMatchObject({ total: 120, page: 1, pageSize: size });
+    expect(body.items).toHaveLength(size);
+  });
+
+  it.each(SIZES)('holds the remainder (20) on the last page of size %i', async (size) => {
+    const last = Math.ceil(120 / size);
+    const body = await list(u, `pageSize=${size}&page=${last}`);
+    expect(body).toMatchObject({ total: 120, page: last, pageSize: size });
+    expect(body.items).toHaveLength(20);
+  });
+
+  it.each(['0', '10', '30', '101', '125', 'abc', '', '050', '50.0', ' 50', '+50', '1e2', '-25'])(
+    'rejects pageSize=%j with 422 validation_error on field pageSize',
+    async (value) => {
+      const res = await call(u, 'GET', `/transactions?pageSize=${encodeURIComponent(value)}`);
+      expect(res.statusCode).toBe(422);
+      expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'pageSize' } });
+    },
+  );
+
+  it('answers a repeated pageSize like a repeated page: 400 validation_error', async () => {
+    const repeatedPage = await call(u, 'GET', '/transactions?page=1&page=2');
+    const repeatedSize = await call(u, 'GET', '/transactions?pageSize=25&pageSize=50');
+    expect(repeatedPage.statusCode).toBe(400);
+    expect(repeatedSize.statusCode).toBe(400);
+    expect(repeatedSize.json<{ error: { code: string } }>().error.code).toBe('validation_error');
+  });
+
+  it.each(SIZES)('answers an empty page past the end with the total and pageSize %i', async (size) => {
+    const body = await list(u, `pageSize=${size}&page=1000`);
+    expect(body).toEqual({ items: [], total: 120, page: 1000, pageSize: size });
+  });
+
+  it('forms the same set in the same order with pages of 25, 50 and 100 (equal instants included)', async () => {
+    const expected = (
+      await getAdminSql()<{ id: string }[]>`
+        select id from public.transactions where user_id = ${u.id} order by occurred_at desc, id desc`
+    ).map((r) => r.id);
+    for (const size of SIZES) {
+      const ids = await allIds(size);
+      expect(new Set(ids).size, `size ${size}`).toBe(120);
+      expect(ids, `size ${size}`).toEqual(expected);
+    }
+  });
+
+  it('applies the size to the filtered and sorted set', async () => {
+    // 40 Incomes with amounts 1, 4, 7, ... 118; sorted by amount ascending the first 25 are 1..73
+    const first = await list(u, 'type=Income&sort=amount&order=asc&pageSize=25');
+    expect(first).toMatchObject({ total: 40, page: 1, pageSize: 25 });
+    expect(first.items.map((r) => r.amount)).toEqual(Array.from({ length: 25 }, (_, k) => `${k * 3 + 1}.00`));
+    const second = await list(u, 'type=Income&sort=amount&order=asc&pageSize=25&page=2');
+    expect(second.total).toBe(40);
+    expect(second.items).toHaveLength(15);
+    expect(second.items[0]?.amount).toBe('76.00');
+  });
+});
+
 describe('GET /transactions filters', () => {
   let u: TestUser;
   let acc1: string;

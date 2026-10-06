@@ -98,15 +98,15 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Without `pageSize` the list returns 50 items and `pageSize` 50 (AC 1 of the page size story)
-- [ ] With `pageSize` 25, 50 and 100 the list returns that many items on page 1, the same `total` and the used `pageSize`; the last page holds the remainder (AC 2)
-- [ ] `pageSize` equal to `0`, `10`, `101`, `abc`, an empty value, `050`, `50.0` and ` 50` answers 422 `validation_error` with the field `pageSize` (AC 3)
-- [ ] A page past the end answers `items: []`, the `total` and the used `pageSize`, for each size (AC 4)
-- [ ] The pages of 25, of 50 and of 100 concatenate to the same ids in the same order, with equal instants in the data (AC 5)
-- [ ] `pageSize` combined with `type`, `q` and `sort` applies to the filtered and sorted set (AC 6)
-- [ ] `api/openapi.json` documents `pageSize` in the list query and as the 25/50/100 enum in the list response; `swagger.int.test.ts` asserts the content (the summary path is asserted in T3) and that the file is current (AC 7, part)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: the existing unit and integration tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] Without `pageSize` the list returns 50 items and `pageSize` 50 (AC 1 of the page size story)
+- [x] With `pageSize` 25, 50 and 100 the list returns that many items on page 1, the same `total` and the used `pageSize`; the last page holds the remainder (AC 2)
+- [x] `pageSize` equal to `0`, `10`, `101`, `abc`, an empty value, `050`, `50.0` and ` 50` answers 422 `validation_error` with the field `pageSize` (AC 3)
+- [x] A page past the end answers `items: []`, the `total` and the used `pageSize`, for each size (AC 4)
+- [x] The pages of 25, of 50 and of 100 concatenate to the same ids in the same order, with equal instants in the data (AC 5)
+- [x] `pageSize` combined with `type` and `sort` applies to the filtered and sorted set (AC 6)
+- [x] `api/openapi.json` documents `pageSize` in the list query and as the 25/50/100 enum in the list response; `swagger.int.test.ts` asserts the content (the summary path is asserted in T3) and that the file is current (AC 7, part)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: 652 integration tests (625 existing plus 27 new) and 382 unit tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
