@@ -201,12 +201,12 @@ T7 → T13
 
 **Done when**:
 
-- [ ] Unit: 66 distinct keys of the form `<family>-<shade>`, 22 families times 400, 600 and 900, in the API's order; `isColorKey` is exact (rejects case, whitespace, unknown) and `colorLabel` gives 66 distinct Portuguese names such as `Azul 600`, `Verde-azulado 400`, `Rosê 900` (COLOR-01 AC 1)
-- [ ] Unit: every `COLOR_CLASSES` entry has `bg` exactly `bg-<family>-<shade>` and `text` per the rule; the source file contains no `${` inside the map (literal classes only); `colorClasses` of an unknown value, `undefined` and `""` equals the `slate-600` entry (COLOR-09 AC 1, 2 and 5)
-- [ ] Unit: the contrast of every one of the 66 entries, computed from the oklch values of `tailwindcss/theme.css` (treating `none` as hue 0), is at least 4.5:1 (COLOR-09 AC 3)
-- [ ] Contract test: the `enum` of `color` in the `GET /accounts` and `GET /categories` 200 schemas of `api/openapi.json` equals `COLOR_KEYS` as a set of 66; a mutated list in the test makes the comparison fail with the difference listed (COLOR-06 AC 2, COLOR-01 AC 2)
-- [ ] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
+- [x] Unit: 66 distinct keys of the form `<family>-<shade>`, 22 families times 400, 600 and 900, in the API's order; `isColorKey` is exact (rejects case, whitespace, unknown) and `colorLabel` gives 66 distinct Portuguese names such as `Azul 600`, `Verde-azulado 400`, `Rosê 900` (COLOR-01 AC 1)
+- [x] Unit: every `COLOR_CLASSES` entry has `bg` exactly `bg-<family>-<shade>` and `text` per the rule; the source file contains no `${` inside the map (literal classes only); `colorClasses` of an unknown value, `undefined` and `""` equals the `slate-600` entry (COLOR-09 AC 1, 2 and 5)
+- [x] Unit: the contrast of every one of the 66 entries, computed from the oklch values of `tailwindcss/theme.css` (treating `none` as hue 0), is at least 4.5:1 (COLOR-09 AC 3)
+- [x] Contract test: the `enum` of `color` in the `GET /accounts` and `GET /categories` 200 schemas of `api/openapi.json` equals `COLOR_KEYS` as a set of 66; a mutated list in the test makes the comparison fail with the difference listed (COLOR-06 AC 2, COLOR-01 AC 2)
+- [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
