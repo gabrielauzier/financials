@@ -121,11 +121,11 @@ T6 → T8
 
 **Done when**:
 
-- [ ] `Transaction` has `identifier: string | null`; `TransactionInput` and `TransactionUpdate` reject it at compile time (a `@ts-expect-error` line in the mock test; typecheck passes) (AC 7)
-- [ ] The mock list returns `identifier` on every row, some filled and some `null` (AC 8)
-- [ ] The mock creates with `identifier: null` even when the body sends one, and the PATCH keeps the stored value, also when `name` changes in the same body (AC 8)
-- [ ] Gate check passes: `yarn --cwd web test` and `yarn --cwd web typecheck`
-- [ ] Test count: 617 existing web tests plus at least 4 new pass (no silent deletions)
+- [x] `Transaction` has `identifier: string | null`; `TransactionInput` and `TransactionUpdate` reject it at compile time (a `@ts-expect-error` line in the mock test; typecheck passes) (AC 7)
+- [x] The mock list returns `identifier` on every row, some filled and some `null` (AC 8)
+- [x] The mock creates with `identifier: null` even when the body sends one, and the PATCH keeps the stored value, also when `name` changes in the same body (AC 8)
+- [x] Gate check passes: `yarn --cwd web test` and `yarn --cwd web typecheck`
+- [x] Test count: 621 web tests pass (617 existing plus 4 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

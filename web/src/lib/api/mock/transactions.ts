@@ -76,6 +76,9 @@ let transactions: Transaction[] = Array.from({ length: 120 }, (_, index) => {
       index % 4 === 0
         ? `${name.toUpperCase()} - COMPRA ${String(index + 1).padStart(3, "0")}`
         : null,
+    // like the rows the import creates: some have the bank's identifier, the manual ones do not
+    identifier:
+      index % 3 === 0 ? `5e1f0c3a-7b2d-4c9e-8a10-${String(index + 1).padStart(12, "0")}` : null,
     neutral: index % 17 === 0,
     counterpartyDocument: null,
     counterpartyBank: null,
@@ -148,6 +151,8 @@ function hydrate(input: CreateInput, id = crypto.randomUUID()): Transaction {
     notes: input.notes?.trim() || null,
     receipt: input.receipt?.trim() || null,
     description: input.description?.trim() || null,
+    // read-only: the API ignores an identifier sent on create, so a created row never has one
+    identifier: null,
     neutral: input.neutral ?? false,
     counterpartyDocument: null,
     counterpartyBank: null,
@@ -236,10 +241,12 @@ export const transactionsHandlers: MockHandler[] = [
       validate(input);
       const account = input.accountId ? accountFor(input.accountId) : undefined;
       const category = input.categoryId ? categoryFor(input.categoryId) : undefined;
-      // `description` is read-only: the API ignores it on PATCH, and so does the mock.
-      const { description: _ignored, ...editable } = input as TransactionUpdate & {
-        description?: unknown;
-      };
+      // `description` and `identifier` are read-only: the API ignores them on PATCH, and so does the mock.
+      const {
+        description: _description,
+        identifier: _identifier,
+        ...editable
+      } = input as TransactionUpdate & { description?: unknown; identifier?: unknown };
       const updated = {
         ...current,
         ...editable,
