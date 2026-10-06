@@ -187,16 +187,16 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| TUX-01 | P1: DatePicker nos filtros e no formulário | In Tasks | Pending |
-| TUX-02 | P1: Extrato sem coluna Tipo e com filtro rápido | In Tasks | Pending |
-| TUX-03 | P1: Feedback por toast nas ações do extrato | In Tasks | Pending |
-| TUX-04 | P1: Feedback por toast nas ações do extrato | In Tasks | Pending |
-| TUX-05 | P1: DatePicker nos filtros e no formulário | In Tasks | Pending |
-| TUX-06 | P1: DatePicker nos filtros e no formulário | In Tasks | Pending |
-| TUX-07 | P1: Extrato sem coluna Tipo e com filtro rápido | In Tasks | Pending |
-| TUX-08 | P1: Campo `description` somente leitura | In Tasks | Pending |
-| TUX-09 | P1: Campo `description` somente leitura | In Tasks | Pending |
-| TUX-10 | P1: Campo `description` somente leitura | In Tasks | Pending |
+| TUX-01 | P1: DatePicker nos filtros e no formulário | In Tasks | Verified |
+| TUX-02 | P1: Extrato sem coluna Tipo e com filtro rápido | In Tasks | Verified |
+| TUX-03 | P1: Feedback por toast nas ações do extrato | In Tasks | Verified |
+| TUX-04 | P1: Feedback por toast nas ações do extrato | In Tasks | Verified |
+| TUX-05 | P1: DatePicker nos filtros e no formulário | In Tasks | Verified |
+| TUX-06 | P1: DatePicker nos filtros e no formulário | In Tasks | Verified |
+| TUX-07 | P1: Extrato sem coluna Tipo e com filtro rápido | In Tasks | Verified |
+| TUX-08 | P1: Campo `description` somente leitura | In Tasks | Verified |
+| TUX-09 | P1: Campo `description` somente leitura | In Tasks | Verified |
+| TUX-10 | P1: Campo `description` somente leitura | In Tasks | Verified |
 
 **Coverage:** 10 total, 10 mapped to tasks, 0 unmapped
 

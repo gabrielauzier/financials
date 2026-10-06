@@ -388,3 +388,33 @@ Baseline `git status --porcelain` before the sensor: `?? .DS_Store`, `?? docs/v2
 **Issues found**: gate flakiness from `pickDate` cost and the debounce race (Fix 1, Fix 2); six weak or missing assertions (Fix 4-8); five spec-precision gaps.
 
 **Next steps**: implement Fix 1 and Fix 2 (Fix 3 intentionally unused), then Fix 4-6 (cheap), decide Fix 7 and Fix 8, re-run the Verifier (iteration 2).
+
+---
+
+## Iteration 1 fixes
+
+Applied on `feat/transactions-ux` after the iteration 1 verdict above (which stays as written). The re-verification writes the new verdict. Fix numbers follow this report's "Fix Plans" section; the fix task list given to the implementer numbered them differently, so both are shown.
+
+| Report fix | Fix task | Change | Commit |
+| ---------- | -------- | ------ | ------ |
+| Fix 1 (gate) | 1 | `pickDate` only opens the picker and clicks the day; the tests put the clock in the target month (fake `Date`), so no dropdown change runs. The per-filter loop became one test per filter. One DatePicker test keeps the month/year dropdown path. | `6606863` |
+| Fix 2 (race) | 2 | The debounce `setFilters` returns `current` when `q` is unchanged and the page is 1, so mount no longer rewrites the filters or clears an early selection; a test proves a selection made right after load survives the debounce with no new query. Every fixed sleep (`350`, `400`, `800`) became fake timers or was removed; none is left. | `bec7d83`, `6606863` |
+| Fix 4 | 4 | `ApiError("not_found")` cases for the row category and the neutral switch assert the mapped text (W12). | `5ce86ed` |
+| Fix 5 | 5 | Page 2 to page 1 for the quick filter and for "Limpar mês", and the exact Ano options (2022 to 2028 with the clock in 2027) (W38, W40, W45). Mutating the page reset in `changeQuick` or `clearQuick` now fails a test. | `4458e66` |
+| Fix 6 | 3 | `/docs/json`: `description` is a nullable string in the POST body and in the POST 201, list and PATCH 200 `Transaction` schemas (all list it in `required`), and absent from the PATCH body (A17, A18). | `d7ac961` |
+| Fix 7 | 6 | Decision: the delete confirmation stays open when the delete fails (spec assumption "Falha ao excluir" and TUX-04 AC 13). Finding: the dialog did close in jsdom, because the Radix action closes it on click, so the browser observation in the report did not match the code; the action now prevents the default close and is disabled while pending, and a test asserts the open `alertdialog` (W14). | `324c67f` |
+| Fix 8 | 7 | `filters` and `quick` live in one state object; `changeDate`, `changeQuick`, `clearQuick` and the reset return the whole next state, so they cannot desync (W43 is unreachable from the UI, covered by construction). | `d5cdfcf` |
+| SPG-1, SPG-4 | 8 | Calendar navigation labels are pt-BR ("Mês anterior", "Próximo mês") with a test; the spec states the labels and that the year list is current-5 to current+1 (2021 to 2027 with the 2026 clock; February 2028 needs the fixed 2027 clock). | `2b9f2a0` |
+
+Decisions and notes:
+
+- `web/vitest.config.ts` keeps `testTimeout: 15_000`. It came from the dashboards feature (`6b3939e`), not from this one. With the fixes the slowest test of the full suite is 6.1 to 6.9 s under 8-way parallelism, above the 5 s default, and `extratoCrud.test.tsx` "cria pelo formulário..." still takes 4.7 to 4.9 s under load (1.6 s alone), so the suite is not fast enough to drop it reliably.
+- Only the clock is faked (`toFake: ["Date"]`) where a test just needs "today" in a month; full fake timers are used only where the 300 ms debounce is awaited, because faking every timer made the Radix and Checkbox updates warn about `act`. The clock never moves back inside a test: react-query reads `Date.now()` for staleness and would stop refetching cached pages.
+- Spec precision gaps SPG-3 (TUX-07 AC 9 only reachable through the pure function) and SPG-5 (toast ordering after the dialog closes) are left as documented; P6 (backfill probe) stays "not testable by design".
+
+Gate after the fixes:
+
+- Web full suite, default workers, 350 tests in 46 files, run 5 times in a row: 5 of 5 green, 46.8 to 48.2 s each. Slowest test per run 6.1 to 6.9 s.
+- Previously flaky tests (5 runs): `cria pelo formulário...` 4.7 to 4.9 s (was 16.4 s, failing); `escolher um dia envia occurredAt...` 2.4 to 2.8 s; `Limpar filtros restaura a consulta padrão` 2.5 to 2.7 s; `emite o toast not_found...` 4.1 to 4.6 s; the former 24 to 35 s `cada filtro...` test is six tests of 5.9 to 6.2 s (tipo, the slowest) down to 2.5 s each.
+- `yarn --cwd web typecheck` clean; `yarn --cwd web lint` 0 errors, the same 7 warnings as in iteration 1.
+- API: unit 266 passed, integration 498 passed (one new test), typecheck and lint clean.

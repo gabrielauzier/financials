@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/transactions-ux/design.md`
-**Status**: Draft
+**Status**: Complete
 
 **Feature prerequisites**: front-fixes complete (`messageForError` exists); migrations 0001 to 0006 applied. Branch `feat/transactions-ux`; the next feature (import-fixes) stacks on this one and shares migration `0007`.
 
