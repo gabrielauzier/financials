@@ -4,6 +4,8 @@ Bank logos vendored for the Financials app (feature colors-and-icons)
 Origin
   Repository: https://github.com/Tgentil/Bancos-em-SVG (branch main)
   Commit consulted: fe1d43f0cf379135bd01c987bc147a04fdf48c6d
+  (verified on 2026-10-06 with the GitHub API: the commit exists, is the head of main, and holds
+  the four source files)
 
 Files copied (source path in the repository -> file in this folder)
   Nu Pagamentos S.A/nubank-logo-fundo-roxo2021.svg      -> nubank.svg
@@ -16,11 +18,22 @@ License
   files is acceptable for the personal use of this project. The brands and logos belong to
   their respective banks.
 
-Edits made to the files (nothing else was changed in the drawings)
+Edits made to the files (the drawings of the marks are not redrawn)
   - All four: removed the XML declaration, comments and editor metadata (sodipodi, inkscape,
     rdf, cc and dc elements, attributes and namespace declarations).
-  - neon.svg: viewBox changed from "0 0 2500 2500" to "0 988.26 2500 543.48" (the box of the
-    mark, which is the clip rectangle of the original file) so the mark fills the frame.
+  - All four: recomposed on a square canvas, viewBox "0 0 2500 2500", with a full-bleed
+    background rectangle in the brand color as the first element and no rounded corners of their
+    own (the app frame rounds every icon the same way). Styles became presentation attributes.
+  - nubank.svg: the background rectangle is now exactly the canvas, and the two purple paths
+    that lay outside the canvas (negative coordinates, never visible) were removed.
+  - sofisa-direto.svg: white full-bleed background (the mark was transparent); the mark is
+    scaled to 72% and centered.
+  - neon.svg: the wide wordmark (2500 x 543, previously cropped with a viewBox of
+    "0 988.26 2500 543.48") is recomposed into the square: Neon blue (#0f92ff) full-bleed
+    background, the wordmark in white (it was blue on transparent), scaled to 84% and centered.
+  - xp.svg: black full-bleed background; the white "xp" is the cut-out of the original black
+    shape, kept as drawn (the p still breaks out of the lower right edge) with a white fill
+    behind the cut-out and the stem of the p extended to the bottom edge of the square.
 
 Usage
   The files are imported by Vite and shown only through <img> (see BankIcon.tsx), never inlined.

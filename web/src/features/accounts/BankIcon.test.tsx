@@ -18,9 +18,28 @@ describe("BankIcon (ICON-02)", () => {
     const images = container.querySelectorAll("img");
     expect(images).toHaveLength(1);
     expect(images[0]).toHaveAttribute("src", src);
-    expect(frame(container)).toHaveClass("size-5", "rounded-md", "bg-white");
+    expect(frame(container)).toHaveClass("size-5", "rounded-md", "overflow-hidden");
     expect(new Set(Object.values(logos)).size).toBe(4);
   });
+
+  it.each(["Nubank", "SofisaDireto", "Neon", "XP", "Other"])(
+    "%s fills the frame: same radius, the image is size-full with no padding, ring or white background (ICON-02)",
+    (bank) => {
+      const { container } = render(<BankIcon bank={bank} />);
+      const classes = frame(container).className;
+      expect(frame(container)).toHaveClass("overflow-hidden", "rounded-md");
+      expect(classes).not.toMatch(/(?:^|\s)(?:p[xytblr]?-|ring|bg-white|border)/);
+      const image = container.querySelector("img");
+      if (image) {
+        expect(image).toHaveClass("size-full");
+        expect(image.className).not.toMatch(
+          /(?:^|\s)(?:p[xytblr]?-|ring|object-|bg-white|rounded)/,
+        );
+      } else {
+        expect(container.querySelector("svg.lucide-landmark")).not.toBeNull();
+      }
+    },
+  );
 
   it("uses a 32 px frame with size lg (AC 1)", () => {
     const { container } = render(<BankIcon bank="Nubank" size="lg" />);

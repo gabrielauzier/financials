@@ -23,7 +23,11 @@ type BankIconProps = {
   decorative?: boolean;
 };
 
-/** Bank logo in a uniform white rounded frame; `Other`, unknown banks and load errors show `Landmark`. */
+/**
+ * Bank logo: a square svg with a full-bleed background fills the frame (`size-full`, no padding),
+ * and the frame (`overflow-hidden rounded-md`, the same radius for every bank) rounds it. `Other`,
+ * unknown banks and load errors show `Landmark` in the same frame.
+ */
 export function BankIcon({ bank, size = "sm", decorative = true }: BankIconProps) {
   const [failedBank, setFailedBank] = useState<string>();
   const logo = bankLogos[bank];
@@ -31,24 +35,26 @@ export function BankIcon({ bank, size = "sm", decorative = true }: BankIconProps
   const a11y = decorative
     ? ({ "aria-hidden": true } as const)
     : ({ role: "img", "aria-label": `Banco ${label}` } as const);
+  const showLogo = logo && failedBank !== bank;
   return (
     <span
       {...a11y}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-md bg-white ring-1 ring-border",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md",
+        !showLogo && "bg-muted text-muted-foreground",
         size === "lg" ? "size-8" : "size-5",
       )}
     >
-      {logo && failedBank !== bank ? (
+      {showLogo ? (
         <img
           src={logo}
           alt=""
           aria-hidden="true"
-          className="size-full object-contain p-0.5"
+          className="size-full"
           onError={() => setFailedBank(bank)}
         />
       ) : (
-        <Landmark aria-hidden="true" className="size-3/4 text-slate-600" />
+        <Landmark aria-hidden="true" className="size-3/4" />
       )}
     </span>
   );

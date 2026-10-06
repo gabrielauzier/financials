@@ -42,6 +42,22 @@ describe("bank SVG assets (ICON-01)", () => {
     expect(violations(readFileSync(path, "utf8"))).toEqual([]);
   });
 
+  it.each(FILES)(
+    "%s is a square 0 0 2500 2500 with a full-bleed first rect and no own rounding",
+    (file) => {
+      const svg = readFileSync(join(dir, file), "utf8");
+      expect(/<svg\b[^>]*\sviewBox="0 0 2500 2500"/.test(svg)).toBe(true);
+      const background = /<rect\b[^>]*>/.exec(svg)?.[0] ?? "";
+      expect(background).toMatch(/\swidth="2500"/);
+      expect(background).toMatch(/\sheight="2500"/);
+      expect(background).not.toMatch(/\s(?:x|y)="[^0"]/);
+      expect(background).not.toMatch(/\sr[xy]=/);
+      expect(background).toMatch(/\sfill="#[0-9a-f]{3,6}"/i);
+      expect(svg).not.toMatch(/<rect\b[^>]*\sr[xy]=/);
+      expect(svg).not.toMatch(/<circle\b[^>]*r="1250"/);
+    },
+  );
+
   it("the four files together stay within 40 KB", () => {
     const total = FILES.reduce((sum, file) => sum + statSync(join(dir, file)).size, 0);
     expect(total).toBeLessThanOrEqual(MAX_TOTAL);
@@ -72,6 +88,7 @@ describe("NOTICE (ICON-01 AC 2 and 4)", () => {
 
   it("names the repository, the four sources and the four vendored files", () => {
     expect(notice).toContain("https://github.com/Tgentil/Bancos-em-SVG");
+    expect(notice).toContain("fe1d43f0cf379135bd01c987bc147a04fdf48c6d");
     for (const source of SOURCES) expect(notice).toContain(source);
     for (const file of FILES) expect(notice).toContain(file);
   });
@@ -80,6 +97,8 @@ describe("NOTICE (ICON-01 AC 2 and 4)", () => {
     expect(notice).toMatch(/owner confirmed/i);
     expect(notice).toMatch(/personal use/i);
     expect(notice).toMatch(/viewBox/);
+    expect(notice).toMatch(/full-bleed/i);
+    expect(notice).toMatch(/recompos/i);
     expect(notice).toMatch(/metadata/i);
     expect(notice).toMatch(/beyond the personal use/i);
     expect(notice).toMatch(/belong to\s+their respective banks/i);
