@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { amountClassName, formatSignedAmount, todayLocal } from "./utils";
+import { formatDateLocal } from "@/lib/format";
+import { amountClassName, formatSignedAmount, todayLocal, weekdayAbbrev } from "./utils";
 
 const originalTZ = process.env["TZ"];
 afterEach(() => {
@@ -80,5 +81,88 @@ describe("formatSignedAmount (IMPIMP-05)", () => {
     expect(formatSignedAmount("Income", "0.00")).toBe("R$ 0,00");
     expect(formatSignedAmount("Income", "1234567.89")).toBe("R$ 1.234.567,89");
     expect(formatSignedAmount("Expense", "-1234567.89")).toBe("-R$ 1.234.567,89");
+  });
+});
+
+describe("weekdayAbbrev (TUXV2-12)", () => {
+  const setZone = (zone: string) => {
+    process.env["TZ"] = zone;
+  };
+  // local noon of a civil day, so the day is the same in every zone the tests use
+  const noon = (year: number, month: number, day: number) =>
+    new Date(year, month - 1, day, 12).toISOString();
+  // local 23:30 of a civil day: in America/Sao_Paulo (UTC-3) the UTC day is already the next one
+  const lateEvening = (year: number, month: number, day: number) =>
+    new Date(year, month - 1, day, 23, 30).toISOString();
+
+  it.each([
+    [4, "Dom"],
+    [5, "Seg"],
+    [6, "Ter"],
+    [7, "Qua"],
+    [8, "Qui"],
+    [9, "Sex"],
+    [10, "Sáb"],
+  ])("2026-10-%i é %s, com a abreviação e o acento do pedido", (day, expected) => {
+    setZone("America/Sao_Paulo");
+    expect(weekdayAbbrev(noon(2026, 10, day))).toBe(expected);
+  });
+
+  it("às 23:30 locais em America/Sao_Paulo (já dia 6 em UTC) devolve o dia local, igual à data exibida", () => {
+    setZone("America/Sao_Paulo");
+    const iso = "2026-10-06T02:30:00Z";
+    expect(formatDateLocal(iso)).toBe("05/10/2026");
+    expect(weekdayAbbrev(iso)).toBe("Seg");
+    expect(weekdayAbbrev(lateEvening(2026, 10, 5))).toBe("Seg");
+  });
+
+  it("o mesmo instante com o fuso em UTC devolve o dia UTC", () => {
+    setZone("UTC");
+    const iso = "2026-10-06T02:30:00Z";
+    expect(formatDateLocal(iso)).toBe("06/10/2026");
+    expect(weekdayAbbrev(iso)).toBe("Ter");
+  });
+
+  it("a leste de UTC (Pacific/Kiritimati) usa o dia local, que já é o seguinte", () => {
+    setZone("Pacific/Kiritimati");
+    // 2026-10-05T12:00Z is the 6th at 02:00 locally
+    expect(weekdayAbbrev("2026-10-05T12:00:00Z")).toBe("Ter");
+  });
+
+  it("meia-noite UTC em America/Sao_Paulo é a noite do dia local anterior: 2026-03-01T00:00Z mostra 28/02 e Sáb", () => {
+    setZone("America/Sao_Paulo");
+    expect(formatDateLocal("2026-03-01T00:00:00Z")).toBe("28/02/2026");
+    expect(weekdayAbbrev("2026-03-01T00:00:00Z")).toBe("Sáb");
+    setZone("UTC");
+    expect(weekdayAbbrev("2026-03-01T00:00:00Z")).toBe("Dom");
+  });
+
+  it("vira o mês: 28/02/2026 é Sáb e 01/03/2026 é Dom, também às 23:30 locais", () => {
+    setZone("America/Sao_Paulo");
+    expect(weekdayAbbrev(noon(2026, 2, 28))).toBe("Sáb");
+    expect(weekdayAbbrev(lateEvening(2026, 2, 28))).toBe("Sáb");
+    expect(weekdayAbbrev(noon(2026, 3, 1))).toBe("Dom");
+  });
+
+  it("vira o ano: 31/12/2026 é Qui e 01/01/2027 é Sex, também às 23:30 locais", () => {
+    setZone("America/Sao_Paulo");
+    expect(weekdayAbbrev(noon(2026, 12, 31))).toBe("Qui");
+    expect(weekdayAbbrev(lateEvening(2026, 12, 31))).toBe("Qui");
+    expect(weekdayAbbrev(noon(2027, 1, 1))).toBe("Sex");
+  });
+
+  it("ano bissexto: 29/02/2028 é Ter e 01/03/2028 é Qua; em ano comum 28/02/2027 é Dom e 01/03/2027 é Seg", () => {
+    setZone("America/Sao_Paulo");
+    expect(weekdayAbbrev(noon(2028, 2, 29))).toBe("Ter");
+    expect(weekdayAbbrev(lateEvening(2028, 2, 29))).toBe("Ter");
+    expect(weekdayAbbrev(noon(2028, 3, 1))).toBe("Qua");
+    expect(weekdayAbbrev(noon(2027, 2, 28))).toBe("Dom");
+    expect(weekdayAbbrev(noon(2027, 3, 1))).toBe("Seg");
+  });
+
+  it("um instante inválido devolve texto vazio", () => {
+    setZone("America/Sao_Paulo");
+    expect(weekdayAbbrev("não é data")).toBe("");
+    expect(weekdayAbbrev("")).toBe("");
   });
 });

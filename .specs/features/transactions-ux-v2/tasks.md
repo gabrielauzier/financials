@@ -275,13 +275,13 @@ T6 → T8
 
 **Done when**:
 
-- [ ] The seven days of 2026-10-04 (Dom) to 2026-10-10 (Sáb) map to "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" (AC 1)
-- [ ] 2026-10-05T23:30 local in America/Sao_Paulo (an instant already on the 6th in UTC) gives "Seg", and the same instant with `TZ` UTC gives "Ter" (AC 2 and 3)
-- [ ] 2026-02-28 gives "Sáb" and 2026-03-01 "Dom"; 2026-12-31 gives "Qui" and 2027-01-01 "Sex"; 2028-02-29 gives "Ter" and 2028-03-01 "Qua" (AC 4 and 5)
-- [ ] `2026-03-01T00:00:00Z` with `TZ` America/Sao_Paulo gives "Sáb", the weekday of the local day 28/02 that `formatDateLocal` shows (AC 6)
-- [ ] An invalid string gives "" (AC 7)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus at least 8 new pass (no silent deletions)
+- [x] The seven days of 2026-10-04 (Dom) to 2026-10-10 (Sáb) map to "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" (AC 1)
+- [x] 2026-10-05T23:30 local in America/Sao_Paulo (an instant already on the 6th in UTC) gives "Seg", and the same instant with `TZ` UTC gives "Ter" (AC 2 and 3)
+- [x] 2026-02-28 gives "Sáb" and 2026-03-01 "Dom"; 2026-12-31 gives "Qui" and 2027-01-01 "Sex"; 2028-02-29 gives "Ter" and 2028-03-01 "Qua" (AC 4 and 5)
+- [x] `2026-03-01T00:00:00Z` with `TZ` America/Sao_Paulo gives "Sáb", the weekday of the local day 28/02 that `formatDateLocal` shows (AC 6)
+- [x] An invalid string gives "" (AC 7)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 692 web tests pass (677 existing plus 15 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

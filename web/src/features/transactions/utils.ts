@@ -19,6 +19,19 @@ export function toLocalDateInput(iso: string): string {
   return `${year}-${month}-${day}`;
 }
 
+const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+
+/**
+ * Weekday abbreviation of the LOCAL day of an instant, in the same zone `formatDateLocal` shows the date in
+ * (the browser's), so the date and its weekday never disagree. Empty for an invalid instant. Never parses a
+ * bare `YYYY-MM-DD` with `new Date`, which would read it as UTC midnight and give the previous day in Brazil.
+ */
+export function weekdayAbbrev(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return WEEKDAYS[date.getDay()] ?? "";
+}
+
 export type QuickMonth = { year?: number; month?: number };
 export type FilterState = { filters: TransactionFilters; quick: QuickMonth };
 
