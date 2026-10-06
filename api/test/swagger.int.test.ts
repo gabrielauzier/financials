@@ -89,6 +89,38 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json documents identifier as a nullable string in every Transaction, and in no request body (TUXV2-03)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{ paths: Record<string, Record<string, OperationDoc>> }>();
+      const body = (operation: OperationDoc | undefined): SchemaDoc | undefined =>
+        operation?.requestBody?.content?.['application/json']?.schema;
+      const response = (operation: OperationDoc | undefined, status: string): SchemaDoc | undefined =>
+        operation?.responses?.[status]?.content?.['application/json']?.schema;
+      const create = doc.paths['/transactions']?.post;
+      const list = doc.paths['/transactions']?.get;
+      const edit = doc.paths['/transactions/{id}']?.patch;
+
+      const transactions: Array<[string, SchemaDoc | undefined]> = [
+        ['POST 201', response(create, '201')],
+        ['GET list item', response(list, '200')?.properties?.items?.items],
+        ['PATCH 200', response(edit, '200')],
+      ];
+      for (const [label, schema] of transactions) {
+        expect(schema?.properties?.identifier, label).toMatchObject({ type: 'string', nullable: true });
+        expect(schema?.required, label).toContain('identifier');
+      }
+      for (const [label, schema] of [['POST body', body(create)], ['PATCH body', body(edit)]] as const) {
+        expect(Object.keys(schema?.properties ?? {}), label).toContain('name');
+        expect(schema?.properties, label).not.toHaveProperty('identifier');
+        expect(schema?.required ?? [], label).not.toContain('identifier');
+      }
+    } finally {
+      await app.close();
+    }
+  });
+
   it('GET /docs/json lists Other with the 7 other payment methods in every enum and "One of" description (IMPFIX-02)', async () => {
     const app = buildApp();
     try {

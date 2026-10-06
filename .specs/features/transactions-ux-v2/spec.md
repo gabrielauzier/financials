@@ -198,9 +198,9 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| TUXV2-01 | P1: Identificadores da transação na API e nos mocks | In Tasks | Pending |
-| TUXV2-02 | P1: Identificadores da transação na API e nos mocks | In Tasks | Pending |
-| TUXV2-03 | P1: Identificadores da transação na API e nos mocks | In Tasks | Pending |
+| TUXV2-01 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
+| TUXV2-02 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
+| TUXV2-03 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
 | TUXV2-04 | P1: Identificadores da transação na API e nos mocks | In Tasks | Pending |
 | TUXV2-05 | P1: Identificadores no modal de edição | In Tasks | Pending |
 | TUXV2-06 | P1: Identificadores no modal de edição | In Tasks | Pending |

@@ -927,6 +927,7 @@
                     "notes",
                     "receipt",
                     "description",
+                    "identifier",
                     "neutral",
                     "counterpartyDocument",
                     "counterpartyBank"
@@ -992,6 +993,11 @@
                     },
                     "description": {
                       "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "identifier": {
+                      "description": "External identifier set by the import (e.g. the bank transaction id); read-only",
                       "type": "string",
                       "nullable": true
                     },
@@ -1136,6 +1142,7 @@
                           "notes",
                           "receipt",
                           "description",
+                          "identifier",
                           "neutral",
                           "counterpartyDocument",
                           "counterpartyBank"
@@ -1201,6 +1208,11 @@
                           },
                           "description": {
                             "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "identifier": {
+                            "description": "External identifier set by the import (e.g. the bank transaction id); read-only",
                             "type": "string",
                             "nullable": true
                           },
@@ -1320,6 +1332,7 @@
                     "notes",
                     "receipt",
                     "description",
+                    "identifier",
                     "neutral",
                     "counterpartyDocument",
                     "counterpartyBank"
@@ -1385,6 +1398,11 @@
                     },
                     "description": {
                       "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "identifier": {
+                      "description": "External identifier set by the import (e.g. the bank transaction id); read-only",
                       "type": "string",
                       "nullable": true
                     },

@@ -90,14 +90,14 @@ T6 → T8
 
 **Done when**:
 
-- [ ] Every `Transaction` of the list, the 201 of POST and the 200 of PATCH carries `identifier` (`string` or `null`); a manual transaction returns `null`; the existing key-set test lists `identifier` (AC 1)
-- [ ] A row inserted with an identifier directly in the database (as the import does) is returned unchanged by GET and PATCH, spaces at the ends kept (AC 2 and edge case)
-- [ ] POST with `identifier` as a string, a number, an object or `null` answers 201 with `identifier: null` and stores null (AC 3 and edge case)
-- [ ] PATCH with `identifier` alone, and together with `name`, answers 200 and keeps the stored value (AC 4)
-- [ ] Another user lists no row and gets 404 on PATCH, and the response does not contain the identifier (AC 5)
-- [ ] `api/openapi.json` describes `identifier` in `Transaction` and not in the POST and PATCH bodies; `swagger.int.test.ts` confirms the shape and that the file is current (AC 6)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: 615 existing integration tests plus at least 8 new pass, 382 unit tests unchanged (no silent deletions)
+- [x] Every `Transaction` of the list, the 201 of POST and the 200 of PATCH carries `identifier` (`string` or `null`); a manual transaction returns `null`; the existing key-set test lists `identifier` (AC 1)
+- [x] A row inserted with an identifier directly in the database (as the import does) is returned unchanged by GET and PATCH, spaces at the ends kept (AC 2 and edge case)
+- [x] POST with `identifier` as a string, a number, an object or `null` answers 201 with `identifier: null` and stores null (AC 3 and edge case)
+- [x] PATCH with `identifier` alone, and together with `name`, answers 200 and keeps the stored value (AC 4)
+- [x] Another user lists no row and gets 404 on PATCH, and the response does not contain the identifier (AC 5)
+- [x] `api/openapi.json` describes `identifier` in `Transaction` and not in the POST and PATCH bodies; `swagger.int.test.ts` confirms the shape and that the file is current (AC 6)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: 625 integration tests (615 existing plus 10 new) and 382 unit tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full

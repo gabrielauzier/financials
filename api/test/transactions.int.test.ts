@@ -73,6 +73,7 @@ describe('POST /transactions', () => {
       notes: 'feira',
       receipt: 'https://example.com/r/1',
       description: null,
+      identifier: null,
       neutral: false,
       counterpartyDocument: null,
       counterpartyBank: null,
@@ -307,7 +308,8 @@ describe('GET /transactions', () => {
     expect(Object.keys(body.items[0] ?? {}).sort()).toEqual(
       [
         'id', 'accountId', 'accountNickname', 'categoryId', 'categoryName', 'name', 'type', 'occurredAt', 'amount',
-        'paymentMethod', 'notes', 'receipt', 'description', 'neutral', 'counterpartyDocument', 'counterpartyBank',
+        'paymentMethod', 'notes', 'receipt', 'description', 'identifier', 'neutral', 'counterpartyDocument',
+        'counterpartyBank',
       ].sort(),
     );
   });
@@ -655,6 +657,7 @@ interface Txn {
   notes: string | null;
   receipt: string | null;
   description: string | null;
+  identifier: string | null;
   neutral: boolean;
   counterpartyDocument: string | null;
   counterpartyBank: string | null;
@@ -1221,5 +1224,88 @@ describe('transaction description', () => {
     const patched = await call(other, 'PATCH', `/transactions/${created.id}`, { name: 'x' });
     expect(patched.statusCode).toBe(404);
     expect(JSON.stringify(patched.json())).not.toContain('Texto privado');
+  });
+});
+
+describe('transaction identifier (read-only)', () => {
+  let u: TestUser;
+  let account: string;
+  let category: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Identificador');
+    category = await categoryId(u, 'Uncategorized');
+  });
+
+  /** A row with an identifier can only come from the import, so the test writes it like the import does. */
+  async function insertImported(name: string, identifier: string | null, as: TestUser = u): Promise<string> {
+    const [row] = await getAdminSql()`
+      insert into public.transactions
+        (user_id, account_id, category_id, name, type, occurred_at, amount, payment_method, identifier)
+      values (${as.id}, ${account}, ${category}, ${name}, 'Expense', '2026-10-05T15:00:00Z', 10, 'PIX', ${identifier})
+      returning id`;
+    return (row as { id: string }).id;
+  }
+  const storedIdentifier = async (id: string) =>
+    (await getAdminSql()`select identifier from public.transactions where id = ${id}`)[0]?.identifier;
+  const create = (over: Record<string, unknown> = {}) =>
+    call(u, 'POST', '/transactions', valid({ accountId: account, ...over }));
+  type Listed = Page['items'][number] & { identifier?: string | null };
+  const find = async (name: string, as: TestUser = u) =>
+    ((await list(as, `q=${encodeURIComponent(name)}`)).items as Listed[]).find((item) => item.name === name);
+
+  it('returns the stored identifier in the list, and null for a manual transaction', async () => {
+    const id = await insertImported('Importada lista', 'a1b2c3d4-0000-4000-8000-000000000001');
+    await create({ name: 'Manual lista' });
+    expect((await find('Importada lista'))?.identifier).toBe('a1b2c3d4-0000-4000-8000-000000000001');
+    expect((await find('Manual lista'))?.identifier).toBeNull();
+    expect(await storedIdentifier(id)).toBe('a1b2c3d4-0000-4000-8000-000000000001');
+  });
+
+  it('returns the identifier untrimmed, with the spaces at the ends kept', async () => {
+    await insertImported('Importada espaços', '  ID-COM-ESPACOS  ');
+    expect((await find('Importada espaços'))?.identifier).toBe('  ID-COM-ESPACOS  ');
+  });
+
+  it.each([
+    ['a string', 'ID-ENVIADO'],
+    ['a number', 42],
+    ['an object', { v: 'x' }],
+    ['null', null],
+  ])('ignores identifier as %s on POST: 201, identifier null, nothing stored', async (_label, identifier) => {
+    const res = await create({ name: `Ignora ${_label}`, identifier });
+    expect(res.statusCode).toBe(201);
+    expect(res.json<Txn>().identifier).toBeNull();
+    expect(await storedIdentifier(res.json<Txn>().id)).toBeNull();
+  });
+
+  it('ignores identifier on PATCH (200, value unchanged), also when name changes in the same body', async () => {
+    const id = await insertImported('Original id', 'ID-ORIGINAL');
+    const only = await call(u, 'PATCH', `/transactions/${id}`, { identifier: 'OUTRO' });
+    expect(only.statusCode).toBe(200);
+    expect(only.json<Txn>().identifier).toBe('ID-ORIGINAL');
+    const both = await call(u, 'PATCH', `/transactions/${id}`, { name: 'Renomeada id', identifier: null });
+    expect(both.statusCode).toBe(200);
+    expect(both.json<Txn>()).toMatchObject({ name: 'Renomeada id', identifier: 'ID-ORIGINAL' });
+    expect(await storedIdentifier(id)).toBe('ID-ORIGINAL');
+  });
+
+  it('returns identifier null on PATCH for a manual transaction that was sent one', async () => {
+    const created = (await create({ name: 'Manual patch' })).json<Txn>();
+    const res = await call(u, 'PATCH', `/transactions/${created.id}`, { identifier: 'TENTATIVA' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json<Txn>().identifier).toBeNull();
+  });
+
+  it('does not show the identifier of one user to another', async () => {
+    const other = await createTestUser();
+    const id = await insertImported('Segredo id', 'ID-PRIVADO');
+    const theirs = await list(other, 'page=1');
+    expect(theirs.items).toEqual([]);
+    expect(JSON.stringify(theirs)).not.toContain('ID-PRIVADO');
+    const patched = await call(other, 'PATCH', `/transactions/${id}`, { name: 'x' });
+    expect(patched.statusCode).toBe(404);
+    expect(JSON.stringify(patched.json())).not.toContain('ID-PRIVADO');
   });
 });

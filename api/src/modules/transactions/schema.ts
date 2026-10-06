@@ -25,6 +25,9 @@ export const TransactionSchema = Type.Object({
   description: Type.Union([Type.String(), Type.Null()], {
     description: 'Original title of the transaction (e.g. from the bank statement); read-only after creation',
   }),
+  identifier: Type.Union([Type.String(), Type.Null()], {
+    description: 'External identifier set by the import (e.g. the bank transaction id); read-only',
+  }),
   neutral: Type.Boolean(),
   counterpartyDocument: nullableString,
   counterpartyBank: nullableString,
@@ -45,6 +48,7 @@ export interface TransactionRow {
   notes: string | null;
   receipt: string | null;
   description: string | null;
+  identifier: string | null;
   neutral: boolean;
   counterparty_document: string | null;
   counterparty_bank: string | null;
@@ -53,7 +57,7 @@ export interface TransactionRow {
 /** Columns plus joined names; the FROM clause must alias `public.transactions t`, accounts `a`, categories `c`. */
 export const selectColumns = (tx: TransactionSql) => tx`
   t.id, t.account_id, a.nickname as account_nickname, t.category_id, c.name as category_name,
-  t.name, t.type, t.occurred_at, t.amount, t.payment_method, t.notes, t.receipt, t.description, t.neutral,
+  t.name, t.type, t.occurred_at, t.amount, t.payment_method, t.notes, t.receipt, t.description, t.identifier, t.neutral,
   t.counterparty_document, t.counterparty_bank`;
 
 export const fromJoins = (tx: TransactionSql) => tx`
@@ -76,6 +80,7 @@ export function toTransaction(row: TransactionRow): Transaction {
     notes: row.notes,
     receipt: row.receipt,
     description: row.description,
+    identifier: row.identifier,
     neutral: row.neutral,
     counterpartyDocument: row.counterparty_document,
     counterpartyBank: row.counterparty_bank,
