@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/transactions-ux-v2/design.md`
-**Status**: Done
+**Status**: Done (fixes after the independent validation applied; the owner's app-level browser check is pending)
 
 **Feature prerequisites**: transactions-ux, import-fixes and colors-and-icons merged on `main` (the `description` column, `Other` payment method and `AccountLabel` exist); migrations 0001 to 0009 applied locally (no new migration). Branch `feat/transactions-ux-v2`, based on `origin/main`; no push.
 

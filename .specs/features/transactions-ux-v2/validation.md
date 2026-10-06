@@ -1,6 +1,6 @@
-# Validation: transactions-ux-v2 (T1-T8), iteration 2, independent Verifier - FAIL
+# Validation: transactions-ux-v2 (T1-T8), after the fixes to the independent report - PASS pending the owner's app-level browser check
 
-**Verdict**: FAIL (independent Verifier, iteration 2). All 13 requirements have `file:line` evidence and every gate is green, but the headline deliverable of the toast story does not work in a real browser: the per-type colors never reach the screen (gap 1 below, reproduced in Chromium in the Browser pane). jsdom tests cannot see it, so every test, the contrast test and the author's 45 mutants passed over it. Nine further mutants survive (gaps 2 to 5), none on a data or authorization path. The author's iteration 1 section is kept at the end, reworded so the single-verdict parser reads this verdict only.
+**Verdict**: PASS pending the owner's app-level browser check. The independent Verifier's iteration 2 verdict was FAIL (the toast colors never painted, plus four test gaps); the author fixed all of them and proved the colors in a real browser page, see the addendum "Fixes after independent validation" at the end. The fixes were checked by the author, not re-verified by a fresh independent agent (the run forbade sub-agents). Still pending: the logged-in, app-level browser steps for the owner. The iteration 2 text below is kept as the Verifier wrote it.
 
 **Date**: 2026-10-06
 **Iteration**: 2 (iteration 1 = the author's self-report)
@@ -173,3 +173,36 @@ Each task's commit body lists its mutations. In total 45 behavior-level mutants 
 2. Trigger a success toast (save a category) and an error toast (stop the API and save): green and red, in the light and the dark theme (the `dark` class on the root); text readable in both.
 3. Apply search, Tipo, Conta, Categoria, Neutra, De, Até and the quick month one by one and clear each with its "x": only that filter goes, the others and the column sort stay, the list returns to page 1.
 4. Look at the weekday under the date in the table and in the narrow (mobile) card; check a transaction near midnight.
+
+---
+
+## Fixes after independent validation
+
+**Date**: 2026-10-06. **Commits**: `bca058d` (toast colors, base-key guard), `41c9455` (page reset per clear x), `c020827` (copy value unchanged). Author's work, not an independent re-run.
+
+| Verifier fix | Done | Evidence |
+| ------------ | ---- | -------- |
+| 1 Toast colors not painted (critical) | Yes | Every color class of every key in `web/src/components/ui/toast-styles.ts` (success, error, neutral for info/default/warning/loading, description, action and cancel buttons, `dark:` ones included) ends with `!`. Guard `toast-styles.test.ts` "toda classe de cor de '<key>' termina com !" (no browser needed) plus a check that success and error keep 6 color classes each (3 dark), so it cannot pass empty. The contrast test now resolves its colors from the same classes (the `!` is stripped). |
+| 2 Page reset for each clear x | Yes | `extratoClearFilters.test.tsx` `it.each` over Busca, Tipo, Conta, Categoria, Neutra, De, Até, Mês rápido: apply, go to page 2, click the x, expect page "1" and the filter's own parameter(s) gone. Fake timers, no sleeps (L-027); the slowest test of the file is 0.65 s alone, De/Até 0.53 and 0.46 s. |
+| 3 Base `toast` key has no color (T12) | Yes | `toast-styles.test.ts` "a chave base 'toast' não leva classe de cor". |
+| 4 Copy value unchanged (I2) | Yes | `transactionIdentifiers.test.tsx` identifier `"  ID-X  "` and id `"  ID-Y  "`: `writeText` receives exactly those strings. |
+| 5 L-027 for De/Até | Yes (no change needed beyond 2) | The two tests already ran on fake timers with no fixed sleep; not slower than the rest of the file (about 0.5 s). Not re-measured under a saturated machine with two suites in parallel. |
+
+**Painted colors, real browser.** A throwaway Vite page (in a temporary git worktree on the external volume, removed afterwards, nothing added to the repo) mounted the app's own `Toaster` with the app's `styles.css` and Tailwind plugin, emitted success, error and info through `notifySuccess`, `notifyError`, `notifyInfo`, and read `getComputedStyle` of each `li[data-type]` in the Browser pane (Chromium), first with no class on `<html>`, then with `dark` on it. Contrast is the WCAG ratio of the painted rgb values.
+
+| Theme | Type | Painted background | Painted text | Contrast |
+| ----- | ---- | ------------------ | ------------ | -------- |
+| light | success | rgb(236,253,245) | rgb(0,79,59) | 9.14 |
+| light | error | rgb(254,242,242) | rgb(130,24,26) | 9.16 |
+| light | info | rgb(251,250,247) | rgb(9,23,16) | 17.62 |
+| dark | success | rgb(0,44,34) | rgb(208,250,229) | 13.36 |
+| dark | error | rgb(70,8,9) | rgb(255,226,226) | 13.26 |
+| dark | info | rgb(2,6,24) | rgb(248,250,252) | 19.27 |
+
+All six are far above 4.5:1; no palette change was needed. The painted backgrounds are the Tailwind emerald-50/950, red-50/950 and the app's `--background` tokens (computed `oklch` values matched, e.g. `oklch(0.979 0.021 166.113)` for the light success). Border colors were also applied (e.g. light success `rgb(94,233,181)`); the neutral dark border is semi-transparent in the theme and is not reported as a ratio.
+
+**Mutation proof** (temporary worktree `.mut-fix` on the external volume, removed; real tree untouched, no `git stash`): dropping `!` on one dark class fails the `!` guard for `error`; dropping it on the neutral border fails info, default, warning and loading; a color class in the base `toast` key fails the base-key guard (with or without `!`). Page reset: select filters keeping the page fails Tipo, Conta, Categoria, Neutra; search fails Busca; quick month x fails Mês rápido; Até and De mutants fail only their own case. Copy: `text.trim()` and `text.trimEnd()` in `TransactionIdentifiers.tsx` fail the new test. Details are in each commit body.
+
+**Gates after the fixes.** `yarn --cwd web test` x3: 75 files, 717 tests, 0 failed each run (63.0 s, 59.9 s, 60.2 s; 697 before, +20). `yarn --cwd web typecheck` clean; `yarn --cwd web lint` 0 errors and the same 7 warnings as before (none new). `pnpm -C api test`: 382 unit + 625 integration pass; `pnpm -C api typecheck` and `lint` clean.
+
+**What remains.** The colors are proven painted on a page that mounts the app's `Toaster` and styles, not inside the running app (no session, `.env` points at hosted Supabase). The owner's app-level browser check is still pending: copy the identifiers in the modal, see a real success and error toast in the light and dark theme, clear each filter from page 2, and see the weekday under the date (the "below" of TUXV2-13 is a layout fact jsdom does not prove). Survivors accepted: D16 (weekday above by CSS). Older slow tests (L-027) are a separate backlog.

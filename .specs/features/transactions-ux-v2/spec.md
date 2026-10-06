@@ -153,6 +153,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 4. WHEN um toast de informação é exibido THEN o sistema SHALL aplicar o fundo e o texto neutros do tema (`--background` e `--foreground`) no tema claro e no escuro.  <!-- TUXV2-07 -->
 5. The sistema SHALL manter contraste de pelo menos 4,5:1 entre o texto e o fundo de cada tipo de toast (sucesso, erro e informação) nos temas claro e escuro, calculado a partir dos valores do tema.  <!-- TUXV2-08 -->
 6. The `Toaster` SHALL continuar montado uma única vez no layout raiz.  <!-- TUXV2-08 -->
+7. The cores aplicadas pelos critérios 2 a 5 SHALL ser as pintadas no toast renderizado (`getComputedStyle` do fundo e do texto), não só as classes: as classes de cor terminam com `!` porque o CSS do sonner não tem camada e vence os utilitários do Tailwind v4.  <!-- TUXV2-07 -->
 
 **Independent Test**: Renderizar o `Toaster`, emitir um toast de cada tipo pelo `notify` e conferir o tipo e as classes do elemento; rodar o teste de contraste.
 
@@ -204,8 +205,8 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | TUXV2-04 | P1: Identificadores da transação na API e nos mocks | In Tasks | Verified |
 | TUXV2-05 | P1: Identificadores no modal de edição | In Tasks | Verified |
 | TUXV2-06 | P1: Identificadores no modal de edição | In Tasks | Verified |
-| TUXV2-07 | P2: Toasts coloridos por tipo | In Tasks | Verified |
-| TUXV2-08 | P2: Toasts coloridos por tipo | In Tasks | Verified |
+| TUXV2-07 | P2: Toasts coloridos por tipo | In Tasks | Verified (real browser page after the fix; app-level check pending for the owner) |
+| TUXV2-08 | P2: Toasts coloridos por tipo | In Tasks | Verified (real browser page after the fix; app-level check pending for the owner) |
 | TUXV2-09 | P1: Limpar cada filtro do extrato | In Tasks | Verified |
 | TUXV2-10 | P1: Limpar cada filtro do extrato | In Tasks | Verified |
 | TUXV2-11 | P1: Limpar cada filtro do extrato | In Tasks | Verified |
@@ -220,7 +221,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 - [x] `GET /transactions` devolve `identifier` e nenhuma rota o aceita para escrita, verificado por teste de integração e pelo `openapi.json`.
 - [x] O modal de edição mostra "ID" e "Identificador externo" (ou "—") com botão de copiar, e nenhum campo editável para eles.
-- [x] Os três tipos de toast têm cores distintas nos dois temas, com contraste de texto de pelo menos 4,5:1 calculado dos valores do tema.
+- [x] Os três tipos de toast têm cores distintas nos dois temas, com contraste de texto de pelo menos 4,5:1. Verificado numa página de navegador real que monta o `Toaster` e o `styles.css` do app (cores pintadas lidas com `getComputedStyle`, contraste de 9,14 a 19,27); a conferência dentro do app em execução continua pendente para o dono (última caixa).
 - [x] Cada um dos oito filtros ativos tem um "x" que limpa só ele, com um teste por filtro, e a ordenação e os demais filtros permanecem.
 - [x] O dia da semana abaixo da data está certo às 23:30 locais em America/Sao_Paulo e em UTC, nas viradas de mês e de ano e em 29 de fevereiro.
 - [x] `pnpm -C api test`, `yarn --cwd web test`, typecheck e lint de cada app passam, sem aviso novo de lint.
