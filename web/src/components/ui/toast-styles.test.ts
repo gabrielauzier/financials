@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import { contrastRatio, luminance, parseOklch, type Oklch } from "@/test/colorContrast";
 import { toastClassNames } from "./toast-styles";
 
+/** A class that sets a color (background, text or border), with or without variants and the `!` suffix. */
+const COLOR_CLASS = /(?:^|:)(?:bg|text|border)-[^\s:]+$/;
+const classesOf = (key: keyof typeof toastClassNames) => toastClassNames[key].split(/\s+/);
+
 const read = (relative: string) => readFileSync(new URL(relative, import.meta.url), "utf8");
 const tailwindTheme = read("../../../node_modules/tailwindcss/theme.css");
 const appStyles = read("../../styles.css");
@@ -33,12 +37,15 @@ const colorOf = (token: string, theme: Theme): Oklch => {
 /** Background and text of a toast type in a theme, resolved from its classes (`dark:` ones only in the dark theme and winning there). */
 function resolve(type: Type, theme: Theme): { background: Oklch; text: Oklch } {
   const picked: Record<string, string> = {};
-  const classes = toastClassNames[type].split(/\s+/);
+  const classes = classesOf(type);
   const wanted = theme === "dark" ? [false, true] : [false];
   for (const darkPass of wanted) {
     for (const name of classes.filter((item) => item.startsWith("dark:") === darkPass)) {
       const match = /^(bg|text)-(.+)$/.exec(
-        name.replace(/^dark:/, "").replace("group-[.toaster]:", ""),
+        name
+          .replace(/^dark:/, "")
+          .replace("group-[.toaster]:", "")
+          .replace(/!$/, ""),
       );
       if (match) picked[match[1] as string] = match[2] as string;
     }
@@ -53,6 +60,31 @@ const hueGap = (first: number, second: number) => {
   const gap = Math.abs(first - second) % 360;
   return gap > 180 ? 360 - gap : gap;
 };
+
+describe("as classes de cor dos toasts vencem o CSS sem camada do sonner", () => {
+  // Tailwind v4 puts utilities in `@layer utilities`; sonner's rules are unlayered and win unless the
+  // utility is important (`!` suffix). jsdom cannot see the cascade, so the guard is on the class text.
+  const keys = Object.keys(toastClassNames) as (keyof typeof toastClassNames)[];
+  it.each(keys)("toda classe de cor de '%s' termina com !", (key) => {
+    for (const name of classesOf(key).filter((item) => COLOR_CLASS.test(item.replace(/!$/, "")))) {
+      expect(name.endsWith("!"), `${key}: ${name}`).toBe(true);
+    }
+  });
+
+  it("success e error têm classes de cor claras e escuras (o guarda não passa por vazio)", () => {
+    for (const key of ["success", "error"] as const) {
+      const colored = classesOf(key).filter((item) => COLOR_CLASS.test(item.replace(/!$/, "")));
+      expect(colored).toHaveLength(6);
+      expect(colored.filter((item) => item.startsWith("dark:"))).toHaveLength(3);
+    }
+  });
+
+  it("as cores vivem só nas chaves por tipo: a chave base 'toast' não leva classe de cor", () => {
+    expect(classesOf("toast").filter((item) => COLOR_CLASS.test(item.replace(/!$/, "")))).toEqual(
+      [],
+    );
+  });
+});
 
 describe.each(THEMES)("cores dos toasts no tema %s (calculadas dos valores do tema)", (theme) => {
   it("o sucesso tem fundo e texto de matiz verde", () => {
