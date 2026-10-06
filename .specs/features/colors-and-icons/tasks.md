@@ -107,14 +107,14 @@ T7 → T13
 
 **Done when**:
 
-- [ ] Unit tests of `palette.ts` (`palette.test.ts`): exactly 22 families and 3 shades give 66 distinct keys matching `^[a-z]+-(400|600|900)$`; `DEFAULT_COLOR` is in the list; `isColorKey` accepts every key and rejects `""`, `"blue"`, `"blue-500"`, `"Blue-600"`, `" blue-600"` and `"#2563eb"` (COLOR-01 AC 1)
-- [ ] Integration: the domain `palette_color` constraint, read from `pg_constraint` (`contypid`), lists exactly the keys of `COLOR_KEYS`, so the SQL and the constant cannot diverge (COLOR-01 AC 2)
-- [ ] Integration: `categories.color` and `accounts.color` are `not null`, of domain `palette_color`, default `slate-600` (`information_schema.columns`); inserting `'blue-500'` into either table fails with SQLSTATE 23514 (COLOR-02 AC 3 and 4)
-- [ ] Integration: the `-- backfill` block extracted from the migration file and run after resetting every `color` to `slate-600` gives the 17 seeded categories the design colors, all 17 distinct; a user category (no `key`) stays `slate-600`; accounts get `purple-600`, `teal-600`, `sky-600`, `zinc-900`, `slate-600` for Nubank, SofisaDireto, Neon, XP, Other (COLOR-02 AC 5 and 6)
-- [ ] Integration: a new user created through the signup path (`createTestUser`) has the 17 categories with the design colors and the same names, keys and `is_system` flags as before; calling `seed_categories` twice adds nothing; `authenticated` and `anon` still cannot execute it (COLOR-03 AC 7)
-- [ ] Integration: user B cannot read or update the colors of user A's rows; an authenticated update of `color` on a system category affects 0 rows; `rls-catalog` and the schema tests still pass (COLOR-03 AC 8)
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` after `pnpm -C api db:reset`
-- [ ] Test count: the existing API tests plus about 8 new unit tests and 10 new integration tests pass (no silent deletions)
+- [x] Unit tests of `palette.ts` (`palette.test.ts`): exactly 22 families and 3 shades give 66 distinct keys matching `^[a-z]+-(400|600|900)$`; `DEFAULT_COLOR` is in the list; `isColorKey` accepts every key and rejects `""`, `"blue"`, `"blue-500"`, `"Blue-600"`, `" blue-600"` and `"#2563eb"` (COLOR-01 AC 1)
+- [x] Integration: the domain `palette_color` constraint, read from `pg_constraint` (`contypid`), lists exactly the keys of `COLOR_KEYS`, so the SQL and the constant cannot diverge (COLOR-01 AC 2)
+- [x] Integration: `categories.color` and `accounts.color` are `not null`, of domain `palette_color`, default `slate-600` (`information_schema.columns`); inserting `'blue-500'` into either table fails with SQLSTATE 23514 (COLOR-02 AC 3 and 4)
+- [x] Integration: the `-- backfill` block extracted from the migration file and run after resetting every `color` to `slate-600` gives the 17 seeded categories the design colors, all 17 distinct; a user category (no `key`) stays `slate-600`; accounts get `purple-600`, `teal-600`, `sky-600`, `zinc-900`, `slate-600` for Nubank, SofisaDireto, Neon, XP, Other (COLOR-02 AC 5 and 6)
+- [x] Integration: a new user created through the signup path (`createTestUser`) has the 17 categories with the design colors and the same names, keys and `is_system` flags as before; calling `seed_categories` twice adds nothing; `authenticated` and `anon` still cannot execute it (COLOR-03 AC 7)
+- [x] Integration: user B cannot read or update the colors of user A's rows; an authenticated update of `color` on a system category affects 0 rows; `rls-catalog` and the schema tests still pass (COLOR-03 AC 8)
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` after `pnpm -C api db:reset`
+- [x] Test count: the existing API tests plus about 8 new unit tests and 10 new integration tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
