@@ -19,8 +19,9 @@ afterEach(() => {
 });
 
 /** One uniquely named transaction dated in 2030 (leads the default date-desc page) on the first account. */
-async function seedOne(name: string) {
-  const [first] = await mockRequest<Account[]>({ method: "GET", path: "/accounts?active=true" });
+async function seedOne(name: string, index = 0) {
+  const list = await mockRequest<Account[]>({ method: "GET", path: "/accounts" });
+  const first = list[index];
   if (!first) throw new Error("seed");
   const item = await mockRequest<Transaction>({
     method: "POST",
@@ -46,12 +47,20 @@ const cardOf = async (name: string) => {
   return headings.find((heading) => heading.closest("article"))?.closest("article") as HTMLElement;
 };
 const accountCell = (row: HTMLElement) => within(row).getAllByRole("cell")[3] as HTMLElement;
+async function foodCategory() {
+  const categories = await mockRequest<Category[]>({ method: "GET", path: "/categories" });
+  return categories.find((category) => category.key === "Food") as Category;
+}
 const dot = (root: HTMLElement) => root.querySelector("span.rounded-full.size-2\\.5");
 
 describe("extrato: ícone e cor da conta (ICON-03 AC 3, 4)", () => {
-  it("a linha e o cartão mostram o ícone, o apelido e o ponto da conta resolvida por accountId", async () => {
+  it("a linha e o cartão mostram o ícone, o apelido e o ponto da conta resolvida por accountId; conta inativa sem sufixo; o select de categoria da linha mostra o badge", async () => {
     const { item, account } = await seedOne("Conta label A");
-    responses.set("GET /accounts", [{ ...account, bank: "XP", color: "orange-400" }]);
+    const second = await seedOne("Conta label B", 1);
+    responses.set("GET /accounts", [
+      { ...account, bank: "XP", color: "orange-400" },
+      { ...second.account, bank: "Nubank", active: false, color: "lime-600" },
+    ]);
     renderWithQuery(<TransactionsPage />);
     const cell = accountCell(await rowOf(item.name));
     await waitFor(() => expect(cell.querySelector("img")).toHaveAttribute("src", xp));
@@ -62,13 +71,21 @@ describe("extrato: ícone e cor da conta (ICON-03 AC 3, 4)", () => {
     expect(label).toHaveTextContent(item.accountNickname);
     expect(card.querySelector("img")).toHaveAttribute("src", xp);
     expect(dot(card)).toHaveClass("bg-orange-400");
-  });
-
-  it("uses the bank of each account from the list (Nubank)", async () => {
-    const { item } = await seedOne("Conta label B");
-    renderWithQuery(<TransactionsPage />);
-    const cell = accountCell(await rowOf(item.name));
-    await waitFor(() => expect(cell.querySelector("img")).toHaveAttribute("src", nubank));
+    // the row category select of the same row: badge in the value and in the opened options
+    const food = await foodCategory();
+    const rowSelect = within(await rowOf(item.name)).getAllByRole("combobox")[0] as HTMLElement;
+    expect(within(rowSelect).getByText(item.categoryName)).toHaveClass("inline-block", "truncate");
+    fireEvent.click(rowSelect);
+    const option = await screen.findByRole("option", { name: food.name });
+    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-600");
+    fireEvent.keyDown(option, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("option")).not.toBeInTheDocument());
+    // a transaction of an inactive account: the bank of that account, its dot, no (inativa) suffix
+    const inactive = accountCell(await rowOf(second.item.name));
+    await waitFor(() => expect(inactive.querySelector("img")).toHaveAttribute("src", nubank));
+    expect(dot(inactive)).toHaveClass("bg-lime-600");
+    expect(inactive).toHaveTextContent(second.item.accountNickname);
+    expect(inactive).not.toHaveTextContent("(inativa)");
   });
 
   it("while GET /accounts is pending the row and the card show only the nickname, then swap to the label", async () => {
@@ -112,17 +129,6 @@ describe("extrato: ícone e cor da conta (ICON-03 AC 3, 4)", () => {
     expect(card.querySelector("img")).toBeNull();
     expect(within(row).getAllByRole("combobox")[0]).toHaveTextContent(item.categoryName);
   });
-
-  it("a transaction of an inactive account shows icon and dot and no (inativa) suffix", async () => {
-    const { item, account } = await seedOne("Conta label E");
-    responses.set("GET /accounts", [{ ...account, active: false, color: "lime-600" }]);
-    renderWithQuery(<TransactionsPage />);
-    const cell = accountCell(await rowOf(item.name));
-    await waitFor(() => expect(cell.querySelector("img")).not.toBeNull());
-    expect(dot(cell)).toHaveClass("bg-lime-600");
-    expect(cell).toHaveTextContent(item.accountNickname);
-    expect(cell).not.toHaveTextContent("(inativa)");
-  });
 });
 
 describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 AC 6)", () => {
@@ -151,33 +157,26 @@ describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 
     expect(dot(xpOption)).toHaveClass("bg-zinc-900");
   });
 
-  it("the filter, the row and the bulk-apply category selects show badges in options and value", async () => {
-    const { item } = await seedOne("Conta label G");
-    const categories = await mockRequest<Category[]>({ method: "GET", path: "/categories" });
-    const food = categories.find((category) => category.key === "Food") as Category;
+  it("the filter category select shows badges in its options", async () => {
+    await seedOne("Conta label G1");
+    const food = await foodCategory();
     renderWithQuery(<TransactionsPage />);
-    const row = await rowOf(item.name);
-
     const filter = await screen.findByLabelText("Categoria");
     await waitFor(() => expect(filter).toBeEnabled());
     fireEvent.click(filter);
-    let option = await screen.findByRole("option", { name: food.name });
+    const option = await screen.findByRole("option", { name: food.name });
     expect(within(option).getByText(food.name)).toHaveClass("bg-orange-600");
-    fireEvent.keyDown(option, { key: "Escape" });
-    await waitFor(() => expect(screen.queryByRole("option")).not.toBeInTheDocument());
+  });
 
-    const rowSelect = within(row).getAllByRole("combobox")[0] as HTMLElement;
-    expect(within(rowSelect).getByText(item.categoryName)).toHaveClass("inline-block", "truncate");
-    fireEvent.click(rowSelect);
-    option = await screen.findByRole("option", { name: food.name });
-    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-600");
-    fireEvent.keyDown(option, { key: "Escape" });
-    await waitFor(() => expect(screen.queryByRole("option")).not.toBeInTheDocument());
-
+  it("the bulk-apply category select shows badges in its options and in its value", async () => {
+    const { item } = await seedOne("Conta label G3");
+    const food = await foodCategory();
+    renderWithQuery(<TransactionsPage />);
+    const row = await rowOf(item.name);
     fireEvent.click(within(row).getByRole("checkbox"));
     const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
     fireEvent.click(within(bar).getByRole("combobox"));
-    option = await screen.findByRole("option", { name: food.name });
+    const option = await screen.findByRole("option", { name: food.name });
     expect(within(option).getByText(food.name)).toHaveClass("bg-orange-600");
     fireEvent.click(option);
     await waitFor(() =>
