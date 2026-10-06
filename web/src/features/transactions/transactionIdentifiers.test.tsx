@@ -138,6 +138,18 @@ describe("modal de edição: copiar identificadores", () => {
     expect(writeText).toHaveBeenCalledExactlyOnceWith(item.identifier);
   });
 
+  it("copia o valor sem alterá-lo: espaços nas pontas do identificador e do ID chegam intactos", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    withClipboard(writeText);
+    renderForm({ ...(await imported()), id: "  ID-Y  ", identifier: "  ID-X  " });
+    fireEvent.click(within(group()).getByRole("button", { name: "Copiar identificador externo" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    expect(writeText).toHaveBeenLastCalledWith("  ID-X  ");
+    fireEvent.click(within(group()).getByRole("button", { name: "Copiar ID" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2));
+    expect(writeText).toHaveBeenLastCalledWith("  ID-Y  ");
+  });
+
   it("escrita rejeitada mostra o toast de erro em português e mantém o modal aberto", async () => {
     withClipboard(vi.fn().mockRejectedValue(new Error("denied")));
     renderForm(await imported());
