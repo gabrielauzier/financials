@@ -261,13 +261,13 @@ T7 → T13
 
 **Done when**:
 
-- [ ] Opening the trigger shows a radiogroup named "Paleta de cores" with 66 radios, each named `<Família> <tom>` in Portuguese (for example `Azul 600`), all names unique (AC 1)
-- [ ] With `value="blue-600"` only `Azul 600` has `aria-checked="true"` and the check mark, and the trigger text is "Azul 600"; clicking another color calls `onChange` with its exact key once, closes the popover and returns focus to the trigger (AC 2 and 3)
-- [ ] Keyboard (via `fireEvent.keyDown` in sequence): right and left move one, down and up move six, none leaves the grid at the first or last cell; Home and End go to the first and last; Enter and Space on the focused radio choose it; Escape closes without calling `onChange` (AC 4, 5 and 6)
-- [ ] A disabled picker does not open on click; an unknown `value` (`"banana"`) shows "Ardósia 600" on the trigger and checks no radio; exactly one radio has `tabIndex=0`; the `id` is on the trigger so `getByLabelText` finds it (AC 7, 8 and 9)
-- [ ] No fixed sleep or raised timeout; the slowest test of the file runs under 7.5 s with two suites in parallel (lesson L-027)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
+- [x] Opening the trigger shows a radiogroup named "Paleta de cores" with 66 radios, each named `<Família> <tom>` in Portuguese (for example `Azul 600`), all names unique (AC 1)
+- [x] With `value="blue-600"` only `Azul 600` has `aria-checked="true"` and the check mark, and the trigger text is "Azul 600"; clicking another color calls `onChange` with its exact key once, closes the popover and returns focus to the trigger (AC 2 and 3)
+- [x] Keyboard (via `fireEvent.keyDown` in sequence): right and left move one, down and up move six, none leaves the grid at the first or last cell; Home and End go to the first and last; Enter and Space on the focused radio choose it; Escape closes without calling `onChange` (AC 4, 5 and 6)
+- [x] A disabled picker does not open on click; an unknown `value` (`"banana"`) shows "Ardósia 600" on the trigger and checks no radio; exactly one radio has `tabIndex=0`; the `id` is on the trigger so `getByLabelText` finds it (AC 7, 8 and 9)
+- [x] No fixed sleep or raised timeout; the slowest test of the file runs under 7.5 s with two suites in parallel (lesson L-027)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
