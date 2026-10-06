@@ -179,15 +179,15 @@ T7 → T8
 
 **Done when**:
 
-- [ ] One unit test per format asserts method, category, name, document, bank and status: compra no débito, via NuPay, compra no crédito, estorno débito and ajuste débito, estorno crédito and ajuste crédito, transferência recebida/enviada pelo Pix, transferência Recebida/Enviada sem Pix, reembolso Pix, boleto, fatura, "Débito em conta", "Dinheiro guardado com resgate planejado" (AC 2 to 12 of the mapping story)
-- [ ] "Compra no débito via NuPay - iFood" resolves to `NuPay`, never `DebitCard` (AC 15)
-- [ ] Case and accent variants ("COMPRA NO DEBITO - x", "transferencia RECEBIDA - …", "Estorno - COMPRA no debito - x") map like the canonical prefix and keep the original case of the name (AC 13)
-- [ ] Names with repeated spaces collapse to one space and are trimmed; a masked document (`•••.224.672-••`) is kept as text (AC 14 and edge case)
-- [ ] Unknown text, "Estorno - Pix - X" and a transfer without `NOME - DOC - BANCO Agência:` return `Other`, `Uncategorized`, the original text as name (not collapsed) and `unrecognized` (AC 16)
-- [ ] "Compra no débito" and "Pagamento de boleto efetuado" without " - X" keep the table method, use the description as name and stay `new`; a name containing " - " keeps everything after the first " - "
-- [ ] `originalText` collapses spaces, keeps 500 code points as is, truncates 501 and longer to exactly 500 code points and never splits a surrogate pair (AC 1, 2 and 4 of the description story)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: 30 new unit tests pass; the existing unit tests still pass (no silent deletions)
+- [x] One unit test per format asserts method, category, name, document, bank and status: compra no débito, via NuPay, compra no crédito, estorno débito and ajuste débito, estorno crédito and ajuste crédito, transferência recebida/enviada pelo Pix, transferência Recebida/Enviada sem Pix, reembolso Pix, boleto, fatura, "Débito em conta", "Dinheiro guardado com resgate planejado" (AC 2 to 12 of the mapping story)
+- [x] "Compra no débito via NuPay - iFood" resolves to `NuPay`, never `DebitCard` (AC 15)
+- [x] Case and accent variants ("COMPRA NO DEBITO - x", "transferencia RECEBIDA - …", "Estorno - COMPRA no debito - x") map like the canonical prefix and keep the original case of the name (AC 13)
+- [x] Names with repeated spaces collapse to one space and are trimmed; a masked document (`•••.224.672-••`) is kept as text (AC 14 and edge case)
+- [x] Unknown text, "Estorno - Pix - X" and a transfer without `NOME - DOC - BANCO Agência:` return `Other`, `Uncategorized`, the original text as name (not collapsed) and `unrecognized` (AC 16)
+- [x] "Compra no débito" and "Pagamento de boleto efetuado" without " - X" keep the table method, use the description as name and stay `new`; a name containing " - " keeps everything after the first " - "
+- [x] `originalText` collapses spaces, keeps 500 code points as is, truncates 501 and longer to exactly 500 code points and never splits a surrogate pair (AC 1, 2 and 4 of the description story)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: 30 new unit tests pass; the existing unit tests still pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
