@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/client";
+import { listMockCategories } from "@/lib/api/mock/categories";
 import type { ImportPreview, PreviewRow } from "@/lib/api/types";
 import { ImportPage } from "./ImportPage";
 
@@ -35,6 +36,9 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+const UNCATEGORIZED = "30000000-0000-4000-8000-000000000012";
+const TRANSPORT = "30000000-0000-4000-8000-000000000007";
+
 const row = (index: number, status: PreviewRow["status"]): PreviewRow => ({
   index,
   localDate: "2026-03-05",
@@ -42,6 +46,7 @@ const row = (index: number, status: PreviewRow["status"]): PreviewRow => ({
   amount: "10.00",
   name: `Linha ${index}`,
   paymentMethod: "PIX",
+  categoryId: UNCATEGORIZED,
   categoryName: "Sem categoria",
   status,
   neutral: false,
@@ -67,6 +72,7 @@ beforeEach(() => {
   confirmResponses = [];
   apiRequest.mockReset();
   apiRequest.mockImplementation((path: string) => {
+    if (path === "/categories") return Promise.resolve(listMockCategories());
     if (path === "/imports/preview") return Promise.resolve(preview);
     if (path === "/imports/confirm") {
       const next = confirmResponses.shift();
@@ -115,7 +121,7 @@ describe("página de importação", () => {
     expect(confirmBody.get("accountId")).toBe("acc-1");
     expect(confirmBody.get("idempotencyKey")).toMatch(/^[0-9a-f-]{36}$/);
     expect(JSON.parse(confirmBody.get("selections") as string)).toEqual([
-      { index: 0, neutral: true },
+      { index: 0, neutral: true, categoryId: UNCATEGORIZED },
     ]);
     expect(screen.getByRole("link", { name: "Ver extrato" })).toHaveAttribute("href", "/extrato");
   });
@@ -197,6 +203,35 @@ describe("página de importação", () => {
   });
 });
 
+describe("página de importação: categoria por linha (IMPIMP-03)", () => {
+  it("o confirm envia a categoria escolhida para a linha alterada e a do preview para as outras", async () => {
+    apiRequest.mockImplementation((path: string) => {
+      if (path === "/categories") return Promise.resolve(listMockCategories());
+      if (path === "/imports/preview")
+        return Promise.resolve({
+          rows: [
+            row(0, "new"),
+            { ...row(1, "new"), categoryId: TRANSPORT, categoryName: "Transporte" },
+          ],
+          totals: { new: 2, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 },
+        });
+      return Promise.resolve({ batchId: "b1", imported: 2, skipped: 0 });
+    });
+    renderPage();
+    await goToPreview();
+    const trigger = await screen.findByRole("combobox", { name: "Categoria de Linha 0" });
+    await waitFor(() => expect(trigger).toHaveTextContent("Sem categoria"));
+    fireEvent.click(trigger);
+    fireEvent.click(await screen.findByRole("option", { name: "Alimentação" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar importação" }));
+    await screen.findByRole("status");
+    expect(JSON.parse(bodyOf("/imports/confirm").get("selections") as string)).toEqual([
+      { index: 0, neutral: false, categoryId: "30000000-0000-4000-8000-000000000002" },
+      { index: 1, neutral: false, categoryId: TRANSPORT },
+    ]);
+  });
+});
+
 describe("página de importação: transferências próprias neutras (IMPFIX-10)", () => {
   const neutralRow = (index: number, name: string, neutral: boolean): PreviewRow => ({
     ...row(index, "new"),
@@ -216,6 +251,7 @@ describe("página de importação: transferências próprias neutras (IMPFIX-10)
 
   beforeEach(() => {
     apiRequest.mockImplementation((path: string) => {
+      if (path === "/categories") return Promise.resolve(listMockCategories());
       if (path === "/imports/preview") return Promise.resolve(neutralPreview);
       if (path === "/imports/confirm")
         return Promise.resolve({ batchId: "b1", imported: 3, skipped: 0 });
@@ -239,9 +275,9 @@ describe("página de importação: transferências próprias neutras (IMPFIX-10)
     fireEvent.click(screen.getByRole("button", { name: "Confirmar importação" }));
     await screen.findByRole("status");
     expect(sentSelections()).toEqual([
-      { index: 0, neutral: true },
-      { index: 1, neutral: true },
-      { index: 2, neutral: false },
+      { index: 0, neutral: true, categoryId: UNCATEGORIZED },
+      { index: 1, neutral: true, categoryId: UNCATEGORIZED },
+      { index: 2, neutral: false, categoryId: UNCATEGORIZED },
     ]);
   });
 
@@ -256,9 +292,9 @@ describe("página de importação: transferências próprias neutras (IMPFIX-10)
     fireEvent.click(screen.getByRole("button", { name: "Confirmar importação" }));
     await screen.findByRole("status");
     expect(sentSelections()).toEqual([
-      { index: 0, neutral: false },
-      { index: 1, neutral: true },
-      { index: 2, neutral: false },
+      { index: 0, neutral: false, categoryId: UNCATEGORIZED },
+      { index: 1, neutral: true, categoryId: UNCATEGORIZED },
+      { index: 2, neutral: false, categoryId: UNCATEGORIZED },
     ]);
   });
 });

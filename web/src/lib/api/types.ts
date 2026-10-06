@@ -107,6 +107,7 @@ export type PreviewRow = {
   amount: string;
   name: string;
   paymentMethod: ImportPaymentMethod;
+  categoryId: string;
   categoryName: string;
   status: ImportRowStatus;
   neutral: boolean;
@@ -120,7 +121,7 @@ export type ImportPreview = {
   totals: Record<ImportRowStatus, number>;
 };
 
-export type ImportSelection = { index: number; neutral: boolean };
+export type ImportSelection = { index: number; neutral: boolean; categoryId?: string };
 
 export type ImportConfirmResult = { batchId: string; imported: number; skipped: number };
 

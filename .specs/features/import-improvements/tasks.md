@@ -315,14 +315,14 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests: `initialSelection` sets each row's `categoryId` from the preview; `selectedPayload` sends `{ index, neutral, categoryId }` with the default and with a chosen category, and only for selected selectable rows (AC 4)
-- [ ] Table test: every new, duplicate and unrecognized row shows a select with the user's category names pre-selected on the row's `categoryId`; ignored and invalid rows show the `categoryName` text with no select (AC 1 and 2)
-- [ ] Table test: choosing another category on one row changes only that row; the selection and the "Neutra" switch of that row and the other rows are unchanged; editing the "Neutra" switch of a row absent from the selection keeps its `categoryId` (AC 3)
-- [ ] Page test: confirming after a category change posts `selections` with `categoryId` of the chosen category for that row and of the preview default for the others (AC 4)
-- [ ] Table test: while categories load the select is disabled with "Carregando categorias…"; when the categories request fails the column shows the `categoryName` text and the confirm still posts the preview `categoryId`s (AC 5 and 6, L-013)
-- [ ] `CategoryOptionLabel` is the only place that renders an option's content, used by the select items and the displayed value (AC 7); the existing category-select usages in the extrato and forms are unchanged and their tests pass
-- [ ] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 10 new ones pass (no silent deletions)
+- [x] Unit tests: `initialSelection` sets each row's `categoryId` from the preview; `selectedPayload` sends `{ index, neutral, categoryId }` with the default and with a chosen category, and only for selected selectable rows (AC 4)
+- [x] Table test: every new, duplicate and unrecognized row shows a select with the user's category names pre-selected on the row's `categoryId`; ignored and invalid rows show the `categoryName` text with no select (AC 1 and 2)
+- [x] Table test: choosing another category on one row changes only that row; the selection and the "Neutra" switch of that row and the other rows are unchanged; editing the "Neutra" switch of a row absent from the selection keeps its `categoryId` (AC 3)
+- [x] Page test: confirming after a category change posts `selections` with `categoryId` of the chosen category for that row and of the preview default for the others (AC 4)
+- [x] Table test: while categories load the select is disabled with "Carregando categorias…"; when the categories request fails the column shows the `categoryName` text and the confirm still posts the preview `categoryId`s (AC 5 and 6, L-013)
+- [x] `CategoryOptionLabel` is the only place that renders an option's content, used by the select items and the displayed value (AC 7); the existing category-select usages in the extrato and forms are unchanged and their tests pass
+- [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 10 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

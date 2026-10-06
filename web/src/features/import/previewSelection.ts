@@ -1,8 +1,12 @@
 import type { ImportRowStatus, ImportSelection, PreviewRow } from "@/lib/api/types";
 
-export type RowChoice = { selected: boolean; neutral: boolean };
+export type RowChoice = { selected: boolean; neutral: boolean; categoryId: string };
 /** Per-row user choices, keyed by the row index returned by the preview. */
 export type PreviewSelection = Record<number, RowChoice>;
+
+/** The row's choice; a row missing from `selection` falls back to what the preview sent. */
+export const choiceOf = (row: PreviewRow, selection: PreviewSelection): RowChoice =>
+  selection[row.index] ?? { selected: false, neutral: row.neutral, categoryId: row.categoryId };
 
 /** Ignored and invalid rows can never be imported. */
 export const isSelectable = (status: ImportRowStatus) =>
@@ -15,6 +19,7 @@ export function initialSelection(rows: PreviewRow[]): PreviewSelection {
     selection[row.index] = {
       selected: row.status === "new" || row.status === "unrecognized",
       neutral: row.neutral,
+      categoryId: row.categoryId,
     };
   }
   return selection;
@@ -27,7 +32,11 @@ export function selectedPayload(
 ): ImportSelection[] {
   return rows
     .filter((row) => isSelectable(row.status) && selection[row.index]?.selected)
-    .map((row) => ({ index: row.index, neutral: selection[row.index]?.neutral ?? row.neutral }));
+    .map((row) => ({
+      index: row.index,
+      neutral: selection[row.index]?.neutral ?? row.neutral,
+      categoryId: selection[row.index]?.categoryId ?? row.categoryId,
+    }));
 }
 
 export type SelectAllState = "all" | "some" | "none" | "disabled";
@@ -50,7 +59,7 @@ export function setAllSelected(
   const next: PreviewSelection = { ...selection };
   for (const row of rows) {
     if (!isSelectable(row.status)) continue;
-    next[row.index] = { ...(selection[row.index] ?? { neutral: row.neutral }), selected };
+    next[row.index] = { ...choiceOf(row, selection), selected };
   }
   return next;
 }

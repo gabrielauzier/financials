@@ -1,12 +1,27 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ImportPreview, ImportRowStatus, PreviewRow } from "@/lib/api/types";
+import { ApiError } from "@/lib/api/client";
+import { mockRequest } from "@/lib/api/mock";
+import type { Category, ImportPreview, ImportRowStatus, PreviewRow } from "@/lib/api/types";
+import { failures, renderWithQuery, resetSpy, responses } from "@/test/apiSpy";
 import { ImportPreviewTable } from "./ImportPreviewTable";
 import { initialSelection, selectedPayload, type PreviewSelection } from "./previewSelection";
 import { formatLocalDate } from "./labels";
 
-afterEach(cleanup);
+vi.mock("@/lib/api/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/client")>()),
+  apiRequest: (await import("@/test/apiSpy")).spiedApiRequest,
+}));
+
+afterEach(() => {
+  cleanup();
+  resetSpy();
+});
+
+const UNCATEGORIZED = "30000000-0000-4000-8000-000000000012";
+const FOOD = "30000000-0000-4000-8000-000000000002";
+const TRANSPORT = "30000000-0000-4000-8000-000000000007";
 
 const row = (
   index: number,
@@ -19,6 +34,7 @@ const row = (
   amount: "1234.50",
   name: `Linha ${index}`,
   paymentMethod: "PIX",
+  categoryId: UNCATEGORIZED,
   categoryName: "Sem categoria",
   status,
   neutral: false,
@@ -55,7 +71,7 @@ function Harness({
 
 describe("tabela da prévia", () => {
   it("mostra as contagens, o contador e os badges em português", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     const totals = within(screen.getByRole("list", { name: "Resumo da prévia" }));
     expect(totals.getByText(/novas/)).toHaveTextContent("2 novas");
     expect(totals.getByText(/duplicadas/)).toHaveTextContent("1 duplicadas");
@@ -70,7 +86,7 @@ describe("tabela da prévia", () => {
   });
 
   it("formata data sem deslocar o dia, valor com sinal e rótulo de método", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     expect(formatLocalDate("2026-03-05")).toBe("05/03/2026");
     const first = within(screen.getByText("Linha 0").closest("tr")!);
     expect(first.getByText("05/03/2026")).toBeInTheDocument();
@@ -83,25 +99,25 @@ describe("tabela da prévia", () => {
 
   it("duplicadas começam desmarcadas e podem ser marcadas e desmarcadas", () => {
     const onChange = vi.fn();
-    render(<Harness onChange={onChange} />);
+    renderWithQuery(<Harness onChange={onChange} />);
     const box = screen.getByRole("checkbox", { name: "Selecionar Linha 1" });
     expect(box).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Selecionar Linha 0" })).toBeChecked();
     fireEvent.click(box);
     expect(box).toBeChecked();
     expect(onChange).toHaveBeenLastCalledWith(
-      expect.arrayContaining([{ index: 1, neutral: false }]),
+      expect.arrayContaining([{ index: 1, neutral: false, categoryId: UNCATEGORIZED }]),
     );
     expect(screen.getByText("4 linhas selecionadas")).toBeInTheDocument();
     fireEvent.click(box);
     expect(onChange).toHaveBeenLastCalledWith(
-      expect.not.arrayContaining([{ index: 1, neutral: false }]),
+      expect.not.arrayContaining([{ index: 1, neutral: false, categoryId: UNCATEGORIZED }]),
     );
   });
 
   it("linhas ignoradas e inválidas não têm checkbox e nunca entram no payload", () => {
     const onChange = vi.fn();
-    render(<Harness onChange={onChange} />);
+    renderWithQuery(<Harness onChange={onChange} />);
     expect(screen.queryByRole("checkbox", { name: "Selecionar Linha 2" })).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox", { name: "Selecionar Linha 4" })).not.toBeInTheDocument();
     // The header "select all" checkbox plus one per selectable row.
@@ -113,7 +129,7 @@ describe("tabela da prévia", () => {
 
   it("neutra começa na sugestão do servidor e a troca muda o payload", () => {
     const onChange = vi.fn();
-    render(<Harness onChange={onChange} />);
+    renderWithQuery(<Harness onChange={onChange} />);
     const suggested = screen.getByRole("switch", { name: "Marcar Linha 5 como neutra" });
     const other = screen.getByRole("switch", { name: "Marcar Linha 0 como neutra" });
     expect(suggested).toBeChecked();
@@ -122,14 +138,14 @@ describe("tabela da prévia", () => {
     fireEvent.click(suggested);
     expect(onChange).toHaveBeenLastCalledWith(
       expect.arrayContaining([
-        { index: 0, neutral: true },
-        { index: 5, neutral: false },
+        { index: 0, neutral: true, categoryId: UNCATEGORIZED },
+        { index: 5, neutral: false, categoryId: UNCATEGORIZED },
       ]),
     );
   });
 
   it("destaca linhas não reconhecidas para revisão", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     expect(screen.getAllByText("Revise esta linha")).toHaveLength(1);
     expect(screen.getByText("Linha 3").closest("tr")).toHaveAttribute(
       "data-status",
@@ -139,7 +155,7 @@ describe("tabela da prévia", () => {
   });
 
   it("o contador vai a zero ao desmarcar tudo", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     for (const name of ["Linha 0", "Linha 3", "Linha 5"]) {
       fireEvent.click(screen.getByRole("checkbox", { name: `Selecionar ${name}` }));
     }
@@ -158,7 +174,7 @@ describe("Valor colorido e sem a coluna Tipo (IMPIMP-05)", () => {
     totals: { new: 3, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 },
   };
   const renderValues = () =>
-    render(
+    renderWithQuery(
       <ImportPreviewTable
         preview={valuePreview}
         selection={initialSelection(valueRows)}
@@ -198,7 +214,7 @@ describe("selecionar todas as linhas (IMPIMP-04)", () => {
 
   it("seleciona todas as linhas selecionáveis, atualiza o contador e deixa ignoradas e inválidas de fora", () => {
     const onChange = vi.fn();
-    render(<Harness onChange={onChange} />);
+    renderWithQuery(<Harness onChange={onChange} />);
     fireEvent.click(selectAll());
     for (const index of [0, 1, 3, 5]) expect(rowBox(index)).toBeChecked();
     expect(screen.getByText("4 linhas selecionadas")).toBeInTheDocument();
@@ -209,7 +225,7 @@ describe("selecionar todas as linhas (IMPIMP-04)", () => {
   });
 
   it("aparece indeterminado com seleção parcial, marcado com todas e desmarcado com nenhuma", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     // Initial selection: new and unrecognized rows only, the duplicate is out.
     expect(selectAll()).toHaveAttribute("aria-checked", "mixed");
     fireEvent.click(rowBox(1));
@@ -219,7 +235,7 @@ describe("selecionar todas as linhas (IMPIMP-04)", () => {
   });
 
   it("clicar no indeterminado seleciona todas e clicar no marcado limpa todas", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     expect(selectAll()).toHaveAttribute("aria-checked", "mixed");
     fireEvent.click(selectAll());
     expect(selectAll()).toHaveAttribute("aria-checked", "true");
@@ -231,7 +247,7 @@ describe("selecionar todas as linhas (IMPIMP-04)", () => {
   });
 
   it("mantém a chave Neutra de cada linha ao usar o checkbox do cabeçalho", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     const suggested = screen.getByRole("switch", { name: "Marcar Linha 5 como neutra" });
     const other = screen.getByRole("switch", { name: "Marcar Linha 0 como neutra" });
     fireEvent.click(other);
@@ -245,7 +261,7 @@ describe("selecionar todas as linhas (IMPIMP-04)", () => {
 
   it("fica desabilitado e desmarcado quando só há linhas ignoradas e inválidas", () => {
     const blocked = [row(0, "ignored"), row(1, "invalid")];
-    render(
+    renderWithQuery(
       <ImportPreviewTable
         preview={{
           rows: blocked,
@@ -260,10 +276,151 @@ describe("selecionar todas as linhas (IMPIMP-04)", () => {
   });
 
   it("a seleção inicial continua com novas e não reconhecidas marcadas e duplicadas desmarcadas", () => {
-    render(<Harness onChange={vi.fn()} />);
+    renderWithQuery(<Harness onChange={vi.fn()} />);
     expect(rowBox(0)).toBeChecked();
     expect(rowBox(3)).toBeChecked();
     expect(rowBox(1)).not.toBeChecked();
+  });
+});
+
+describe("categoria por linha (IMPIMP-03)", () => {
+  const catRows: PreviewRow[] = [
+    row(0, "new", { categoryId: FOOD, categoryName: "Alimentação" }),
+    row(1, "duplicate"),
+    row(2, "ignored", { categoryName: "Transporte" }),
+    row(3, "unrecognized", { categoryId: TRANSPORT, categoryName: "Transporte" }),
+    row(4, "invalid", { categoryName: "Desconhecida" }),
+    row(5, "new", { neutral: true }),
+  ];
+  const catPreview: ImportPreview = {
+    rows: catRows,
+    totals: { new: 2, duplicate: 1, ignored: 1, unrecognized: 1, invalid: 1 },
+  };
+  function CatHarness({
+    onChange,
+  }: {
+    onChange: (payload: ReturnType<typeof selectedPayload>) => void;
+  }) {
+    const [selection, setSelection] = useState<PreviewSelection>(() => initialSelection(catRows));
+    return (
+      <ImportPreviewTable
+        preview={catPreview}
+        selection={selection}
+        onSelectionChange={(next) => {
+          setSelection(next);
+          onChange(selectedPayload(catRows, next));
+        }}
+      />
+    );
+  }
+  const select = (name: string) => screen.getByRole("combobox", { name: `Categoria de ${name}` });
+  const pick = async (name: string, category: string) => {
+    fireEvent.click(select(name));
+    fireEvent.click(await screen.findByRole("option", { name: category }));
+  };
+
+  it("mostra um select pré-selecionado na categoria de cada linha nova, duplicada e não reconhecida", async () => {
+    renderWithQuery(<CatHarness onChange={vi.fn()} />);
+    await waitFor(() => expect(select("Linha 0")).toHaveTextContent("Alimentação"));
+    expect(select("Linha 1")).toHaveTextContent("Sem categoria");
+    expect(select("Linha 3")).toHaveTextContent("Transporte");
+    expect(select("Linha 5")).toHaveTextContent("Sem categoria");
+    expect(screen.getAllByRole("combobox")).toHaveLength(4);
+  });
+
+  it("lista exatamente as categorias do usuário nas opções", async () => {
+    renderWithQuery(<CatHarness onChange={vi.fn()} />);
+    await waitFor(() => expect(select("Linha 0")).toHaveTextContent("Alimentação"));
+    const expected = (await mockRequest<Category[]>({ method: "GET", path: "/categories" })).map(
+      (category) => category.name,
+    );
+    fireEvent.click(select("Linha 0"));
+    const options = await screen.findAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual(expected);
+  });
+
+  it("mostra o nome em texto, sem select, nas linhas ignoradas e inválidas", async () => {
+    renderWithQuery(<CatHarness onChange={vi.fn()} />);
+    await waitFor(() => expect(select("Linha 0")).toHaveTextContent("Alimentação"));
+    for (const [name, text] of [
+      ["Linha 2", "Transporte"],
+      ["Linha 4", "Desconhecida"],
+    ] as const) {
+      const cells = within(screen.getByText(name).closest("tr")!);
+      expect(cells.queryByRole("combobox")).not.toBeInTheDocument();
+      expect(cells.getByText(text, { selector: "td" })).toBeInTheDocument();
+    }
+  });
+
+  it("escolher outra categoria muda só essa linha, sem alterar seleção nem Neutra", async () => {
+    const onChange = vi.fn();
+    renderWithQuery(<CatHarness onChange={onChange} />);
+    await waitFor(() => expect(select("Linha 0")).toHaveTextContent("Alimentação"));
+    await pick("Linha 5", "Transporte");
+    await waitFor(() => expect(select("Linha 5")).toHaveTextContent("Transporte"));
+    expect(select("Linha 0")).toHaveTextContent("Alimentação");
+    expect(select("Linha 1")).toHaveTextContent("Sem categoria");
+    expect(select("Linha 3")).toHaveTextContent("Transporte");
+    expect(onChange).toHaveBeenLastCalledWith([
+      { index: 0, neutral: false, categoryId: FOOD },
+      { index: 3, neutral: false, categoryId: TRANSPORT },
+      { index: 5, neutral: true, categoryId: TRANSPORT },
+    ]);
+    expect(screen.getByRole("checkbox", { name: "Selecionar Linha 1" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Selecionar Linha 5" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Marcar Linha 5 como neutra" })).toBeChecked();
+    expect(screen.getByText("3 linhas selecionadas")).toBeInTheDocument();
+  });
+
+  it("a categoria escolhida sobrevive a desmarcar e marcar de novo a linha", async () => {
+    const onChange = vi.fn();
+    renderWithQuery(<CatHarness onChange={onChange} />);
+    await waitFor(() => expect(select("Linha 0")).toHaveTextContent("Alimentação"));
+    await pick("Linha 1", "Transporte");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar Linha 1" }));
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.arrayContaining([{ index: 1, neutral: false, categoryId: TRANSPORT }]),
+    );
+  });
+
+  it("editar a chave Neutra de uma linha ausente da seleção mantém a categoryId do preview", async () => {
+    const onChange = vi.fn();
+    renderWithQuery(
+      <ImportPreviewTable
+        preview={{ ...catPreview, rows: [row(0, "new", { categoryId: FOOD })] }}
+        selection={{}}
+        onSelectionChange={onChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("switch", { name: "Marcar Linha 0 como neutra" }));
+    expect(onChange).toHaveBeenLastCalledWith({
+      0: { selected: false, neutral: true, categoryId: FOOD },
+    });
+  });
+
+  it("enquanto as categorias carregam o select fica desabilitado com Carregando categorias…", async () => {
+    responses.set("GET /categories", () => new Promise(() => {}));
+    renderWithQuery(<CatHarness onChange={vi.fn()} />);
+    const trigger = select("Linha 0");
+    expect(trigger).toBeDisabled();
+    expect(trigger).toHaveTextContent("Carregando categorias…");
+  });
+
+  it("se as categorias falham a coluna mostra o nome em texto e o payload mantém as categoryId do preview", async () => {
+    failures.set("GET /categories", new ApiError("internal_error", "boom", 500));
+    const onChange = vi.fn();
+    renderWithQuery(<CatHarness onChange={onChange} />);
+    await waitFor(() => expect(screen.queryAllByRole("combobox")).toHaveLength(0));
+    const first = within(screen.getByText("Linha 0").closest("tr")!);
+    expect(first.getByText("Alimentação", { selector: "td" })).toBeInTheDocument();
+    expect(screen.getByText("Linha 1").closest("tr")).toHaveTextContent("Sem categoria");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar Linha 1" }));
+    expect(onChange).toHaveBeenLastCalledWith([
+      { index: 0, neutral: false, categoryId: FOOD },
+      { index: 1, neutral: false, categoryId: UNCATEGORIZED },
+      { index: 3, neutral: false, categoryId: TRANSPORT },
+      { index: 5, neutral: true, categoryId: UNCATEGORIZED },
+    ]);
   });
 });
 
@@ -282,7 +439,7 @@ describe("rótulos de método da prévia", () => {
     const methodRows = methods.map(([method], index) =>
       row(index, "new", { name: `Método ${method}`, paymentMethod: method }),
     );
-    render(
+    renderWithQuery(
       <ImportPreviewTable
         preview={{
           rows: methodRows,
@@ -330,7 +487,7 @@ describe("chave Neutra das transferências próprias (IMPFIX-10)", () => {
     screen.getAllByRole("switch", { name: `Marcar ${name} como neutra` })[position] as HTMLElement;
 
   it("mostra a chave Neutra ligada nas linhas neutras do preview, selecionadas ou não, antes e depois de marcar e desmarcar", () => {
-    render(<NeutralHarness onChange={vi.fn()} />);
+    renderWithQuery(<NeutralHarness onChange={vi.fn()} />);
     const neutralSwitches = [
       neutralSwitch("Maria Souza Lima", 0),
       neutralSwitch("MARIA SOUZA LIMA LTDA"),
@@ -362,12 +519,14 @@ describe("chave Neutra das transferências próprias (IMPFIX-10)", () => {
 
   it("não perde a marca neutra do preview quando a linha ainda não está no estado de seleção", () => {
     const onChange = vi.fn();
-    render(
+    renderWithQuery(
       <ImportPreviewTable preview={neutralPreview} selection={{}} onSelectionChange={onChange} />,
     );
     // The switch is rendered on from the preview value, so the first click on the checkbox must keep it.
     expect(neutralSwitch("MARIA SOUZA LIMA LTDA")).toBeChecked();
     fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar MARIA SOUZA LIMA LTDA" }));
-    expect(onChange).toHaveBeenLastCalledWith({ 1: { selected: true, neutral: true } });
+    expect(onChange).toHaveBeenLastCalledWith({
+      1: { selected: true, neutral: true, categoryId: UNCATEGORIZED },
+    });
   });
 });

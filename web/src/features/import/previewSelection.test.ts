@@ -3,10 +3,14 @@ import type { ImportRowStatus, PreviewRow } from "@/lib/api/types";
 import {
   initialSelection,
   isSelectable,
+  selectedPayload,
   selectAllState,
   setAllSelected,
   type PreviewSelection,
 } from "./previewSelection";
+
+const UNCATEGORIZED = "30000000-0000-4000-8000-000000000012";
+const FOOD = "30000000-0000-4000-8000-000000000002";
 
 const row = (
   index: number,
@@ -19,6 +23,7 @@ const row = (
   amount: "10.00",
   name: `Linha ${index}`,
   paymentMethod: "PIX",
+  categoryId: UNCATEGORIZED,
   categoryName: "Sem categoria",
   status,
   neutral: false,
@@ -67,7 +72,9 @@ describe("selecionar todas: estado do checkbox (IMPIMP-04)", () => {
 
   it("uma linha selecionável presente na seleção mas desmarcada mantém o estado parcial", () => {
     const two = [row(0, "new"), row(1, "new")];
-    expect(selectAllState(two, { 0: { selected: true, neutral: false } })).toBe("some");
+    expect(
+      selectAllState(two, { 0: { selected: true, neutral: false, categoryId: UNCATEGORIZED } }),
+    ).toBe("some");
   });
 });
 
@@ -86,8 +93,8 @@ describe("selecionar todas: aplicar (IMPIMP-04)", () => {
   it("mantém a chave Neutra de cada linha, inclusive a que o usuário alterou", () => {
     const start: PreviewSelection = {
       ...initialSelection(rows),
-      0: { selected: true, neutral: true },
-      3: { selected: true, neutral: false },
+      0: { selected: true, neutral: true, categoryId: UNCATEGORIZED },
+      3: { selected: true, neutral: false, categoryId: UNCATEGORIZED },
     };
     for (const selected of [true, false]) {
       const next = setAllSelected(rows, start, selected);
@@ -99,7 +106,7 @@ describe("selecionar todas: aplicar (IMPIMP-04)", () => {
 
   it("usa o neutral do preview para a linha ausente da seleção", () => {
     const next = setAllSelected(rows, {}, true);
-    expect(next[3]).toEqual({ selected: true, neutral: true });
+    expect(next[3]).toEqual({ selected: true, neutral: true, categoryId: UNCATEGORIZED });
   });
 
   it("não altera o objeto de seleção recebido", () => {
@@ -107,5 +114,48 @@ describe("selecionar todas: aplicar (IMPIMP-04)", () => {
     const snapshot = JSON.stringify(start);
     setAllSelected(rows, start, true);
     expect(JSON.stringify(start)).toBe(snapshot);
+  });
+});
+
+describe("categoria por linha no estado e no payload (IMPIMP-03)", () => {
+  const catRows: PreviewRow[] = [
+    row(0, "new", { categoryId: FOOD }),
+    row(1, "duplicate"),
+    row(2, "ignored"),
+    row(3, "invalid"),
+    row(4, "unrecognized"),
+  ];
+
+  it("a seleção inicial guarda a categoryId do preview de cada linha", () => {
+    const selection = initialSelection(catRows);
+    expect(selection[0]?.categoryId).toBe(FOOD);
+    expect(selection[1]?.categoryId).toBe(UNCATEGORIZED);
+    expect(selection[4]?.categoryId).toBe(UNCATEGORIZED);
+  });
+
+  it("o payload envia { index, neutral, categoryId } com a categoria padrão do preview", () => {
+    expect(selectedPayload(catRows, initialSelection(catRows))).toEqual([
+      { index: 0, neutral: false, categoryId: FOOD },
+      { index: 4, neutral: false, categoryId: UNCATEGORIZED },
+    ]);
+  });
+
+  it("o payload envia a categoria escolhida e só para linhas selecionadas e selecionáveis", () => {
+    const selection: PreviewSelection = {
+      ...initialSelection(catRows),
+      0: { selected: true, neutral: false, categoryId: UNCATEGORIZED },
+      1: { selected: true, neutral: true, categoryId: FOOD },
+      2: { selected: true, neutral: false, categoryId: FOOD },
+      3: { selected: true, neutral: false, categoryId: FOOD },
+    };
+    expect(selectedPayload(catRows, selection)).toEqual([
+      { index: 0, neutral: false, categoryId: UNCATEGORIZED },
+      { index: 1, neutral: true, categoryId: FOOD },
+      { index: 4, neutral: false, categoryId: UNCATEGORIZED },
+    ]);
+  });
+
+  it("uma linha fora do estado de seleção não entra no payload", () => {
+    expect(selectedPayload([row(7, "new", { categoryId: FOOD, neutral: true })], {})).toEqual([]);
   });
 });

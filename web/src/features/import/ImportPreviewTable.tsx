@@ -9,13 +9,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CategorySelect } from "@/features/categories/CategorySelect";
+import { useCategories } from "@/features/categories/hooks";
 import { paymentMethodLabels } from "@/features/transactions/labels";
 import { amountClassName, formatSignedAmount } from "@/features/transactions/utils";
 import type { ImportPreview, ImportRowStatus, PreviewRow } from "@/lib/api/types";
 import { formatLocalDate, importStatusLabels } from "./labels";
 import {
+  choiceOf,
   isSelectable,
   selectAllState,
+  type RowChoice,
   setAllSelected,
   type PreviewSelection,
 } from "./previewSelection";
@@ -48,11 +52,10 @@ export function ImportPreviewTable({
   selection,
   onSelectionChange,
 }: ImportPreviewTableProps) {
-  // A row missing from `selection` is shown, and edited, with the neutral value the preview sent.
-  const choiceOf = (row: PreviewRow) =>
-    selection[row.index] ?? { selected: false, neutral: row.neutral };
-  const update = (row: PreviewRow, patch: Partial<PreviewSelection[number]>) => {
-    onSelectionChange({ ...selection, [row.index]: { ...choiceOf(row), ...patch } });
+  // When the categories fail to load the column shows the preview's category name as text.
+  const categoriesFailed = useCategories().isError;
+  const update = (row: PreviewRow, patch: Partial<RowChoice>) => {
+    onSelectionChange({ ...selection, [row.index]: { ...choiceOf(row, selection), ...patch } });
   };
   const selectedCount = preview.rows.filter(
     (row) => isSelectable(row.status) && selection[row.index]?.selected,
@@ -104,7 +107,7 @@ export function ImportPreviewTable({
         <TableBody>
           {preview.rows.map((row) => {
             const selectable = isSelectable(row.status);
-            const choice = choiceOf(row);
+            const choice = choiceOf(row, selection);
             return (
               <TableRow
                 key={row.index}
@@ -130,7 +133,17 @@ export function ImportPreviewTable({
                   ) : null}
                 </TableCell>
                 <TableCell>{paymentMethodLabels[row.paymentMethod]}</TableCell>
-                <TableCell>{row.categoryName}</TableCell>
+                <TableCell className="min-w-48">
+                  {selectable && !categoriesFailed ? (
+                    <CategorySelect
+                      value={choice.categoryId}
+                      onChange={(categoryId) => update(row, { categoryId })}
+                      ariaLabel={`Categoria de ${row.name}`}
+                    />
+                  ) : (
+                    row.categoryName
+                  )}
+                </TableCell>
                 <TableCell className={`text-right tabular-nums ${amountClassName(row.type)}`}>
                   {formatSignedAmount(row.type, row.amount)}
                 </TableCell>
