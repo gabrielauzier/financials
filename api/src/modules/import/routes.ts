@@ -295,13 +295,14 @@ async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<Confirm
   const column = <T>(pick: (row: ClassifiedRow) => T): T[] => c.rows.map(pick);
   const inserted = await tx`
     insert into public.transactions
-      (account_id, category_id, name, type, occurred_at, amount, payment_method, identifier,
+      (account_id, category_id, name, description, type, occurred_at, amount, payment_method, identifier,
        counterparty_document, counterparty_bank, neutral, import_batch_id)
-    select ${c.account.id}, r.category_id, r.name, r.type, r.occurred_at, r.amount, r.payment_method, r.identifier,
+    select ${c.account.id}, r.category_id, r.name, r.description, r.type, r.occurred_at, r.amount, r.payment_method, r.identifier,
            r.counterparty_document, r.counterparty_bank, r.neutral, ${c.batchId}
     from unnest(
       ${column((r) => (c.categories.get(r.categoryKey) as Category).id)}::uuid[],
       ${column((r) => r.name)}::text[],
+      ${column((r) => r.description)}::text[],
       ${column((r) => r.type)}::text[],
       ${column((r) => localMidnight(r.localDate, c.tz))}::timestamptz[],
       ${column((r) => r.amount)}::numeric[],
@@ -311,7 +312,7 @@ async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<Confirm
       ${column((r) => r.counterpartyBank)}::text[],
       -- postgres.js sends a boolean array as a scalar boolean; text round-trips exactly.
       ${column((r) => String(r.neutral))}::text[]::boolean[]
-    ) as r (category_id, name, type, occurred_at, amount, payment_method, identifier,
+    ) as r (category_id, name, description, type, occurred_at, amount, payment_method, identifier,
             counterparty_document, counterparty_bank, neutral)`;
   if (inserted.count !== imported) throw new Error(`Inserted ${inserted.count} of ${imported} transactions`);
   await tx`

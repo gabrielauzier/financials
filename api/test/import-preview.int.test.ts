@@ -124,6 +124,63 @@ describe('POST /imports/preview', () => {
     expect(body.totals).toEqual({ new: 13, duplicate: 1, ignored: 0, unrecognized: 0, invalid: 0 });
   });
 
+  it('carries NuPay, Boleto and Other in the preview, the unknown line flagged as unrecognized (IMPFIX-02)', async () => {
+    const res = await preview({ accountId: nubankId }, [
+      csv(
+        [
+          'Data,Valor,Identificador,Descrição',
+          '02/09/2026,-10.00,m-1,Compra no débito via NuPay - Entrega Rapida',
+          '03/09/2026,-20.00,m-2,Pagamento de boleto efetuado - ESCOLA SUL',
+          '04/09/2026,-30.00,m-3,Algo que a tabela não conhece',
+          '',
+        ].join('\n'),
+      ),
+    ]);
+    expect(res.statusCode).toBe(200);
+    const body = res.json<Preview>();
+    expect(body.rows.map((r) => [r.paymentMethod, r.status, r.name])).toEqual([
+      ['NuPay', 'new', 'Entrega Rapida'],
+      ['Boleto', 'new', 'ESCOLA SUL'],
+      ['Other', 'unrecognized', 'Algo que a tabela não conhece'],
+    ]);
+    expect(body.totals).toEqual({ new: 2, duplicate: 0, ignored: 0, unrecognized: 1, invalid: 0 });
+  });
+
+  describe('deduplication with the extracted names (IMPFIX-08)', () => {
+    async function seed(name: string, over: { identifier?: string | null; amount?: string } = {}) {
+      const other = await createTestUser();
+      const accountId = await createAccount(other, { bank: 'Nubank', holderNames: [HOLDER] });
+      const [category] = await getAdminSql()`
+        select id from public.categories where user_id = ${other.id} and key = 'Uncategorized'`;
+      await getAdminSql()`
+        insert into public.transactions
+          (user_id, account_id, category_id, name, type, occurred_at, amount, payment_method, identifier)
+        values (${other.id}, ${accountId}, ${(category as { id: string }).id}, ${name}, 'Expense',
+                '2026-09-02T03:00:00Z', ${over.amount ?? '12.34'}, 'DebitCard', ${over.identifier ?? null})`;
+      return { other, accountId };
+    }
+    const statement = (identifier: string, description: string) =>
+      csv(`Data,Valor,Identificador,Descrição\n02/09/2026,-12.34,${identifier},${description}\n`);
+
+    it('keeps a row with an existing identifier duplicate even when the stored name differs', async () => {
+      const { other, accountId } = await seed('Texto antigo inteiro', { identifier: 'ident-1' });
+      const res = await preview({ accountId }, [statement('ident-1', 'Compra no débito - Padaria Estrela Azul')], other);
+      expect(res.json<Preview>().rows.map((r) => [r.name, r.status])).toEqual([['Padaria Estrela Azul', 'duplicate']]);
+    });
+
+    it('marks a row without identifier duplicate when the extracted name, local day, amount and type match', async () => {
+      const { other, accountId } = await seed('Padaria Estrela Azul');
+      const res = await preview({ accountId }, [statement('', 'Compra no débito - Padaria Estrela Azul')], other);
+      expect(res.json<Preview>().rows.map((r) => r.status)).toEqual(['duplicate']);
+    });
+
+    it('keeps a row without identifier new when only the extracted name differs', async () => {
+      const { other, accountId } = await seed('Padaria Estrela Azul');
+      const res = await preview({ accountId }, [statement('', 'Compra no débito - Padaria Estrela Verde')], other);
+      expect(res.json<Preview>().rows.map((r) => r.status)).toEqual(['new']);
+    });
+  });
+
   it('returns the invoice as 18 new purchases and 1 ignored row', async () => {
     const res = await preview({ accountId: nubankId }, [csv(INVOICE_CSV, 'fatura.csv')]);
     expect(res.statusCode).toBe(200);

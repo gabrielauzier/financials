@@ -289,3 +289,65 @@ describe('POST /imports/confirm', () => {
     }
   });
 });
+
+describe('description and extracted names (IMPFIX-06, IMPFIX-08)', () => {
+  const HEADER = 'Data,Valor,Identificador,Descrição';
+  const SANITIZED = fixture('nubank_statement_sanitized.csv');
+
+  async function storedDescriptions(userId: string) {
+    return getAdminSql()<{ name: string; description: string | null; chars: number | null }[]>`
+      select name, description, char_length(description)::int as chars
+      from public.transactions where user_id = ${userId} order by name`;
+  }
+
+  it('stores the original text (spaces collapsed) as description, keeps the extracted name and returns both from GET /transactions', async () => {
+    const o = await owner();
+    const text = `${HEADER}\n02/09/2026,-12.50,id-a,Compra no débito -  Padaria   Estrela Azul\n03/09/2026,5.00,id-b,Estorno - Compra no débito - RIDEX *VIAGEM\n`;
+    const res = await confirm(o, { content: text, selections: pick(0, 1) });
+    expect(res.statusCode).toBe(201);
+    expect(await storedDescriptions(o.user.id)).toEqual([
+      { name: 'Padaria Estrela Azul', description: 'Compra no débito - Padaria Estrela Azul', chars: 39 },
+      { name: 'RIDEX *VIAGEM', description: 'Estorno - Compra no débito - RIDEX *VIAGEM', chars: 42 },
+    ]);
+    const listed = await app.inject({
+      method: 'GET',
+      url: '/transactions',
+      headers: { authorization: `Bearer ${o.user.token}` },
+    });
+    const items = listed.json<{ items: { name: string; description: string | null }[] }>().items;
+    expect(items.map((t) => [t.name, t.description]).sort()).toEqual([
+      ['Padaria Estrela Azul', 'Compra no débito - Padaria Estrela Azul'],
+      ['RIDEX *VIAGEM', 'Estorno - Compra no débito - RIDEX *VIAGEM'],
+    ]);
+  });
+
+  it('stores exactly 500 code points for a 600-character line and the whole text for 500, with the name intact', async () => {
+    const o = await owner();
+    const long = `Compra no débito - ${'L'.repeat(600)}`;
+    const exact = `Compra no débito - ${'M'.repeat(481)}`;
+    const text = `${HEADER}\n02/09/2026,-1.00,id-long,${long}\n03/09/2026,-2.00,id-exact,${exact}\n`;
+    expect((await confirm(o, { content: text, selections: pick(0, 1) })).statusCode).toBe(201);
+    const rows = await storedDescriptions(o.user.id);
+    const bySize = Object.fromEntries(rows.map((r) => [r.name.charAt(0), r]));
+    expect(bySize.L).toMatchObject({ chars: 500, description: long.slice(0, 500), name: 'L'.repeat(600) });
+    expect(bySize.M).toMatchObject({ chars: 500, description: exact, name: 'M'.repeat(481) });
+  });
+
+  it('marks all 96 rows of the sanitized statement as duplicate when it is previewed again after the confirm', async () => {
+    const o = await owner();
+    const first = await confirm(o, { content: SANITIZED, selections: pick(...Array(96).keys()) });
+    expect(first.statusCode).toBe(201);
+    expect(first.json()).toMatchObject({ imported: 96, skipped: 0 });
+    const body = multipart({ accountId: o.accountId }, [{ filename: 'extrato.csv', content: SANITIZED }]);
+    const again = await app.inject({
+      method: 'POST',
+      url: '/imports/preview',
+      headers: { authorization: `Bearer ${o.user.token}`, ...body.headers },
+      payload: body.payload,
+    });
+    expect(again.statusCode).toBe(200);
+    const preview = again.json<{ rows: { status: string }[]; totals: Record<string, number> }>();
+    expect(preview.rows).toHaveLength(96);
+    expect(preview.totals).toEqual({ new: 0, duplicate: 96, ignored: 0, unrecognized: 0, invalid: 0 });
+  });
+});

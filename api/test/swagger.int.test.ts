@@ -121,6 +121,21 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json lists the 8 payment methods in the import preview row paymentMethod (IMPFIX-02)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{ paths: Record<string, Record<string, OperationDoc>> }>();
+      const rows = doc.paths['/imports/preview']?.post?.responses?.['200']?.content?.['application/json']?.schema
+        ?.properties?.rows?.items;
+      expect((rows?.properties?.paymentMethod as { enum?: string[] } | undefined)?.enum).toEqual([
+        'BankTransfer', 'Boleto', 'Cash', 'CreditCard', 'DebitCard', 'NuPay', 'PIX', 'Other',
+      ]);
+    } finally {
+      await app.close();
+    }
+  });
+
   it('pnpm openapi:export writes the document, and the committed api/openapi.json is up to date', () => {
     const dir = mkdtempSync(join(tmpdir(), 'openapi-'));
     try {

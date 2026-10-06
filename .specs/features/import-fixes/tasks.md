@@ -119,12 +119,12 @@ T7 → T8
 
 **Done when**:
 
-- [ ] Preview assertions: 96 rows, totals `new` 96 and `unrecognized` 0, methods 61 `DebitCard` / 6 `NuPay` / 19 `PIX` / 4 `BankTransfer` / 6 `Boleto` / 0 `Other`, `categoryName` "Estorno (de compras)" on the 8 estornos and "Sem categoria" on the other 88, 13 `Income` and 83 `Expense`, extracted names for one row of every format, Pix document and bank extracted (AC 2)
-- [ ] `neutral: true` exactly on the Pix enviada to "Maria Souza Lima" and the 3 "Transferência Recebida" of "MARIA SOUZA LIMA LTDA", `neutral: false` on the other 92 (AC 3)
-- [ ] Confirm with the preview's `neutral` marks, then a read of `transactions` asserts `payment_method`, `name`, `neutral` and `description` equal to the original CSV text (AC 4)
-- [ ] The run is red as expected: the failures listed in the commit body are method, name, category, `description` and neutral assertions, and no other file of `pnpm -C api test` fails (AC 5)
-- [ ] Gate check run: `pnpm -C api test` (expected red only in `import-fixes.int.test.ts`; the rest green)
-- [ ] Test count: the new file has 4 tests, all red now; the existing integration tests still pass (no silent deletions)
+- [x] Preview assertions: 96 rows, totals `new` 96 and `unrecognized` 0, methods 61 `DebitCard` / 6 `NuPay` / 19 `PIX` / 4 `BankTransfer` / 6 `Boleto` / 0 `Other`, `categoryName` "Estorno (de compras)" on the 8 estornos and "Sem categoria" on the other 88, 13 `Income` and 83 `Expense`, extracted names for one row of every format, Pix document and bank extracted (AC 2)
+- [x] `neutral: true` exactly on the Pix enviada to "Maria Souza Lima" and the 3 "Transferência Recebida" of "MARIA SOUZA LIMA LTDA", `neutral: false` on the other 92 (AC 3)
+- [x] Confirm with the preview's `neutral` marks, then a read of `transactions` asserts `payment_method`, `name`, `neutral` and `description` equal to the original CSV text (AC 4)
+- [x] The run is red as expected: the failures listed in the commit body are method, name, category, `description` and neutral assertions, and no other file of `pnpm -C api test` fails (AC 5)
+- [x] Gate check run: `pnpm -C api test` (expected red only in `import-fixes.int.test.ts`; the rest green)
+- [x] Test count: the new file has 4 tests, all red now; the existing integration tests still pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
@@ -242,14 +242,14 @@ T7 → T8
 
 **Done when**:
 
-- [ ] Preview JSON carries `NuPay`, `Boleto` and `Other` without a serialization error; `api/openapi.json` shows the 8 values for the preview `paymentMethod` and the swagger test passes (AC 3 and 4 of the Other story)
-- [ ] Confirm stores `description` equal to the row text and `GET /transactions` returns it; `name` stays the extracted name; a 600-character line stores exactly 500 code points (AC 3 to 5 of the description story)
-- [ ] Dedup with identifier: a row whose identifier exists with a different `name` stays `duplicate` (AC 1 of the dedup story)
-- [ ] Dedup without identifier: same extracted name, local day, amount and type is `duplicate`; same data with a different extracted name stays `new` (AC 2 and 3)
-- [ ] Previewing the fixture again after confirm marks 96 rows `duplicate` (AC 4)
-- [ ] `import-fixes.int.test.ts` now passes every assertion except, at most, the neutral assertion for the single Pix enviada row; the 3 LTDA transfers are neutral (AC 2 of the neutral story)
-- [ ] Gate check passes: `pnpm -C api test` (only an eventual Pix neutral assertion of `import-fixes.int.test.ts` may still fail; the failure message is recorded in the commit body for T8)
-- [ ] Test count: the existing import integration tests plus 6 new ones pass (no silent deletions)
+- [x] Preview JSON carries `NuPay`, `Boleto` and `Other` without a serialization error; `api/openapi.json` shows the 8 values for the preview `paymentMethod` and the swagger test passes (AC 3 and 4 of the Other story)
+- [x] Confirm stores `description` equal to the row text and `GET /transactions` returns it; `name` stays the extracted name; a 600-character line stores exactly 500 code points (AC 3 to 5 of the description story)
+- [x] Dedup with identifier: a row whose identifier exists with a different `name` stays `duplicate` (AC 1 of the dedup story)
+- [x] Dedup without identifier: same extracted name, local day, amount and type is `duplicate`; same data with a different extracted name stays `new` (AC 2 and 3)
+- [x] Previewing the fixture again after confirm marks 96 rows `duplicate` (AC 4)
+- [x] `import-fixes.int.test.ts` now passes every assertion except, at most, the neutral assertion for the single Pix enviada row; the 3 LTDA transfers are neutral (AC 2 of the neutral story)
+- [x] Gate check passes: `pnpm -C api test` (only an eventual Pix neutral assertion of `import-fixes.int.test.ts` may still fail; the failure message is recorded in the commit body for T8)
+- [x] Test count: the existing import integration tests plus 6 new ones pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
