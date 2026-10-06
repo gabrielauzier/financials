@@ -96,14 +96,14 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Creating a user seeds 17 categories with the identifiers and pt-BR names from the spec; exactly 3 have `is_system`
-- [ ] Updating or deleting a system category as `authenticated` affects 0 rows
-- [ ] Deleting from `accounts` as `authenticated` fails
-- [ ] Duplicate account nickname or category name (any case) violates the unique index
-- [ ] RLS isolates both tables between two users
-- [ ] Running the seed twice does not duplicate categories (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Creating a user seeds 17 categories with the identifiers and pt-BR names from the spec; exactly 3 have `is_system`
+- [x] Updating or deleting a system category as `authenticated` affects 0 rows
+- [x] Deleting from `accounts` as `authenticated` fails
+- [x] Duplicate account nickname or category name (any case) violates the unique index
+- [x] RLS isolates both tables between two users
+- [x] Running the seed twice does not duplicate categories (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -127,11 +127,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Accents, case and repeated spaces normalize to the same string
-- [ ] Empty and whitespace-only input yields an empty string
-- [ ] `collapseSpaces` keeps case and accents (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Accents, case and repeated spaces normalize to the same string
+- [x] Empty and whitespace-only input yields an empty string
+- [x] `collapseSpaces` keeps case and accents (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -157,13 +157,13 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Valid payload creates an active account
-- [ ] Duplicate nickname returns 409 `duplicate_name`
-- [ ] No holder returns 422 `holder_required`
-- [ ] Blank nickname and duplicate holder in the same account return 422
-- [ ] Invalid bank value returns 422 (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid payload creates an active account
+- [x] Duplicate nickname returns 409 `duplicate_name`
+- [x] No holder returns 422 `holder_required`
+- [x] Blank nickname and duplicate holder in the same account return 422
+- [x] Invalid bank value returns 422 (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -187,10 +187,10 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Lists all of the user's accounts and none of another user's
-- [ ] `active=true` omits inactive accounts (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Lists all of the user's accounts and none of another user's
+- [x] `active=true` omits inactive accounts (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -214,11 +214,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Edits persist and unspecified fields stay
-- [ ] Same validations as create apply
-- [ ] Unknown id and another user's id return 404 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Edits persist and unspecified fields stay
+- [x] Same validations as create apply
+- [x] Unknown id and another user's id return 404 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -242,12 +242,12 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Deactivate sets `active=false` and the row is kept
-- [ ] Activate restores `active=true`
-- [ ] `DELETE /accounts/:id` returns 404 (no route)
-- [ ] Inactive accounts' holder names remain readable for neutral detection (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Deactivate sets `active=false` and the row is kept
+- [x] Activate restores `active=true`
+- [x] `DELETE /accounts/:id` returns 404 (no route)
+- [x] Inactive accounts' holder names remain readable for neutral detection (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -273,10 +273,10 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Returns 17 seeded categories with pt-BR names for a new user
-- [ ] Never returns another user's categories (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Returns 17 seeded categories with pt-BR names for a new user
+- [x] Never returns another user's categories (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -300,11 +300,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Creates a non-system category
-- [ ] Blank or whitespace name returns 422
-- [ ] Duplicate name in any case returns 409 `duplicate_name` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Creates a non-system category
+- [x] Blank or whitespace name returns 422
+- [x] Duplicate name in any case returns 409 `duplicate_name` (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -328,11 +328,11 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Rename persists and the `key` is unchanged
-- [ ] Renaming Estorno, Sem categoria or Investimentos returns 403 `category_protected`
-- [ ] Duplicate and blank names are rejected (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Rename persists and the `key` is unchanged
+- [x] Renaming Estorno, Sem categoria or Investimentos returns 403 `category_protected`
+- [x] Duplicate and blank names are rejected (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -356,14 +356,14 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Unused category is deleted
-- [ ] System category returns 403
-- [ ] In-use category without `reassignTo` returns 422 `reassign_required`
-- [ ] `reassignTo` equal to the category returns 422
-- [ ] Failure during reassignment leaves the category and its rows unchanged
-- [ ] Registry mechanism is tested with a temporary test table (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Unused category is deleted
+- [x] System category returns 403
+- [x] In-use category without `reassignTo` returns 422 `reassign_required`
+- [x] `reassignTo` equal to the category returns 422
+- [x] Failure during reassignment leaves the category and its rows unchanged
+- [x] Registry mechanism is tested with a temporary test table (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -387,10 +387,10 @@ T12 → T16
 
 **Done when**:
 
-- [ ] Every mutating route returns 404 for another user's id
-- [ ] No data of user A appears in user B's lists (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Every mutating route returns 404 for another user's id
+- [x] No data of user A appears in user B's lists (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

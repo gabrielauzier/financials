@@ -108,13 +108,13 @@ Parcelas e recorrências de cartão (assinaturas, compras parceladas) precisam d
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| CARD-01 | P1: CRUD (criar, validar) | - | Pending |
-| CARD-02 | P1: CRUD (editar, excluir, valor restante) | - | Pending |
-| CARD-03 | P1: Status (valores e filtro) | - | Pending |
-| CARD-04 | P1: Status (sem automação) | - | Pending |
-| CARD-05 | P2: Isolamento dos totais | - | Pending |
+| CARD-01 | P1: CRUD (criar, validar) | - | Verified |
+| CARD-02 | P1: CRUD (editar, excluir, valor restante) | - | Verified |
+| CARD-03 | P1: Status (valores e filtro) | - | Verified |
+| CARD-04 | P1: Status (sem automação) | - | Verified |
+| CARD-05 | P2: Isolamento dos totais | - | Verified |
 
-**Coverage:** 5 total, 0 mapped to tasks, 5 unmapped ⚠️
+**Coverage:** 5 total; all Verified; CARD-05 (despesas de cartão fora dos totais do dashboard) foi verificada na feature `dashboards`.
 
 ---
 

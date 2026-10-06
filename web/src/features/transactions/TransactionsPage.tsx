@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -31,9 +32,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AccountLabel } from "@/features/accounts/AccountLabel";
 import { AccountSelect } from "@/features/accounts/AccountSelect";
+import { useAccountLookup } from "@/features/accounts/hooks";
 import { CategorySelect } from "@/features/categories/CategorySelect";
-import { formatBRL, formatDateLocal } from "@/lib/format";
+import { formatDateLocal } from "@/lib/format";
+import { notifyError, notifySuccess } from "@/lib/notify";
 import type { Transaction, TransactionFilters } from "@/lib/api/types";
 import {
   useDeleteTransaction,
@@ -41,22 +45,59 @@ import {
   useUpdateTransaction,
   useUpdateTransactionCategories,
 } from "./hooks";
-import { paymentMethodLabels, transactionTypeLabels } from "./labels";
+import { paymentMethodLabels } from "./labels";
 import { TransactionForm } from "./TransactionForm";
+import {
+  amountClassName,
+  applyDateFilter,
+  formatSignedAmount,
+  monthRange,
+  type FilterState,
+} from "./utils";
 
 type Sort = NonNullable<TransactionFilters["sort"]>;
 const baseFilters: TransactionFilters = { sort: "date", order: "desc", page: 1 };
+const MONTH_NAMES = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+/** Current year minus 5 up to the current year plus 1, ascending. */
+const yearOptions = () => {
+  const current = new Date().getFullYear();
+  return Array.from({ length: 7 }, (_, index) => current - 5 + index);
+};
+
+const initialState: FilterState = { filters: baseFilters, quick: {} };
+/** Applies `update` to the filters of a state; the very same state comes back when they do not change. */
+const withFilters =
+  (update: (current: TransactionFilters) => TransactionFilters) =>
+  (state: FilterState): FilterState => {
+    const filters = update(state.filters);
+    return filters === state.filters ? state : { ...state, filters };
+  };
 
 export function TransactionsPage() {
-  const [filters, setFilters] = useState<TransactionFilters>(baseFilters);
+  // filters and the quick month live in one state, so no update can change one without the other
+  const [{ filters, quick }, setState] = useState<FilterState>(initialState);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkCategory, setBulkCategory] = useState("");
   const [editing, setEditing] = useState<Transaction>();
   const [formOpen, setFormOpen] = useState(false);
   const [deleting, setDeleting] = useState<Transaction>();
-  const [actionError, setActionError] = useState("");
-  const { data, isLoading, isError, refetch } = useTransactions(filters);
+  const quickActive = quick.year !== undefined && quick.month !== undefined;
+  const invalidPeriod = Boolean(filters.from && filters.to && filters.from > filters.to);
+  const { data, isLoading, isError, refetch } = useTransactions(filters, !invalidPeriod);
   const update = useUpdateTransaction();
   const remove = useDeleteTransaction();
   const bulk = useUpdateTransactionCategories();
@@ -65,31 +106,57 @@ export function TransactionsPage() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const query = search.trim();
-      setFilters((current) => {
-        const next = { ...current, page: 1 };
-        if (query) next.q = query;
-        else delete next.q;
-        return next;
-      });
+      setState(
+        withFilters((current) => {
+          // nothing to change (the first run, right after mount): keep the filters, and the selection
+          if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
+          const next = { ...current, page: 1 };
+          if (query) next.q = query;
+          else delete next.q;
+          return next;
+        }),
+      );
     }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
   useEffect(() => setSelected(new Set()), [filters]);
 
   const changeFilter = <K extends keyof TransactionFilters>(key: K, value: TransactionFilters[K]) =>
-    setFilters((current) => {
-      const next = { ...current, page: 1 };
-      if (value === undefined || value === "") delete next[key];
-      else Object.assign(next, { [key]: value });
-      return next;
+    setState(
+      withFilters((current) => {
+        const next = { ...current, page: 1 };
+        if (value === undefined || value === "") delete next[key];
+        else Object.assign(next, { [key]: value });
+        return next;
+      }),
+    );
+  const changeDate = (key: "from" | "to", value: string) =>
+    setState((state) => applyDateFilter(state, key, value));
+  const changeQuick = (part: "year" | "month", value: number) =>
+    setState((state) => {
+      const next = { ...state.quick, [part]: value };
+      if (next.year === undefined || next.month === undefined) return { ...state, quick: next };
+      return {
+        quick: next,
+        filters: { ...state.filters, ...monthRange(next.year, next.month), page: 1 },
+      };
+    });
+  const clearQuick = () =>
+    setState((state) => {
+      const filters = { ...state.filters, page: 1 };
+      delete filters.from;
+      delete filters.to;
+      return { quick: {}, filters };
     });
   const sortBy = (sort: Sort) =>
-    setFilters((current) => ({
-      ...current,
-      sort,
-      order: current.sort === sort && current.order === "asc" ? "desc" : "asc",
-      page: 1,
-    }));
+    setState(
+      withFilters((current) => ({
+        ...current,
+        sort,
+        order: current.sort === sort && current.order === "asc" ? "desc" : "asc",
+        page: 1,
+      })),
+    );
   const allSelected = items.length > 0 && items.every((item) => selected.has(item.id));
   const toggleAll = (checked: boolean) =>
     setSelected(checked ? new Set(items.map((item) => item.id)) : new Set());
@@ -101,28 +168,27 @@ export function TransactionsPage() {
       return next;
     });
   const saveInline = async (id: string, input: { categoryId?: string; neutral?: boolean }) => {
-    setActionError("");
     try {
       await update.mutateAsync({ id, input });
-    } catch {
-      setActionError(
-        input.categoryId
-          ? "Não foi possível salvar a categoria"
-          : "Não foi possível salvar a alteração",
-      );
+      if (input.categoryId) notifySuccess("Categoria atualizada");
+    } catch (reason) {
+      notifyError(reason, "transaction");
     }
   };
   const applyBulk = async () => {
     if (!bulkCategory || selected.size === 0) return;
-    setActionError("");
+    const count = selected.size;
     try {
       await bulk.mutateAsync({ ids: [...selected], categoryId: bulkCategory });
       setSelected(new Set());
       setBulkCategory("");
-    } catch (reason) {
-      setActionError(
-        reason instanceof Error ? reason.message : "Não foi possível aplicar a categoria",
+      notifySuccess(
+        count === 1
+          ? "Categoria aplicada a 1 transação"
+          : `Categoria aplicada a ${count} transações`,
       );
+    } catch (reason) {
+      notifyError(reason, "transaction");
     }
   };
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 50));
@@ -152,19 +218,19 @@ export function TransactionsPage() {
         className="grid gap-4 border-b py-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
       >
         <Filter label="De" id="filter-from">
-          <Input
+          <DatePicker
             id="filter-from"
-            type="date"
             value={filters.from ?? ""}
-            onChange={(e) => changeFilter("from", e.target.value)}
+            disabled={quickActive}
+            onChange={(value) => changeDate("from", value)}
           />
         </Filter>
         <Filter label="Até" id="filter-to">
-          <Input
+          <DatePicker
             id="filter-to"
-            type="date"
             value={filters.to ?? ""}
-            onChange={(e) => changeFilter("to", e.target.value)}
+            disabled={quickActive}
+            onChange={(value) => changeDate("to", value)}
           />
         </Filter>
         <Filter label="Conta" id="filter-account">
@@ -215,11 +281,38 @@ export function TransactionsPage() {
             variant="outline"
             className="w-full"
             onClick={() => {
-              setFilters(baseFilters);
+              setState(initialState);
               setSearch("");
             }}
           >
             Limpar filtros
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 items-end gap-4 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto] lg:col-span-4 xl:col-span-3">
+          <Filter label="Mês" id="filter-quick-month">
+            <SimpleSelect
+              id="filter-quick-month"
+              value={quick.month === undefined ? "" : String(quick.month)}
+              placeholder="Selecione o mês"
+              onChange={(value) => changeQuick("month", Number(value))}
+              options={MONTH_NAMES.map((name, index) => [String(index + 1), name])}
+            />
+          </Filter>
+          <Filter label="Ano" id="filter-quick-year">
+            <SimpleSelect
+              id="filter-quick-year"
+              value={quick.year === undefined ? "" : String(quick.year)}
+              placeholder="Selecione o ano"
+              onChange={(value) => changeQuick("year", Number(value))}
+              options={yearOptions().map((year) => [String(year), String(year)])}
+            />
+          </Filter>
+          <Button
+            variant="outline"
+            disabled={quick.year === undefined && quick.month === undefined}
+            onClick={clearQuick}
+          >
+            Limpar mês
           </Button>
         </div>
         <div className="relative sm:col-span-2 lg:col-span-4 xl:col-span-7">
@@ -235,6 +328,14 @@ export function TransactionsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        {invalidPeriod && (
+          <p
+            role="alert"
+            className="text-sm text-destructive sm:col-span-2 lg:col-span-4 xl:col-span-7"
+          >
+            A data inicial deve ser anterior à final
+          </p>
+        )}
       </section>
       {selected.size > 0 && (
         <div className="my-4 flex flex-col gap-3 border-y bg-muted/40 px-4 py-3 sm:flex-row sm:items-center">
@@ -246,11 +347,6 @@ export function TransactionsPage() {
             Aplicar categoria
           </Button>
         </div>
-      )}
-      {actionError && (
-        <p role="alert" className="my-4 text-sm text-destructive">
-          {actionError}
-        </p>
       )}
       {isLoading && <p className="py-10 text-sm text-muted-foreground">Carregando transações…</p>}
       {isError && (
@@ -284,7 +380,6 @@ export function TransactionsPage() {
                   <TableHead>Conta</TableHead>
                   <Sortable label="Categoria" name="category" filters={filters} onSort={sortBy} />
                   <TableHead>Método de pagamento</TableHead>
-                  <TableHead>Tipo</TableHead>
                   <Sortable label="Valor" name="amount" filters={filters} onSort={sortBy} />
                   <TableHead>Neutra</TableHead>
                   <TableHead>Observações</TableHead>
@@ -340,10 +435,12 @@ export function TransactionsPage() {
               size="sm"
               disabled={data.page <= 1}
               onClick={() =>
-                setFilters((current) => ({
-                  ...current,
-                  page: Math.max(1, (current.page ?? 1) - 1),
-                }))
+                setState(
+                  withFilters((current) => ({
+                    ...current,
+                    page: Math.max(1, (current.page ?? 1) - 1),
+                  })),
+                )
               }
             >
               Anterior
@@ -353,7 +450,7 @@ export function TransactionsPage() {
               size="sm"
               disabled={data.page >= pages}
               onClick={() =>
-                setFilters((current) => ({ ...current, page: (current.page ?? 1) + 1 }))
+                setState(withFilters((current) => ({ ...current, page: (current.page ?? 1) + 1 })))
               }
             >
               Próxima
@@ -378,17 +475,17 @@ export function TransactionsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={async () => {
+              disabled={remove.isPending}
+              onClick={async (event) => {
+                // keep the dialog open when the delete fails, so the user can retry or cancel
+                event.preventDefault();
                 if (!deleting) return;
                 try {
                   await remove.mutateAsync(deleting.id);
                   setDeleting(undefined);
+                  notifySuccess("Transação excluída");
                 } catch (reason) {
-                  setActionError(
-                    reason instanceof Error
-                      ? reason.message
-                      : "Não foi possível excluir a transação",
-                  );
+                  notifyError(reason, "transaction");
                 }
               }}
             >
@@ -414,16 +511,18 @@ function SimpleSelect({
   value,
   onChange,
   options,
+  placeholder,
 }: {
   id: string;
   value: string;
   onChange: (value: string) => void;
   options: Array<[string, string]>;
+  placeholder?: string;
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger id={id}>
-        <SelectValue />
+        <SelectValue {...(placeholder ? { placeholder } : {})} />
       </SelectTrigger>
       <SelectContent>
         {options.map(([value, label]) => (
@@ -466,6 +565,16 @@ type RowProps = {
   onEdit: () => void;
   onDelete: () => void;
 };
+/** Account of a transaction: icon and color from the cached account list, plain nickname until it loads. */
+function TransactionAccount({
+  item,
+}: {
+  item: Pick<Transaction, "accountId" | "accountNickname">;
+}) {
+  const { byId, ready } = useAccountLookup();
+  const account = ready ? byId.get(item.accountId) : undefined;
+  return account ? <AccountLabel account={account} /> : <>{item.accountNickname}</>;
+}
 function TransactionRow({
   item,
   selected,
@@ -485,17 +594,27 @@ function TransactionRow({
         />
       </TableCell>
       <TableCell className="whitespace-nowrap">{formatDateLocal(item.occurredAt)}</TableCell>
-      <TableCell className="min-w-40 font-medium">{item.name}</TableCell>
-      <TableCell>{item.accountNickname}</TableCell>
+      <TableCell className="min-w-40">
+        <div className="font-medium">{item.name}</div>
+        {item.description && (
+          <div
+            data-testid="transaction-description"
+            className="max-w-xs truncate text-xs text-muted-foreground"
+            title={item.description}
+          >
+            {item.description}
+          </div>
+        )}
+      </TableCell>
+      <TableCell>
+        <TransactionAccount item={item} />
+      </TableCell>
       <TableCell className="min-w-48">
         <CategorySelect value={item.categoryId} onChange={onCategory} />
       </TableCell>
       <TableCell>{paymentMethodLabels[item.paymentMethod]}</TableCell>
-      <TableCell>{transactionTypeLabels[item.type]}</TableCell>
-      <TableCell
-        className={`whitespace-nowrap font-semibold ${item.type === "Expense" ? "text-destructive" : "text-primary"}`}
-      >
-        {item.type === "Expense" ? `-${formatBRL(item.amount)}` : formatBRL(item.amount)}
+      <TableCell className={amountClassName(item.type)}>
+        {formatSignedAmount(item.type, item.amount)}
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
@@ -539,25 +658,28 @@ function TransactionCard(props: RowProps) {
           />
           <div>
             <h2 className="font-semibold">{item.name}</h2>
-            <p className="text-sm text-muted-foreground">
-              {formatDateLocal(item.occurredAt)} · {item.accountNickname}
+            {item.description && (
+              <p
+                data-testid="transaction-description"
+                className="max-w-xs truncate text-xs text-muted-foreground"
+                title={item.description}
+              >
+                {item.description}
+              </p>
+            )}
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              {formatDateLocal(item.occurredAt)} · <TransactionAccount item={item} />
             </p>
           </div>
         </div>
-        <span
-          className={`font-semibold ${item.type === "Expense" ? "text-destructive" : "text-primary"}`}
-        >
-          {item.type === "Expense" ? `-${formatBRL(item.amount)}` : formatBRL(item.amount)}
+        <span className={amountClassName(item.type)}>
+          {formatSignedAmount(item.type, item.amount)}
         </span>
       </div>
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <div>
           <dt className="text-muted-foreground">Método</dt>
           <dd>{paymentMethodLabels[item.paymentMethod]}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Tipo</dt>
-          <dd>{transactionTypeLabels[item.type]}</dd>
         </div>
       </dl>
       <CategorySelect value={item.categoryId} onChange={props.onCategory} />

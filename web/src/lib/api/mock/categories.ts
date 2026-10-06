@@ -1,32 +1,34 @@
+import { DEFAULT_COLOR, isColorKey, type ColorKey } from "@/features/colors/palette";
 import type { Category } from "../types";
 import { mockApiError, type MockHandler } from "./index";
 import { categoryHasTransactions, reassignCategoryTransactions } from "./transactionRelations";
 
-const seed: Array<[string, string, boolean]> = [
-  ["Entertainment", "Entretenimento", false],
-  ["Food", "Alimentação", false],
-  ["Salaries", "Salários", false],
-  ["Healthcare", "Saúde", false],
-  ["Utilities", "Utilidades", false],
-  ["Unknown", "Desconhecida", false],
-  ["Transport", "Transporte", false],
-  ["Help", "Ajuda (a terceiros)", false],
-  ["PJ", "PJ", false],
-  ["Bills", "Contas", false],
-  ["Emergency", "Emergência", false],
-  ["Uncategorized", "Sem categoria", true],
-  ["Wishes", "Desejos", false],
-  ["Reversal", "Estorno (de compras)", true],
-  ["Shopping", "Compras", false],
-  ["Pets", "Pets", false],
-  ["Investments", "Investimentos", true],
+const seed: Array<[string, string, boolean, ColorKey]> = [
+  ["Entertainment", "Entretenimento", false, "purple-400"],
+  ["Food", "Alimentação", false, "orange-400"],
+  ["Salaries", "Salários", false, "emerald-400"],
+  ["Healthcare", "Saúde", false, "rose-400"],
+  ["Utilities", "Utilidades", false, "sky-400"],
+  ["Unknown", "Desconhecida", false, "zinc-400"],
+  ["Transport", "Transporte", false, "blue-400"],
+  ["Help", "Ajuda (a terceiros)", false, "pink-400"],
+  ["PJ", "PJ", false, "indigo-400"],
+  ["Bills", "Contas", false, "amber-400"],
+  ["Emergency", "Emergência", false, "red-400"],
+  ["Uncategorized", "Sem categoria", true, "slate-400"],
+  ["Wishes", "Desejos", false, "fuchsia-400"],
+  ["Reversal", "Estorno (de compras)", true, "teal-400"],
+  ["Shopping", "Compras", false, "lime-400"],
+  ["Pets", "Pets", false, "yellow-400"],
+  ["Investments", "Investimentos", true, "green-400"],
 ];
 
-let categories: Category[] = seed.map(([key, name, isSystem], index) => ({
+let categories: Category[] = seed.map(([key, name, isSystem, color], index) => ({
   id: `30000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   key,
   name,
   isSystem,
+  color,
 }));
 
 export function listMockCategories(): Category[] {
@@ -50,14 +52,29 @@ const validateName = (name: string, exceptId?: string) => {
   return clean;
 };
 
+const validateColor = (color: unknown): ColorKey | undefined => {
+  if (color === undefined) return undefined;
+  if (!isColorKey(color))
+    throw mockApiError("validation_error", "Escolha uma cor da paleta", 422, "color");
+  return color;
+};
+
 export const categoriesHandlers: MockHandler[] = [
   { method: "GET", path: "/categories", handle: () => categories.map((item) => ({ ...item })) },
   {
     method: "POST",
     path: "/categories",
     handle: ({ body }) => {
-      const name = validateName((body as { name: string }).name);
-      const category: Category = { id: crypto.randomUUID(), key: null, name, isSystem: false };
+      const input = body as { name: string; color?: unknown };
+      const name = validateName(input.name);
+      const color = validateColor(input.color);
+      const category: Category = {
+        id: crypto.randomUUID(),
+        key: null,
+        name,
+        isSystem: false,
+        color: color ?? DEFAULT_COLOR,
+      };
       categories = [...categories, category];
       return category;
     },
@@ -69,7 +86,10 @@ export const categoriesHandlers: MockHandler[] = [
       const id = path.split("/")[2] ?? "";
       const current = findCategory(id);
       if (current.isSystem) throw mockApiError("category_protected", "Categoria protegida", 403);
-      const updated = { ...current, name: validateName((body as { name: string }).name, id) };
+      const input = body as { name?: string; color?: unknown };
+      const name = input.name === undefined ? current.name : validateName(input.name, id);
+      const color = validateColor(input.color) ?? current.color;
+      const updated = { ...current, name, color };
       categories = categories.map((item) => (item.id === id ? updated : item));
       return updated;
     },

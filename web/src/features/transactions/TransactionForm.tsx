@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -22,28 +23,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { CategorySelect } from "@/features/categories/CategorySelect";
 import { useCategories } from "@/features/categories/hooks";
+import { fieldForError, messageForError } from "@/lib/api/errorMessages";
 import type {
   PaymentMethod,
   Transaction,
   TransactionInput,
   TransactionType,
 } from "@/lib/api/types";
+import { notifyError, notifySuccess } from "@/lib/notify";
 import { useCreateTransaction, useUpdateTransaction } from "./hooks";
-import { parseBRLToDecimal, toLocalDateInput } from "./utils";
+import { paymentMethodLabels } from "./labels";
+import { parseBRLToDecimal, todayLocal, toLocalDateInput } from "./utils";
 
-const paymentLabels: Record<PaymentMethod, string> = {
-  BankTransfer: "Transferência bancária",
-  Boleto: "Boleto",
-  Cash: "Dinheiro",
-  CreditCard: "Cartão de crédito",
-  DebitCard: "Cartão de débito",
-  NuPay: "NuPay",
-  PIX: "PIX",
-};
-const initial = {
+// A function, not a constant: "today" must be computed when the form opens, not when the module loads.
+const emptyForm = () => ({
   name: "",
   type: "Expense" as TransactionType,
-  date: new Date().toISOString().slice(0, 10),
+  date: todayLocal(),
   amount: "",
   accountId: "",
   categoryId: "",
@@ -51,14 +47,25 @@ const initial = {
   notes: "",
   receipt: "",
   neutral: false,
-};
+});
+
+const formFields = new Set([
+  "name",
+  "type",
+  "date",
+  "amount",
+  "accountId",
+  "paymentMethod",
+  "categoryId",
+  "receipt",
+]);
 
 type Props = { open: boolean; onOpenChange: (open: boolean) => void; transaction?: Transaction };
 export function TransactionForm({ open, onOpenChange, transaction }: Props) {
   const create = useCreateTransaction();
   const update = useUpdateTransaction();
   const { data: categories = [] } = useCategories();
-  const [form, setForm] = useState(initial);
+  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   useEffect(() => {
     if (!open) return;
@@ -77,7 +84,7 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
             receipt: transaction.receipt ?? "",
             neutral: transaction.neutral,
           }
-        : initial,
+        : emptyForm(),
     );
   }, [open, transaction]);
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -98,6 +105,8 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
     if (Object.keys(next).length || !amount) return;
     const fallbackCategory = categories.find((category) => category.key === "Uncategorized")?.id;
     const categoryId = form.categoryId || fallbackCategory;
+    const notes = form.notes.trim();
+    const receipt = form.receipt.trim();
     const input: TransactionInput = {
       name: form.name.trim(),
       type: form.type,
@@ -107,29 +116,25 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
       paymentMethod: form.paymentMethod,
       neutral: form.neutral,
       ...(categoryId ? { categoryId } : {}),
-      ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
-      ...(form.receipt.trim() ? { receipt: form.receipt.trim() } : {}),
+      ...(notes ? { notes } : {}),
+      ...(receipt ? { receipt } : {}),
     };
     try {
-      if (transaction) await update.mutateAsync({ id: transaction.id, input });
-      else await create.mutateAsync(input);
+      if (transaction) {
+        // PATCH only clears notes and receipt when they are sent as null
+        await update.mutateAsync({
+          id: transaction.id,
+          input: { ...input, notes: notes || null, receipt: receipt || null },
+        });
+      } else await create.mutateAsync(input);
       onOpenChange(false);
+      notifySuccess(transaction ? "Transação atualizada" : "Transação criada");
     } catch (reason) {
-      const field =
-        typeof reason === "object" && reason && "field" in reason ? String(reason.field) : "form";
-      const code =
-        typeof reason === "object" && reason && "code" in reason ? String(reason.code) : "";
+      notifyError(reason, "transaction");
+      const apiField = fieldForError(reason);
+      const field = apiField === "occurredAt" ? "date" : apiField;
       setErrors({
-        [field]:
-          code === "invalid_amount"
-            ? "Valor inválido"
-            : code === "invalid_account"
-              ? "Conta inválida"
-              : code === "invalid_receipt_url"
-                ? "URL inválida"
-                : reason instanceof Error
-                  ? reason.message
-                  : "Não foi possível salvar a transação",
+        [field && formFields.has(field) ? field : "form"]: messageForError(reason, "transaction"),
       });
     }
   };
@@ -139,7 +144,13 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{transaction ? "Editar transação" : "Nova transação"}</DialogTitle>
-          <DialogDescription>Preencha os dados do lançamento.</DialogDescription>
+          {transaction?.description ? (
+            <DialogDescription data-testid="transaction-description">
+              {transaction.description}
+            </DialogDescription>
+          ) : (
+            <DialogDescription>Preencha os dados do lançamento.</DialogDescription>
+          )}
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2" noValidate>
           <Field label="Nome" id="transaction-name" error={errors["name"]}>
@@ -164,11 +175,10 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
             </Select>
           </Field>
           <Field label="Data" id="transaction-date" error={errors["date"]}>
-            <Input
+            <DatePicker
               id="transaction-date"
-              type="date"
               value={form.date}
-              onChange={(e) => set("date", e.target.value)}
+              onChange={(value) => set("date", value)}
             />
           </Field>
           <Field label="Valor" id="transaction-amount" error={errors["amount"]}>
@@ -200,7 +210,7 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(paymentLabels).map(([value, label]) => (
+                {Object.entries(paymentMethodLabels).map(([value, label]) => (
                   <SelectItem key={value} value={value}>
                     {label}
                   </SelectItem>
@@ -208,7 +218,7 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Categoria" id="transaction-category">
+          <Field label="Categoria" id="transaction-category" error={errors["categoryId"]}>
             <CategorySelect
               id="transaction-category"
               value={

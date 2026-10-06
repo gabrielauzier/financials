@@ -114,6 +114,10 @@ Detalhes e ações em `features/auth/lovable.md` (seção "Desvios registrados")
 - **`typecheck` com `tsgo`**: ainda aberto desde o prompt 1.
 - **Mocks de categorias em uso são fixos**: o prompt de `transactions` deve ligar a exclusão com reatribuição aos mocks de transações.
 
+### Integração com a API real (2026-10-05)
+
+Front e API foram integrados localmente e testados no navegador (ver `.specs/INTEGRACAO-FRONT-BACK.md`, seção 8). Mensagem de correção ao Lovable (D1, D2, D7, testes de UI do extrato) **pendente de envio**, no mesmo arquivo. O front roda na porta 8080 e usa `web/.env.local`.
+
 ### Correções enviadas e pendentes
 
 | Prompt | Mensagem | Situação |
@@ -147,9 +151,19 @@ Detalhes e ações em `features/auth/lovable.md` (seção "Desvios registrados")
 | Receitas com `text-primary` em vez de verde | v3 | Baixa |
 | `AccountsPage` sem tratamento de erro ao ativar/desativar; lacunas de validação no mock de contas | v2 | Baixa |
 | Decisões D3 (TanStack Start/SSR) e D4 (projeto Supabase do Lovable é o da API) | prompt 1 | D4 relevante para o backend |
+| **Contrato 400 x 422 em contas e categorias**: a API responde 400 `validation_error` para corpo malformado (campo ausente, tipo errado) e 422 só para as regras semânticas; o contrato do prompt 2 diz 422 com `field`. O front já cai na mensagem genérica, mas conferir na integração e ajustar o contrato ou o tratamento de erro | backend accounts-categories | Baixa |
+| **`web/src/features/auth/emailExists.ts` precisa de um terceiro critério** para detectar e-mail já cadastrado e não confirmado: `confirmation_sent_at - created_at >= 1000 ms` (hoje esse caso mostra "Verifique seu e-mail" em vez de "E-mail já cadastrado"). O caso de e-mail confirmado já funciona (`user_already_exists`). Achado do backend (T13) | backend auth | Média |
 
 ### Como retomar
 1. Aplicar qualquer zip novo com `.lovable/sync-codebase.sh` (primeiro `--dry-run`).
 2. Reenviar a mensagem pedindo os testes de UI do extrato e confirmar no código que foram entregues.
 3. Rodar o prompt 4 (`import`); antes, conferir que o mock de importação usa `listMockAccounts`, `listMockCategories` e `transactionRelations`.
 4. Com as APIs prontas, retirar as áreas de `VITE_MOCK_AREAS` na ordem da tabela "Troca de mocks pela API real" e repetir o checklist de cada prompt contra a API real.
+
+## Mudança de processo (2026-10-05): o front passa a ser feito aqui
+
+A partir da feature `import`, as tasks de interface (fases "Web" dos `tasks.md`) voltam a ser implementadas diretamente em `web/`, junto com as de backend, com o mesmo ciclo (testes, gate, commit por task, Verifier). O Lovable deixa de ser o caminho de desenvolvimento do front:
+
+- Os arquivos `features/*/lovable.md` passam a servir só como **especificação de comportamento e contrato** da interface; não há mais novos zips nem `sync-codebase.sh` no fluxo (o script e os backups ficam como histórico).
+- Os gates do front são `yarn --cwd web test`, `typecheck` e `lint`; a verificação inclui conferir a tela no navegador contra a API real.
+- As pendências do front listadas em `INTEGRACAO-FRONT-BACK.md` (D1, D2, D7, testes de UI do extrato, erro em contas) passam a ser tarefas minhas e entram em ciclo próprio.

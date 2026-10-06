@@ -56,6 +56,32 @@ describe("cadastro", () => {
     fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
     expect(await screen.findByText("E-mail já cadastrado")).toBeInTheDocument();
   });
+  it("mostra e-mail já cadastrado quando o usuário não confirmado volta como novo", async () => {
+    signUp.mockResolvedValueOnce({
+      data: {
+        user: {
+          identities: [{}],
+          created_at: "2026-10-05T10:00:00.000Z",
+          confirmation_sent_at: "2026-10-05T10:03:00.000Z",
+        },
+        session: null,
+      },
+      error: null,
+    });
+    renderWithRouter(<SignupForm />);
+    for (const [label, value] of [
+      ["Nome", "Ana"],
+      ["Apelido", "Ani"],
+      ["E-mail", "ana@example.com"],
+      ["Senha", "12345678"],
+    ] as const)
+      fireEvent.change(await screen.findByLabelText(label), { target: { value } });
+    fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
+    const message = await screen.findByText("E-mail já cadastrado");
+    expect(message).toBeInTheDocument();
+    expect(screen.getByLabelText("E-mail")).toHaveAccessibleDescription("E-mail já cadastrado");
+    expect(screen.queryByText("Verifique seu e-mail")).not.toBeInTheDocument();
+  });
   it("mostra falha de confirmação e sucesso", async () => {
     signUp
       .mockResolvedValueOnce({ data: { user: null, session: null }, error: { code: "mail_error" } })

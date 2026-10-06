@@ -101,12 +101,12 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Amount `0`, negative and 3-decimal values are rejected by the table
-- [ ] A transaction cannot reference another user's account or category
-- [ ] Invalid type or payment method is rejected
-- [ ] RLS isolates rows between two users (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Amount `0`, negative and 3-decimal values are rejected by the table
+- [x] A transaction cannot reference another user's account or category
+- [x] Invalid type or payment method is rejected
+- [x] RLS isolates rows between two users (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -130,11 +130,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Valid amounts pass, including `0.01` and 12-digit integers
-- [ ] Zero, negative, 3 decimals, 13 integer digits and non-numeric input are rejected
-- [ ] `http` and `https` URLs pass; `ftp`, `javascript:` and plain text are rejected (6 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid amounts pass, including `0.01` and 12-digit integers
+- [x] Zero, negative, 3 decimals, 13 integer digits and non-numeric input are rejected
+- [x] `http` and `https` URLs pass; `ftp`, `javascript:` and plain text are rejected (6 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -158,11 +158,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Valid payload returns 201 with a uuid and category Sem categoria when none is given
-- [ ] Invalid amount, empty required field, inactive account, other user's account and invalid receipt URL are rejected with 422
-- [ ] `identifier` stays empty for manual rows (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid payload returns 201 with a uuid and category Sem categoria when none is given
+- [x] Invalid amount, empty required field, inactive account, other user's account and invalid receipt URL are rejected with 422
+- [x] `identifier` stays empty for manual rows (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -188,11 +188,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] 120 rows return page 1 with 50 items and `total` 120; page 3 has 20
-- [ ] Default order is date descending and stable across pages
-- [ ] Another user's rows never appear (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] 120 rows return page 1 with 50 items and `total` 120; page 3 has 20
+- [x] Default order is date descending and stable across pages
+- [x] Another user's rows never appear (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -216,11 +216,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Each filter alone and combined returns only matching rows
-- [ ] `from`/`to` include the whole local day at both edges in `America/Sao_Paulo`
-- [ ] `neutral=true` and `neutral=false` filter correctly (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Each filter alone and combined returns only matching rows
+- [x] `from`/`to` include the whole local day at both edges in `America/Sao_Paulo`
+- [x] `neutral=true` and `neutral=false` filter correctly (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -244,10 +244,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] `cafe` matches `Café Central` and `CAFE`
-- [ ] Non-matching text returns an empty page (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `cafe` matches `Café Central` and `CAFE`
+- [x] Non-matching text returns an empty page (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -271,10 +271,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Sorting by each column orders the entire set, not only the page
-- [ ] Invalid `sort` returns 422 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Sorting by each column orders the entire set, not only the page
+- [x] Invalid `sort` returns 422 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -300,12 +300,12 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Edited fields persist and the others are unchanged
-- [ ] Same validations as create apply
-- [ ] Toggling `neutral` persists
-- [ ] Unknown and other user's id return 404; edits on an inactive account's transaction are allowed (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Edited fields persist and the others are unchanged
+- [x] Same validations as create apply
+- [x] Toggling `neutral` persists
+- [x] Unknown and other user's id return 404; edits on an inactive account's transaction are allowed (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -329,10 +329,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Existing row is removed and no longer listed
-- [ ] Unknown and other user's id return 404 (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Existing row is removed and no longer listed
+- [x] Unknown and other user's id return 404 (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -356,11 +356,11 @@ T20 → T21
 
 **Done when**:
 
-- [ ] All listed rows get the category in one operation
-- [ ] One unknown or foreign id returns 404 and no row changes
-- [ ] Unknown category returns 422 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] All listed rows get the category in one operation
+- [x] One unknown or foreign id returns 404 and no row changes
+- [x] Unknown category returns 404 `not_found` on `categoryId`, consistent with create and edit (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -384,10 +384,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] Deleting a category with `reassignTo` moves its transactions to the destination and the table shows the destination name
-- [ ] Failure keeps rows unchanged (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Deleting a category with `reassignTo` moves its transactions to the destination and the table shows the destination name
+- [x] Failure keeps rows unchanged (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -411,10 +411,10 @@ T20 → T21
 
 **Done when**:
 
-- [ ] User B gets 404 on every mutation of user A's rows
-- [ ] User B's list never includes user A's rows (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] User B gets 404 on every mutation of user A's rows
+- [x] User B's list never includes user A's rows (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full

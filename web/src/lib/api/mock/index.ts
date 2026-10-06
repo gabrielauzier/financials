@@ -10,7 +10,7 @@ export type ApiArea =
   | "accounts"
   | "categories"
   | "transactions"
-  | "import"
+  | "imports"
   | "creditExpenses"
   | "dashboard"
   | "investmentReturns";
@@ -30,7 +30,7 @@ const pathAreaMap: Record<string, ApiArea> = {
   accounts: "accounts",
   categories: "categories",
   transactions: "transactions",
-  import: "import",
+  imports: "imports",
   "credit-expenses": "creditExpenses",
   dashboard: "dashboard",
   "investment-returns": "investmentReturns",

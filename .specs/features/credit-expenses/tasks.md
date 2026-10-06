@@ -56,8 +56,9 @@ T4 → T7
 T5 → T7
 ```
 
-### Phase 2: Web: credit expenses (substituída pelo Lovable, ver lovable.md)
+### Phase 2: Web: credit expenses
 ```
+T13 → T8
 T8 → T9
 T8 → T10
 T8 → T11
@@ -87,11 +88,11 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Each check constraint rejects its invalid value
-- [ ] Cross-user account/category references are rejected
-- [ ] RLS isolates rows (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Each check constraint rejects its invalid value
+- [x] Cross-user account/category references are rejected
+- [x] RLS isolates rows (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -115,10 +116,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Valid payload creates the row with `paidAmount` 0
-- [ ] Total ≤ 0, paid out of range, day outside 1-31, invalid status and inactive account return 422 (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid payload creates the row with `paidAmount` 0
+- [x] Total ≤ 0, paid out of range, day outside 1-31, invalid status and inactive account return 422 (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -142,10 +143,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] `remainingAmount` equals total minus paid (R$ 600,00 total, R$ 200,00 paid -> 400.00)
-- [ ] `status` filter returns only that status for each of the 5 statuses (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `remainingAmount` equals total minus paid (R$ 600,00 total, R$ 200,00 paid -> 400.00)
+- [x] `status` filter returns only that status for each of the 5 statuses (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -169,11 +170,11 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Any status can be changed to any other status
-- [ ] Total below `paid_amount` returns 422 `invalid_paid_amount`
-- [ ] Editing one field preserves the others and does not touch status or paid (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Any status can be changed to any other status
+- [x] Total below `paid_amount` returns 422 `invalid_paid_amount`
+- [x] Editing one field preserves the others and does not touch status or paid (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -197,10 +198,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Existing row is deleted
-- [ ] Unknown and foreign ids return 404 (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Existing row is deleted
+- [x] Unknown and foreign ids return 404 (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -224,9 +225,9 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Deleting a category with `reassignTo` moves its credit expenses (1 test)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Deleting a category with `reassignTo` moves its credit expenses (1 test)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -250,9 +251,9 @@ T11 → T12
 
 **Done when**:
 
-- [ ] User B gets 404 on every mutation of user A's rows and never lists them (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] User B gets 404 on every mutation of user A's rows and never lists them (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -261,12 +262,39 @@ T11 → T12
 
 ---
 
-### Phase 2: Web: credit expenses (substituída pelo Lovable, ver lovable.md)
+### Phase 2: Web: credit expenses
+### T13: Add the credit expense error messages
+
+**What**: Extend the shared error module with the `creditExpense` context and the codes `invalid_paid_amount` ("Valor pago inválido"), `invalid_day` ("Dia inválido (use de 1 a 31)"), `invalid_status` ("Status inválido"); in that context `invalid_amount` reads "Valor total inválido". Existing contexts and texts stay unchanged.
+**Where**: `web/src/lib/api/errorMessages.ts`
+**Depends on**: None
+**Reuses**: existing `messageForError` and its tests
+**Requirement**: CARD-01
+
+**Tools**:
+
+- MCP: NONE
+- Skill: react-best-practices
+
+**Done when**:
+
+- [x] Each new code returns its Portuguese text and `invalid_amount` reads "Valor total inválido" only in the `creditExpense` context
+- [x] The API `message` is still never returned and existing codes and contexts are unchanged (4 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(credit-expenses): add the credit expense error messages`
+
+---
+
 ### T8: Create the credit expenses hooks
 
 **What**: `useCreditExpenses({ status })` and mutations with cache invalidation.
 **Where**: `web/src/features/creditExpenses/hooks.ts`
-**Depends on**: None
+**Depends on**: T13
 **Reuses**: -
 **Requirement**: CARD-01
 
@@ -277,10 +305,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Hooks call the endpoints with the status filter
-- [ ] Mutations invalidate the list (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Hooks call the endpoints with the status filter
+- [x] Mutations invalidate the list (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -304,10 +332,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Shows remaining amount per row
-- [ ] Status filter emits the chosen status (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Shows remaining amount per row
+- [x] Status filter emits the chosen status (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -331,10 +359,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Invalid total, paid and day show their messages
-- [ ] Valid data submits (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Invalid total, paid and day show their messages
+- [x] Valid data submits (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -358,10 +386,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] All 5 statuses are offered from any current status
-- [ ] Changing the status calls the update (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] All 5 statuses are offered from any current status
+- [x] Changing the status calls the update (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -372,7 +400,7 @@ T11 → T12
 
 ### T12: Wire the credit expenses page
 
-**What**: Page composing table, form dialog, status select and delete confirmation.
+**What**: Page composing table, form dialog, status select and delete confirmation; the `/cartao` route renders it in place of the placeholder, inside `RequireAuth` and `AppLayout`.
 **Where**: `web/src/features/creditExpenses/CreditExpensesPage.tsx`
 **Depends on**: T9, T10, T11
 **Reuses**: -
@@ -385,9 +413,10 @@ T11 → T12
 
 **Done when**:
 
-- [ ] Create, edit, status change and delete work with a mocked API (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Create, edit, status change and delete work with a mocked API
+- [x] `web/src/routes/cartao.tsx` renders the page (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

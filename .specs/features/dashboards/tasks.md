@@ -9,7 +9,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/dashboards/design.md`
-**Status**: Draft
+**Status**: Complete
+
+**Contract**: the wire contract of the endpoints is the one in `lovable.md` ("Contrato da API"): wrapped responses (`{ points }`, `{ items }`), `categoryName`, `accountNickname`, `invalid_period` (422). Where `design.md` differs, `lovable.md` wins. Web tasks T14-T20 are implemented directly in `web/` (Lovable is not the development path anymore); `lovable.md` stays the behavior spec for the UI.
 
 **Feature prerequisites**: auth, accounts-categories, transactions, import and credit-expenses complete.
 
@@ -64,7 +66,7 @@ T10 → T13
 T11 → T13
 ```
 
-### Phase 4: Web: dashboard (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: dashboard
 ```
 T14 → T20
 T15 → T20
@@ -95,11 +97,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Amount 0 is rejected by the table
-- [ ] Another user's account cannot be referenced
-- [ ] RLS isolates rows (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Amount 0 is rejected by the table
+- [x] Another user's account cannot be referenced
+- [x] RLS isolates rows (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -123,11 +125,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Fixed dataset with one row of each special case yields exactly the spec totals: neutral, CreditCard, Investments, Reversal Income (abates expense), Reversal Expense (normal expense), future-dated, inactive-account rows
-- [ ] Income and expense totals exclude each special case as specified
-- [ ] Net value counts the Reversal as positive and the invoice payment as expense (6 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Fixed dataset with one row of each special case yields exactly the spec totals: neutral, CreditCard, Investments, Reversal Income (abates expense), Reversal Expense (normal expense), future-dated, inactive-account rows
+- [x] Income and expense totals exclude each special case as specified
+- [x] Net value counts the Reversal as positive and the invoice payment as expense (6 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -151,11 +153,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Window is 30 days ending today inclusive in `America/Sao_Paulo` and in `UTC`
-- [ ] Previous window is the 30 days immediately before
-- [ ] Month list has the current month plus 11 earlier, crossing year boundaries (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Window is 30 days ending today inclusive in `America/Sao_Paulo` and in `UTC`
+- [x] Previous window is the 30 days immediately before
+- [x] Month list has the current month plus 11 earlier, crossing year boundaries (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -181,11 +183,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] R$ 100 and R$ 50 in the window and R$ 100 before gives total 150.00 and +50%
-- [ ] Previous total zero returns `changePct` null
-- [ ] No expenses returns 0.00 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] R$ 100 and R$ 50 in the window and R$ 100 before gives total 150.00 and +50%
+- [x] Previous total zero returns `changePct` null
+- [x] No expenses returns 0.00 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -209,11 +211,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Transactions in 3 months leave the other 9 at 0.00
-- [ ] Balance equals income minus expense each month
-- [ ] A transaction at 23:30 local on the last day of a month belongs to that month (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Transactions in 3 months leave the other 9 at 0.00
+- [x] Balance equals income minus expense each month
+- [x] A transaction at 23:30 local on the last day of a month belongs to that month (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -237,11 +239,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Sum of all rows equals the total expense for the same period
-- [ ] Estorno appears as a negative row
-- [ ] Default period is the current local month; empty period returns an empty list; `from > to` returns 422 (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Sum of all rows equals the total expense for the same period
+- [x] Estorno appears as a negative row
+- [x] Default period is the current local month; empty period returns an empty list; `from > to` returns 422 (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -265,12 +267,12 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Income 1000.00, expense 300.00 and return 50.00 give 750.00
-- [ ] Series has one point per month with cumulative values, no gaps
-- [ ] Invoice payment counts as expense; Estorno counts positive; Investments, neutral and CreditCard rows do not move the value
-- [ ] No data returns 0.00 and an empty series (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Income 1000.00, expense 300.00 and return 50.00 give 750.00
+- [x] Series has one point per month with cumulative values, no gaps
+- [x] Invoice payment counts as expense; Estorno counts positive; Investments, neutral and CreditCard rows do not move the value
+- [x] No data returns 0.00 and an empty series (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -294,12 +296,12 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Two CreditCard rows in Alimentação sum under that category
-- [ ] Credit expenses show total minus paid for Active, Once and ToCancel only
-- [ ] Creating a credit expense and CreditCard rows leaves last-30-days, trend, categories and net worth unchanged (CARD-05)
-- [ ] Empty period returns empty lists (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Two CreditCard rows in Alimentação sum under that category
+- [x] Credit expenses show total minus paid for Active, Once and ToCancel only
+- [x] Creating a credit expense and CreditCard rows leaves last-30-days, trend, categories and net worth unchanged (CARD-05)
+- [x] Empty period returns empty lists (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -325,10 +327,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Positive and negative amounts are created
-- [ ] Zero, 3 decimals and foreign account return 422 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Positive and negative amounts are created
+- [x] Zero, 3 decimals and foreign account return 422 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -352,10 +354,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Rows are ordered by date descending and `lastDate` is the newest date
-- [ ] Empty list returns `lastDate` null (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Rows are ordered by date descending and `lastDate` is the newest date
+- [x] Empty list returns `lastDate` null (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -379,11 +381,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Edit persists and net worth reflects it
-- [ ] Delete removes the row and net worth reflects it
-- [ ] Foreign and unknown ids return 404 (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Edit persists and net worth reflects it
+- [x] Delete removes the row and net worth reflects it
+- [x] Foreign and unknown ids return 404 (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -407,10 +409,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Guard passes on the current tree
-- [ ] Guard fails when a sample file with a duplicated rule is introduced in a temporary directory (2 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Guard passes on the current tree
+- [x] Guard fails when a sample file with a duplicated rule is introduced in a temporary directory (2 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -434,10 +436,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] User B's dashboards never include user A's data
-- [ ] User B gets 404 on user A's investment returns (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] User B's dashboards never include user A's data
+- [x] User B gets 404 on user A's investment returns (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -446,7 +448,8 @@ T19 → T20
 
 ---
 
-### Phase 4: Web: dashboard (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: dashboard
+
 ### T14: Build the last 30 days card
 
 **What**: Total, variation percent and the 'sem base de comparação' state.
@@ -462,11 +465,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Shows total and variation
-- [ ] Null variation shows 'sem base de comparação'
-- [ ] Zero total shows R$ 0,00 (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Shows total and variation
+- [x] Null variation shows 'sem base de comparação'
+- [x] Zero total shows R$ 0,00 (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -490,10 +493,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Renders 12 months with zero months
-- [ ] Shows income, expense and balance series (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Renders 12 months with zero months
+- [x] Shows income, expense and balance series (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -517,11 +520,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Changing the period requests the new range
-- [ ] Negative Estorno renders as a negative value
-- [ ] Empty state renders (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Changing the period requests the new range
+- [x] Negative Estorno renders as a negative value
+- [x] Empty state renders (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -545,10 +548,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Shows the current value and the series
-- [ ] Empty data shows R$ 0,00 and the empty state (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Shows the current value and the series
+- [x] Empty data shows R$ 0,00 and the empty state (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -572,10 +575,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Both sections render with totals
-- [ ] Empty period shows the empty state (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Both sections render with totals
+- [x] Empty period shows the empty state (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -599,11 +602,11 @@ T19 → T20
 
 **Done when**:
 
-- [ ] Create and edit validate non-zero amount
-- [ ] Last entry older than 30 days is highlighted with its date
-- [ ] Delete removes the row (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Create and edit validate non-zero amount
+- [x] Last entry older than 30 days is highlighted with its date
+- [x] Delete removes the row (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -627,10 +630,10 @@ T19 → T20
 
 **Done when**:
 
-- [ ] All panels render from a mocked API
-- [ ] No data renders every panel at R$ 0,00 with empty states (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] All panels render from a mocked API
+- [x] No data renders every panel at R$ 0,00 with empty states (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

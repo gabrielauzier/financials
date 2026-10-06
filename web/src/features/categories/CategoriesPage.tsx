@@ -23,23 +23,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ColorPicker } from "@/features/colors/ColorPicker";
+import { DEFAULT_COLOR, type ColorKey } from "@/features/colors/palette";
+import { fieldForError, messageForError } from "@/lib/api/errorMessages";
 import type { Category } from "@/lib/api/types";
+import { CategoryBadge } from "./CategoryBadge";
 import { CategorySelect } from "./CategorySelect";
-import { useCategories, useCreateCategory, useDeleteCategory, useRenameCategory } from "./hooks";
+import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from "./hooks";
 
 const nameSchema = z.string().trim().min(1).max(100);
+const COLOR_ERROR = "Escolha uma cor da paleta.";
 const getCode = (reason: unknown) =>
   typeof reason === "object" && reason && "code" in reason ? String(reason.code) : "";
 
 export function CategoriesPage() {
   const { data = [], isLoading, isError, refetch } = useCategories();
   const create = useCreateCategory();
-  const rename = useRenameCategory();
+  const update = useUpdateCategory();
   const remove = useDeleteCategory();
   const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState<ColorKey>(DEFAULT_COLOR);
   const [createError, setCreateError] = useState("");
   const [editing, setEditing] = useState<Category>();
   const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState<ColorKey>(DEFAULT_COLOR);
   const [editError, setEditError] = useState("");
   const [deleting, setDeleting] = useState<Category>();
   const [reassigning, setReassigning] = useState<Category>();
@@ -54,19 +61,16 @@ export function CategoriesPage() {
       return;
     }
     try {
-      await create.mutateAsync(parsed.data);
+      await create.mutateAsync({ name: parsed.data, color: newColor });
       setNewName("");
+      setNewColor(DEFAULT_COLOR);
     } catch (reason) {
       setCreateError(
-        getCode(reason) === "duplicate_name"
-          ? "Já existe uma categoria com esse nome"
-          : reason instanceof Error
-            ? reason.message
-            : "Não foi possível criar a categoria",
+        fieldForError(reason) === "color" ? COLOR_ERROR : messageForError(reason, "category"),
       );
     }
   };
-  const submitRename = async (event: FormEvent) => {
+  const submitUpdate = async (event: FormEvent) => {
     event.preventDefault();
     if (!editing) return;
     setEditError("");
@@ -76,18 +80,11 @@ export function CategoriesPage() {
       return;
     }
     try {
-      await rename.mutateAsync({ id: editing.id, name: parsed.data });
+      await update.mutateAsync({ id: editing.id, name: parsed.data, color: editColor });
       setEditing(undefined);
     } catch (reason) {
-      const code = getCode(reason);
       setEditError(
-        code === "duplicate_name"
-          ? "Já existe uma categoria com esse nome"
-          : code === "category_protected"
-            ? "Categoria protegida"
-            : reason instanceof Error
-              ? reason.message
-              : "Não foi possível renomear a categoria",
+        fieldForError(reason) === "color" ? COLOR_ERROR : messageForError(reason, "category"),
       );
     }
   };
@@ -103,10 +100,7 @@ export function CategoriesPage() {
       if (getCode(reason) === "reassign_required") {
         setDestination(undefined);
         setReassigning(category);
-      } else
-        setDeleteError(
-          reason instanceof Error ? reason.message : "Não foi possível excluir a categoria",
-        );
+      } else setDeleteError(messageForError(reason, "category"));
     }
   };
   const confirmReassignment = async () => {
@@ -117,9 +111,7 @@ export function CategoriesPage() {
       setReassigning(undefined);
       setDestination(undefined);
     } catch (reason) {
-      setDeleteError(
-        reason instanceof Error ? reason.message : "Não foi possível excluir a categoria",
-      );
+      setDeleteError(messageForError(reason, "category"));
     }
   };
   return (
@@ -156,6 +148,10 @@ export function CategoriesPage() {
               </p>
             )}
           </div>
+          <div className="space-y-2 sm:w-52">
+            <Label htmlFor="new-category-color">Cor</Label>
+            <ColorPicker id="new-category-color" value={newColor} onChange={setNewColor} />
+          </div>
           <Button className="sm:mt-7" disabled={create.isPending}>
             <Plus />
             {create.isPending ? "Criando…" : "Nova categoria"}
@@ -184,7 +180,7 @@ export function CategoriesPage() {
               >
                 {editing?.id === category.id ? (
                   <form
-                    onSubmit={submitRename}
+                    onSubmit={submitUpdate}
                     className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start"
                     noValidate
                   >
@@ -213,8 +209,18 @@ export function CategoriesPage() {
                         </p>
                       )}
                     </div>
+                    <div className="sm:w-52">
+                      <Label htmlFor={`category-color-${category.id}`} className="sr-only">
+                        Cor da categoria
+                      </Label>
+                      <ColorPicker
+                        id={`category-color-${category.id}`}
+                        value={editColor}
+                        onChange={setEditColor}
+                      />
+                    </div>
                     <div className="flex gap-1">
-                      <Button size="icon" aria-label="Salvar nome">
+                      <Button size="icon" aria-label="Salvar categoria">
                         <Check />
                       </Button>
                       <Button
@@ -231,7 +237,7 @@ export function CategoriesPage() {
                 ) : (
                   <>
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-medium">{category.name}</span>
+                      <CategoryBadge name={category.name} color={category.color} />
                       {category.isSystem && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -254,6 +260,7 @@ export function CategoriesPage() {
                           onClick={() => {
                             setEditing(category);
                             setEditName(category.name);
+                            setEditColor(category.color);
                             setEditError("");
                           }}
                         >

@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AccountLabel } from "./AccountLabel";
 import { useAccounts } from "./hooks";
 
 type AccountSelectProps = {
@@ -31,8 +32,7 @@ export function AccountSelect({
       <SelectContent>
         {data.map((account) => (
           <SelectItem key={account.id} value={account.id}>
-            {account.nickname}
-            {!account.active ? " (inativa)" : ""}
+            <AccountLabel account={account} showInactive />
           </SelectItem>
         ))}
       </SelectContent>

@@ -93,10 +93,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `pnpm -C api typecheck`, `lint` and `test` scripts exist and run clean on an empty suite
-- [ ] Scripts `test:unit` (`src/**/*.test.ts`) and `test:int` (`test/**/*.int.test.ts`) are separate
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `pnpm -C api typecheck`, `lint` and `test` scripts exist and run clean on an empty suite
+- [x] Scripts `test:unit` (`src/**/*.test.ts`) and `test:int` (`test/**/*.int.test.ts`) are separate
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build
@@ -120,10 +120,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `GET /health` returns 200 with `{ status: 'ok' }` without a token
-- [ ] `buildApp()` can be called repeatedly in tests without port binding (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `GET /health` returns 200 with `{ status: 'ok' }` without a token
+- [x] `buildApp()` can be called repeatedly in tests without port binding (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -147,11 +147,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `AppError` produces the documented status and body
-- [ ] Validation failures expose `field`
-- [ ] Unexpected errors return 500 `internal_error` with no stack in the body (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `AppError` produces the documented status and body
+- [x] Validation failures expose `field`
+- [x] Unexpected errors return 500 `internal_error` with no stack in the body (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -175,11 +175,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Missing header yields `America/Sao_Paulo`
-- [ ] Valid zone is exposed on `request.tz`
-- [ ] Invalid zone yields 400 `invalid_timezone` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Missing header yields `America/Sao_Paulo`
+- [x] Valid zone is exposed on `request.tz`
+- [x] Invalid zone yields 400 `invalid_timezone` (3 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -203,11 +203,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `supabase start` brings up Postgres, Auth and Storage locally
-- [ ] `config.toml` has email confirmation enabled
-- [ ] Root README snippet documents the local stack commands
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `supabase start` brings up Postgres, Auth and Storage locally
+- [x] `config.toml` has email confirmation enabled
+- [x] Root README snippet documents the local stack commands
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build
@@ -218,7 +218,7 @@ T14 → T20
 
 ### T6: Create the integration test helpers
 
-**What**: Helpers to connect as admin, create a confirmed test user, mint an HS256 JWT for that user with the local secret, and clean up.
+**What**: Helpers to connect as admin, create a confirmed test user, obtain a real access token for that user by signing in through GoTrue, and clean up. (Finding: local GoTrue signs user tokens with ES256 published at `/auth/v1/.well-known/jwks.json`; the HS256 `JWT_SECRET` signs only the anon and service_role API keys, so a user token cannot be minted locally.)
 **Where**: `api/test/helpers/db.ts`
 **Depends on**: T1, T5
 **Reuses**: -
@@ -231,11 +231,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `createTestUser()` returns `{ id, token }` for a user present in `auth.users`
-- [ ] Two calls produce two distinct users
-- [ ] Cleanup removes created users (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `createTestUser()` returns `{ id, token }` for a user present in `auth.users`
+- [x] Two calls produce two distinct users
+- [x] Cleanup removes created users (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -261,11 +261,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Creating an `auth.users` row creates a `profiles` row with name and nickname
-- [ ] A user reads only their own profile; another user reads none
-- [ ] `handle_new_user` uses `set search_path = public` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Creating an `auth.users` row creates a `profiles` row with name and nickname
+- [x] A user reads only their own profile; another user reads none
+- [x] `handle_new_user` uses `set search_path = public` (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -289,11 +289,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Inside `withUser`, `auth.uid()` equals the token subject and the role is `authenticated`
-- [ ] Two consecutive `withUser` calls for different users never see each other's claims (no leakage)
-- [ ] A thrown error rolls the transaction back (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Inside `withUser`, `auth.uid()` equals the token subject and the role is `authenticated`
+- [x] Two consecutive `withUser` calls for different users never see each other's claims (no leakage)
+- [x] A thrown error rolls the transaction back (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -304,7 +304,7 @@ T14 → T20
 
 ### T9: Implement JWT verification
 
-**What**: `verifyToken(token)` validates signature and expiry with `jose`: remote JWKS mode and HS256 secret mode selected by config; returns claims with `sub`.
+**What**: `verifyToken(token)` validates signature and expiry with `jose`: remote JWKS mode (primary; the local stack and new Supabase projects publish ES256 keys at `<SUPABASE_URL>/auth/v1/.well-known/jwks.json`) and an HS256 secret mode kept as a config fallback for legacy projects; returns claims with `sub`.
 **Where**: `api/src/plugins/auth.ts`
 **Depends on**: T2, T3
 **Reuses**: -
@@ -317,12 +317,12 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Valid HS256 token returns claims
-- [ ] Expired token and bad-signature token are rejected
-- [ ] JWKS mode accepts a token signed by a locally generated key set
-- [ ] Missing `sub` is rejected (5 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Valid HS256 token returns claims
+- [x] Expired token and bad-signature token are rejected
+- [x] JWKS mode accepts a token signed by a locally generated key set
+- [x] Missing `sub` is rejected (5 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -346,11 +346,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Protected sample route returns 401 without token, with malformed token and with expired token
-- [ ] Valid token returns 200 and `request.user.id` equals the subject
-- [ ] `/health` stays public (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Protected sample route returns 401 without token, with malformed token and with expired token
+- [x] Valid token returns 200 and `request.user.id` equals the subject
+- [x] `/health` stays public (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -374,10 +374,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Query over `pg_class`/`information_schema` fails when a user-data table has RLS disabled
-- [ ] Test passes for the tables existing now (1 test)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Query over `pg_class`/`information_schema` fails when a user-data table has RLS disabled
+- [x] Test passes for the tables existing now (1 test)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -401,10 +401,10 @@ T14 → T20
 
 **Done when**:
 
-- [ ] `GET /docs/json` returns a valid OpenAPI document that lists `/health`
-- [ ] `pnpm -C api openapi:export` writes `api/openapi.json` (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] `GET /docs/json` returns a valid OpenAPI document that lists `/health`
+- [x] `pnpm -C api openapi:export` writes `api/openapi.json` (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -428,11 +428,11 @@ T14 → T20
 
 **Done when**:
 
-- [ ] Duplicate `signUp` result is captured and the detection rule for 'E-mail já cadastrado' is written in `design.md`
-- [ ] Unconfirmed login error code and invalid-credentials code are captured
-- [ ] If duplicate detection is impossible, STOP and report to the user before continuing (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Duplicate `signUp` result is captured and the detection rule for 'E-mail já cadastrado' is written in `design.md`
+- [x] Unconfirmed login error code and invalid-credentials code are captured
+- [x] If duplicate detection is impossible, STOP and report to the user before continuing (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -647,3 +647,12 @@ Phase 1 → Phase 2 → Phase 3
 ```
 
 Execution is strictly sequential within each phase; cross-feature order is auth → accounts-categories → transactions → import → credit-expenses → dashboards.
+
+---
+
+## Fix tasks (Verifier iteration 1)
+
+- [x] F1: discriminate the auth hook 401 branches with a route that does not call withUser
+- [x] F2: record that the confirmation link marks the e-mail confirmed
+- [x] F3: enforce the 8-character minimum password in GoTrue and record it
+- [x] F4: bundled minor fixes (sub validation cases, JWKS-unreachable path, cross-user profiles UPDATE/DELETE, meaningful confirmation_sent_at assertion)

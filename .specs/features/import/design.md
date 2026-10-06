@@ -197,6 +197,7 @@ interface ClassifiedRow extends ParsedRow { neutral: boolean }
 | Regex de Pix só testada em 14 linhas de uma conta | `parsers/nubankAccount.ts` | Linhas válidas viram `unrecognized` | Tratamento de `unrecognized` já importável e sinalizado; fixtures reais adicionadas ao crescer |
 | Dedup por nome+data+valor marca como duplicada compra legítima idêntica na reimportação | `import/classify.ts` | Falso positivo | Usuário desmarca a flag na prévia (IMP-05.6) |
 | Parsers de Sofisa, Neon e XP ausentes | `parsers/` | Sem importação desses bancos | Interface `Parser` por banco; importação de outro banco responde `unsupported_format` até haver amostra |
+| Arquivos no Storage permanecem como órfãos quando o usuário é excluído (`storage.objects` não tem FK para `auth.users`) | `0004_imports.sql` | Retenção indevida de dados | Limpeza explícita na futura exclusão de conta; fora do MVP |
 | Arquivo de entrada não confiável | `import/service.ts` | CSV malicioso/grande | Limite 5 MB, parsing em memória com `csv-parse`, sem execução de conteúdo |
 
 ---

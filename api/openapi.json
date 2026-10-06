@@ -1,0 +1,2919 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Financials API",
+    "version": "0.0.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "bank",
+                  "nickname",
+                  "holderNames"
+                ],
+                "properties": {
+                  "bank": {
+                    "description": "One of: Nubank, SofisaDireto, Neon, XP, Other",
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "type": "string"
+                  },
+                  "holderNames": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "color": {
+                    "description": "One of: red-400, orange-400, amber-400, yellow-400, lime-400, green-400, emerald-400, teal-400, cyan-400, sky-400, blue-400, indigo-400, violet-400, purple-400, fuchsia-400, pink-400, rose-400, slate-400, gray-400, zinc-400, neutral-400, stone-400",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "bank",
+                    "nickname",
+                    "holderNames",
+                    "active",
+                    "color",
+                    "createdAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "bank": {
+                      "type": "string",
+                      "enum": [
+                        "Nubank",
+                        "SofisaDireto",
+                        "Neon",
+                        "XP",
+                        "Other"
+                      ]
+                    },
+                    "nickname": {
+                      "type": "string"
+                    },
+                    "holderNames": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "orange-400",
+                        "amber-400",
+                        "yellow-400",
+                        "lime-400",
+                        "green-400",
+                        "emerald-400",
+                        "teal-400",
+                        "cyan-400",
+                        "sky-400",
+                        "blue-400",
+                        "indigo-400",
+                        "violet-400",
+                        "purple-400",
+                        "fuchsia-400",
+                        "pink-400",
+                        "rose-400",
+                        "slate-400",
+                        "gray-400",
+                        "zinc-400",
+                        "neutral-400",
+                        "stone-400"
+                      ]
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "active",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "bank",
+                      "nickname",
+                      "holderNames",
+                      "active",
+                      "color",
+                      "createdAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "bank": {
+                        "type": "string",
+                        "enum": [
+                          "Nubank",
+                          "SofisaDireto",
+                          "Neon",
+                          "XP",
+                          "Other"
+                        ]
+                      },
+                      "nickname": {
+                        "type": "string"
+                      },
+                      "holderNames": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "color": {
+                        "type": "string",
+                        "enum": [
+                          "red-400",
+                          "orange-400",
+                          "amber-400",
+                          "yellow-400",
+                          "lime-400",
+                          "green-400",
+                          "emerald-400",
+                          "teal-400",
+                          "cyan-400",
+                          "sky-400",
+                          "blue-400",
+                          "indigo-400",
+                          "violet-400",
+                          "purple-400",
+                          "fuchsia-400",
+                          "pink-400",
+                          "rose-400",
+                          "slate-400",
+                          "gray-400",
+                          "zinc-400",
+                          "neutral-400",
+                          "stone-400"
+                        ]
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{id}": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bank": {
+                    "description": "One of: Nubank, SofisaDireto, Neon, XP, Other",
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "type": "string"
+                  },
+                  "holderNames": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "color": {
+                    "description": "One of: red-400, orange-400, amber-400, yellow-400, lime-400, green-400, emerald-400, teal-400, cyan-400, sky-400, blue-400, indigo-400, violet-400, purple-400, fuchsia-400, pink-400, rose-400, slate-400, gray-400, zinc-400, neutral-400, stone-400",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "bank",
+                    "nickname",
+                    "holderNames",
+                    "active",
+                    "color",
+                    "createdAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "bank": {
+                      "type": "string",
+                      "enum": [
+                        "Nubank",
+                        "SofisaDireto",
+                        "Neon",
+                        "XP",
+                        "Other"
+                      ]
+                    },
+                    "nickname": {
+                      "type": "string"
+                    },
+                    "holderNames": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "orange-400",
+                        "amber-400",
+                        "yellow-400",
+                        "lime-400",
+                        "green-400",
+                        "emerald-400",
+                        "teal-400",
+                        "cyan-400",
+                        "sky-400",
+                        "blue-400",
+                        "indigo-400",
+                        "violet-400",
+                        "purple-400",
+                        "fuchsia-400",
+                        "pink-400",
+                        "rose-400",
+                        "slate-400",
+                        "gray-400",
+                        "zinc-400",
+                        "neutral-400",
+                        "stone-400"
+                      ]
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{id}/deactivate": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "bank",
+                    "nickname",
+                    "holderNames",
+                    "active",
+                    "color",
+                    "createdAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "bank": {
+                      "type": "string",
+                      "enum": [
+                        "Nubank",
+                        "SofisaDireto",
+                        "Neon",
+                        "XP",
+                        "Other"
+                      ]
+                    },
+                    "nickname": {
+                      "type": "string"
+                    },
+                    "holderNames": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "orange-400",
+                        "amber-400",
+                        "yellow-400",
+                        "lime-400",
+                        "green-400",
+                        "emerald-400",
+                        "teal-400",
+                        "cyan-400",
+                        "sky-400",
+                        "blue-400",
+                        "indigo-400",
+                        "violet-400",
+                        "purple-400",
+                        "fuchsia-400",
+                        "pink-400",
+                        "rose-400",
+                        "slate-400",
+                        "gray-400",
+                        "zinc-400",
+                        "neutral-400",
+                        "stone-400"
+                      ]
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{id}/activate": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "bank",
+                    "nickname",
+                    "holderNames",
+                    "active",
+                    "color",
+                    "createdAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "bank": {
+                      "type": "string",
+                      "enum": [
+                        "Nubank",
+                        "SofisaDireto",
+                        "Neon",
+                        "XP",
+                        "Other"
+                      ]
+                    },
+                    "nickname": {
+                      "type": "string"
+                    },
+                    "holderNames": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "orange-400",
+                        "amber-400",
+                        "yellow-400",
+                        "lime-400",
+                        "green-400",
+                        "emerald-400",
+                        "teal-400",
+                        "cyan-400",
+                        "sky-400",
+                        "blue-400",
+                        "indigo-400",
+                        "violet-400",
+                        "purple-400",
+                        "fuchsia-400",
+                        "pink-400",
+                        "rose-400",
+                        "slate-400",
+                        "gray-400",
+                        "zinc-400",
+                        "neutral-400",
+                        "stone-400"
+                      ]
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "key",
+                      "name",
+                      "isSystem",
+                      "color"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "isSystem": {
+                        "type": "boolean"
+                      },
+                      "color": {
+                        "type": "string",
+                        "enum": [
+                          "red-400",
+                          "orange-400",
+                          "amber-400",
+                          "yellow-400",
+                          "lime-400",
+                          "green-400",
+                          "emerald-400",
+                          "teal-400",
+                          "cyan-400",
+                          "sky-400",
+                          "blue-400",
+                          "indigo-400",
+                          "violet-400",
+                          "purple-400",
+                          "fuchsia-400",
+                          "pink-400",
+                          "rose-400",
+                          "slate-400",
+                          "gray-400",
+                          "zinc-400",
+                          "neutral-400",
+                          "stone-400"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "description": "One of: red-400, orange-400, amber-400, yellow-400, lime-400, green-400, emerald-400, teal-400, cyan-400, sky-400, blue-400, indigo-400, violet-400, purple-400, fuchsia-400, pink-400, rose-400, slate-400, gray-400, zinc-400, neutral-400, stone-400",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "key",
+                    "name",
+                    "isSystem",
+                    "color"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isSystem": {
+                      "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "orange-400",
+                        "amber-400",
+                        "yellow-400",
+                        "lime-400",
+                        "green-400",
+                        "emerald-400",
+                        "teal-400",
+                        "cyan-400",
+                        "sky-400",
+                        "blue-400",
+                        "indigo-400",
+                        "violet-400",
+                        "purple-400",
+                        "fuchsia-400",
+                        "pink-400",
+                        "rose-400",
+                        "slate-400",
+                        "gray-400",
+                        "zinc-400",
+                        "neutral-400",
+                        "stone-400"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/{id}": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "description": "One of: red-400, orange-400, amber-400, yellow-400, lime-400, green-400, emerald-400, teal-400, cyan-400, sky-400, blue-400, indigo-400, violet-400, purple-400, fuchsia-400, pink-400, rose-400, slate-400, gray-400, zinc-400, neutral-400, stone-400",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "key",
+                    "name",
+                    "isSystem",
+                    "color"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isSystem": {
+                      "type": "boolean"
+                    },
+                    "color": {
+                      "type": "string",
+                      "enum": [
+                        "red-400",
+                        "orange-400",
+                        "amber-400",
+                        "yellow-400",
+                        "lime-400",
+                        "green-400",
+                        "emerald-400",
+                        "teal-400",
+                        "cyan-400",
+                        "sky-400",
+                        "blue-400",
+                        "indigo-400",
+                        "violet-400",
+                        "purple-400",
+                        "fuchsia-400",
+                        "pink-400",
+                        "rose-400",
+                        "slate-400",
+                        "gray-400",
+                        "zinc-400",
+                        "neutral-400",
+                        "stone-400"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "reassignTo",
+            "required": false,
+            "description": "Category that receives the rows of the deleted one"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "type",
+                  "occurredAt",
+                  "amount",
+                  "accountId",
+                  "paymentMethod"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "One of: Income, Expense",
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "description": "ISO-8601 instant with offset, e.g. 2026-10-05T14:30:00-03:00",
+                    "type": "string"
+                  },
+                  "amount": {
+                    "description": "Decimal string, > 0, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "type": "string"
+                  },
+                  "categoryId": {
+                    "type": "string"
+                  },
+                  "paymentMethod": {
+                    "description": "One of: BankTransfer, Boleto, Cash, CreditCard, DebitCard, NuPay, PIX, Other",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "receipt": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "description": {
+                    "description": "Original title, at most 500 characters after trimming; blank is stored as null. Only accepted on creation",
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "neutral": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "accountNickname",
+                    "categoryId",
+                    "categoryName",
+                    "name",
+                    "type",
+                    "occurredAt",
+                    "amount",
+                    "paymentMethod",
+                    "notes",
+                    "receipt",
+                    "description",
+                    "neutral",
+                    "counterpartyDocument",
+                    "counterpartyBank"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountNickname": {
+                      "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryName": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "Income",
+                        "Expense"
+                      ]
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "description": "ISO-8601 instant in UTC",
+                      "type": "string"
+                    },
+                    "amount": {
+                      "description": "Positive decimal string with 2 decimals, e.g. \"1234.56\"",
+                      "type": "string"
+                    },
+                    "paymentMethod": {
+                      "type": "string",
+                      "enum": [
+                        "BankTransfer",
+                        "Boleto",
+                        "Cash",
+                        "CreditCard",
+                        "DebitCard",
+                        "NuPay",
+                        "PIX",
+                        "Other"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "receipt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "description": {
+                      "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "neutral": {
+                      "type": "boolean"
+                    },
+                    "counterpartyDocument": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "counterpartyBank": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "accountId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "categoryId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "description": "One of: Income, Expense"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "neutral",
+            "required": false,
+            "description": "true or false"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "description": "Name contains this text, ignoring case and accents"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "description": "One of: date, name, amount, category (default date)"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "description": "asc or desc (default desc for date, asc for the other columns)"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "description": "Page number, starting at 1 (50 rows per page)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "total",
+                    "page",
+                    "pageSize"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "accountId",
+                          "accountNickname",
+                          "categoryId",
+                          "categoryName",
+                          "name",
+                          "type",
+                          "occurredAt",
+                          "amount",
+                          "paymentMethod",
+                          "notes",
+                          "receipt",
+                          "description",
+                          "neutral",
+                          "counterpartyDocument",
+                          "counterpartyBank"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountNickname": {
+                            "type": "string"
+                          },
+                          "categoryId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "Income",
+                              "Expense"
+                            ]
+                          },
+                          "occurredAt": {
+                            "format": "date-time",
+                            "description": "ISO-8601 instant in UTC",
+                            "type": "string"
+                          },
+                          "amount": {
+                            "description": "Positive decimal string with 2 decimals, e.g. \"1234.56\"",
+                            "type": "string"
+                          },
+                          "paymentMethod": {
+                            "type": "string",
+                            "enum": [
+                              "BankTransfer",
+                              "Boleto",
+                              "Cash",
+                              "CreditCard",
+                              "DebitCard",
+                              "NuPay",
+                              "PIX",
+                              "Other"
+                            ]
+                          },
+                          "notes": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "receipt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "description": {
+                            "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "neutral": {
+                            "type": "boolean"
+                          },
+                          "counterpartyDocument": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "counterpartyBank": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "enum": [
+                        50
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/{id}": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "One of: Income, Expense",
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "description": "ISO-8601 instant with offset",
+                    "type": "string"
+                  },
+                  "amount": {
+                    "description": "Decimal string, > 0, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "description": "An account of the user; inactive accounts are allowed on edit",
+                    "type": "string"
+                  },
+                  "categoryId": {
+                    "type": "string"
+                  },
+                  "paymentMethod": {
+                    "description": "One of: BankTransfer, Boleto, Cash, CreditCard, DebitCard, NuPay, PIX, Other",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "receipt": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "neutral": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "accountNickname",
+                    "categoryId",
+                    "categoryName",
+                    "name",
+                    "type",
+                    "occurredAt",
+                    "amount",
+                    "paymentMethod",
+                    "notes",
+                    "receipt",
+                    "description",
+                    "neutral",
+                    "counterpartyDocument",
+                    "counterpartyBank"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountNickname": {
+                      "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryName": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "Income",
+                        "Expense"
+                      ]
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "description": "ISO-8601 instant in UTC",
+                      "type": "string"
+                    },
+                    "amount": {
+                      "description": "Positive decimal string with 2 decimals, e.g. \"1234.56\"",
+                      "type": "string"
+                    },
+                    "paymentMethod": {
+                      "type": "string",
+                      "enum": [
+                        "BankTransfer",
+                        "Boleto",
+                        "Cash",
+                        "CreditCard",
+                        "DebitCard",
+                        "NuPay",
+                        "PIX",
+                        "Other"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "receipt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "description": {
+                      "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "neutral": {
+                      "type": "boolean"
+                    },
+                    "counterpartyDocument": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "counterpartyBank": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/transactions/category": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids",
+                  "categoryId"
+                ],
+                "properties": {
+                  "ids": {
+                    "description": "1 to 500 transaction ids; repeated ids (in any letter case) count once",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "categoryId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Category applied to every id"
+          }
+        }
+      }
+    },
+    "/credit-expenses": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "totalAmount",
+                  "occurredAt",
+                  "recurrencyDay",
+                  "status",
+                  "accountId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "totalAmount": {
+                    "description": "Decimal string, > 0, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "paidAmount": {
+                    "description": "Decimal string, 0 or more and not above totalAmount, up to 2 decimals",
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "description": "ISO-8601 instant with offset, e.g. 2026-10-05T14:30:00-03:00",
+                    "type": "string"
+                  },
+                  "recurrencyDay": {
+                    "description": "Day of the month, integer from 1 to 31",
+                    "type": "integer"
+                  },
+                  "status": {
+                    "description": "One of: Once, Active, Inactive, Canceled, ToCancel",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "description": "An active account of the user",
+                    "type": "string"
+                  },
+                  "categoryId": {
+                    "description": "Defaults to the Sem categoria system category",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "categoryId",
+                    "categoryName",
+                    "name",
+                    "totalAmount",
+                    "paidAmount",
+                    "remainingAmount",
+                    "occurredAt",
+                    "recurrencyDay",
+                    "status",
+                    "notes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryName": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "totalAmount": {
+                      "description": "Positive decimal string with 2 decimals, e.g. \"600.00\"",
+                      "type": "string"
+                    },
+                    "paidAmount": {
+                      "description": "Decimal string with 2 decimals, between 0.00 and totalAmount",
+                      "type": "string"
+                    },
+                    "remainingAmount": {
+                      "description": "totalAmount minus paidAmount, computed by the database, 2 decimals",
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "description": "ISO-8601 instant in UTC",
+                      "type": "string"
+                    },
+                    "recurrencyDay": {
+                      "minimum": 1,
+                      "maximum": 31,
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "Once",
+                        "Active",
+                        "Inactive",
+                        "Canceled",
+                        "ToCancel"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "description": "Only this status; one of: Once, Active, Inactive, Canceled, ToCancel"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "accountId",
+                      "categoryId",
+                      "categoryName",
+                      "name",
+                      "totalAmount",
+                      "paidAmount",
+                      "remainingAmount",
+                      "occurredAt",
+                      "recurrencyDay",
+                      "status",
+                      "notes"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "accountId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "categoryId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "categoryName": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "totalAmount": {
+                        "description": "Positive decimal string with 2 decimals, e.g. \"600.00\"",
+                        "type": "string"
+                      },
+                      "paidAmount": {
+                        "description": "Decimal string with 2 decimals, between 0.00 and totalAmount",
+                        "type": "string"
+                      },
+                      "remainingAmount": {
+                        "description": "totalAmount minus paidAmount, computed by the database, 2 decimals",
+                        "type": "string"
+                      },
+                      "occurredAt": {
+                        "format": "date-time",
+                        "description": "ISO-8601 instant in UTC",
+                        "type": "string"
+                      },
+                      "recurrencyDay": {
+                        "minimum": 1,
+                        "maximum": 31,
+                        "type": "integer"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "Once",
+                          "Active",
+                          "Inactive",
+                          "Canceled",
+                          "ToCancel"
+                        ]
+                      },
+                      "notes": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credit-expenses/{id}": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "totalAmount": {
+                    "description": "Decimal string, > 0, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "paidAmount": {
+                    "description": "Decimal string, 0 or more and not above totalAmount, up to 2 decimals",
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "description": "ISO-8601 instant with offset",
+                    "type": "string"
+                  },
+                  "recurrencyDay": {
+                    "description": "Day of the month, integer from 1 to 31",
+                    "type": "integer"
+                  },
+                  "status": {
+                    "description": "Any of: Once, Active, Inactive, Canceled, ToCancel; any status may follow any other",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "description": "An account of the user; inactive accounts are allowed on edit",
+                    "type": "string"
+                  },
+                  "categoryId": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "categoryId",
+                    "categoryName",
+                    "name",
+                    "totalAmount",
+                    "paidAmount",
+                    "remainingAmount",
+                    "occurredAt",
+                    "recurrencyDay",
+                    "status",
+                    "notes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryName": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "totalAmount": {
+                      "description": "Positive decimal string with 2 decimals, e.g. \"600.00\"",
+                      "type": "string"
+                    },
+                    "paidAmount": {
+                      "description": "Decimal string with 2 decimals, between 0.00 and totalAmount",
+                      "type": "string"
+                    },
+                    "remainingAmount": {
+                      "description": "totalAmount minus paidAmount, computed by the database, 2 decimals",
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "description": "ISO-8601 instant in UTC",
+                      "type": "string"
+                    },
+                    "recurrencyDay": {
+                      "minimum": 1,
+                      "maximum": 31,
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "Once",
+                        "Active",
+                        "Inactive",
+                        "Canceled",
+                        "ToCancel"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/dashboard/last-30-days": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "total",
+                    "previousTotal",
+                    "changePct"
+                  ],
+                  "properties": {
+                    "total": {
+                      "description": "Expenses of the 30 days ending today (inclusive), decimal string with 2 decimals",
+                      "type": "string"
+                    },
+                    "previousTotal": {
+                      "description": "Expenses of the 30 days immediately before, decimal string with 2 decimals",
+                      "type": "string"
+                    },
+                    "changePct": {
+                      "description": "(total - previousTotal) / previousTotal * 100, 1 decimal; null when previousTotal is 0",
+                      "type": "number",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/trend": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "points"
+                  ],
+                  "properties": {
+                    "points": {
+                      "description": "Always 12 points, oldest first: the 11 previous months and the current one",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "month",
+                          "income",
+                          "expense",
+                          "balance"
+                        ],
+                        "properties": {
+                          "month": {
+                            "description": "Local calendar month, YYYY-MM",
+                            "type": "string"
+                          },
+                          "income": {
+                            "description": "Income of the month, decimal string with 2 decimals",
+                            "type": "string"
+                          },
+                          "expense": {
+                            "description": "Expense of the month (Reversal abates it), decimal string with 2 decimals",
+                            "type": "string"
+                          },
+                          "balance": {
+                            "description": "income minus expense, decimal string with 2 decimals (may be negative)",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/categories": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "First local day, YYYY-MM-DD, inclusive; give both from and to or neither"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Last local day, YYYY-MM-DD, inclusive"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "description": "Largest first; categories whose total is zero are omitted; the sum equals the total expense of the period",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "categoryId",
+                          "name",
+                          "total"
+                        ],
+                        "properties": {
+                          "categoryId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Category name in Portuguese",
+                            "type": "string"
+                          },
+                          "total": {
+                            "description": "Expense of the category in the period, decimal string with 2 decimals; negative for Estorno",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/net-worth": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "current",
+                    "series"
+                  ],
+                  "properties": {
+                    "current": {
+                      "description": "Net worth now: income minus expenses plus investment returns, decimal string with 2 decimals",
+                      "type": "string"
+                    },
+                    "series": {
+                      "description": "One point per month from the first month with a transaction or return to the current month; empty without data",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "month",
+                          "value"
+                        ],
+                        "properties": {
+                          "month": {
+                            "description": "Local calendar month, YYYY-MM",
+                            "type": "string"
+                          },
+                          "value": {
+                            "description": "Cumulative net worth at the end of the month, decimal string with 2 decimals",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/card": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "First local day, YYYY-MM-DD, inclusive; give both from and to or neither"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Last local day, YYYY-MM-DD, inclusive"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "transactions",
+                    "creditExpenses"
+                  ],
+                  "properties": {
+                    "transactions": {
+                      "description": "CreditCard transactions in the period (neutral ones included) by category, largest first; never part of the totals of the other dashboards",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "categoryName",
+                          "total"
+                        ],
+                        "properties": {
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "total": {
+                            "description": "CreditCard purchases of the category in the period, decimal string with 2 decimals",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "creditExpenses": {
+                      "description": "Active, Once and ToCancel credit expenses by category; an open balance, listed whatever the period",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "categoryName",
+                          "remaining"
+                        ],
+                        "properties": {
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "remaining": {
+                            "description": "Sum of totalAmount minus paidAmount, decimal string with 2 decimals",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investment-returns": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "occurredOn",
+                  "amount",
+                  "accountId"
+                ],
+                "properties": {
+                  "occurredOn": {
+                    "description": "Calendar date, YYYY-MM-DD",
+                    "type": "string"
+                  },
+                  "amount": {
+                    "description": "Signed decimal string, never zero, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "description": "Any account of the user, active or not",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "accountNickname",
+                    "occurredOn",
+                    "amount",
+                    "notes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountNickname": {
+                      "type": "string"
+                    },
+                    "occurredOn": {
+                      "description": "Calendar date, YYYY-MM-DD",
+                      "type": "string"
+                    },
+                    "amount": {
+                      "description": "Signed decimal string with 2 decimals, never zero, e.g. \"50.00\" or \"-20.00\"",
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "lastDate"
+                  ],
+                  "properties": {
+                    "items": {
+                      "description": "Newest date first",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "accountId",
+                          "accountNickname",
+                          "occurredOn",
+                          "amount",
+                          "notes"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "accountNickname": {
+                            "type": "string"
+                          },
+                          "occurredOn": {
+                            "description": "Calendar date, YYYY-MM-DD",
+                            "type": "string"
+                          },
+                          "amount": {
+                            "description": "Signed decimal string with 2 decimals, never zero, e.g. \"50.00\" or \"-20.00\"",
+                            "type": "string"
+                          },
+                          "notes": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "lastDate": {
+                      "description": "Date of the newest return (YYYY-MM-DD), null when there are none",
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investment-returns/{id}": {
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "occurredOn": {
+                    "description": "Calendar date, YYYY-MM-DD",
+                    "type": "string"
+                  },
+                  "amount": {
+                    "description": "Signed decimal string, never zero, up to 12 integer digits and 2 decimals",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "description": "Any account of the user, active or not",
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "accountId",
+                    "accountNickname",
+                    "occurredOn",
+                    "amount",
+                    "notes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "accountNickname": {
+                      "type": "string"
+                    },
+                    "occurredOn": {
+                      "description": "Calendar date, YYYY-MM-DD",
+                      "type": "string"
+                    },
+                    "amount": {
+                      "description": "Signed decimal string with 2 decimals, never zero, e.g. \"50.00\" or \"-20.00\"",
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/imports": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "description": "Most items returned; defaults to 50"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "filename",
+                      "mimeType",
+                      "sizeBytes",
+                      "bank",
+                      "account",
+                      "createdAt",
+                      "rowCount",
+                      "importedCount",
+                      "skippedCount"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "filename": {
+                        "description": "The name of the file as uploaded",
+                        "type": "string"
+                      },
+                      "mimeType": {
+                        "type": "string"
+                      },
+                      "sizeBytes": {
+                        "type": "integer"
+                      },
+                      "bank": {
+                        "type": "string"
+                      },
+                      "account": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "nickname"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "nickname": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "rowCount": {
+                        "description": "Data rows of the file",
+                        "type": "integer"
+                      },
+                      "importedCount": {
+                        "type": "integer"
+                      },
+                      "skippedCount": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/{id}/file": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file exactly as uploaded; Content-Type is the stored mime type",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "description": "unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found: unknown, foreign or non-UUID id, or the object is gone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "description": "not_found: unknown, foreign or non-UUID id, or the object is gone"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "storage_error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "description": "storage_error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "storage_not_configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "description": "storage_not_configured"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/preview": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "accountId"
+                ],
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "description": "The CSV file (UTF-8, at most 5 MB)",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "format": "uuid",
+                    "description": "An active account of the user",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "rows",
+                    "totals"
+                  ],
+                  "properties": {
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "index",
+                          "localDate",
+                          "type",
+                          "amount",
+                          "name",
+                          "paymentMethod",
+                          "categoryId",
+                          "categoryName",
+                          "status",
+                          "neutral",
+                          "counterpartyDocument",
+                          "counterpartyBank"
+                        ],
+                        "properties": {
+                          "index": {
+                            "description": "0-based data row of the file; the selection key",
+                            "type": "integer"
+                          },
+                          "localDate": {
+                            "description": "YYYY-MM-DD",
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "Income",
+                              "Expense"
+                            ]
+                          },
+                          "amount": {
+                            "description": "Decimal string, e.g. \"1234.56\"",
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "paymentMethod": {
+                            "type": "string",
+                            "enum": [
+                              "BankTransfer",
+                              "Boleto",
+                              "Cash",
+                              "CreditCard",
+                              "DebitCard",
+                              "NuPay",
+                              "PIX",
+                              "Other"
+                            ]
+                          },
+                          "categoryId": {
+                            "format": "uuid",
+                            "description": "The user's category of the parser's key; the default of the row",
+                            "type": "string"
+                          },
+                          "categoryName": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "new",
+                              "duplicate",
+                              "ignored",
+                              "unrecognized",
+                              "invalid"
+                            ]
+                          },
+                          "neutral": {
+                            "type": "boolean"
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "counterpartyDocument": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "counterpartyBank": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "totals": {
+                      "type": "object",
+                      "required": [
+                        "new",
+                        "duplicate",
+                        "ignored",
+                        "unrecognized",
+                        "invalid"
+                      ],
+                      "properties": {
+                        "new": {
+                          "type": "integer"
+                        },
+                        "duplicate": {
+                          "type": "integer"
+                        },
+                        "ignored": {
+                          "type": "integer"
+                        },
+                        "unrecognized": {
+                          "type": "integer"
+                        },
+                        "invalid": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/confirm": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "accountId",
+                  "idempotencyKey",
+                  "selections"
+                ],
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "description": "The CSV file (UTF-8, at most 5 MB)",
+                    "type": "string"
+                  },
+                  "accountId": {
+                    "format": "uuid",
+                    "description": "An active account of the user",
+                    "type": "string"
+                  },
+                  "idempotencyKey": {
+                    "format": "uuid",
+                    "description": "One per preview session; a repeated key does not import twice",
+                    "type": "string"
+                  },
+                  "selections": {
+                    "description": "JSON array `[{ \"index\": number, \"neutral\": boolean, \"categoryId\"?: uuid }]` with the rows to import (status new, duplicate or unrecognized), each index once. `categoryId` is one of the user's categories (422 `invalid_category` otherwise); omitted, the row keeps the category of the parser (see `categoryId` of the preview rows)",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "This idempotencyKey was already confirmed: the stored summary, nothing written",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "batchId",
+                    "imported",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "batchId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "imported": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "integer"
+                    }
+                  },
+                  "description": "This idempotencyKey was already confirmed: the stored summary, nothing written"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "batchId",
+                    "imported",
+                    "skipped"
+                  ],
+                  "properties": {
+                    "batchId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "imported": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}

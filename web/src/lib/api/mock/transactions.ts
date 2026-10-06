@@ -40,6 +40,7 @@ const methods: PaymentMethod[] = [
   "Cash",
   "NuPay",
   "CreditCard",
+  "Other",
 ];
 
 let transactions: Transaction[] = Array.from({ length: 120 }, (_, index) => {
@@ -71,6 +72,10 @@ let transactions: Transaction[] = Array.from({ length: 120 }, (_, index) => {
     paymentMethod,
     notes: index % 5 === 0 ? "Pagamento mensal" : null,
     receipt: null,
+    description:
+      index % 4 === 0
+        ? `${name.toUpperCase()} - COMPRA ${String(index + 1).padStart(3, "0")}`
+        : null,
     neutral: index % 17 === 0,
     counterpartyDocument: null,
     counterpartyBank: null,
@@ -83,7 +88,7 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase();
 const validAmount = (value: string) => /^(?:0*[1-9]\d*)(?:\.\d{1,2})?$/.test(value);
-const validReceipt = (value?: string) => !value || /^https?:\/\//i.test(value);
+const validReceipt = (value?: string | null) => !value || /^https?:\/\//i.test(value);
 const accountFor = (id: string) => listMockAccounts().find((item) => item.id === id);
 const categoryFor = (id: string) => listMockCategories().find((item) => item.id === id);
 const uncategorized = () => listMockCategories().find((item) => item.key === "Uncategorized");
@@ -121,7 +126,9 @@ function validate(input: TransactionInput | TransactionUpdate, requireActiveAcco
   if (!validReceipt(input.receipt))
     throw mockApiError("invalid_receipt_url", "URL inválida", 422, "receipt");
 }
-function hydrate(input: TransactionInput, id = crypto.randomUUID()): Transaction {
+// The API accepts `description` only on creation, so the create body carries it beside the input.
+type CreateInput = TransactionInput & { description?: string | null };
+function hydrate(input: CreateInput, id = crypto.randomUUID()): Transaction {
   validate(input, true);
   const account = accountFor(input.accountId);
   if (!account) throw mockApiError("invalid_account", "Conta inválida", 422, "accountId");
@@ -140,6 +147,7 @@ function hydrate(input: TransactionInput, id = crypto.randomUUID()): Transaction
     paymentMethod: input.paymentMethod,
     notes: input.notes?.trim() || null,
     receipt: input.receipt?.trim() || null,
+    description: input.description?.trim() || null,
     neutral: input.neutral ?? false,
     counterpartyDocument: null,
     counterpartyBank: null,
@@ -198,7 +206,7 @@ export const transactionsHandlers: MockHandler[] = [
     method: "POST",
     path: "/transactions",
     handle: ({ body }) => {
-      const item = hydrate(body as TransactionInput);
+      const item = hydrate(body as CreateInput);
       transactions = [item, ...transactions];
       return item;
     },
@@ -228,13 +236,17 @@ export const transactionsHandlers: MockHandler[] = [
       validate(input);
       const account = input.accountId ? accountFor(input.accountId) : undefined;
       const category = input.categoryId ? categoryFor(input.categoryId) : undefined;
+      // `description` is read-only: the API ignores it on PATCH, and so does the mock.
+      const { description: _ignored, ...editable } = input as TransactionUpdate & {
+        description?: unknown;
+      };
       const updated = {
         ...current,
-        ...input,
+        ...editable,
         ...(account ? { accountNickname: account.nickname } : {}),
         ...(category ? { categoryName: category.name } : {}),
-        notes: input.notes === undefined ? current.notes : input.notes.trim() || null,
-        receipt: input.receipt === undefined ? current.receipt : input.receipt.trim() || null,
+        notes: input.notes === undefined ? current.notes : input.notes?.trim() || null,
+        receipt: input.receipt === undefined ? current.receipt : input.receipt?.trim() || null,
       };
       transactions = transactions.map((item) => (item.id === current.id ? updated : item));
       return updated;

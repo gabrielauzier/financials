@@ -41,6 +41,7 @@ O usuário quer enxergar para onde o dinheiro vai e quanto acumulou: despesas do
 | Lançamento de rendimento: conta | Obrigatória, entre contas do usuário | PRD US-19 lista conta/instituição | n |
 | Valor de rendimento | Diferente de zero, positivo ou negativo, 2 casas | PRD: positivo ou negativo | n |
 | Transações em data futura | Contadas somente quando a data é ≤ hoje | Painéis refletem o realizado | n |
+| Visão de cartão: grupos de soma zero, estornos e despesas parceladas | Categoria cujas compras e estornos de cartão somam 0,00 é omitida; estorno (Income em CreditCard) reduz a sua categoria; despesas de crédito em aberto ignoram o período | Mantém a lista só com valores a mostrar, como o painel de categorias; o saldo restante não depende do período | n |
 
 **Open questions:** none - all resolved or logged above.
 
@@ -187,13 +188,13 @@ O usuário quer enxergar para onde o dinheiro vai e quanto acumulou: despesas do
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| DASH-01 | P1: Regras de cálculo | - | Pending |
-| DASH-02 | P1: Últimos 30 dias | - | Pending |
-| DASH-03 | P1: Tendência de 12 meses | - | Pending |
-| DASH-04 | P1: Gastos por categoria | - | Pending |
-| DASH-05 | P1: Patrimônio | - | Pending |
-| DASH-06 | P1: Lançamentos de rendimento | - | Pending |
-| DASH-07 | P1: Visão de cartão | - | Pending |
+| DASH-01 | P1: Regras de cálculo | - | Verified |
+| DASH-02 | P1: Últimos 30 dias | - | Verified |
+| DASH-03 | P1: Tendência de 12 meses | - | Verified |
+| DASH-04 | P1: Gastos por categoria | - | Verified |
+| DASH-05 | P1: Patrimônio | - | Verified |
+| DASH-06 | P1: Lançamentos de rendimento | - | Verified |
+| DASH-07 | P1: Visão de cartão | - | Verified |
 
 **Coverage:** 7 total, 0 mapped to tasks, 7 unmapped ⚠️
 

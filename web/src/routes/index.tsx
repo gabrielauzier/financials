@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RequireAuth } from "@/features/auth/RequireAuth";
 import { AppLayout } from "@/features/layout/AppLayout";
-import { PlaceholderPage } from "@/features/pages/PlaceholderPage";
+import { DashboardPage } from "@/features/dashboard/DashboardPage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,12 +17,11 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
     <RequireAuth>
       <AppLayout>
-        <PlaceholderPage title="Dashboard" />
+        <DashboardPage />
       </AppLayout>
     </RequireAuth>
   );

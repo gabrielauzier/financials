@@ -75,8 +75,9 @@ T16 → T17
 T14 → T18
 ```
 
-### Phase 4: Web: import flow (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: import flow
 ```
+T24 → T19
 T19 → T20
 T19 → T21
 T19 → T22
@@ -106,10 +107,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Types compile and are exported
-- [ ] No runtime code in the file
-- [ ] Gate check passes: build gate for the layer (typecheck + lint + tests)
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Types compile and are exported
+- [x] No runtime code in the file
+- [x] Gate check passes: build gate for the layer (typecheck + lint + tests)
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: none
 **Gate**: build
@@ -133,11 +134,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] BOM and no-BOM files parse identically
-- [ ] Quoted fields with commas and decimal commas are preserved
-- [ ] Empty and header-only files raise `empty_file` (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] BOM and no-BOM files parse identically
+- [x] Quoted fields with commas and decimal commas are preserved
+- [x] Empty and header-only files raise `empty_file` (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -161,11 +162,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Fixture yields 14 rows with correct date, type, amount and identifier
-- [ ] Negative value is Expense and positive is Income
-- [ ] Zero value, invalid date and non-numeric value become `invalid` with a reason (5 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Fixture yields 14 rows with correct date, type, amount and identifier
+- [x] Negative value is Expense and positive is Income
+- [x] Zero value, invalid date and non-numeric value become `invalid` with a reason (5 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -189,11 +190,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Row for MERCADO AUTO yields name `MERCADO AUTO SOLUCOES PUBLICIDADE E TECNOLOGIA LTDA`, document `41.460.383/0001-68`, bank `BCO SANTANDER (BRASIL) S.A. (0033)`, method PIX
-- [ ] Masked document `•••.224.672-••` and bank `NU PAGAMENTOS - IP (0260)` are captured intact
-- [ ] All Pix rows of the fixture parse with a name and a document (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Row for MERCADO AUTO yields name `MERCADO AUTO SOLUCOES PUBLICIDADE E TECNOLOGIA LTDA`, document `41.460.383/0001-68`, bank `BCO SANTANDER (BRASIL) S.A. (0033)`, method PIX
+- [x] Masked document `•••.224.672-••` and bank `NU PAGAMENTOS - IP (0260)` are captured intact
+- [x] All Pix rows of the fixture parse with a name and a document (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -217,11 +218,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Each known description maps to the specified method and category key
-- [ ] Unknown description is `unrecognized`, name equals the description, category Sem categoria
-- [ ] Counterparty fields are null for non-Pix rows (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Each known description maps to the specified method and category key
+- [x] Unknown description is `unrecognized`, name equals the description, category Sem categoria
+- [x] Counterparty fields are null for non-Pix rows (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -245,12 +246,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Fixture yields 18 Expense rows and 1 ignored row (`Pagamento recebido`)
-- [ ] `Prado Som Car - Parcela 3/6` keeps its full name and amount 343.72
-- [ ] Amount `1.335,61` parses to `1335.61`; identifier is null on every row
-- [ ] Invalid date or amount becomes `invalid` (4 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Fixture yields 18 Expense rows and 1 ignored row (`Pagamento recebido`)
+- [x] `Prado Som Car - Parcela 3/6` keeps its full name and amount 343.72
+- [x] Amount `1.335,61` parses to `1335.61`; identifier is null on every row
+- [x] Invalid date or amount becomes `invalid` (4 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -274,11 +275,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Account and invoice headers are recognized
-- [ ] Unknown header returns null
-- [ ] Format with a non-Nubank account raises `bank_mismatch` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Account and invoice headers are recognized
+- [x] Unknown header returns null
+- [x] Format with a non-Nubank account raises `bank_mismatch` (3 tests)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -304,11 +305,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Duplicate `(user_id, idempotency_key)` is rejected
-- [ ] A user cannot read another user's batches or attachments
-- [ ] Storage policy allows only `{auth.uid()}/...` paths in `imports` (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Duplicate `(user_id, idempotency_key)` is rejected
+- [x] A user cannot read another user's batches or attachments
+- [x] Storage policy allows only `{auth.uid()}/...` paths in `imports` (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -332,12 +333,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Existing identifier on the same account is `duplicate`
-- [ ] Same identifier on another account is `new`
-- [ ] Second occurrence in the same file is `duplicate`
-- [ ] Rows with `ignored` or `invalid` status are untouched (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Existing identifier on the same account is `duplicate`
+- [x] Same identifier on another account is `new`
+- [x] Second occurrence in the same file is `duplicate`
+- [x] Rows with `ignored` or `invalid` status are untouched (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -361,12 +362,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Same name, day, amount and type is `duplicate`
-- [ ] Different amount or type is `new`
-- [ ] Day comparison uses the user's timezone near midnight
-- [ ] Two identical invoice rows on a first import are both `new`; on re-import both are `duplicate` (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Same name, day, amount and type is `duplicate`
+- [x] Different amount or type is `new`
+- [x] Day comparison uses the user's timezone near midnight
+- [x] Two identical invoice rows on a first import are both `new`; on re-import both are `duplicate` (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -390,12 +391,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] With holder `Gabriel Vasconcelos Auzier`, the 5 Pix rows to that name are neutral
-- [ ] Case, accent and spacing variants match
-- [ ] Inactive account's holder still matches
-- [ ] No match keeps `neutral=false` and no value/date heuristic is applied (4 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] With holder `Gabriel Vasconcelos Auzier`, the 6 Pix rows to that name (indexes 3, 4, 5, 8, 12 and 13) are neutral
+- [x] Case, accent and spacing variants match
+- [x] Inactive account's holder still matches
+- [x] No match keeps `neutral=false` and no value/date heuristic is applied (4 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -421,11 +422,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Upload then download returns identical bytes
-- [ ] Remove deletes the object
-- [ ] A user cannot read another user's path (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Upload then download returns identical bytes
+- [x] Remove deletes the object
+- [x] A user cannot read another user's path (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -449,11 +450,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Account fixture returns 14 rows, invoice fixture 18 new plus 1 ignored
-- [ ] File over 5 MB returns 413; unknown header returns 422 `unsupported_format`; invoice sent to a non-Nubank account returns 422 `bank_mismatch`; empty file returns 422
-- [ ] No row is written to any table by preview (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Account fixture returns 14 rows, invoice fixture 18 new plus 1 ignored
+- [x] File over 5 MB returns 413; unknown header returns 422 `unsupported_format`; invoice sent to a non-Nubank account returns 422 `bank_mismatch`; empty file returns 422
+- [x] No row is written to any table by preview (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -477,13 +478,13 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Only selected rows are inserted, linked by `import_batch_id`
-- [ ] Unchecked duplicates are skipped; a duplicate the user re-selects is imported
-- [ ] Per-row neutral override is stored
-- [ ] Batch counts and attachment row are recorded and the stored file equals the upload
-- [ ] Selecting an `ignored` or `invalid` index returns 422 (5 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Only selected rows are inserted, linked by `import_batch_id`
+- [x] Unchecked duplicates are skipped; a duplicate the user re-selects is imported
+- [x] Per-row neutral override is stored
+- [x] Batch counts and attachment row are recorded and the stored file equals the upload
+- [x] Selecting an `ignored` or `invalid` index returns 422 (5 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -507,10 +508,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Forced insert failure leaves no batch, transaction, attachment or storage object
-- [ ] Forced upload failure leaves no batch or transaction (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Forced insert failure leaves no batch, transaction, attachment or storage object
+- [x] Forced upload failure leaves no batch or transaction (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -534,10 +535,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Repeated confirm returns the same `batchId` and counts
-- [ ] Transaction count is unchanged after the second call (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Repeated confirm returns the same `batchId` and counts
+- [x] Transaction count is unchanged after the second call (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -561,11 +562,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Re-import of the account fixture classifies all importable rows `duplicate`
-- [ ] Re-import of the invoice fixture classifies all 18 rows `duplicate`
-- [ ] Cancel path writes nothing (3 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Re-import of the account fixture classifies all importable rows `duplicate`
+- [x] Re-import of the invoice fixture classifies all 18 rows `duplicate`
+- [x] Cancel path writes nothing (3 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -589,10 +590,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] User B cannot import into user A's account
-- [ ] User B cannot read user A's attachment or batch (2 tests)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] User B cannot import into user A's account
+- [x] User B cannot read user A's attachment or batch (2 tests)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: integration
 **Gate**: full
@@ -601,12 +602,40 @@ T22 → T23
 
 ---
 
-### Phase 4: Web: import flow (substituída pelo Lovable, ver lovable.md)
+### Phase 4: Web: import flow
+### T24: Extend the API client to send FormData
+
+**What**: `apiRequest` accepts a `FormData` body: it is sent as is (no `JSON.stringify`) and without a `Content-Type` header so the browser sets the multipart boundary; JSON bodies, the `Authorization` and `X-Timezone` headers and the 401 handling stay as they are.
+**Where**: `web/src/lib/api/client.ts`
+**Depends on**: None
+**Reuses**: existing `apiRequest` and its tests
+**Requirement**: IMP-05
+
+**Tools**:
+
+- MCP: NONE
+- Skill: react-best-practices
+
+**Done when**:
+
+- [x] A `FormData` body reaches `fetch` unchanged and with no `Content-Type` header
+- [x] A JSON body is still serialized with `Content-Type: application/json`
+- [x] The Bearer and `X-Timezone` headers are still sent and a 401 still signs the user out (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(import): let the api client send form data`
+
+---
+
 ### T19: Create the import hooks
 
 **What**: `useImportPreview` and `useImportConfirm` (multipart) with `idempotencyKey` generated per preview session.
 **Where**: `web/src/features/import/useImport.ts`
-**Depends on**: None
+**Depends on**: T24
 **Reuses**: -
 **Requirement**: IMP-05
 
@@ -617,11 +646,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Preview sends file and account
-- [ ] Confirm sends the same file, the key and selections
-- [ ] The key is stable across retries of one session (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Preview sends file and account
+- [x] Confirm sends the same file, the key and selections
+- [x] The key is stable across retries of one session (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -645,10 +674,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] File over 5 MB is blocked with the message
-- [ ] Server `unsupported_format` and `bank_mismatch` errors are shown (3 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] File over 5 MB is blocked with the message
+- [x] Server `unsupported_format` and `bank_mismatch` errors are shown (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -672,12 +701,12 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Duplicate rows start unchecked and can be checked
-- [ ] Neutral rows are flagged and the toggle changes the payload
-- [ ] Invalid and ignored rows cannot be selected
-- [ ] Unrecognized rows are flagged for review (4 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Duplicate rows start unchecked and can be checked
+- [x] Neutral rows are flagged and the toggle changes the payload
+- [x] Invalid and ignored rows cannot be selected
+- [x] Unrecognized rows are flagged for review (4 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -701,10 +730,10 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Shows imported and skipped counts
-- [ ] Failure shows the error and keeps the preview (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Shows imported and skipped counts
+- [x] Failure shows the error and keeps the preview (2 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick
@@ -715,7 +744,7 @@ T22 → T23
 
 ### T23: Wire the import page
 
-**What**: Wizard composing start step, preview, confirm, summary and cancel (cancel writes nothing).
+**What**: Wizard composing start step, preview, confirm, summary and cancel (cancel writes nothing); the `/importar` route renders it in place of the placeholder.
 **Where**: `web/src/features/import/ImportPage.tsx`
 **Depends on**: T20, T21, T22
 **Reuses**: -
@@ -728,10 +757,11 @@ T22 → T23
 
 **Done when**:
 
-- [ ] Full happy path with a mocked API
-- [ ] Cancel returns to the start step without calling confirm (2 tests)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: all tests listed above pass, no silent deletions or skips
+- [x] Full happy path with a mocked API
+- [x] Cancel returns to the start step without calling confirm
+- [x] `web/src/routes/importar.tsx` renders `ImportPage` inside the authenticated layout (3 tests)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: all tests listed above pass, no silent deletions or skips
 
 **Tests**: unit
 **Gate**: quick

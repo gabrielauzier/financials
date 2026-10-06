@@ -33,6 +33,7 @@ Toda transação pertence a uma conta bancária e tem uma categoria. As contas c
 | Bancos disponíveis | Nubank, Sofisa Direto, Neon, XP, Outro | PRD §5.2 | n |
 | Nome de conta (apelido) único por usuário | Sim | Necessário para escolher contas sem ambiguidade | n |
 | Nomes de titular: quantidade | 1 ou mais, sem limite fixo | PRD não limita | n |
+| Critério de duplicidade (acentos) | Titulares de uma conta: ignora caixa, acentos e espaços internos (`normalizeName`); nome de categoria: só caixa; apelido de conta: caixa e espaços nas pontas | Decisão tomada na implementação; a spec não definia | n |
 | Excluir categoria em uso | Exige escolher categoria destino; destino não pode ser a própria categoria | PRD US-09 | n |
 
 **Open questions:** none - all resolved or logged above.
@@ -114,15 +115,15 @@ Toda transação pertence a uma conta bancária e tem uma categoria. As contas c
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| ACCT-01 | P1: Contas (criar, validar, editar) | - | Pending |
-| ACCT-02 | P1: Contas (desativar, reativar, sem exclusão) | - | Pending |
+| ACCT-01 | P1: Contas (criar, validar, editar) | - | Verified |
+| ACCT-02 | P1: Contas (desativar, reativar, sem exclusão) | - | Verified |
 | ACCT-03 | P1: Contas (efeitos da inatividade) | - | Pending |
-| CAT-01 | P1: Categorias iniciais (semeadura e nomes pt-BR) | - | Pending |
-| CAT-02 | P1: Categorias de sistema (proteção) | - | Pending |
-| CAT-03 | P1: Categorias próprias (criar, renomear) | - | Pending |
-| CAT-04 | P1: Categorias próprias (excluir com reatribuição) | - | Pending |
+| CAT-01 | P1: Categorias iniciais (semeadura e nomes pt-BR) | - | Verified |
+| CAT-02 | P1: Categorias de sistema (proteção) | - | Verified |
+| CAT-03 | P1: Categorias próprias (criar, renomear) | - | Verified |
+| CAT-04 | P1: Categorias próprias (excluir com reatribuição) | - | Verified |
 
-**Coverage:** 7 total, 0 mapped to tasks, 7 unmapped ⚠️
+**Coverage:** 7 total; backend verificado: 6 Verified (ACCT-01, ACCT-02, CAT-01 a CAT-04), ACCT-03 Implementing (efeitos nas demais features: contas inativas no extrato e titulares na importação). Mensagens e telas pertencem ao front (Lovable).
 
 ---
 

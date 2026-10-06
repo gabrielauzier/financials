@@ -1,0 +1,50 @@
+{
+  "name": "financials-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:int": "vitest run --config vitest.int.config.ts",
+    "test": "pnpm test:unit && pnpm test:int",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "build:vercel": "node scripts/build-vercel.mjs",
+    "start": "node --env-file-if-exists=.env dist/server.js",
+    "openapi:export": "tsx src/export-openapi.ts",
+    "db:start": "npx supabase --workdir .. start",
+    "db:stop": "npx supabase --workdir .. stop",
+    "db:reset": "npx supabase --workdir .. db reset",
+    "db:status": "npx supabase --workdir .. status"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@fastify/multipart": "^10.1.2",
+    "@fastify/swagger": "^9.9.1",
+    "@fastify/swagger-ui": "^6.1.1",
+    "@fastify/type-provider-typebox": "^6.1.0",
+    "@sinclair/typebox": "^0.34.52",
+    "csv-parse": "^7.0.3",
+    "fastify": "^5.12.5",
+    "fastify-plugin": "^6.0.0",
+    "jose": "^6.2.12",
+    "luxon": "^3.7.2",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/luxon": "^3.7.6",
+    "@types/node": "^26.6.4",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.12.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}

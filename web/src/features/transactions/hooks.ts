@@ -16,8 +16,8 @@ import {
 export const transactionsQueryOptions = (filters: TransactionFilters) =>
   queryOptions({ queryKey: ["transactions", filters], queryFn: () => getTransactions(filters) });
 
-export function useTransactions(filters: TransactionFilters) {
-  return useQuery(transactionsQueryOptions(filters));
+export function useTransactions(filters: TransactionFilters, enabled = true) {
+  return useQuery({ ...transactionsQueryOptions(filters), enabled });
 }
 
 const replaceInPages = (
