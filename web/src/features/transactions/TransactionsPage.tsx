@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/table";
 import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { CategorySelect } from "@/features/categories/CategorySelect";
-import { formatBRL, formatDateLocal } from "@/lib/format";
+import { formatDateLocal } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/notify";
 import type { Transaction, TransactionFilters } from "@/lib/api/types";
 import {
@@ -45,7 +45,13 @@ import {
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
 import { TransactionForm } from "./TransactionForm";
-import { applyDateFilter, monthRange, type FilterState } from "./utils";
+import {
+  amountClassName,
+  applyDateFilter,
+  formatSignedAmount,
+  monthRange,
+  type FilterState,
+} from "./utils";
 
 type Sort = NonNullable<TransactionFilters["sort"]>;
 const baseFilters: TransactionFilters = { sort: "date", order: "desc", page: 1 };
@@ -593,10 +599,8 @@ function TransactionRow({
         <CategorySelect value={item.categoryId} onChange={onCategory} />
       </TableCell>
       <TableCell>{paymentMethodLabels[item.paymentMethod]}</TableCell>
-      <TableCell
-        className={`whitespace-nowrap font-semibold ${item.type === "Expense" ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"}`}
-      >
-        {item.type === "Expense" ? `-${formatBRL(item.amount)}` : formatBRL(item.amount)}
+      <TableCell className={amountClassName(item.type)}>
+        {formatSignedAmount(item.type, item.amount)}
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
@@ -654,10 +658,8 @@ function TransactionCard(props: RowProps) {
             </p>
           </div>
         </div>
-        <span
-          className={`font-semibold ${item.type === "Expense" ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"}`}
-        >
-          {item.type === "Expense" ? `-${formatBRL(item.amount)}` : formatBRL(item.amount)}
+        <span className={amountClassName(item.type)}>
+          {formatSignedAmount(item.type, item.amount)}
         </span>
       </div>
       <dl className="grid grid-cols-2 gap-3 text-sm">

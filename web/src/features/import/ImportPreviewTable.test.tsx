@@ -69,17 +69,15 @@ describe("tabela da prévia", () => {
     expect(screen.getByText("Ignorada")).toHaveAttribute("title", "Pagamento recebido");
   });
 
-  it("formata data sem deslocar o dia, valor com sinal e rótulos de método e tipo", () => {
+  it("formata data sem deslocar o dia, valor com sinal e rótulo de método", () => {
     render(<Harness onChange={vi.fn()} />);
     expect(formatLocalDate("2026-03-05")).toBe("05/03/2026");
     const first = within(screen.getByText("Linha 0").closest("tr")!);
     expect(first.getByText("05/03/2026")).toBeInTheDocument();
     expect(first.getByText("-R$ 1.234,50")).toBeInTheDocument();
-    expect(first.getByText("Despesa")).toBeInTheDocument();
     expect(first.getByText("PIX")).toBeInTheDocument();
     const income = within(screen.getByText("Linha 5").closest("tr")!);
     expect(income.getByText("R$ 10,00")).toBeInTheDocument();
-    expect(income.getByText("Receita")).toBeInTheDocument();
     expect(income.getByText("Transferência bancária")).toBeInTheDocument();
   });
 
@@ -146,6 +144,50 @@ describe("tabela da prévia", () => {
       fireEvent.click(screen.getByRole("checkbox", { name: `Selecionar ${name}` }));
     }
     expect(screen.getByText("0 linhas selecionadas")).toBeInTheDocument();
+  });
+});
+
+describe("Valor colorido e sem a coluna Tipo (IMPIMP-05)", () => {
+  const valueRows: PreviewRow[] = [
+    row(0, "new", { name: "Despesa sem sinal", type: "Expense", amount: "1234.56" }),
+    row(1, "new", { name: "Despesa com sinal", type: "Expense", amount: "-1234.56" }),
+    row(2, "new", { name: "Salário março", type: "Income", amount: "99.90" }),
+  ];
+  const valuePreview: ImportPreview = {
+    rows: valueRows,
+    totals: { new: 3, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 },
+  };
+  const renderValues = () =>
+    render(
+      <ImportPreviewTable
+        preview={valuePreview}
+        selection={initialSelection(valueRows)}
+        onSelectionChange={vi.fn()}
+      />,
+    );
+
+  it("não tem a coluna Tipo nem células Receita ou Despesa", () => {
+    renderValues();
+    expect(screen.queryByRole("columnheader", { name: "Tipo" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Receita", { selector: "td" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Despesa", { selector: "td" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader")).toHaveLength(8);
+  });
+
+  it("receita aparece em verde e sem sinal", () => {
+    renderValues();
+    const cell = screen.getByText("R$ 99,90");
+    expect(cell).toHaveClass("text-emerald-700", "dark:text-emerald-400", "font-semibold");
+    expect(cell).not.toHaveClass("text-destructive");
+  });
+
+  it("despesa aparece em vermelho com um único sinal, com ou sem sinal no valor do preview", () => {
+    renderValues();
+    for (const name of ["Despesa sem sinal", "Despesa com sinal"]) {
+      const cell = within(screen.getByText(name).closest("tr")!).getByText("-R$ 1.234,56");
+      expect(cell).toHaveClass("text-destructive", "font-semibold");
+      expect(cell).not.toHaveClass("text-emerald-700");
+    }
   });
 });
 

@@ -9,8 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { paymentMethodLabels, transactionTypeLabels } from "@/features/transactions/labels";
-import { formatBRL } from "@/lib/format";
+import { paymentMethodLabels } from "@/features/transactions/labels";
+import { amountClassName, formatSignedAmount } from "@/features/transactions/utils";
 import type { ImportPreview, ImportRowStatus, PreviewRow } from "@/lib/api/types";
 import { formatLocalDate, importStatusLabels } from "./labels";
 import {
@@ -42,9 +42,6 @@ const statusVariant: Record<ImportRowStatus, "default" | "secondary" | "destruct
     unrecognized: "outline",
     invalid: "destructive",
   };
-
-const signedAmount = (row: PreviewRow) =>
-  formatBRL(row.type === "Expense" && !row.amount.startsWith("-") ? `-${row.amount}` : row.amount);
 
 export function ImportPreviewTable({
   preview,
@@ -99,7 +96,6 @@ export function ImportPreviewTable({
             <TableHead>Nome</TableHead>
             <TableHead>Método</TableHead>
             <TableHead>Categoria</TableHead>
-            <TableHead>Tipo</TableHead>
             <TableHead className="text-right">Valor</TableHead>
             <TableHead>Neutra</TableHead>
             <TableHead>Status</TableHead>
@@ -135,8 +131,9 @@ export function ImportPreviewTable({
                 </TableCell>
                 <TableCell>{paymentMethodLabels[row.paymentMethod]}</TableCell>
                 <TableCell>{row.categoryName}</TableCell>
-                <TableCell>{transactionTypeLabels[row.type]}</TableCell>
-                <TableCell className="text-right tabular-nums">{signedAmount(row)}</TableCell>
+                <TableCell className={`text-right tabular-nums ${amountClassName(row.type)}`}>
+                  {formatSignedAmount(row.type, row.amount)}
+                </TableCell>
                 <TableCell>
                   {selectable ? (
                     <Switch

@@ -1,4 +1,5 @@
-import type { TransactionFilters } from "@/lib/api/types";
+import { formatBRL } from "@/lib/format";
+import type { TransactionFilters, TransactionType } from "@/lib/api/types";
 
 export function parseBRLToDecimal(value: string): string | null {
   const clean = value.trim().replace(/\s/g, "");
@@ -47,4 +48,17 @@ export function todayLocal(now: Date = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+/** Color classes of a signed amount: red for an expense, green for an income. */
+export function amountClassName(type: TransactionType): string {
+  return type === "Expense"
+    ? "whitespace-nowrap font-semibold text-destructive"
+    : "whitespace-nowrap font-semibold text-emerald-700 dark:text-emerald-400";
+}
+
+/** An expense shows a single leading "-" (whether or not the amount carries one); an income has none. */
+export function formatSignedAmount(type: TransactionType, amount: string): string {
+  if (type === "Income") return formatBRL(amount);
+  return `-${formatBRL(amount.trim().replace(/^-/, ""))}`;
 }

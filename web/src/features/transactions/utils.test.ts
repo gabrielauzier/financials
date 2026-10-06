@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { todayLocal } from "./utils";
+import { amountClassName, formatSignedAmount, todayLocal } from "./utils";
 
 const originalTZ = process.env["TZ"];
 afterEach(() => {
@@ -39,5 +39,46 @@ describe("todayLocal", () => {
     process.env["TZ"] = "Pacific/Kiritimati";
     // 2026-10-05T12:00Z is already the 6th at 02:00 locally
     expect(todayLocal(new Date("2026-10-05T12:00:00Z"))).toBe("2026-10-06");
+  });
+});
+
+describe("amountClassName (IMPIMP-05)", () => {
+  it("receita fica em verde com as classes do extrato", () => {
+    const classes = amountClassName("Income").split(" ");
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        "text-emerald-700",
+        "dark:text-emerald-400",
+        "font-semibold",
+        "whitespace-nowrap",
+      ]),
+    );
+    expect(classes).not.toContain("text-destructive");
+  });
+
+  it("despesa fica em vermelho com as classes do extrato", () => {
+    const classes = amountClassName("Expense").split(" ");
+    expect(classes).toEqual(
+      expect.arrayContaining(["text-destructive", "font-semibold", "whitespace-nowrap"]),
+    );
+    expect(classes).not.toContain("text-emerald-700");
+  });
+});
+
+describe("formatSignedAmount (IMPIMP-05)", () => {
+  it("receita não tem sinal", () => {
+    expect(formatSignedAmount("Income", "1234.56")).toBe("R$ 1.234,56");
+  });
+
+  it("despesa tem um único sinal, com ou sem sinal no valor recebido", () => {
+    expect(formatSignedAmount("Expense", "1234.56")).toBe("-R$ 1.234,56");
+    expect(formatSignedAmount("Expense", "-1234.56")).toBe("-R$ 1.234,56");
+  });
+
+  it("formata zero e valores grandes", () => {
+    expect(formatSignedAmount("Expense", "0.00")).toBe("-R$ 0,00");
+    expect(formatSignedAmount("Income", "0.00")).toBe("R$ 0,00");
+    expect(formatSignedAmount("Income", "1234567.89")).toBe("R$ 1.234.567,89");
+    expect(formatSignedAmount("Expense", "-1234567.89")).toBe("-R$ 1.234.567,89");
   });
 });

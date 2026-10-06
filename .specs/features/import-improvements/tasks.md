@@ -287,11 +287,11 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests of both helpers: income class contains `text-emerald-700` and `dark:text-emerald-400`, expense class contains `text-destructive`, both `font-semibold` and `whitespace-nowrap`; income text `R$ 1.234,56`; expense text `-R$ 1.234,56` for `"1234.56"` and for `"-1234.56"` (a single minus); zero and large values format (AC 2, 3 and 4)
-- [ ] Preview table test: no column header "Tipo" and no "Receita" or "Despesa" cell; an income row shows its Valor with the green classes and no sign, an expense row shows `-R$ …` with the red class, whether the preview `amount` carries a minus or not (AC 1, 2 and 3)
-- [ ] The extrato table and mobile card render the same text and classes as before (the existing extrato tests pass unchanged) and call the helpers (AC 4)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 7 new ones pass (no silent deletions)
+- [x] Unit tests of both helpers: income class contains `text-emerald-700` and `dark:text-emerald-400`, expense class contains `text-destructive`, both `font-semibold` and `whitespace-nowrap`; income text `R$ 1.234,56`; expense text `-R$ 1.234,56` for `"1234.56"` and for `"-1234.56"` (a single minus); zero and large values format (AC 2, 3 and 4)
+- [x] Preview table test: no column header "Tipo" and no "Receita" or "Despesa" cell; an income row shows its Valor with the green classes and no sign, an expense row shows `-R$ …` with the red class, whether the preview `amount` carries a minus or not (AC 1, 2 and 3)
+- [x] The extrato table and mobile card render the same text and classes as before (the existing extrato tests pass unchanged) and call the helpers (AC 4)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 7 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
