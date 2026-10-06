@@ -8,10 +8,10 @@ O modal de edição não mostra como a transação é identificada (o id do banc
 
 ## Goals
 
-- [ ] A API devolve `identifier` em toda `Transaction` e nunca o aceita para escrita; o modal de edição mostra "ID" e "Identificador externo" como texto com botão de copiar.
-- [ ] Os toasts de sucesso (verde), de erro (vermelho) e de informação (neutro) se distinguem nos temas claro e escuro, com contraste de texto de pelo menos 4,5:1 calculado a partir dos valores do tema.
-- [ ] Cada filtro ativo do extrato (busca, tipo, conta, categoria, neutra, De, Até e mês rápido) tem um "x" que limpa só aquele filtro, mantém os demais e a ordenação e volta à página 1.
-- [ ] A tabela e o cartão móvel mostram o dia da semana abreviado abaixo da data, calculado da data local da transação, correto às 23:30 locais, nas viradas de mês e de ano e em ano bissexto.
+- [x] A API devolve `identifier` em toda `Transaction` e nunca o aceita para escrita; o modal de edição mostra "ID" e "Identificador externo" como texto com botão de copiar.
+- [x] Os toasts de sucesso (verde), de erro (vermelho) e de informação (neutro) se distinguem nos temas claro e escuro, com contraste de texto de pelo menos 4,5:1 calculado a partir dos valores do tema.
+- [x] Cada filtro ativo do extrato (busca, tipo, conta, categoria, neutra, De, Até e mês rápido) tem um "x" que limpa só aquele filtro, mantém os demais e a ordenação e volta à página 1.
+- [x] A tabela e o cartão móvel mostram o dia da semana abreviado abaixo da data, calculado da data local da transação, correto às 23:30 locais, nas viradas de mês e de ano e em ano bissexto.
 
 ## Out of Scope
 
@@ -198,19 +198,19 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| TUXV2-01 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
-| TUXV2-02 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
-| TUXV2-03 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
-| TUXV2-04 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
-| TUXV2-05 | P1: Identificadores no modal de edição | In Tasks | Implementing |
-| TUXV2-06 | P1: Identificadores no modal de edição | In Tasks | Implementing |
-| TUXV2-07 | P2: Toasts coloridos por tipo | In Tasks | Implementing |
-| TUXV2-08 | P2: Toasts coloridos por tipo | In Tasks | Implementing |
-| TUXV2-09 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
-| TUXV2-10 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
-| TUXV2-11 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
-| TUXV2-12 | P2: Dia da semana abaixo da data | In Tasks | Implementing |
-| TUXV2-13 | P2: Dia da semana abaixo da data | In Tasks | Implementing |
+| TUXV2-01 | P1: Identificadores da transação na API e nos mocks | In Tasks | Verified |
+| TUXV2-02 | P1: Identificadores da transação na API e nos mocks | In Tasks | Verified |
+| TUXV2-03 | P1: Identificadores da transação na API e nos mocks | In Tasks | Verified |
+| TUXV2-04 | P1: Identificadores da transação na API e nos mocks | In Tasks | Verified |
+| TUXV2-05 | P1: Identificadores no modal de edição | In Tasks | Verified |
+| TUXV2-06 | P1: Identificadores no modal de edição | In Tasks | Verified |
+| TUXV2-07 | P2: Toasts coloridos por tipo | In Tasks | Verified |
+| TUXV2-08 | P2: Toasts coloridos por tipo | In Tasks | Verified |
+| TUXV2-09 | P1: Limpar cada filtro do extrato | In Tasks | Verified |
+| TUXV2-10 | P1: Limpar cada filtro do extrato | In Tasks | Verified |
+| TUXV2-11 | P1: Limpar cada filtro do extrato | In Tasks | Verified |
+| TUXV2-12 | P2: Dia da semana abaixo da data | In Tasks | Verified |
+| TUXV2-13 | P2: Dia da semana abaixo da data | In Tasks | Verified |
 
 **Coverage:** 13 total, 13 mapped to tasks, 0 unmapped
 
@@ -218,10 +218,10 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 ## Success Criteria
 
-- [ ] `GET /transactions` devolve `identifier` e nenhuma rota o aceita para escrita, verificado por teste de integração e pelo `openapi.json`.
-- [ ] O modal de edição mostra "ID" e "Identificador externo" (ou "—") com botão de copiar, e nenhum campo editável para eles.
-- [ ] Os três tipos de toast têm cores distintas nos dois temas, com contraste de texto de pelo menos 4,5:1 calculado dos valores do tema.
-- [ ] Cada um dos oito filtros ativos tem um "x" que limpa só ele, com um teste por filtro, e a ordenação e os demais filtros permanecem.
-- [ ] O dia da semana abaixo da data está certo às 23:30 locais em America/Sao_Paulo e em UTC, nas viradas de mês e de ano e em 29 de fevereiro.
-- [ ] `pnpm -C api test`, `yarn --cwd web test`, typecheck e lint de cada app passam, sem aviso novo de lint.
+- [x] `GET /transactions` devolve `identifier` e nenhuma rota o aceita para escrita, verificado por teste de integração e pelo `openapi.json`.
+- [x] O modal de edição mostra "ID" e "Identificador externo" (ou "—") com botão de copiar, e nenhum campo editável para eles.
+- [x] Os três tipos de toast têm cores distintas nos dois temas, com contraste de texto de pelo menos 4,5:1 calculado dos valores do tema.
+- [x] Cada um dos oito filtros ativos tem um "x" que limpa só ele, com um teste por filtro, e a ordenação e os demais filtros permanecem.
+- [x] O dia da semana abaixo da data está certo às 23:30 locais em America/Sao_Paulo e em UTC, nas viradas de mês e de ano e em 29 de fevereiro.
+- [x] `pnpm -C api test`, `yarn --cwd web test`, typecheck e lint de cada app passam, sem aviso novo de lint.
 - [ ] No navegador, contra a API local: copiar os identificadores no modal, ver as cores dos toasts nos dois temas, limpar cada filtro e ver o dia da semana (conferência do dono, sem sessão dos agentes).
