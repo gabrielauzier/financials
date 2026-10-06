@@ -249,3 +249,16 @@ IMPFIX-01..10: all verified in code and tests; IMPFIX-09 has the C05 sub-gap; th
 ## Summary
 
 Gates green (API 322 unit and 518 integration, typecheck, lint; web typecheck, lint with 0 errors, 359 tests three times). All 10 requirements and every edge case have `file:line` evidence. 83 of 88 mutants killed; the 5 survivors are 3 equivalents and 2 real low gaps (C05, C07). No real statement data in any tracked file or commit message of the range. Ready, with the browser re-run as the single open item.
+
+---
+
+## Gaps closed
+
+Closed after the verdict above; the top-line verdict is unchanged (PASS).
+
+- C05 (IMPFIX-09): `api/test/import-classify.int.test.ts` now classifies holder-named rows with `identifier: null` as `new` and as a content-matched `duplicate`, both `neutral: true`. Mutant "neutral only when the identifier is not null" is killed.
+- C07 (IMPFIX-08): `api/test/import-preview.int.test.ts` now previews a row with a new identifier and the same name, day, amount and type as an existing transaction and asserts `new`. Mutant "content match also applies to identifier rows" is killed (4 tests fail, including the new one).
+- SPG-1: `api/test/import-idempotency.int.test.ts` now reads `description` of the 5 rows before and after a replay with the same key and asserts it unchanged. Mutant "replay rewrites description" is killed.
+- Mutants ran in a temporary worktree on the external volume (removed); the real tree was not mutated; no stash, no `db:reset`.
+- Statuses: `spec.md` IMPFIX-01..10 are Verified; `tasks.md` is Complete.
+- Browser check: the Verifier could not run it (stale session); it is re-covered by the next feature's browser verification.

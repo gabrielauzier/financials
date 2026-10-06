@@ -215,16 +215,16 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| IMPFIX-01 | P1: Reprodução com fixture sanitizada | In Tasks | Pending |
-| IMPFIX-02 | P1: Método `Other` na API e no front | In Tasks | Pending |
-| IMPFIX-03 | P1: Método `Other` na API e no front | In Tasks | Pending |
-| IMPFIX-04 | P1: Mapeamento de formatos de descrição | In Tasks | Pending |
-| IMPFIX-05 | P1: Mapeamento de formatos de descrição | In Tasks | Pending |
-| IMPFIX-06 | P1: `description` gravada pelo import | In Tasks | Pending |
-| IMPFIX-07 | P1: Mapeamento de formatos de descrição | In Tasks | Pending |
-| IMPFIX-08 | P1: Deduplicação íntegra com os novos nomes | In Tasks | Pending |
-| IMPFIX-09 | P1: Transferências próprias neutras | In Tasks | Pending |
-| IMPFIX-10 | P1: Transferências próprias neutras | In Tasks | Pending |
+| IMPFIX-01 | P1: Reprodução com fixture sanitizada | In Tasks | Verified |
+| IMPFIX-02 | P1: Método `Other` na API e no front | In Tasks | Verified |
+| IMPFIX-03 | P1: Método `Other` na API e no front | In Tasks | Verified |
+| IMPFIX-04 | P1: Mapeamento de formatos de descrição | In Tasks | Verified |
+| IMPFIX-05 | P1: Mapeamento de formatos de descrição | In Tasks | Verified |
+| IMPFIX-06 | P1: `description` gravada pelo import | In Tasks | Verified |
+| IMPFIX-07 | P1: Mapeamento de formatos de descrição | In Tasks | Verified |
+| IMPFIX-08 | P1: Deduplicação íntegra com os novos nomes | In Tasks | Verified |
+| IMPFIX-09 | P1: Transferências próprias neutras | In Tasks | Verified |
+| IMPFIX-10 | P1: Transferências próprias neutras | In Tasks | Verified |
 
 **Coverage:** 10 total, 10 mapped to tasks, 0 unmapped
 

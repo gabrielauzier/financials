@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/import-fixes/design.md`
-**Status**: Draft
+**Status**: Complete
 
 **Feature prerequisites**: transactions-ux complete (migration `0007` applies `transactions.description` and `Other` in the `payment_method` check; `GET /transactions` returns `description`); migrations 0001 a 0007 applied (`pnpm -C api db:reset`). Branch `feat/import-fixes`, stacked on `feat/transactions-ux`; no new migration. Do not commit `references/nubank_extrato_setembro.csv` (real names and counterparties).
 
