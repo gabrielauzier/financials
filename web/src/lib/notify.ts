@@ -6,6 +6,10 @@ export function notifySuccess(message: string): void {
   toast.success(message);
 }
 
+export function notifyInfo(message: string): void {
+  toast.info(message);
+}
+
 export function notifyError(error: unknown, context?: ErrorContext): void {
   toast.error(messageForError(error, context));
 }

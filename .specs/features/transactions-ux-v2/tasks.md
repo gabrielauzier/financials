@@ -182,14 +182,14 @@ T6 → T8
 
 **Done when**:
 
-- [ ] `notifyInfo(message)` emits `toast.info` with the exact text and no other helper calls `toast` directly (AC 1 of the toast story)
-- [ ] A real `Toaster` renders a success, an error and an info toast through `notify`, and each toast element carries the type attribute and the color classes of its own type only (AC 2, 3 and 4)
-- [ ] The background and text colors resolved from the theme have a green hue for success, a red hue for error and a chroma under 0.03 for info, in the light and the dark theme (AC 2, 3 and 4)
-- [ ] The text and background of every type in both themes have a WCAG contrast ratio of at least 4.5:1 (AC 5)
-- [ ] `RootComponent` still mounts one "Notifications" region (AC 6, existing test)
-- [ ] The Tailwind compilation of the classes contains the `dark` rule for `:is(.dark *)` with the `group-[.toaster]` prefix (recorded in the commit body)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus at least 12 new pass (no silent deletions)
+- [x] `notifyInfo(message)` emits `toast.info` with the exact text and no other helper calls `toast` directly (AC 1 of the toast story)
+- [x] A real `Toaster` renders a success, an error and an info toast through `notify`, and each toast element carries the type attribute and the color classes of its own type only (AC 2, 3 and 4)
+- [x] The background and text colors resolved from the theme have a green hue for success, a red hue for error and a chroma under 0.03 for info, in the light and the dark theme (AC 2, 3 and 4)
+- [x] The text and background of every type in both themes have a WCAG contrast ratio of at least 4.5:1 (AC 5)
+- [x] `RootComponent` still mounts one "Notifications" region (AC 6, existing test)
+- [x] The Tailwind compilation of the classes contains the `dark` rule for `:is(.dark *)` with the `group-[.toaster]` prefix (recorded in the commit body)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 656 web tests pass (630 existing plus 26 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

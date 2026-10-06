@@ -52,7 +52,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | Estratégia de cor dos toasts | `classNames` por tipo no `Toaster` (`success`, `error`, `info`, `default`, `warning`, `loading`), sem `richColors`; as classes ficam num módulo próprio (`toast-styles.ts`) lido pelo `sonner.tsx` e pelo teste de contraste | `richColors` usa cores fixas do `sonner` fora do tema Tailwind; assim o contraste é calculado dos valores do tema, como pedido | n |
 | Paleta | Sucesso: `emerald` (fundo 50, texto 900, borda 300; escuro: fundo 950, texto 100, borda 800). Erro: `red` com os mesmos degraus. Informação, padrão, aviso e carregamento: `background`, `foreground` e `border` do tema do app | Verde e vermelho do Tailwind, já usados no app (`emerald` no valor da receita); neutro herda o tema | n |
 | Tema escuro | Variante `dark:` do projeto (`@custom-variant dark (&:is(.dark *))`), junto do prefixo `group-[.toaster]:` que o wrapper já usa para vencer o CSS padrão do `sonner` | Padrão existente do wrapper | n |
-| Cálculo do contraste | Teste lê `--color-emerald-*` e `--color-red-*` de `tailwindcss/theme.css` e `--background`, `--foreground` de `web/src/styles.css`, converte OKLCH para sRGB e calcula a razão de luminância WCAG 2.x; limite 4,5:1 para o texto e matiz verde (110° a 180°), vermelho (0° a 40°) e croma baixo (< 0,03) para o neutro | Verificável sem navegador e sem fixar nomes de classes na asserção | n |
+| Cálculo do contraste | Teste lê `--color-emerald-*` e `--color-red-*` de `tailwindcss/theme.css` e `--background`, `--foreground` de `web/src/styles.css`, converte OKLCH para sRGB e calcula a razão de luminância WCAG 2.x; limite 4,5:1 para o texto; matiz verde (110° a 180°) no sucesso, vermelho (0° a 40°) no erro e, na informação, fundo e texto iguais a `--background` e `--foreground` do tema (o escuro do app tem croma 0,042, por isso o neutro é definido pelos tokens do tema e não por um limite de croma) | Verificável sem navegador e sem fixar nomes de classes na asserção | n |
 | Info neutro | `notify` ganha `notifyInfo(message)` (`toast.info`); nenhum fluxo o usa ainda | Sem o helper, o tipo neutro não seria emitido pelo canal único nem testável | n |
 | "Filtro ativo" | Busca: o campo tem texto; Tipo, Conta, Categoria, Neutra, De e Até: o filtro tem valor; mês rápido: mês e ano escolhidos. Só o mês ou só o ano escolhido não é filtro ativo (nada vai para a consulta) e continua sendo limpo pelo botão "Limpar mês" | O "x" aparece onde o filtro altera a consulta | n |
 | Nome e posição do "x" | Botão com ícone ao lado do rótulo visível, nome acessível "Limpar filtro <rótulo>": "Limpar filtro De", "Limpar filtro Até", "Limpar filtro Conta", "Limpar filtro Categoria", "Limpar filtro Tipo", "Limpar filtro Neutra", "Limpar filtro Mês rápido" (ao lado do rótulo "Mês"); a busca não tem rótulo visível, então o "x" fica dentro do campo, à direita, com o nome "Limpar filtro Busca" | O nome distingue o botão de "Limpar filtros" e de "Limpar mês" (que continuam) | n |
@@ -150,7 +150,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 1. The `notify` SHALL expor `notifyInfo(message)`, que emite `toast.info`, além de `notifySuccess` e `notifyError`, e SHALL continuar sendo o único chamador de `toast`.  <!-- TUXV2-07 -->
 2. WHEN um toast de sucesso é exibido THEN o sistema SHALL aplicar fundo e texto de matiz verde no tema claro e no escuro.  <!-- TUXV2-07 -->
 3. WHEN um toast de erro é exibido THEN o sistema SHALL aplicar fundo e texto de matiz vermelho no tema claro e no escuro.  <!-- TUXV2-07 -->
-4. WHEN um toast de informação é exibido THEN o sistema SHALL aplicar as cores neutras do tema (sem matiz) no tema claro e no escuro.  <!-- TUXV2-07 -->
+4. WHEN um toast de informação é exibido THEN o sistema SHALL aplicar o fundo e o texto neutros do tema (`--background` e `--foreground`) no tema claro e no escuro.  <!-- TUXV2-07 -->
 5. The sistema SHALL manter contraste de pelo menos 4,5:1 entre o texto e o fundo de cada tipo de toast (sucesso, erro e informação) nos temas claro e escuro, calculado a partir dos valores do tema.  <!-- TUXV2-08 -->
 6. The `Toaster` SHALL continuar montado uma única vez no layout raiz.  <!-- TUXV2-08 -->
 
@@ -204,8 +204,8 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | TUXV2-04 | P1: Identificadores da transação na API e nos mocks | In Tasks | Implementing |
 | TUXV2-05 | P1: Identificadores no modal de edição | In Tasks | Implementing |
 | TUXV2-06 | P1: Identificadores no modal de edição | In Tasks | Implementing |
-| TUXV2-07 | P2: Toasts coloridos por tipo | In Tasks | Pending |
-| TUXV2-08 | P2: Toasts coloridos por tipo | In Tasks | Pending |
+| TUXV2-07 | P2: Toasts coloridos por tipo | In Tasks | Implementing |
+| TUXV2-08 | P2: Toasts coloridos por tipo | In Tasks | Implementing |
 | TUXV2-09 | P1: Limpar cada filtro do extrato | In Tasks | Pending |
 | TUXV2-10 | P1: Limpar cada filtro do extrato | In Tasks | Pending |
 | TUXV2-11 | P1: Limpar cada filtro do extrato | In Tasks | Pending |

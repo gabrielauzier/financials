@@ -5,12 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
 import { GENERIC_ERROR } from "@/lib/api/errorMessages";
-import { notifyError, notifySuccess } from "./notify";
+import { notifyError, notifyInfo, notifySuccess } from "./notify";
 import { Route } from "@/routes/__root";
 
 vi.mock("sonner", async (importOriginal) => ({
   ...(await importOriginal<typeof import("sonner")>()),
-  toast: { success: vi.fn(), error: vi.fn() },
+  toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 // The root component needs a router and a session only for the page content, not for the Toaster.
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
@@ -24,6 +24,7 @@ vi.mock("@/features/auth/useSession", () => ({
 beforeEach(() => {
   vi.mocked(toast.success).mockClear();
   vi.mocked(toast.error).mockClear();
+  vi.mocked(toast.info).mockClear();
 });
 afterEach(cleanup);
 
@@ -31,6 +32,13 @@ describe("notify", () => {
   it("notifySuccess emite toast.success com o texto exato", () => {
     notifySuccess("Transação criada");
     expect(toast.success).toHaveBeenCalledExactlyOnceWith("Transação criada");
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("notifyInfo emite toast.info com o texto exato", () => {
+    notifyInfo("Dica para você");
+    expect(toast.info).toHaveBeenCalledExactlyOnceWith("Dica para você");
+    expect(toast.success).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
   });
 
