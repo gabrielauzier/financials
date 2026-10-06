@@ -57,7 +57,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | Mesma lista nos dois lados | API: constante `COLOR_KEYS` em `api/src/lib/palette.ts` (famílias × tons); web: `COLOR_KEYS` em `web/src/features/colors/palette.ts`; banco: o domínio. Sincronia por teste: o `openapi.json` expõe `enum` de 22 chaves em `color` (contas e categorias); um teste do web lê `api/openapi.json` e compara com `COLOR_KEYS`; um teste de integração da API compara o domínio do banco com `COLOR_KEYS` | AD-001 (apps independentes, contrato = OpenAPI); falha ao divergir sem pacote compartilhado | n |
 | Onde a API usa a lista | Schemas de resposta com `Type.Unsafe({ type: "string", enum: COLOR_KEYS })`; corpos de entrada como `Type.String` com a lista na descrição, validados no handler (como `bank`) | Mantém 422 com campo e `enum` no OpenAPI | n |
 | Mapa de classes | Um único módulo `palette.ts` no web com 22 entradas literais `{ bg, text }` (ex.: `{ bg: "bg-blue-400", text: "text-blue-800" }`); nenhuma classe é montada por template; o Tailwind v4 as encontra por `@source "../src"` | Classes dinâmicas não são geradas pelo Tailwind | n |
-| Regra de cor do texto do badge | Fundo `bg-<família>-400` e texto `text-<família>-800`, da mesma família (decisão do dono em `docs/v1/ajustes-pontuais.md`) | Contraste medido com os valores oklch do `tailwindcss/theme.css`: 800 sobre 400 chega a 4,5:1 só em lime, slate, gray, zinc, neutral e stone; as outras 16 famílias ficam entre 2,77 e 4,38. **Desvio conhecido (COLOR-09 AC 3): o par mandatado fica abaixo de 4,5:1 nessas 16; o limiar não foi enfraquecido e a decisão é do dono** (ver validation.md, adendo) | n |
+| Regra de cor do badge | Fundo `bg-<família>-200` e texto `text-<família>-800`, da mesma família (o dono trocou o tom do badge de 400 para 200 em 2026-10-06; a regra do texto 800 vem de `docs/v1/ajustes-pontuais.md`). As chaves armazenadas continuam `<família>-400`: o sufixo é só um identificador, sem mudança de banco ou API. Pontos, barras e molduras de conta (accent) continuam em `bg-<família>-400` | Contraste medido com os valores oklch do `tailwindcss/theme.css`: 800 sobre 200 fica entre 5,42 (orange) e 12,09 (stone), então as 22 famílias cumprem 4,5:1; a troca do tom resolveu o desvio de contraste que existia com 800 sobre 400 | n |
 | Legibilidade nos dois temas | O badge é um preenchimento sólido da cor escolhida com texto próprio (não depende do fundo da página), mais `ring-1 ring-inset ring-black/10 dark:ring-white/25` para o contorno aparecer sobre fundo claro e escuro | Texto legível igual nos dois temas e o tom 900 não some no fundo escuro | n |
 | Teste de contraste | Teste unitário calcula o contraste de cada entrada a partir do `theme.css` (`require.resolve("tailwindcss/theme.css")`), tratando `none` como matiz 0, e exige ≥ 4,5 | Evidência objetiva, sem hex copiado à mão | n |
 | Componente do badge | `CategoryBadge({ name, color })` sobre o `Badge` do shadcn (`web/src/components/ui/badge.tsx`), com `variant="outline"` zerado pelas classes do mapa; `CategoryOptionLabel` passa a renderizá-lo; cor fora do mapa cai em `slate-400` | `CategoryOptionLabel` já é o único ponto de conteúdo dos selects (decisão da import-improvements) | n |
@@ -226,14 +226,14 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 **Acceptance Criteria**:
 
-1. The mapa de classes SHALL ter 22 entradas, uma por chave da paleta, cada uma com `bg` e `text` como strings literais (`bg-<família>-400`) e nenhuma montada por template.  <!-- COLOR-09 -->
-2. The mapa de classes SHALL usar a regra de texto do design: `text-<família>-800`, da mesma família do fundo `bg-<família>-400`.  <!-- COLOR-09 -->
-3. The contraste entre o texto 800 e o fundo 400 de cada uma das 22 entradas, calculado dos valores do `tailwindcss/theme.css`, SHALL ser de pelo menos 4,5:1; **desvio conhecido: 16 famílias (red, orange, amber, yellow, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose) não chegam a 4,5:1 com o par mandatado, o limiar do teste não foi enfraquecido e o teste afirma a lista exata dessas famílias até a decisão do dono**.  <!-- COLOR-09 -->
-4. WHEN `CategoryBadge` recebe `name` e uma chave da paleta THEN SHALL renderizar um `Badge` com o nome e as classes `bg` e `text` da chave, mais o contorno `ring-1 ring-inset ring-black/10 dark:ring-white/25`.  <!-- COLOR-09 -->
-5. IF `CategoryBadge` recebe uma cor fora do mapa THEN SHALL usar as classes de `slate-400`.  <!-- COLOR-09 -->
+1. The mapa de classes SHALL ter 22 entradas, uma por chave da paleta, em dois mapas, `badge` (`bg` e `text`) e `accent` (`bg`), de strings literais (`bg-<família>-200`, `text-<família>-800` e `bg-<família>-400`) e nenhuma montada por template; as chaves armazenadas continuam `<família>-400`.  <!-- COLOR-09 -->
+2. The mapa `badge` SHALL usar `bg-<família>-200` com `text-<família>-800`, da mesma família, e o mapa `accent` SHALL usar `bg-<família>-400` (pontos, barras e molduras de conta); o `ColorPicker` SHALL mostrar o tom do badge.  <!-- COLOR-09 -->
+3. The contraste entre o texto 800 e o fundo 200 de cada uma das 22 entradas do mapa `badge`, calculado dos valores do `tailwindcss/theme.css`, SHALL ser de pelo menos 4,5:1.  <!-- COLOR-09 -->
+4. WHEN `CategoryBadge` recebe `name` e uma chave da paleta THEN SHALL renderizar um `Badge` com o nome e as classes `bg` e `text` do mapa `badge` da chave, mais o contorno `ring-1 ring-inset ring-black/10 dark:ring-white/25`.  <!-- COLOR-09 -->
+5. IF `CategoryBadge` recebe uma cor fora do mapa THEN SHALL usar as classes `badge` de `slate-400`.  <!-- COLOR-09 -->
 6. WHERE o nome da categoria é longo o `CategoryBadge` SHALL truncar o texto com reticências sem quebrar a linha do select.  <!-- COLOR-09 -->
 
-**Independent Test**: Renderizar o badge das 22 chaves e conferir as classes; o teste de contraste verde, com a lista de desvios conhecidos exata.
+**Independent Test**: Renderizar o badge das 22 chaves e conferir as classes; o teste de contraste verde para as 22 famílias (800 sobre 200).
 
 ---
 
@@ -365,6 +365,6 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 
 - [ ] `pnpm -C api test` (com `supabase start`) e `yarn --cwd web test`, mais typecheck e lint de cada app, passam; o teste do swagger confirma o `openapi.json` atualizado e o teste de contrato do web confirma as 22 chaves iguais.
 - [ ] Os testes de integração mostram as 17 categorias de um novo usuário com as cores da tabela (todas distintas), o preenchimento das linhas existentes, o 422 de cor inválida em contas e categorias e o RLS inalterado.
-- [ ] Os testes de contraste mostram as 22 combinações 800 sobre 400 com a lista exata das famílias abaixo de 4,5:1 (desvio conhecido, decisão do dono) e as demais com pelo menos 4,5:1, e os testes de sanidade mostram os quatro SVGs sem script nem referência externa, cada um com até 12 KB.
+- [ ] Os testes de contraste mostram as 22 combinações 800 sobre 200 com pelo menos 4,5:1, e os testes de sanidade mostram os quatro SVGs sem script nem referência externa, cada um com até 12 KB.
 - [ ] No navegador, contra a API local: o picker troca a cor de uma conta e de uma categoria e o extrato, os selects e a lista de contas refletem a troca; os selects mostram badges nos temas claro e escuro; o extrato e o seletor de conta mostram o ícone certo de Nubank, Sofisa Direto, Neon, XP e o genérico para Outro.
 - [ ] Nenhum arquivo versionado de banco tem origem sem registro no `NOTICE`.

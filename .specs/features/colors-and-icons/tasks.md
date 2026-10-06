@@ -475,7 +475,7 @@ T7 → T13
 - [x] A selectable preview row's select shows the category badge in its trigger and in its opened options (COLOR-10 AC 5)
 - [x] An `ignored` or `invalid` row shows the `CategoryBadge` with the category name and the color of the user's category with that id when the lookup is ready (COLOR-10 AC 5)
 - [x] When `GET /categories` fails the column shows the `categoryName` text for every row, with no badge, as before; while loading the select shows "Carregando categorias…" (COLOR-10 AC 6 and 8)
-- [ ] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for each of the 22 colors (shade 400, text 800; the contrast deviation of 16 families is a known item for the owner); the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
+- [ ] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for each of the 22 colors (badge tone 200, text 800; the contrast deviation is resolved; was a known item for the owner); the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
 - [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
 - [x] Test count: the existing web tests plus about 5 new ones pass (no silent deletions)
 
@@ -496,7 +496,7 @@ T7 → T13
 
 - [x] The schema test replays 0008 then 0009 from the files in a rolled-back transaction (domain, defaults, check, remap, seed function, deleted seeded categories)
 - [x] The key lists agree in the migration, the API, `openapi.json` and the web (22 keys); the web contract test compares them
-- [x] The contrast test keeps the 4.5:1 threshold and lists the 16 families that miss it with 800 on 400 (known deviation, decision pending with the owner)
+- [x] The contrast test keeps the 4.5:1 threshold; with 800 on 400 it listed 16 failing families (superseded: on 2026-10-06 the owner moved the badge to 200 and all 22 pass)
 
 **Tests**: unit, integration
 **Gate**: build
@@ -522,7 +522,7 @@ T7 → T13
 **What**: `spec.md`, `design.md`, this file and the addendum of `validation.md` record the changes above.
 **Done when**:
 
-- [x] COLOR-* describe 22 keys, shade 400 and text 800; ICON-* describe the square icons; the contrast deviation is stated
+- [x] COLOR-* describe 22 keys, shade 400 and text 800; ICON-* describe the square icons; badges use the 200 tone and the former contrast deviation is resolved
 - [ ] The browser boxes of T10 and T13 stay open for the owner
 
 **Tests**: none

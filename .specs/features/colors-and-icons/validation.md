@@ -338,35 +338,8 @@ Recorded after the iteration-1 verdict above, which is unchanged. This addendum 
 
 **Mutation checks of the new guards** (temporary worktree on the external volume, removed afterwards; not the full Verifier sensor): 7 web mutants (text 900, no roving reset on open, Down not clamped, padding on the image, non-square Neon viewBox, `rx` on the XP background, a different text on one family) and 5 migration mutants (duplicate seeded color, account default left at `slate-600`, domain without `stone-400`, remap skipping accounts, `seed_categories` granted to `authenticated`) were all killed.
 
-**Known deviation: contrast of the mandated pair.** The owner asked for `text-<family>-800` on `bg-<family>-400`. With the Tailwind v4 theme values (oklch from `tailwindcss/theme.css`, WCAG relative luminance) only 6 of 22 families reach 4.5:1. The threshold was not weakened; `palette.test.ts` asserts the exact list of failing families, so it fails if the list changes either way. Ratios (800 on 400), and the same family at 900 and 950 for the owner's decision:
-
-| Family | 800 on 400 | 900 on 400 | 950 on 400 |
-| ------ | ---------- | ---------- | ---------- |
-| red | 2.90 | 3.48 | 5.58 |
-| orange | 3.09 | 3.96 | 6.58 |
-| amber | 4.15 | 5.29 | 8.73 |
-| yellow | 4.38 | 5.54 | 9.29 |
-| lime (passes) | 4.59 | 5.68 | 9.51 |
-| green | 4.00 | 5.11 | 8.40 |
-| emerald | 3.92 | 5.01 | 7.83 |
-| teal | 4.04 | 5.07 | 7.76 |
-| cyan | 4.01 | 5.04 | 7.40 |
-| sky | 3.44 | 4.34 | 6.37 |
-| blue | 3.35 | 3.94 | 5.58 |
-| indigo | 3.23 | 3.68 | 5.14 |
-| violet | 3.21 | 3.87 | 5.36 |
-| purple | 3.18 | 3.92 | 5.39 |
-| fuchsia | 3.23 | 3.90 | 5.75 |
-| pink | 2.86 | 3.51 | 5.47 |
-| rose | 2.77 | 3.37 | 5.48 |
-| slate (passes) | 5.58 | 6.79 | 7.68 |
-| gray (passes) | 5.64 | 6.82 | 7.73 |
-| zinc (passes) | 5.66 | 6.74 | 7.56 |
-| neutral (passes) | 5.83 | 6.91 | 7.63 |
-| stone (passes) | 5.87 | 6.76 | 7.63 |
-
-Failing with 800 (16): red, orange, amber, yellow, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose. Text 950 on 400 of the same family would pass in all 22; 900 passes in 12 (amber, yellow, lime, green, emerald, teal, cyan, slate, gray, zinc, neutral, stone). The owner decides whether to keep 800 or move those 16 to 950.
+**Contrast deviation resolved (owner change of 2026-10-06).** The owner changed the badge tone from 400 to 200 (`bg-<family>-200 text-<family>-800`; stored keys stay `<family>-400`, no DB or API change; account accents keep 400 through a separate map). Computed from `tailwindcss/theme.css`, 800 on 200 is between 5.42 (orange) and 12.09 (stone), so all 22 families reach 4.5:1 and `palette.test.ts` now asserts that for every family with the threshold unchanged. This replaces the earlier known deviation (800 on 400, 16 families below 4.5:1). Mutants killed in a temporary worktree: text 900, badge bg 400, accent bg 200, template class, fallback to another family, picker using the accent map.
 
 **Icon render check** (standalone page with the four icons at 20, 32 and 96 px on a light and a dark background, plus the generic frame): all four fill the frame with the same rounding; Nubank, Neon and XP are solid brand squares; Sofisa Direto is a white square, so on a light background only the ring is visible and the rounding shows on dark; the Neon wordmark is about 3 px tall at 20 px (legible as a blue tile, not as text); in XP the "p" breaks out of the lower right edge as in the original drawing, so the mark is not centered in the square.
 
-**Manual browser steps still owed by the owner** (never run by an agent): the steps of the section above, with the new palette: the picker offers 22 swatches named by family and changes a category and an account color; the extrato, selects, accounts list and import preview reflect it; badges in light and dark themes (judge the 16 low-contrast families); the four bank icons and the generic one in the account select and the extrato; a 320 px screen with the picker; `pnpm -C api openapi:export` leaves `api/openapi.json` unchanged. After applying `0009` to the hosted database (not done here), existing colors keep their family in shade 400.
+**Manual browser steps still owed by the owner** (never run by an agent): the steps of the section above, with the new palette: the picker offers 22 swatches named by family and changes a category and an account color; the extrato, selects, accounts list and import preview reflect it; badges in light and dark themes (the 200 tone); the four bank icons and the generic one in the account select and the extrato; a 320 px screen with the picker; `pnpm -C api openapi:export` leaves `api/openapi.json` unchanged. After applying `0009` to the hosted database (not done here), existing colors keep their family in shade 400.
