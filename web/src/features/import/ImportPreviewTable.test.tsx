@@ -106,7 +106,8 @@ describe("tabela da prévia", () => {
     render(<Harness onChange={onChange} />);
     expect(screen.queryByRole("checkbox", { name: "Selecionar Linha 2" })).not.toBeInTheDocument();
     expect(screen.queryByRole("checkbox", { name: "Selecionar Linha 4" })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("checkbox")).toHaveLength(4);
+    // The header "select all" checkbox plus one per selectable row.
+    expect(screen.getAllByRole("checkbox")).toHaveLength(5);
     fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar Linha 1" }));
     const indexes = onChange.mock.calls.at(-1)![0].map((s: { index: number }) => s.index);
     expect(indexes).toEqual([0, 1, 3, 5]);
@@ -145,6 +146,82 @@ describe("tabela da prévia", () => {
       fireEvent.click(screen.getByRole("checkbox", { name: `Selecionar ${name}` }));
     }
     expect(screen.getByText("0 linhas selecionadas")).toBeInTheDocument();
+  });
+});
+
+describe("selecionar todas as linhas (IMPIMP-04)", () => {
+  const selectAll = () => screen.getByRole("checkbox", { name: "Selecionar todas as linhas" });
+  const rowBox = (index: number) =>
+    screen.getByRole("checkbox", { name: `Selecionar Linha ${index}` });
+
+  it("seleciona todas as linhas selecionáveis, atualiza o contador e deixa ignoradas e inválidas de fora", () => {
+    const onChange = vi.fn();
+    render(<Harness onChange={onChange} />);
+    fireEvent.click(selectAll());
+    for (const index of [0, 1, 3, 5]) expect(rowBox(index)).toBeChecked();
+    expect(screen.getByText("4 linhas selecionadas")).toBeInTheDocument();
+    const indexes = onChange.mock.calls.at(-1)![0].map((s: { index: number }) => s.index);
+    expect(indexes).toEqual([0, 1, 3, 5]);
+    expect(screen.queryByRole("checkbox", { name: "Selecionar Linha 2" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Selecionar Linha 4" })).not.toBeInTheDocument();
+  });
+
+  it("aparece indeterminado com seleção parcial, marcado com todas e desmarcado com nenhuma", () => {
+    render(<Harness onChange={vi.fn()} />);
+    // Initial selection: new and unrecognized rows only, the duplicate is out.
+    expect(selectAll()).toHaveAttribute("aria-checked", "mixed");
+    fireEvent.click(rowBox(1));
+    expect(selectAll()).toHaveAttribute("aria-checked", "true");
+    for (const index of [0, 1, 3, 5]) fireEvent.click(rowBox(index));
+    expect(selectAll()).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("clicar no indeterminado seleciona todas e clicar no marcado limpa todas", () => {
+    render(<Harness onChange={vi.fn()} />);
+    expect(selectAll()).toHaveAttribute("aria-checked", "mixed");
+    fireEvent.click(selectAll());
+    expect(selectAll()).toHaveAttribute("aria-checked", "true");
+    expect(rowBox(1)).toBeChecked();
+    fireEvent.click(selectAll());
+    expect(selectAll()).toHaveAttribute("aria-checked", "false");
+    for (const index of [0, 1, 3, 5]) expect(rowBox(index)).not.toBeChecked();
+    expect(screen.getByText("0 linhas selecionadas")).toBeInTheDocument();
+  });
+
+  it("mantém a chave Neutra de cada linha ao usar o checkbox do cabeçalho", () => {
+    render(<Harness onChange={vi.fn()} />);
+    const suggested = screen.getByRole("switch", { name: "Marcar Linha 5 como neutra" });
+    const other = screen.getByRole("switch", { name: "Marcar Linha 0 como neutra" });
+    fireEvent.click(other);
+    fireEvent.click(selectAll());
+    fireEvent.click(selectAll());
+    fireEvent.click(selectAll());
+    expect(other).toBeChecked();
+    expect(suggested).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Marcar Linha 1 como neutra" })).not.toBeChecked();
+  });
+
+  it("fica desabilitado e desmarcado quando só há linhas ignoradas e inválidas", () => {
+    const blocked = [row(0, "ignored"), row(1, "invalid")];
+    render(
+      <ImportPreviewTable
+        preview={{
+          rows: blocked,
+          totals: { new: 0, duplicate: 0, ignored: 1, unrecognized: 0, invalid: 1 },
+        }}
+        selection={initialSelection(blocked)}
+        onSelectionChange={vi.fn()}
+      />,
+    );
+    expect(selectAll()).toBeDisabled();
+    expect(selectAll()).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("a seleção inicial continua com novas e não reconhecidas marcadas e duplicadas desmarcadas", () => {
+    render(<Harness onChange={vi.fn()} />);
+    expect(rowBox(0)).toBeChecked();
+    expect(rowBox(3)).toBeChecked();
+    expect(rowBox(1)).not.toBeChecked();
   });
 });
 

@@ -13,7 +13,12 @@ import { paymentMethodLabels, transactionTypeLabels } from "@/features/transacti
 import { formatBRL } from "@/lib/format";
 import type { ImportPreview, ImportRowStatus, PreviewRow } from "@/lib/api/types";
 import { formatLocalDate, importStatusLabels } from "./labels";
-import { isSelectable, type PreviewSelection } from "./previewSelection";
+import {
+  isSelectable,
+  selectAllState,
+  setAllSelected,
+  type PreviewSelection,
+} from "./previewSelection";
 
 type ImportPreviewTableProps = {
   preview: ImportPreview;
@@ -55,6 +60,7 @@ export function ImportPreviewTable({
   const selectedCount = preview.rows.filter(
     (row) => isSelectable(row.status) && selection[row.index]?.selected,
   ).length;
+  const allState = selectAllState(preview.rows, selection);
 
   return (
     <div className="flex flex-col gap-4">
@@ -74,7 +80,21 @@ export function ImportPreviewTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Selecionar</TableHead>
+            <TableHead>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  aria-label="Selecionar todas as linhas"
+                  disabled={allState === "disabled"}
+                  checked={
+                    allState === "all" ? true : allState === "some" ? "indeterminate" : false
+                  }
+                  onCheckedChange={() =>
+                    onSelectionChange(setAllSelected(preview.rows, selection, allState !== "all"))
+                  }
+                />
+                Selecionar
+              </div>
+            </TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Nome</TableHead>
             <TableHead>Método</TableHead>

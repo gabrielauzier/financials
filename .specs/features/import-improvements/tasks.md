@@ -258,12 +258,12 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Unit tests of `selectAllState` and `setAllSelected` over rows with new, duplicate, unrecognized, ignored and invalid statuses: all, some, none, disabled (no selectable rows), and the set functions leave `neutral` untouched and never mark ignored or invalid rows (AC 2, 3, 6 and 8)
-- [ ] Table test: the header checkbox named "Selecionar todas as linhas" selects every selectable row and the "N linhas selecionadas" counter matches; ignored and invalid rows have no checkbox and stay out (AC 1 and 2)
-- [ ] Table test: with one row selected the checkbox has `aria-checked="mixed"`; clicking it selects all; with all selected it is checked and clicking clears all; neutral switches keep their value (AC 3, 4, 5 and 6)
-- [ ] Table test: a preview with only ignored and invalid rows renders the checkbox disabled and unchecked (AC 8); `initialSelection` still starts new and unrecognized selected and duplicates unselected (AC 7)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
+- [x] Unit tests of `selectAllState` and `setAllSelected` over rows with new, duplicate, unrecognized, ignored and invalid statuses: all, some, none, disabled (no selectable rows), and the set functions leave `neutral` untouched and never mark ignored or invalid rows (AC 2, 3, 6 and 8)
+- [x] Table test: the header checkbox named "Selecionar todas as linhas" selects every selectable row and the "N linhas selecionadas" counter matches; ignored and invalid rows have no checkbox and stay out (AC 1 and 2)
+- [x] Table test: with one row selected the checkbox has `aria-checked="mixed"`; clicking it selects all; with all selected it is checked and clicking clears all; neutral switches keep their value (AC 3, 4, 5 and 6)
+- [x] Table test: a preview with only ignored and invalid rows renders the checkbox disabled and unchecked (AC 8); `initialSelection` still starts new and unrecognized selected and duplicates unselected (AC 7)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

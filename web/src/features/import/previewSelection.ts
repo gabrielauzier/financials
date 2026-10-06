@@ -29,3 +29,28 @@ export function selectedPayload(
     .filter((row) => isSelectable(row.status) && selection[row.index]?.selected)
     .map((row) => ({ index: row.index, neutral: selection[row.index]?.neutral ?? row.neutral }));
 }
+
+export type SelectAllState = "all" | "some" | "none" | "disabled";
+
+/** State of the header checkbox, computed over the selectable rows only. */
+export function selectAllState(rows: PreviewRow[], selection: PreviewSelection): SelectAllState {
+  const selectable = rows.filter((row) => isSelectable(row.status));
+  if (selectable.length === 0) return "disabled";
+  const selected = selectable.filter((row) => selection[row.index]?.selected).length;
+  if (selected === 0) return "none";
+  return selected === selectable.length ? "all" : "some";
+}
+
+/** Marks or clears every selectable row; neutral flags and ignored/invalid rows are left alone. */
+export function setAllSelected(
+  rows: PreviewRow[],
+  selection: PreviewSelection,
+  selected: boolean,
+): PreviewSelection {
+  const next: PreviewSelection = { ...selection };
+  for (const row of rows) {
+    if (!isSelectable(row.status)) continue;
+    next[row.index] = { ...(selection[row.index] ?? { neutral: row.neutral }), selected };
+  }
+  return next;
+}
