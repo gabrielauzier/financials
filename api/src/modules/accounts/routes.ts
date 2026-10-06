@@ -2,6 +2,8 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type, type Static } from '@sinclair/typebox';
 import postgres, { type TransactionSql } from 'postgres';
+import { ColorInput, ColorResponse, validColor } from '../../lib/color-field.js';
+import type { ColorKey } from '../../lib/palette.js';
 import { normalizeName } from '../../lib/normalize.js';
 import { AppError } from '../../plugins/errors.js';
 
@@ -15,6 +17,7 @@ const AccountSchema = Type.Object({
   nickname: Type.String(),
   holderNames: Type.Array(Type.String()),
   active: Type.Boolean(),
+  color: ColorResponse,
   createdAt: Type.String({ format: 'date-time' }),
 });
 type Account = Static<typeof AccountSchema>;
@@ -26,12 +29,14 @@ const CreateBody = Type.Object({
   bank: bankField,
   nickname: Type.String(),
   holderNames: Type.Array(Type.String()),
+  color: Type.Optional(ColorInput),
 });
 
 const UpdateBody = Type.Object({
   bank: Type.Optional(bankField),
   nickname: Type.Optional(Type.String()),
   holderNames: Type.Optional(Type.Array(Type.String())),
+  color: Type.Optional(ColorInput),
 });
 
 const IdParams = Type.Object({ id: Type.String() });
@@ -42,10 +47,11 @@ interface AccountRow {
   nickname: string;
   holder_names: string[];
   active: boolean;
+  color: ColorKey;
   created_at: Date;
 }
 
-const columns = (tx: TransactionSql) => tx`id, bank, nickname, holder_names, active, created_at`;
+const columns = (tx: TransactionSql) => tx`id, bank, nickname, holder_names, active, color, created_at`;
 
 function toAccount(row: AccountRow): Account {
   return {
@@ -54,6 +60,7 @@ function toAccount(row: AccountRow): Account {
     nickname: row.nickname,
     holderNames: row.holder_names,
     active: row.active,
+    color: row.color,
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -118,11 +125,13 @@ export async function accountsRoutes(app: FastifyInstance): Promise<void> {
       const bank = validBank(request.body.bank);
       const nickname = validNickname(request.body.nickname);
       const holders = validHolders(request.body.holderNames);
+      // An absent color is left out of the insert so the column default (slate-600) applies.
+      const color = request.body.color === undefined ? undefined : validColor(request.body.color);
+      const values = { bank, nickname, holder_names: holders, ...(color === undefined ? {} : { color }) };
       try {
         const [row] = await request.withUser(
           (tx) => tx<AccountRow[]>`
-            insert into public.accounts (bank, nickname, holder_names)
-            values (${bank}, ${nickname}, ${holders})
+            insert into public.accounts ${tx(values)}
             returning ${columns(tx)}`,
         );
         return reply.status(201).send(toAccount(row as AccountRow));
@@ -156,11 +165,12 @@ export async function accountsRoutes(app: FastifyInstance): Promise<void> {
     { schema: { params: IdParams, body: UpdateBody, response: { 200: AccountSchema } } },
     async (request) => {
       const { id } = request.params;
-      const { bank, nickname, holderNames } = request.body;
-      const patch: { bank?: Bank; nickname?: string; holder_names?: string[] } = {};
+      const { bank, nickname, holderNames, color } = request.body;
+      const patch: { bank?: Bank; nickname?: string; holder_names?: string[]; color?: ColorKey } = {};
       if (bank !== undefined) patch.bank = validBank(bank);
       if (nickname !== undefined) patch.nickname = validNickname(nickname);
       if (holderNames !== undefined) patch.holder_names = validHolders(holderNames);
+      if (color !== undefined) patch.color = validColor(color);
       if (!UUID.test(id)) throw notFound();
       try {
         const [row] = await request.withUser((tx) =>

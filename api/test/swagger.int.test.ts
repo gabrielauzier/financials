@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
+import { COLOR_KEYS } from '../src/lib/palette.js';
 
 const apiDir = fileURLToPath(new URL('..', import.meta.url));
 
@@ -201,6 +202,45 @@ describe('OpenAPI contract', () => {
         const schema = responses[status]?.content?.['application/json']?.schema;
         expect(schema?.properties?.error?.required, status).toEqual(expect.arrayContaining(['code', 'message']));
       }
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('GET /docs/json documents color with the 66-key enum on the account responses and the key list on its bodies (COLOR-06)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{ paths: Record<string, Record<string, OperationDoc>> }>();
+      const colorOf = (schema: SchemaDoc | undefined) =>
+        schema?.properties?.color as { type?: string; enum?: string[]; description?: string } | undefined;
+      const response = (operation: OperationDoc | undefined, status: string): SchemaDoc | undefined =>
+        operation?.responses?.[status]?.content?.['application/json']?.schema;
+      const body = (operation: OperationDoc | undefined): SchemaDoc | undefined =>
+        operation?.requestBody?.content?.['application/json']?.schema;
+
+      const list = doc.paths['/accounts']?.get;
+      const create = doc.paths['/accounts']?.post;
+      const edit = doc.paths['/accounts/{id}']?.patch;
+      for (const [label, schema] of [
+        ['GET list item', response(list, '200')?.items],
+        ['POST 201', response(create, '201')],
+        ['PATCH 200', response(edit, '200')],
+        ['activate 200', response(doc.paths['/accounts/{id}/activate']?.post, '200')],
+        ['deactivate 200', response(doc.paths['/accounts/{id}/deactivate']?.post, '200')],
+      ] as const) {
+        expect(colorOf(schema)?.enum, label).toEqual([...COLOR_KEYS]);
+        expect(colorOf(schema)?.enum, label).toHaveLength(66);
+        expect(schema?.required, label).toContain('color');
+      }
+      for (const [label, schema] of [
+        ['POST body', body(create)],
+        ['PATCH body', body(edit)],
+      ] as const) {
+        expect(colorOf(schema)?.type, label).toBe('string');
+        expect(colorOf(schema)?.description, label).toBe(`One of: ${COLOR_KEYS.join(', ')}`);
+      }
+      expect(body(create)?.required ?? []).not.toContain('color');
     } finally {
       await app.close();
     }

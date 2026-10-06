@@ -138,13 +138,13 @@ T7 → T13
 
 **Done when**:
 
-- [ ] Integration: `POST /accounts` with `color: "teal-400"` answers 201 with that color and the row stores it; without `color` it stores and returns `slate-600` (COLOR-04 AC 1 and 2)
-- [ ] Integration: `POST` and `PATCH` with `""`, `"blue"`, `"blue-500"`, `"Blue-600"`, `" blue-600"` and `"#2563eb"` answer 422 `validation_error` with `field: "color"` and write nothing; `null`, a number and an object answer 400 `validation_error` (COLOR-04 AC 3 and 4)
-- [ ] Integration: `PATCH` with only `color` changes the color and keeps bank, nickname and holders; `PATCH` with `color` and an invalid `nickname` changes nothing; `GET /accounts`, `activate` and `deactivate` return `color` (COLOR-04 AC 5 and 6)
-- [ ] Integration: user B `PATCH`ing user A's account answers 404 `not_found` and A's color is unchanged (COLOR-04 AC 7)
-- [ ] `api/openapi.json` regenerated (never edited by hand) lists `color` with an enum of 66 keys on the account schema and the key list on the POST and PATCH bodies; the swagger test passes (COLOR-06 AC 1)
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
-- [ ] Test count: the existing API tests (whole-response assertions updated to include `color`) plus about 14 new integration tests pass (no silent deletions)
+- [x] Integration: `POST /accounts` with `color: "teal-400"` answers 201 with that color and the row stores it; without `color` it stores and returns `slate-600` (COLOR-04 AC 1 and 2)
+- [x] Integration: `POST` and `PATCH` with `""`, `"blue"`, `"blue-500"`, `"Blue-600"`, `" blue-600"` and `"#2563eb"` answer 422 `validation_error` with `field: "color"` and write nothing; `null`, a number and an object answer 400 `validation_error` (COLOR-04 AC 3 and 4)
+- [x] Integration: `PATCH` with only `color` changes the color and keeps bank, nickname and holders; `PATCH` with `color` and an invalid `nickname` changes nothing; `GET /accounts`, `activate` and `deactivate` return `color` (COLOR-04 AC 5 and 6)
+- [x] Integration: user B `PATCH`ing user A's account answers 404 `not_found` and A's color is unchanged (COLOR-04 AC 7)
+- [x] `api/openapi.json` regenerated (never edited by hand) lists `color` with an enum of 66 keys on the account schema and the key list on the POST and PATCH bodies; the swagger test passes (COLOR-06 AC 1)
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
+- [x] Test count: the existing API tests (whole-response assertions updated to include `color`) plus about 14 new integration tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
