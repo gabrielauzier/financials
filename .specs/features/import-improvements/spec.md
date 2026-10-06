@@ -10,7 +10,7 @@ Hoje o usuário só vê o preview do import como uma tabela rígida: a categoria
 
 - [ ] O confirm aceita `categoryId` opcional por linha, validado como categoria do usuário, e o preview devolve a categoria efetiva de cada linha; o preview da tela tem um select de categoria por linha.
 - [ ] O preview tem "selecionar todas" com estado indeterminado, mostra Valor verde (receita) e vermelho (despesa) sem a coluna "Tipo", e pede confirmação quando há duplicadas selecionadas.
-- [ ] `GET /imports`, `GET /imports/:id/file` e `POST /imports/:id/preview` existem, são isoladas por usuário (RLS) e nunca expõem o caminho do Storage.
+- [ ] `GET /imports` e `GET /imports/:id/file` existem, são isoladas por usuário (RLS) e nunca expõem o caminho do Storage.
 - [ ] A tela de importação lista "Arquivos importados" com os botões "Reimportar" (leva o arquivo ao preview normal, na conta certa) e "Baixar".
 - [ ] `api/openapi.json` regenerado e mocks e tipos do `web/` acompanham as rotas e os campos novos.
 
@@ -32,6 +32,7 @@ Explicitamente excluído para evitar crescimento de escopo.
 | Reimportar sem confirmar duplicadas ou pular a deduplicação | A deduplicação e o modal de duplicadas valem igual na reimportação |
 | Backfill de `attachments` ou lotes antigos | Todo lote já nasce com anexo desde a feature import |
 | Nova migration | Os campos necessários já existem (justificativa na Assumptions) |
+| Rota `POST /imports/:id/preview` (preview de lote guardado) | Descartada: a reimportação baixa o arquivo e reaproveita o preview e o confirm normais, então nenhuma tela chamaria a rota |
 | Mostrar `description` no preview | Continua fora do preview (decisão da import-fixes) |
 
 ---
@@ -69,11 +70,11 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | Download | `GET /imports/:id/file` lê o objeto do bucket `imports` com o token do próprio usuário (as policies de Storage valem) e responde 200 com os bytes em memória (no máximo 5 MB), `Content-Type` igual ao `mime_type` guardado (se não for do formato `tipo/subtipo`, `application/octet-stream`), `Content-Disposition: attachment; filename="<ASCII>"; filename*=UTF-8''<percent-encoded>` com o nome original (aspas, barras, controle e CR/LF removidos do fallback), `Cache-Control: private, no-store` e `X-Content-Type-Options: nosniff` | Cabeçalho seguro contra injeção; sem streaming porque o arquivo é limitado a 5 MB | n |
 | Id inválido ou de outro usuário | `:id` que não é UUID, lote inexistente ou de outro usuário respondem 404 `not_found` com a mesma resposta (o RLS esconde o lote de B); a rota não consulta o Storage nesses casos | Não vazar existência de lote alheio | n |
 | Objeto ausente no Storage | O Storage responde 400 (corpo `statusCode: "404"`) ou 404 para objeto inexistente ou fora da policy; os dois viram 404 `not_found`; qualquer outra falha (5xx, 401, 403, rede, timeout de 30 s) vira 502 `storage_error` sem URL, token nem caminho na mensagem | O helper já trata o 400 do Storage como erro de política; a rota distingue "sumiu" de "indisponível" | n |
-| Storage não configurado | Sem `publishableKey`, as rotas `GET /imports/:id/file` e `POST /imports/:id/preview` respondem 503 `storage_not_configured` (verificado depois da autenticação e antes da consulta ao lote); `GET /imports` não usa o Storage e funciona | Mesmo comportamento do confirm; a lista só lê o banco | n |
-| Preview de lote | `POST /imports/:id/preview` sem corpo: lê o anexo do lote no Storage, roda o mesmo `analyze` (parse + classify) para a conta do lote e devolve o mesmo formato de `POST /imports/preview` (com `categoryId`); nenhuma escrita; sem `accountId` alternativo | A conta do lote é a conta do arquivo; o plano pede o mesmo preview | n |
-| Duplicatas no preview de lote | Pelas regras de sempre: como o import anterior já gravou os identificadores na conta, as linhas importadas voltam `duplicate` (por `identifier`; sem identificador, por nome, dia, valor e tipo); linhas ignoradas no import original continuam `new` ou `ignored` | Reuso integral do `classify`; sem regra nova | n |
-| Conta inativa ou removida na reimportação | O preview de lote responde 422 `invalid_account` (campo `accountId`), como o preview normal; no front, o preview normal da reimportação mostra "Selecione uma conta ativa" | Uma regra só para conta | n |
-| Como a reimportação confirma | O front baixa o arquivo por `GET /imports/:id/file` como `Blob`, monta um `File` com o nome e o tipo originais e usa o caminho normal: `POST /imports/preview` e depois `POST /imports/confirm` com a conta do lote; a rota `POST /imports/:id/preview` fica na API como contrato do plano e para clientes futuros, mas a tela não a chama | Um único caminho de confirm (o confirm relê o arquivo da própria requisição, nunca do Storage); a segunda origem de arquivo era o risco do plano | n |
+| Storage não configurado | Sem `publishableKey`, a rota `GET /imports/:id/file` responde 503 `storage_not_configured` (verificado depois da autenticação e antes da consulta ao lote); `GET /imports` não usa o Storage e funciona | Mesmo comportamento do confirm; a lista só lê o banco | n |
+| Preview de lote | Não existe rota `POST /imports/:id/preview`: a reimportação usa o preview normal (`POST /imports/preview`) com o arquivo baixado; nenhuma rota de preview lê o Storage | O front reaproveita o caminho normal; uma rota sem consumidor seria código morto (decisão do orquestrador) | n |
+| Duplicatas na reimportação | Pelas regras de sempre do `classify`: como o import anterior já gravou os identificadores na conta, as linhas importadas voltam `duplicate` no preview normal (por `identifier`; sem identificador, por nome, dia, valor e tipo); linhas ignoradas no import original continuam `new` ou `ignored` | Reuso integral do `classify`; sem regra nova | n |
+| Conta inativa ou removida na reimportação | O preview normal responde 422 `invalid_account` (campo `accountId`); no front, o formulário mostra "Selecione uma conta ativa" | Uma regra só para conta | n |
+| Como a reimportação confirma | O front baixa o arquivo por `GET /imports/:id/file` como `Blob`, monta um `File` com o nome e o tipo originais e usa o caminho normal: `POST /imports/preview` e depois `POST /imports/confirm` com a conta do lote | Um único caminho de confirm e de preview (o confirm relê o arquivo da própria requisição, nunca do Storage); a segunda origem de arquivo era o risco do plano | n |
 | Cada reimportação gera um lote novo | O confirm cria novo lote, nova chave de idempotência (renovada ao gerar a prévia) e novo objeto no Storage; o arquivo guardado do lote antigo não é alterado | Reaproveita o confirm sem mudar a regra de idempotência; o custo é um objeto extra por reimportação | n |
 | Atualização da lista | A lista é uma consulta `["imports"]` do react-query; o confirm com sucesso a invalida; a lista aparece só no passo "Conta e arquivo" | O novo lote aparece ao voltar ao início | n |
 | Download no navegador | `fetch` autenticado (token da sessão, mesmo cliente de `apiRequest`) devolve `Blob`; o front cria uma URL de objeto, aciona um `<a download="<nome original>">` e revoga a URL; nunca navega para a URL do Storage | O token não pode ir em query string (Privacy); o caminho do Storage nunca chega ao front | n |
@@ -81,7 +82,7 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | Estados da lista | Carregando: 3 linhas de `Skeleton`; vazia: "Nenhum arquivo importado ainda."; erro: alerta com `messageForError(error, "import")` e botão "Tentar novamente" | Pedido: estados vazio, erro e skeleton | n |
 | Erros por ação | Falha de download ou de leitura do arquivo na reimportação aparece em um alerta da lista (`role="alert"`) com `messageForError(error, "import")`; falha do preview da reimportação aparece no formulário do passo inicial (a conta e o arquivo já ficam preenchidos) | Cada erro aparece perto da ação que o causou | n |
 | Mensagens novas | `storage_error`: "Não foi possível acessar o arquivo guardado. Tente novamente."; `storage_not_configured`: "O armazenamento de arquivos não está disponível no momento."; `invalid_category` no `importErrorMessage`: "Há linhas com categoria inválida. Gere a prévia de novo." | Nenhum código novo pode cair na mensagem genérica (L-013) | n |
-| Mocks do front | `web/src/lib/api/mock/import.ts` ganha handlers em memória para `GET /imports` (2 lotes semente), `GET /imports/:id/file` (um `Blob` CSV), `POST /imports/:id/preview`, `POST /imports/preview` e `POST /imports/confirm` (cria lote novo na lista); a chave `import` de `pathAreaMap` vira `imports` porque o caminho real é `/imports/...` | Hoje os handlers de import são vazios e a chave não casa com o caminho; os testes não podem mascarar divergência (risco do plano) | n |
+| Mocks do front | `web/src/lib/api/mock/import.ts` ganha handlers em memória para `GET /imports` (2 lotes semente), `GET /imports/:id/file` (um `Blob` CSV), `POST /imports/preview` e `POST /imports/confirm` (cria lote novo na lista); a chave `import` de `pathAreaMap` vira `imports` porque o caminho real é `/imports/...` | Hoje os handlers de import são vazios e a chave não casa com o caminho; os testes não podem mascarar divergência (risco do plano) | n |
 | Observabilidade | Falhas do Storage nas novas rotas passam pelo `storageError` (só operação e status HTTP na mensagem); o log de erro não leva URL, token nem caminho; as rotas novas só leem, sem efeito colateral | Nenhum segredo ou caminho em log ou resposta | n |
 | Concorrência | As rotas novas são só leitura; duplo clique em "Reimportar" ou "Baixar" é evitado desabilitando o botão da linha enquanto a requisição roda; reconfirmar segue idempotente pela chave | Sem estado compartilhado novo | n |
 | Limites e rate limit | Tamanho do arquivo continua 5 MB (já limitado no upload); a API não tem rate limit hoje e esta feature não o introduz | Sem rate limit no projeto; fora do escopo | n |
@@ -230,23 +231,18 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 ---
 
-### P1: Preview de um lote guardado (API) ⭐ MVP
+### P1: Preview único para upload e reimportação ⭐ MVP
 
-**User Story**: Como usuário, quero gerar o preview a partir de um arquivo que já importei, sem reenviá-lo, com as linhas já importadas marcadas como duplicadas.
+**User Story**: Como usuário, quero que a reimportação gere o preview pelo mesmo caminho do upload, com as linhas já importadas marcadas como duplicadas.
 
-**Why P1**: É a base da reimportação e fecha o contrato do plano.
+**Why P1**: É a base da reimportação; uma só implementação de análise evita divergência entre as duas origens do arquivo.
 
 **Acceptance Criteria**:
 
-1. WHEN o usuário chama `POST /imports/:id/preview` de um lote seu THEN a API SHALL reler o arquivo do Storage, executar o mesmo parse e classificação do preview do upload para a conta do lote e responder 200 com o mesmo formato (`rows` com `categoryId`, `totals`).  <!-- IMPIMP-09 -->
-2. WHEN todas as linhas do arquivo foram importadas antes THEN o preview SHALL marcá-las `duplicate`.  <!-- IMPIMP-09 -->
-3. WHEN o preview de lote é igual ao `POST /imports/preview` do mesmo conteúdo e da mesma conta THEN as respostas SHALL ser iguais, linha a linha.  <!-- IMPIMP-09 -->
-4. IF a conta do lote está inativa THEN a API SHALL responder 422 `invalid_account` no campo `accountId`, sem escrever nada.  <!-- IMPIMP-09 -->
-5. IF `:id` não é UUID, o lote não existe ou é de outro usuário THEN a API SHALL responder 404 `not_found`; IF o objeto não existe THEN SHALL responder 404 `not_found`; IF o Storage falha THEN SHALL responder 502 `storage_error`; IF a API está sem `publishableKey` THEN SHALL responder 503 `storage_not_configured`.  <!-- IMPIMP-09 -->
-6. WHEN o arquivo guardado não é de um formato suportado pela conta THEN a API SHALL responder com o mesmo erro do preview do upload (`unsupported_format` ou `bank_mismatch`).  <!-- IMPIMP-09 -->
-7. The rota SHALL NOT gravar lote, transação, anexo nem objeto.  <!-- IMPIMP-09 -->
+1. The preview do upload SHALL ser gerado por uma única implementação de análise e montagem (`analyze` e `toPreview` em módulo próprio), sem mudança na resposta nem no OpenAPI.  <!-- IMPIMP-09 -->
+2. WHEN o arquivo baixado por `GET /imports/:id/file` é enviado a `POST /imports/preview` na conta do lote THEN o preview SHALL marcar como `duplicate` todas as linhas importadas antes e o contador de linhas SHALL ser o do arquivo.  <!-- IMPIMP-09 -->
 
-**Independent Test**: Confirmar um import e chamar `POST /imports/:id/preview`: todas as linhas importadas voltam `duplicate` e o contador de linhas é o do arquivo.
+**Independent Test**: Confirmar um import, baixar o arquivo por `GET /imports/:id/file` e enviá-lo a `POST /imports/preview` na mesma conta: todas as linhas importadas voltam `duplicate`.
 
 ---
 
@@ -254,17 +250,17 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 **User Story**: Como usuário, quero que ninguém veja, baixe ou reimporte os meus arquivos.
 
-**Why P1**: São dados financeiros e arquivos privados; o RLS precisa valer nas três rotas novas.
+**Why P1**: São dados financeiros e arquivos privados; o RLS precisa valer nas duas rotas novas.
 
 **Acceptance Criteria**:
 
-1. IF a requisição a `GET /imports`, `GET /imports/:id/file` ou `POST /imports/:id/preview` não tem token válido THEN a API SHALL responder 401 `unauthorized`.  <!-- IMPIMP-10 -->
+1. IF a requisição a `GET /imports` ou `GET /imports/:id/file` não tem token válido THEN a API SHALL responder 401 `unauthorized`.  <!-- IMPIMP-10 -->
 2. WHEN o usuário B chama `GET /imports` THEN a resposta SHALL NOT conter lotes do usuário A.  <!-- IMPIMP-10 -->
-3. WHEN o usuário B chama `GET /imports/:id/file` ou `POST /imports/:id/preview` com o id de um lote do usuário A THEN a API SHALL responder 404 `not_found`, igual à resposta de um id inexistente, sem devolver o conteúdo do arquivo.  <!-- IMPIMP-10 -->
+3. WHEN o usuário B chama `GET /imports/:id/file` com o id de um lote do usuário A THEN a API SHALL responder 404 `not_found`, igual à resposta de um id inexistente, sem devolver o conteúdo do arquivo.  <!-- IMPIMP-10 -->
 4. The rotas novas SHALL acessar o banco só por `withUser` (RLS) e o Storage só com o token do próprio usuário, nunca com a chave de serviço.  <!-- IMPIMP-10 -->
 5. WHEN o usuário A baixa o próprio arquivo THEN o conteúdo SHALL ser o do seu upload, mesmo havendo lotes de outros usuários com o mesmo nome de arquivo.  <!-- IMPIMP-10 -->
 
-**Independent Test**: Com dois usuários, B tentando listar, baixar e gerar preview do lote de A: lista sem itens de A e 404 nas outras duas.
+**Independent Test**: Com dois usuários, B tentando listar e baixar o lote de A: lista sem itens de A e 404 no download.
 
 ---
 
@@ -301,9 +297,9 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 
 **Acceptance Criteria**:
 
-1. The `api/openapi.json` SHALL documentar `categoryId` nos itens de `selections` e nas linhas do preview, e as rotas `GET /imports`, `GET /imports/{id}/file` e `POST /imports/{id}/preview` com os respectivos erros, regenerado por `pnpm -C api openapi:export` e conferido pelo teste de swagger.  <!-- IMPIMP-14 -->
+1. The `api/openapi.json` SHALL documentar `categoryId` nos itens de `selections` e nas linhas do preview, e as rotas `GET /imports` e `GET /imports/{id}/file` com os respectivos erros, regenerado por `pnpm -C api openapi:export` e conferido pelo teste de swagger.  <!-- IMPIMP-14 -->
 2. The tipos do `web/` SHALL incluir `PreviewRow.categoryId`, `ImportSelection.categoryId` e o tipo do item da lista de arquivos, com a forma da resposta da API.  <!-- IMPIMP-14 -->
-3. The mocks do `web/` SHALL atender `GET /imports`, `GET /imports/:id/file`, `POST /imports/:id/preview`, `POST /imports/preview` e `POST /imports/confirm` em memória, e a chave de área do import SHALL casar com o caminho `/imports/...`.  <!-- IMPIMP-14 -->
+3. The mocks do `web/` SHALL atender `GET /imports`, `GET /imports/:id/file`, `POST /imports/preview` e `POST /imports/confirm` em memória, e a chave de área do import SHALL casar com o caminho `/imports/...`.  <!-- IMPIMP-14 -->
 4. WHEN a API responde 502 `storage_error` ou 503 `storage_not_configured` THEN o front SHALL mostrar a mensagem em português definida para o código, em todos os pontos da tela de importação.  <!-- IMPIMP-15 -->
 5. WHEN o confirm responde 422 `invalid_category` THEN o front SHALL mostrar "Há linhas com categoria inválida. Gere a prévia de novo.".  <!-- IMPIMP-15 -->
 
@@ -341,7 +337,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 | IMPIMP-06 | P2: Confirmação de duplicadas | In Tasks | Pending |
 | IMPIMP-07 | P1: Lista de arquivos importados (API) | In Tasks | Pending |
 | IMPIMP-08 | P1: Download do arquivo importado (API) | In Tasks | Pending |
-| IMPIMP-09 | P1: Preview de um lote guardado (API) | In Tasks | Pending |
+| IMPIMP-09 | P1: Preview único para upload e reimportação | In Tasks | Pending |
 | IMPIMP-10 | P1: Isolamento e autenticação das rotas de arquivos | In Tasks | Pending |
 | IMPIMP-11 | P1: Arquivos importados na tela de importação | In Tasks | Pending |
 | IMPIMP-12 | P1: Arquivos importados na tela de importação | In Tasks | Pending |
@@ -356,7 +352,7 @@ Each requirement gets a unique ID for tracking across design, tasks, and validat
 ## Success Criteria
 
 - [ ] `pnpm -C api test` (com `supabase start`) e `yarn --cwd web test`, mais typecheck e lint de cada app, passam; o teste de swagger confirma o `openapi.json` atualizado.
-- [ ] Os testes de isolamento mostram que o usuário B não lista, não baixa e não gera preview do lote do usuário A, e que as três rotas respondem 401 sem token.
+- [ ] Os testes de isolamento mostram que o usuário B não lista nem baixa o lote do usuário A, e que as duas rotas respondem 401 sem token.
 - [ ] No navegador, contra a API local: o select de categoria muda a categoria gravada, "Selecionar todas" fica indeterminado em seleção parcial, o Valor aparece verde e vermelho sem a coluna "Tipo", o diálogo de duplicadas aparece com a contagem e "Voltar" mantém a seleção.
 - [ ] No navegador: a lista "Arquivos importados" mostra o arquivo recém-importado, "Baixar" salva o CSV idêntico ao enviado e "Reimportar" abre o preview na conta certa com as linhas marcadas como duplicadas.
 - [ ] Nenhuma resposta nem tela contém o caminho do objeto no Storage.

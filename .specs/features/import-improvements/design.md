@@ -10,21 +10,18 @@
 Duas frentes sobre o import que já existe (`analyze` -> `toPreview` / `insertBatch` -> web), sem migration:
 
 1. **Preview e confirm (I1 a I4)**: a API passa a devolver `categoryId` por linha do preview e a aceitar `categoryId` opcional em cada item de `selections`; a validação de propriedade é uma consulta sob RLS dentro da transação que já reanalisa o arquivo. A tela ganha o select por linha, o checkbox "selecionar todas", o Valor colorido sem a coluna "Tipo" e o `AlertDialog` de duplicadas.
-2. **Arquivos importados (I5)**: um módulo novo `batches.ts` registra `GET /imports`, `GET /imports/:id/file` e `POST /imports/:id/preview`. O arquivo é relido do bucket privado `imports` com o token do usuário (o helper de Storage ganha o download). O front lista os lotes, baixa o arquivo como `Blob` e, na reimportação, transforma esse `Blob` em `File` e entra no preview e no confirm normais.
+2. **Arquivos importados (I5)**: um módulo novo `batches.ts` registra `GET /imports`, e `GET /imports/:id/file`. O arquivo é relido do bucket privado `imports` com o token do usuário (o helper de Storage ganha o download). O front lista os lotes, baixa o arquivo como `Blob` e, na reimportação, transforma esse `Blob` em `File` e entra no preview e no confirm normais.
 
-Decisão central (reimportação): **um único caminho de confirm**. O confirm relê o arquivo da própria requisição multipart e nunca do Storage; oferecer um confirm "por id de lote" criaria uma segunda origem de arquivo (risco registrado no plano). Por isso o front baixa o arquivo por `GET /imports/:id/file` e reutiliza `POST /imports/preview` e `POST /imports/confirm`. `POST /imports/:id/preview` fica na API (contrato do plano, mesmo `analyze` do upload, para clientes futuros e testes de relido do Storage), mas a tela não o chama.
+Decisão central (reimportação): **um único caminho de confirm e de preview**. O confirm relê o arquivo da própria requisição multipart e nunca do Storage; oferecer um confirm ou um preview "por id de lote" criaria uma segunda origem de arquivo (risco registrado no plano). Por isso o front baixa o arquivo por `GET /imports/:id/file` e reutiliza `POST /imports/preview` e `POST /imports/confirm`. A rota `POST /imports/:id/preview` do plano foi descartada: nenhuma tela a chamaria.
 
-Decisões de `STATE.md` aplicadas: AD-001 (apps independentes: tipos do `web/` editados à mão, contrato é o `openapi.json` regenerado), AD-002 (toda leitura e a validação de categoria dentro de `request.withUser`, com RLS; o Storage com o token do usuário, nunca a chave de serviço), AD-004 (valores seguem strings decimais; o helper de valor do front trabalha com a string) e AD-005 (o preview de lote usa `request.tz`, como o preview do upload). Nenhuma decisão ativa é substituída; as escolhas novas (um só confirm, `storage_path` nunca sai da API) são locais da feature.
+Decisões de `STATE.md` aplicadas: AD-001 (apps independentes: tipos do `web/` editados à mão, contrato é o `openapi.json` regenerado), AD-002 (toda leitura e a validação de categoria dentro de `request.withUser`, com RLS; o Storage com o token do usuário, nunca a chave de serviço), AD-004 (valores seguem strings decimais; o helper de valor do front trabalha com a string). Nenhuma decisão ativa é substituída; as escolhas novas (um só confirm, `storage_path` nunca sai da API) são locais da feature.
 
 Lições confirmadas aplicadas: L-004 (a spec define como `categoryId` é comparado: UUID exato, sem caixa relevante, e como o nome do arquivo vira cabeçalho), L-006 (um único status para campo inválido: 422 `invalid_category` e 422 `validation_error` em `selections`; `limit` fora da faixa é 400 como nas outras listagens, por schema) e L-013 (cada falha de interface tem teste com o texto em português e as opções visíveis: erro da lista, erro do download, conta inativa na reimportação, categorias que falham ao carregar).
 
 ```mermaid
 graph TD
     UP[POST /imports/preview] --> AN[preview.ts: analyze + toPreview]
-    BP[POST /imports/:id/preview] --> BT[batches.ts: lote + anexo]
-    BT -->|token do usuario| ST[storage.ts: downloadImportFile]
-    ST --> BP2[bytes do arquivo]
-    BP2 --> AN
+    BT[batches.ts: lote + anexo] -->|token do usuario| ST[storage.ts: downloadImportFile]
     AN -->|rows com categoryId| WEB[ImportPreviewTable]
     WEB -->|selections index, neutral, categoryId| CF[POST /imports/confirm]
     CF --> SEL[selections.ts: parse + valida shape]
@@ -78,7 +75,7 @@ graph TD
 
 ### Preview compartilhado (`preview.ts`)
 
-- **Purpose**: Uma só implementação de "analisar o arquivo e montar o preview", usada pelo upload e pelo lote guardado.
+- **Purpose**: Uma só implementação de "analisar o arquivo e montar o preview", isolada de `routes.ts` para o upload e o confirm a compartilharem.
 - **Location**: `api/src/modules/import/preview.ts`
 - **Interfaces**:
   - `PreviewSchema` / `PreviewRowSchema` (agora com `categoryId: string uuid`) e os tipos `Preview`, `PreviewRow`.
@@ -122,13 +119,12 @@ graph TD
 
 ### Lotes importados (`batches.ts`)
 
-- **Purpose**: As três rotas de arquivos importados, isoladas por usuário.
+- **Purpose**: As duas rotas de arquivos importados, isoladas por usuário.
 - **Location**: `api/src/modules/import/batches.ts`
 - **Interfaces**:
   - `importedFilesRoutes(app, options: ImportRoutesOptions): Promise<void>` - registrada por `importRoutes`.
   - `GET /imports?limit=` -> `200 ImportBatch[]`. Consulta: `select b.id, b.bank, b.row_count, b.imported_count, b.skipped_count, b.created_at, a.filename, a.mime_type, a.size_bytes, c.id as account_id, c.nickname from import_batches b join accounts c on c.id = b.account_id join lateral (select ... from attachments where import_batch_id = b.id order by created_at asc, id asc limit 1) a on true order by b.created_at desc, b.id desc limit $1`. O `storage_path` nunca entra na lista de colunas da resposta.
   - `GET /imports/:id/file` -> `200 binary` (ou 404/502/503). Ordem: 503 se faltar `publishableKey`; `:id` não UUID ou lote ausente -> 404; leitura do Storage (`null` -> 404); cabeçalhos `Content-Type`, `Content-Disposition`, `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`, `Content-Length`.
-  - `POST /imports/:id/preview` -> `200 Preview` (ou 404/422/502/503). Mesma busca do lote e do anexo, leitura do Storage e `analyze(tx, batch.account_id, content, request.tz)` seguido de `toPreview`.
   - `contentDisposition(filename: string): string` (em `contentDisposition.ts`) - `attachment; filename="<fallback ASCII>"; filename*=UTF-8''<encodeURIComponent estendido>`; o fallback troca por `_` tudo fora de ASCII imprimível e as aspas e a barra invertida; CR, LF e controle são removidos.
 - **Dependencies**: `withUser`, `preview.ts`, `storage.ts`, `contentDisposition.ts`.
 - **Reuses**: `ImportRoutesOptions`, `UUID`, `AppError`.
@@ -191,7 +187,6 @@ graph TD
   - `apiRequestBlob(path, options?): Promise<Blob>` em `web/src/lib/api/client.ts` - o mesmo caminho de `apiRequest` (token, `X-Timezone`, 401 e erros mapeados para `ApiError`) mas devolve `response.blob()`; em modo mock devolve o `Blob` do handler.
   - `listImports(limit?): Promise<ImportedFile[]>` - `GET /imports`.
   - `downloadImportFile(id): Promise<Blob>` - `GET /imports/:id/file`.
-  - `previewImportBatch(id): Promise<ImportPreview>` - `POST /imports/:id/preview` (contrato; a tela não o usa).
   - `fileFromBlob(blob, file: ImportedFile): File` - `new File([blob], file.filename, { type: file.mimeType })`.
   - `useImportedFiles()` - `useQuery(["imports"])`; `useDownloadImport()` e `useReimportFile()` - `useMutation`; `useImportConfirm` invalida também `["imports"]`.
 - **Dependencies**: `apiRequest`, `apiRequestBlob`.
@@ -217,7 +212,7 @@ graph TD
 
 - **Purpose**: Mocks em memória do import e mensagens para os códigos novos.
 - **Location**: `web/src/lib/api/mock/import.ts` (mais `index.ts` para a chave de área e `web/src/lib/api/errorMessages.ts`, `web/src/features/import/errorMessages.ts`)
-- **Interfaces**: handlers `GET /imports`, `GET /imports/:id/file` (Blob CSV), `POST /imports/:id/preview`, `POST /imports/preview`, `POST /imports/confirm` (cria um lote novo no início da lista); `pathAreaMap` troca `import` por `imports`; mensagens `storage_error`, `storage_not_configured` (globais) e `invalid_category` (import).
+- **Interfaces**: handlers `GET /imports`, `GET /imports/:id/file` (Blob CSV), `POST /imports/preview`, `POST /imports/confirm` (cria um lote novo no início da lista); `pathAreaMap` troca `import` por `imports`; mensagens `storage_error`, `storage_not_configured` (globais) e `invalid_category` (import).
 - **Dependencies**: `mockApiError`, `listMockAccounts`, `listMockCategories`.
 - **Reuses**: o padrão dos outros mocks (`MockHandler[]`).
 
@@ -291,12 +286,11 @@ type PreviewRow = { /* ... */ categoryId: string; categoryName: string /* ... */
 
 | Concern | Location (file:line) | Impact | Mitigation |
 | ------- | -------------------- | ------ | ---------- |
-| `routes.ts` já tem 441 linhas e concentra preview, confirm, formulário e transação; acrescentar três rotas e a validação de categoria o tornaria difícil de manter | `api/src/modules/import/routes.ts:27-441` | Mudança arriscada e revisão difícil | T1 extrai `preview.ts` sem mudar comportamento (testes existentes verdes, contagem igual) antes de qualquer feature; as rotas novas vão em `batches.ts` |
+| `routes.ts` já tem 441 linhas e concentra preview, confirm, formulário e transação; acrescentar duas rotas e a validação de categoria o tornaria difícil de manter | `api/src/modules/import/routes.ts:27-441` | Mudança arriscada e revisão difícil | T1 extrai `preview.ts` sem mudar comportamento (testes existentes verdes, contagem igual) antes de qualquer feature; as rotas novas vão em `batches.ts` |
 | O Storage responde 400 com `statusCode: "404"` para objeto ausente ou fora da policy (e o helper atual descarta o corpo) | `api/src/modules/import/storage.ts:58-67` | Confundir "sumiu" com erro do cliente ou vazar status do Storage | `downloadImportFile` trata 400 e 404 como "ausente" (`null` -> 404) e todo o resto como 502; teste unitário por status e teste de integração com objeto removido (service key só no teste) |
 | O download guarda até 5 MB em memória por requisição | `api/src/modules/import/batches.ts` (novo) | Uso de memória sob várias requisições simultâneas | O upload já limita a 5 MB; sem streaming por simplicidade; `Cache-Control: no-store`; aceito para o volume do projeto |
 | Nome original do arquivo vem do cliente e vai para o `Content-Disposition` | `api/src/modules/import/routes.ts:153` (`filename` do upload) | Injeção de cabeçalho (CR/LF) ou cabeçalho inválido derrubando a resposta | `contentDisposition` remove controle e CR/LF do fallback e percent-codifica o `filename*`; teste unitário com aspas, acento, CR/LF e nome vazio |
 | O `mime_type` guardado vem do cliente | `api/src/modules/import/routes.ts:407` | `Content-Type` inválido ou perigoso | Só o formato `tipo/subtipo` é usado; senão `application/octet-stream`, com `nosniff` |
-| `POST /imports/:id/preview` não é usada pela tela | `api/src/modules/import/batches.ts` (novo) | Rota sem consumidor pode apodrecer | Mantida pelo plano e coberta por teste de integração (mesmo resultado do preview do upload, linha a linha); o front documenta por que usa o caminho normal; remover a rota é um corte barato se o dono preferir |
 | O mapa de áreas dos mocks usa `import`, mas o caminho real é `/imports/...`; os handlers de import estão vazios | `web/src/lib/api/mock/index.ts:33`; `web/src/lib/api/mock/import.ts:3` | Com `VITE_MOCK_AREAS=import` nada é simulado; com `*` o import quebra | T12 troca a chave, adiciona handlers e testa `areaFromPath("/imports/preview")` e cada handler |
 | Cada linha do preview terá um `Select` (até centenas de linhas) e todos consultam `useCategories` | `web/src/features/import/ImportPreviewTable.tsx` | Renderização lenta com arquivos grandes | `useCategories` é uma única consulta em cache compartilhada; o conteúdo do Select do shadcn (Radix) só monta ao abrir; sem virtualização (fora do escopo) |
 | A escolha de categoria vive junto de `selected` e `neutral` no mesmo estado | `web/src/features/import/previewSelection.ts:15` | Esquecer `categoryId` em `initialSelection` envia categoria vazia | `categoryId` é obrigatório em `RowChoice`; teste unitário do payload com categoria padrão e escolhida |
@@ -313,7 +307,6 @@ type PreviewRow = { /* ... */ categoryId: string; categoryName: string /* ... */
 | Decision | Choice | Rationale |
 | -------- | ------ | --------- |
 | Como reimportar | Blob de `GET /imports/:id/file` -> `File` -> `POST /imports/preview` e `POST /imports/confirm` | Um único confirm, que relê o arquivo da requisição; evita segunda origem de arquivo |
-| `POST /imports/:id/preview` | Implementada, não usada pela tela | Contrato do plano; mesmo `analyze`; custo baixo de manter |
 | `categoryId` ausente no confirm | Vale a categoria do parser | Contrato aditivo; clientes antigos não quebram |
 | Validação de categoria | Consulta `id = any(...)` sob RLS, antes do upload ao Storage | RLS decide a propriedade; a falha não deixa objeto órfão |
 | Erro de categoria | 422 `invalid_category`, campo `selections` | L-006 (422 para dado inválido); código próprio para mensagem em português |

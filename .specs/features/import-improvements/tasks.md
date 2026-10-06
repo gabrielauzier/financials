@@ -57,8 +57,6 @@ T3
 T4
 T3 → T5
 T4 → T5
-T3 → T6
-T4 → T6
 ```
 
 ### Phase 3: Web preview (select all, value, category, duplicates)
@@ -171,7 +169,7 @@ T12 → T13
 
 ### T4: List the user's imported files
 
-**What**: `GET /imports?limit=` returns the user's batches newest first (`id`, `filename`, `mimeType`, `sizeBytes`, `bank`, `account { id, nickname }`, `createdAt`, `rowCount`, `importedCount`, `skippedCount`), with the earliest attachment per batch via a lateral join; creates `batches.ts` with `importedFilesRoutes`, registered from `importRoutes`; also adds the shared batch-and-attachment lookup used by T5 and T6. Regenerate `api/openapi.json`.
+**What**: `GET /imports?limit=` returns the user's batches newest first (`id`, `filename`, `mimeType`, `sizeBytes`, `bank`, `account { id, nickname }`, `createdAt`, `rowCount`, `importedCount`, `skippedCount`), with the earliest attachment per batch via a lateral join; creates `batches.ts` with `importedFilesRoutes`, registered from `importRoutes`; also adds the shared batch-and-attachment lookup used by T5. Regenerate `api/openapi.json`.
 **Where**: `api/src/modules/import/batches.ts`
 **Depends on**: T1
 **Reuses**: `api/src/modules/import/routes.ts` (registration, `ImportRoutesOptions`); `api/src/modules/accounts/routes.ts` (list and `querystring` pattern); `api/test/imports-isolation.int.test.ts` (two users, real Storage); `api/test/helpers/*`
@@ -207,7 +205,7 @@ T12 → T13
 **Where**: `api/src/modules/import/batches.ts` (modify)
 **Depends on**: T3, T4
 **Reuses**: `api/src/modules/import/storage.ts` (`downloadImportFile`); `api/src/modules/import/contentDisposition.ts` (new, with `contentDisposition.test.ts`); `api/test/helpers/storage.ts` (removes objects with the service key, test only); `api/test/imports-isolation.int.test.ts`
-**Requirement**: IMPIMP-08, IMPIMP-10, IMPIMP-14
+**Requirement**: IMPIMP-08, IMPIMP-09, IMPIMP-10, IMPIMP-14
 
 **Tools**:
 
@@ -218,6 +216,7 @@ T12 → T13
 
 - [ ] Unit tests of `contentDisposition`: plain ASCII name; accents (`extrato março.csv`) give an ASCII fallback and a percent-encoded `filename*`; double quote, backslash, `;` and slash are neutralized in the fallback; CR, LF and other control characters never appear in the output; an empty name falls back to a fixed ASCII name (AC 2 of the download story)
 - [ ] Integration: download after a confirm returns bytes identical to the uploaded CSV, `Content-Type` equal to the stored mime type, `Content-Disposition` with the original filename, `Cache-Control: private, no-store` (AC 1)
+- [ ] Integration: after confirming every row of a fixture, the downloaded bytes sent to `POST /imports/preview` on the batch's account give the file's row count with every confirmed row `duplicate` (AC 2 of the shared-preview story)
 - [ ] Integration: a stored file name with accents and a quote still produces a valid response; a stored `mime_type` that is not `type/subtype` is answered as `application/octet-stream` (AC 2 and edge case)
 - [ ] Integration: non-UUID id, unknown UUID and another user's batch all answer the same 404 `not_found` and the same body; a removed Storage object answers 404 `not_found` (AC 3 and 4); Storage errors answer 502 `storage_error` without URL, token or path in the body (the Storage URL of the app is pointed at an unreachable address in this test) (AC 5)
 - [ ] Integration: an app built without `publishableKey` answers 503 `storage_not_configured` (AC 6); no response body or header contains the storage path, the Storage URL or the project key (AC 7)
@@ -235,34 +234,10 @@ T12 → T13
 
 ### T6: Preview an imported file from its stored copy
 
-**What**: `POST /imports/:id/preview` finds the user's batch and attachment, reads the file with `downloadImportFile`, runs `analyze` for the batch's account with `request.tz` and answers `toPreview`; same 503, 404, 502 ordering as the file route; writes nothing. Regenerate `api/openapi.json`.
-**Where**: `api/src/modules/import/batches.ts` (modify)
-**Depends on**: T3, T4
-**Reuses**: `api/src/modules/import/preview.ts` (`analyze`, `toPreview`, `PreviewSchema`); the batch-and-attachment lookup of T4; `api/test/import-preview.int.test.ts`, `api/test/imports-isolation.int.test.ts`
-**Requirement**: IMPIMP-09, IMPIMP-10, IMPIMP-14
+**Status**: Dropped. The endpoint `POST /imports/:id/preview` is not built: the web reimports by downloading the file as a `Blob` (T5) and reusing the normal `POST /imports/preview` and `POST /imports/confirm`, so nothing would call it. No work, no commit; the number is kept so references stay stable.
 
-**Tools**:
-
-- MCP: NONE
-- Skill: NONE
-
-**Done when**:
-
-- [ ] After confirming every row of a fixture, the batch preview returns the same row count and marks every confirmed row `duplicate` (AC 1 and 2 of the stored-preview story)
-- [ ] The batch preview JSON equals the `POST /imports/preview` JSON for the same content and account, row by row, `categoryId` included (AC 3)
-- [ ] A row skipped in the original import is not `duplicate` in the batch preview (`new` or `ignored` as the rules say) (AC 2 edge)
-- [ ] An inactivated account answers 422 `invalid_account` on `accountId` (AC 4); a stored file that no longer matches the account's bank answers the same error as the upload preview (`bank_mismatch` or `unsupported_format`) (AC 6)
-- [ ] Non-UUID, unknown and foreign ids answer 404 `not_found`; a removed object answers 404; unreachable Storage answers 502 `storage_error`; an app without `publishableKey` answers 503 `storage_not_configured` (AC 5)
-- [ ] `importState` of the user is identical before and after the call: no batch, transaction, attachment or object is written (AC 7)
-- [ ] Isolation: user B calling it with A's batch id gets the same 404 as an unknown id and no preview rows; 401 without a valid token (AC 1 and 3 of the isolation story)
-- [ ] `api/openapi.json` regenerated documents `POST /imports/{id}/preview` with its responses; the swagger test passes
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
-- [ ] Test count: the existing API tests plus about 12 new integration tests pass (no silent deletions)
-
-**Tests**: integration
-**Gate**: full
-
-**Commit**: `feat(import): preview an imported file from its stored copy`
+**Tests**: none
+**Gate**: none
 
 ---
 
@@ -391,9 +366,9 @@ T12 → T13
 
 ### T11: Add the imported-files data layer to the web
 
-**What**: Hand-written types (`ImportedFile`), `apiRequestBlob` in the API client (same token, `X-Timezone`, 401 and `ApiError` mapping as `apiRequest`, returns `Blob`), `listImports`, `downloadImportFile`, `previewImportBatch`, `fileFromBlob`, the hooks `useImportedFiles`, `useDownloadImport`, `useReimportFile`, the `["imports"]` invalidation on a successful confirm, and the Portuguese messages for `storage_error`, `storage_not_configured` and `invalid_category`.
+**What**: Hand-written types (`ImportedFile`), `apiRequestBlob` in the API client (same token, `X-Timezone`, 401 and `ApiError` mapping as `apiRequest`, returns `Blob`), `listImports`, `downloadImportFile`, `fileFromBlob`, the hooks `useImportedFiles`, `useDownloadImport`, `useReimportFile`, the `["imports"]` invalidation on a successful confirm, and the Portuguese messages for `storage_error`, `storage_not_configured` and `invalid_category`.
 **Where**: `web/src/features/import/api.ts`
-**Depends on**: T6
+**Depends on**: T5
 **Reuses**: `web/src/lib/api/client.ts` (shared request code with `apiRequest`); `web/src/lib/api/types.ts`; `web/src/features/import/useImport.ts`; `web/src/lib/api/errorMessages.ts`; `web/src/features/import/errorMessages.ts`; `web/src/lib/api/client.test.ts`, `errorMessages.test.ts`, `useImport.test.tsx`
 **Requirement**: IMPIMP-14, IMPIMP-15
 
@@ -405,7 +380,7 @@ T12 → T13
 **Done when**:
 
 - [ ] `apiRequestBlob` sends the bearer token and `X-Timezone`, returns the response `Blob` on 200, throws `ApiError` with the API code on an error body, throws `unexpected_error` on a non-JSON error, and signs the user out on 401 like `apiRequest` (client test) (AC 2 of the contract story)
-- [ ] `listImports` calls `GET /imports`, `downloadImportFile` calls `GET /imports/:id/file` through `apiRequestBlob`, `previewImportBatch` calls `POST /imports/:id/preview`; `fileFromBlob` returns a `File` with the original name and mime type and the blob's bytes
+- [ ] `listImports` calls `GET /imports`, `downloadImportFile` calls `GET /imports/:id/file` through `apiRequestBlob`, `fileFromBlob` returns a `File` with the original name and mime type and the blob's bytes
 - [ ] `useImportedFiles` loads the list under the `["imports"]` key; a successful confirm invalidates `["imports"]` and `["transactions"]` (hook tests)
 - [ ] `messageForError` returns "Não foi possível acessar o arquivo guardado. Tente novamente." for `storage_error` and "O armazenamento de arquivos não está disponível no momento." for `storage_not_configured` in the `import` context; `importErrorMessage` returns "Há linhas com categoria inválida. Gere a prévia de novo." for `invalid_category` and the shared messages for the storage codes; none falls to the generic text and none returns the API `message` (AC 4 and 5)
 - [ ] `yarn --cwd web typecheck` passes with `ImportedFile`, `PreviewRow.categoryId` and `ImportSelection.categoryId` matching `api/openapi.json`
@@ -421,7 +396,7 @@ T12 → T13
 
 ### T12: Mock the import endpoints in memory
 
-**What**: In-memory handlers for `GET /imports` (2 seeded batches, newest first), `GET /imports/:id/file` (a CSV `Blob`), `POST /imports/:id/preview`, `POST /imports/preview` and `POST /imports/confirm` (adds a new batch at the top); `apiRequestBlob` returns the handler's `Blob` in mock mode; the area key `import` becomes `imports` so it matches `/imports/...`.
+**What**: In-memory handlers for `GET /imports` (2 seeded batches, newest first), `GET /imports/:id/file` (a CSV `Blob`), `POST /imports/preview` and `POST /imports/confirm` (adds a new batch at the top); `apiRequestBlob` returns the handler's `Blob` in mock mode; the area key `import` becomes `imports` so it matches `/imports/...`.
 **Where**: `web/src/lib/api/mock/import.ts`
 **Depends on**: T11
 **Reuses**: `web/src/lib/api/mock/index.ts` (`pathAreaMap`, `mockApiError`, `MockHandler`); `web/src/lib/api/mock/accounts.ts`, `categories.ts`; `web/src/lib/api/mock/transactions.test.ts` (test style)
@@ -437,7 +412,7 @@ T12 → T13
 - [ ] `areaFromPath("/imports/preview")` and `areaFromPath("/imports")` return `imports`, and with `VITE_MOCK_AREAS=imports` only the import routes are mocked (AC 3 of the contract story)
 - [ ] `GET /imports` returns the seeded batches newest first with the `ImportedFile` shape and an account nickname from the mock accounts; the mock confirm adds a new batch that the next list call returns first
 - [ ] `GET /imports/:id/file` returns a `Blob` with the CSV text; an unknown id throws a mock `not_found` error with status 404
-- [ ] `POST /imports/:id/preview` and `POST /imports/preview` return an `ImportPreview` whose rows carry `categoryId` of mock categories and the 8 methods' labels remain valid; the preview of a stored batch marks its rows `duplicate`
+- [ ] `POST /imports/preview` returns an `ImportPreview` whose rows carry `categoryId` of mock categories and the 8 methods' labels remain valid; a file whose content matches a seeded batch marks those rows `duplicate`
 - [ ] `POST /imports/confirm` honors `selections` (counts imported and skipped, ignores `categoryId` validity except an unknown id, which throws `invalid_category` 422) and returns a `ImportConfirmResult`
 - [ ] Gate check passes: `yarn --cwd web test`
 - [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
@@ -487,7 +462,7 @@ T12 → T13
 Phase 1 → Phase 2 → Phase 3 → Phase 4
 
 Phase 1:  T1 ------→ T2
-Phase 2:  T3, T4 (independent), then T5 and T6 (both after T3 and T4)
+Phase 2:  T3, T4 (independent), then T5 (after T3 and T4); T6 dropped
 Phase 3:  T7 ------→ T8 ------→ T9 ------→ T10
 Phase 4:  T11, then T12 (after T11), then T13 (after T11 and T12)
 ```
@@ -507,7 +482,7 @@ Execution is strictly sequential - there is no intra-phase parallelism; T3 and T
 | T3: Storage download | 1 function | ✅ Granular |
 | T4: list imported files | 1 endpoint (plus the shared lookup) | ✅ Granular |
 | T5: download imported file | 1 endpoint (plus 1 pure header helper) | ✅ Granular |
-| T6: preview from stored copy | 1 endpoint | ✅ Granular |
+| T6: dropped | - | n/a |
 | T7: select all | 1 header control with 2 pure helpers | ✅ Granular |
 | T8: value color and no type column | 1 helper pair applied to the preview (and the extrato) | ✅ Granular |
 | T9: category select per row | 1 choice field through state, payload and one column | ✅ Granular |
@@ -525,12 +500,12 @@ Execution is strictly sequential - there is no intra-phase parallelism; T3 and T
 | T3 | None | none | ✅ Match |
 | T4 | T1 | T1 (previous phase) | ✅ Match |
 | T5 | T3, T4 | T3, T4 | ✅ Match |
-| T6 | T3, T4 | T3, T4 | ✅ Match |
+| T6 | Dropped | none | ✅ Match |
 | T7 | None | none | ✅ Match |
 | T8 | T7 | T7 | ✅ Match |
 | T9 | T2, T8 | T8 (T2 in an earlier phase) | ✅ Match |
 | T10 | T9 | T9 | ✅ Match |
-| T11 | T6 | T6 (previous phase) | ✅ Match |
+| T11 | T5 | T5 (previous phase) | ✅ Match |
 | T12 | T11 | T11 | ✅ Match |
 | T13 | T11, T12, T10 | T11, T12 (T10 in an earlier phase) | ✅ Match |
 
@@ -543,7 +518,7 @@ Execution is strictly sequential - there is no intra-phase parallelism; T3 and T
 | T3: Storage download | API pure logic (Storage helper, mocked fetch) | unit | unit | ✅ OK |
 | T4: list files | API routes, SQL, OpenAPI | integration | integration | ✅ OK |
 | T5: download file | API pure logic (header helper) and API routes | unit + integration | integration (unit tests in Done when) | ✅ OK |
-| T6: preview from storage | API routes, Storage round trip | integration | integration | ✅ OK |
+| T6: dropped | - | - | - | ✅ OK |
 | T7: select all | Web pure helpers and components | unit | unit | ✅ OK |
 | T8: value color | Web pure helpers and components | unit | unit | ✅ OK |
 | T9: category select | Web helpers, components and hand-written types | unit | unit | ✅ OK |
@@ -564,12 +539,12 @@ Execution is strictly sequential - there is no intra-phase parallelism; T3 and T
 | IMPIMP-06 | T10 |
 | IMPIMP-07 | T4 |
 | IMPIMP-08 | T3, T5 |
-| IMPIMP-09 | T1, T6 |
-| IMPIMP-10 | T4, T5, T6 |
+| IMPIMP-09 | T1, T5 |
+| IMPIMP-10 | T4, T5 |
 | IMPIMP-11 | T13 |
 | IMPIMP-12 | T13 |
 | IMPIMP-13 | T13 |
-| IMPIMP-14 | T2, T4, T5, T6, T9, T11, T12 |
+| IMPIMP-14 | T2, T4, T5, T9, T11, T12 |
 | IMPIMP-15 | T11 |
 
-**Notes for the worker**: `api/openapi.json` is regenerated by `pnpm -C api openapi:export` (T2, T4, T5, T6), never edited by hand. The Storage download uses the user's token only; the service key appears only in test helpers that clean up or remove objects. Never return, log or put in a test expectation a storage path in a client-facing response. The web does not call `POST /imports/:id/preview`; it reuses `POST /imports/preview` and `POST /imports/confirm` with the downloaded `File` (design decision: one confirm path). `CategoryOptionLabel` must stay the single place that renders a category option so the colors-and-icons feature can swap it for the badge. Do not commit `references/nubank_extrato_setembro.csv`.
+**Notes for the worker**: `api/openapi.json` is regenerated by `pnpm -C api openapi:export` (T2, T4, T5), never edited by hand. The Storage download uses the user's token only; the service key appears only in test helpers that clean up or remove objects. Never return, log or put in a test expectation a storage path in a client-facing response. The web does not call `POST /imports/:id/preview`; it reuses `POST /imports/preview` and `POST /imports/confirm` with the downloaded `File` (design decision: one confirm path). `CategoryOptionLabel` must stay the single place that renders a category option so the colors-and-icons feature can swap it for the badge. Do not commit `references/nubank_extrato_setembro.csv`.
