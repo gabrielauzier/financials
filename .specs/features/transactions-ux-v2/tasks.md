@@ -215,11 +215,11 @@ T6 → T8
 
 **Done when**:
 
-- [ ] Without `onClear` there is only the label; with `onClear` there is a button named "Limpar filtro <rótulo>" beside the label that calls `onClear` once per click (AC 1 of the filter story)
-- [ ] `clearLabel` replaces the label in the button name; the label stays associated with its control (`getByLabelText`) (AC 10)
-- [ ] `ClearButton` renders a button with the given accessible name and calls its handler
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus at least 4 new pass (no silent deletions)
+- [x] Without `onClear` there is only the label; with `onClear` there is a button named "Limpar filtro <rótulo>" beside the label that calls `onClear` once per click (AC 1 of the filter story)
+- [x] `clearLabel` replaces the label in the button name; the label stays associated with its control (`getByLabelText`) (AC 10)
+- [x] `ClearButton` renders a button with the given accessible name and calls its handler
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 660 web tests pass (656 existing plus 4 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
