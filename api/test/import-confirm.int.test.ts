@@ -351,3 +351,146 @@ describe('description and extracted names (IMPFIX-06, IMPFIX-08)', () => {
     expect(preview.totals).toEqual({ new: 0, duplicate: 96, ignored: 0, unrecognized: 0, invalid: 0 });
   });
 });
+
+describe('category per selected row (IMPIMP-01)', () => {
+  async function createCategory(o: Owner, name: string): Promise<string> {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/categories',
+      headers: { authorization: `Bearer ${o.user.token}` },
+      payload: { name },
+    });
+    expect(res.statusCode).toBe(201);
+    return res.json<{ id: string }>().id;
+  }
+
+  const categoryOf = async (userId: string) => {
+    const rows = await getAdminSql()<{ identifier: string; category_id: string }[]>`
+      select identifier, category_id from public.transactions where user_id = ${userId}`;
+    return new Map(rows.map((r) => [r.identifier, r.category_id]));
+  };
+
+  const ROW0 = '6a442c8d-0f0c-471a-8aba-ca4523ca8ebb';
+  const ROW1 = '6a46bc6a-5768-4e2c-8181-ebf0072c0f16';
+  const ROW2 = '6a46ebe4-6e90-4411-97e9-2c5185394f9a';
+  const EMPTY = { transactions: 0, batches: 0, attachments: 0, objects: 0 };
+
+  it('stores each row with its own chosen category, read back by GET /transactions', async () => {
+    const o = await owner();
+    const food = await createCategory(o, 'Mercado');
+    const fun = await createCategory(o, 'Lazer');
+    const res = await confirm(o, {
+      selections: [
+        { index: 0, neutral: false, categoryId: food },
+        { index: 1, neutral: false, categoryId: fun },
+      ],
+    });
+    expect(res.statusCode).toBe(201);
+    const stored = await categoryOf(o.user.id);
+    expect(stored.get(ROW0)).toBe(food);
+    expect(stored.get(ROW1)).toBe(fun);
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/transactions',
+      headers: { authorization: `Bearer ${o.user.token}` },
+    });
+    const items = list.json<{ items: { name: string; categoryId: string }[] }>().items;
+    expect(items.find((t) => t.name === 'Débito em conta')?.categoryId).toBe(food);
+    expect(items.find((t) => t.name === 'Dinheiro guardado com resgate planejado')?.categoryId).toBe(fun);
+  });
+
+  it('keeps the parser category for an item without categoryId, next to an item with one', async () => {
+    const o = await owner();
+    const food = await createCategory(o, 'Mercado');
+    const [uncategorized, investments] = await Promise.all(
+      ['Uncategorized', 'Investments'].map(async (key) => {
+        const [c] = await getAdminSql()<{ id: string }[]>`
+          select id from public.categories where user_id = ${o.user.id} and key = ${key}`;
+        return (c as { id: string }).id;
+      }),
+    );
+    const res = await confirm(o, {
+      selections: [
+        { index: 0, neutral: false },
+        { index: 1, neutral: false },
+        { index: 2, neutral: false, categoryId: food },
+      ],
+    });
+    expect(res.statusCode).toBe(201);
+    const stored = await categoryOf(o.user.id);
+    expect(stored.get(ROW0)).toBe(uncategorized);
+    expect(stored.get(ROW1)).toBe(investments);
+    expect(stored.get(ROW2)).toBe(food);
+  });
+
+  it('stores neutral = true together with the chosen category', async () => {
+    const o = await owner();
+    const food = await createCategory(o, 'Mercado');
+    const res = await confirm(o, { selections: [{ index: 3, neutral: true, categoryId: food }] });
+    expect(res.statusCode).toBe(201);
+    const [row] = await getAdminSql()<{ neutral: boolean; category_id: string }[]>`
+      select neutral, category_id from public.transactions where user_id = ${o.user.id}`;
+    expect(row).toEqual({ neutral: true, category_id: food });
+  });
+
+  it('accepts an upper-case categoryId of the user\'s own category', async () => {
+    const o = await owner();
+    const food = await createCategory(o, 'Mercado');
+    const res = await confirm(o, { selections: [{ index: 0, neutral: false, categoryId: food.toUpperCase() }] });
+    expect(res.statusCode).toBe(201);
+    expect((await categoryOf(o.user.id)).get(ROW0)).toBe(food);
+  });
+
+  it('answers 422 invalid_category with the row index, writing nothing, for a well-formed id that does not exist', async () => {
+    const o = await owner();
+    const res = await confirm(o, {
+      selections: [
+        { index: 0, neutral: false },
+        { index: 5, neutral: false, categoryId: randomUUID() },
+      ],
+    });
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toEqual({
+      error: { code: 'invalid_category', message: 'Row 5 has a category that does not exist', field: 'selections' },
+    });
+    expect(await importState(o.user.id)).toEqual(EMPTY);
+  });
+
+  it('answers 422 invalid_category, writing nothing, for the category of another user', async () => {
+    const o = await owner();
+    const other = await owner();
+    const foreign = await createCategory(other, 'Do outro usuario');
+    const res = await confirm(o, { selections: [{ index: 2, neutral: false, categoryId: foreign }] });
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toEqual({
+      error: { code: 'invalid_category', message: 'Row 2 has a category that does not exist', field: 'selections' },
+    });
+    expect(await importState(o.user.id)).toEqual(EMPTY);
+    expect(await importState(other.user.id)).toEqual(EMPTY);
+  });
+
+  it('answers 422 validation_error for a malformed categoryId and writes nothing', async () => {
+    const o = await owner();
+    for (const categoryId of [null, 7, {}, '', 'abc']) {
+      const res = await confirm(o, { selections: [{ index: 0, neutral: false, categoryId }] });
+      expect(res.statusCode, JSON.stringify(categoryId)).toBe(422);
+      expect(res.json()).toMatchObject({ error: { code: 'validation_error', field: 'selections' } });
+    }
+    expect(await importState(o.user.id)).toEqual(EMPTY);
+  });
+
+  it('replays the same idempotency key with HTTP 200 and the stored summary, without writing again', async () => {
+    const o = await owner();
+    const food = await createCategory(o, 'Mercado');
+    const key = randomUUID();
+    const selections = [{ index: 0, neutral: false, categoryId: food }];
+    const first = await confirm(o, { idempotencyKey: key, selections });
+    expect(first.statusCode).toBe(201);
+    const before = await importState(o.user.id);
+    const again = await confirm(o, { idempotencyKey: key, selections });
+    expect(again.statusCode).toBe(200);
+    expect(again.json()).toEqual(first.json());
+    expect(await importState(o.user.id)).toEqual(before);
+  });
+});

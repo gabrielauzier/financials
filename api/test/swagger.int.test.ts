@@ -136,6 +136,28 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json documents categoryId on the preview rows and in the confirm selections (IMPIMP-14)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{ paths: Record<string, Record<string, OperationDoc>> }>();
+      const rows = doc.paths['/imports/preview']?.post?.responses?.['200']?.content?.['application/json']?.schema
+        ?.properties?.rows?.items;
+      expect(rows?.properties?.categoryId).toMatchObject({ type: 'string', format: 'uuid' });
+      expect(rows?.required).toContain('categoryId');
+
+      const confirm = doc.paths['/imports/confirm']?.post?.requestBody?.content?.['multipart/form-data']?.schema;
+      expect((confirm?.properties?.selections as { description?: string } | undefined)?.description).toContain(
+        '"categoryId"?: uuid',
+      );
+      expect(Object.keys(doc.paths['/imports/confirm']?.post?.responses ?? {})).toEqual(
+        expect.arrayContaining(['200', '201']),
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
   it('pnpm openapi:export writes the document, and the committed api/openapi.json is up to date', () => {
     const dir = mkdtempSync(join(tmpdir(), 'openapi-'));
     try {

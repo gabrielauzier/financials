@@ -62,6 +62,7 @@ interface PreviewRow {
   amount: string;
   name: string;
   paymentMethod: string;
+  categoryId: string;
   categoryName: string;
   status: string;
   neutral: boolean;
@@ -91,6 +92,7 @@ describe('POST /imports/preview', () => {
       amount: '8608.00',
       name: 'MERCADO AUTO SOLUCOES PUBLICIDADE E TECNOLOGIA LTDA',
       paymentMethod: 'PIX',
+      categoryId: expect.stringMatching(/^[0-9a-f-]{36}$/),
       categoryName: 'Sem categoria',
       status: 'new',
       neutral: false,
@@ -303,5 +305,39 @@ describe('POST /imports/preview', () => {
     expect((await preview({ accountId }, [csv(ACCOUNT_CSV)], other)).statusCode).toBe(200);
     expect((await preview({ accountId }, [csv(INVOICE_CSV)], other)).statusCode).toBe(200);
     expect(await importState(other.id)).toEqual(before);
+  });
+});
+
+describe('POST /imports/preview carries the default category id (IMPIMP-02)', () => {
+  async function categoryIdByName(userId: string): Promise<Map<string, string>> {
+    const rows = await getAdminSql()<{ id: string; name: string }[]>`
+      select id, name from public.categories where user_id = ${userId}`;
+    return new Map(rows.map((c) => [c.name, c.id]));
+  }
+
+  it('gives every account row the id of the user category behind its categoryName', async () => {
+    const res = await preview({ accountId: nubankId }, [csv(ACCOUNT_CSV)]);
+    const rows = res.json<Preview>().rows;
+    const ids = await categoryIdByName(user.id);
+    expect(ids.get('Sem categoria')).toBeDefined();
+    expect(ids.get('Investimentos')).toBeDefined();
+    for (const row of rows) expect(row.categoryId, `row ${row.index}`).toBe(ids.get(row.categoryName));
+    expect(rows[1]).toMatchObject({ categoryName: 'Investimentos', categoryId: ids.get('Investimentos') });
+    expect(rows[0]).toMatchObject({ categoryName: 'Sem categoria', categoryId: ids.get('Sem categoria') });
+  });
+
+  it('gives the ignored row of an invoice a categoryId too', async () => {
+    const res = await preview({ accountId: nubankId }, [csv(INVOICE_CSV, 'fatura.csv')]);
+    const ignored = res.json<Preview>().rows.find((r) => r.status === 'ignored');
+    expect(ignored?.categoryId).toBe((await categoryIdByName(user.id)).get(ignored?.categoryName ?? ''));
+  });
+
+  it('gives invalid rows a categoryId too', async () => {
+    const res = await preview({ accountId: nubankId }, [
+      csv('Data,Valor,Identificador,Descrição\n31/02/2026,-1.00,a,Débito em conta\n'),
+    ]);
+    const [row] = res.json<Preview>().rows;
+    expect(row?.status).toBe('invalid');
+    expect(row?.categoryId).toBe((await categoryIdByName(user.id)).get(row?.categoryName ?? ''));
   });
 });

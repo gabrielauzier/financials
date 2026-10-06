@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import postgres, { type TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
 import { analyze, categoriesByKey, toPreview, PreviewSchema, UUID, type Category } from './preview.js';
+import { categoryIdsOf, parseSelections, type Selection } from './selections.js';
 import { removeImportFile, uploadImportFile } from './storage.js';
 import type { ClassifiedRow, RowStatus } from './types.js';
 
@@ -30,8 +31,10 @@ const ConfirmForm = Type.Object({
   idempotencyKey: Type.String({ format: 'uuid', description: 'One per preview session; a repeated key does not import twice' }),
   selections: Type.String({
     description:
-      'JSON array `[{ "index": number, "neutral": boolean }]` with the rows to import (status new, duplicate ' +
-      'or unrecognized), each index once',
+      'JSON array `[{ "index": number, "neutral": boolean, "categoryId"?: uuid }]` with the rows to import ' +
+      '(status new, duplicate or unrecognized), each index once. `categoryId` is one of the user\'s categories ' +
+      '(422 `invalid_category` otherwise); omitted, the row keeps the category of the parser (see `categoryId` ' +
+      'of the preview rows)',
   }),
 });
 
@@ -124,35 +127,11 @@ function invalid(message: string, field: string): AppError {
   return new AppError('validation_error', 422, message, field);
 }
 
-interface Selection {
-  index: number;
-  neutral: boolean;
-}
-
-/** `selections` must be a non-empty JSON array of `{ index: integer >= 0, neutral: boolean }`, each index once. */
-function parseSelections(raw: string): Selection[] {
-  let value: unknown;
-  try {
-    value = JSON.parse(raw);
-  } catch {
-    throw invalid('selections must be a JSON array', 'selections');
-  }
-  if (!Array.isArray(value)) throw invalid('selections must be a JSON array', 'selections');
-  if (value.length === 0) throw invalid('Select at least one row to import', 'selections');
-  const seen = new Set<number>();
-  return value.map((item: unknown) => {
-    const { index, neutral } = (item ?? {}) as { index?: unknown; neutral?: unknown };
-    if (typeof item !== 'object' || !Number.isSafeInteger(index) || (index as number) < 0 || typeof neutral !== 'boolean') {
-      throw invalid('Each selection must be { index: integer >= 0, neutral: boolean }', 'selections');
-    }
-    if (seen.has(index as number)) throw invalid(`Row ${String(index)} is selected more than once`, 'selections');
-    seen.add(index as number);
-    return { index: index as number, neutral };
-  });
-}
+type SelectedRow = ClassifiedRow & { chosenCategoryId?: string };
+type ChosenRow = ClassifiedRow & { categoryId: string };
 
 /** Selected rows of the file, in file order; a selection of a non-selectable or unknown row is rejected. */
-function selectedRows(rows: ClassifiedRow[], selections: Selection[]): ClassifiedRow[] {
+function selectedRows(rows: ClassifiedRow[], selections: Selection[]): SelectedRow[] {
   const byIndex = new Map(rows.map((row) => [row.index, row]));
   const chosen = selections.map((selection) => {
     const row = byIndex.get(selection.index);
@@ -164,9 +143,33 @@ function selectedRows(rows: ClassifiedRow[], selections: Selection[]): Classifie
         'selections',
       );
     }
-    return { ...row, neutral: selection.neutral };
+    return {
+      ...row,
+      neutral: selection.neutral,
+      ...(selection.categoryId === undefined ? {} : { chosenCategoryId: selection.categoryId.toLowerCase() }),
+    };
   });
   return chosen.sort((a, b) => a.index - b.index);
+}
+
+/**
+ * The category each selected row is saved with: the one the user chose, which must be visible to them
+ * (RLS hides other users' categories), or else the one of the parser's key. One query for all rows.
+ */
+async function resolveCategories(tx: TransactionSql, rows: SelectedRow[], selections: Selection[]): Promise<ChosenRow[]> {
+  const ids = categoryIdsOf(selections);
+  const visible = new Set(
+    ids.length === 0
+      ? []
+      : (await tx<{ id: string }[]>`select id from public.categories where id = any(${ids}::uuid[])`).map((c) => c.id),
+  );
+  const byKey = await categoriesByKey(tx, rows);
+  return rows.map(({ chosenCategoryId, ...row }) => {
+    if (chosenCategoryId !== undefined && !visible.has(chosenCategoryId)) {
+      throw new AppError('invalid_category', 422, `Row ${row.index} has a category that does not exist`, 'selections');
+    }
+    return { ...row, categoryId: chosenCategoryId ?? (byKey.get(row.categoryKey) as Category).id };
+  });
 }
 
 /** Midnight of the local day in `zone`, as an ISO instant with offset (DST-safe start of day). */
@@ -179,8 +182,7 @@ interface Confirmation {
   idempotencyKey: string;
   account: { id: string; bank: string };
   rowCount: number;
-  rows: ClassifiedRow[];
-  categories: Map<string, Category>;
+  rows: ChosenRow[];
   file: UploadedFile & { storagePath: string };
   tz: string;
 }
@@ -192,7 +194,7 @@ async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<Confirm
   await tx`
     insert into public.import_batches (id, account_id, bank, idempotency_key, row_count, imported_count, skipped_count)
     values (${c.batchId}, ${c.account.id}, ${c.account.bank}, ${c.idempotencyKey}, ${c.rowCount}, ${imported}, ${skipped})`;
-  const column = <T>(pick: (row: ClassifiedRow) => T): T[] => c.rows.map(pick);
+  const column = <T>(pick: (row: ChosenRow) => T): T[] => c.rows.map(pick);
   const inserted = await tx`
     insert into public.transactions
       (account_id, category_id, name, description, type, occurred_at, amount, payment_method, identifier,
@@ -200,7 +202,7 @@ async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<Confirm
     select ${c.account.id}, r.category_id, r.name, r.description, r.type, r.occurred_at, r.amount, r.payment_method, r.identifier,
            r.counterparty_document, r.counterparty_bank, r.neutral, ${c.batchId}
     from unnest(
-      ${column((r) => (c.categories.get(r.categoryKey) as Category).id)}::uuid[],
+      ${column((r) => r.categoryId)}::uuid[],
       ${column((r) => r.name)}::text[],
       ${column((r) => r.description)}::text[],
       ${column((r) => r.type)}::text[],
@@ -298,7 +300,7 @@ export async function importRoutes(app: FastifyInstance, options: ImportRoutesOp
       const prepared = await request.withUser(async (tx) => {
         const { account, rows } = await analyze(tx, accountId, form.file.content, request.tz);
         const chosen = selectedRows(rows, selections);
-        return { account, rowCount: rows.length, rows: chosen, categories: await categoriesByKey(tx, chosen) };
+        return { account, rowCount: rows.length, rows: await resolveCategories(tx, chosen, selections) };
       });
 
       const batchId = randomUUID();

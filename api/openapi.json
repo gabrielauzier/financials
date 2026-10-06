@@ -2206,6 +2206,7 @@
                           "amount",
                           "name",
                           "paymentMethod",
+                          "categoryId",
                           "categoryName",
                           "status",
                           "neutral",
@@ -2247,6 +2248,11 @@
                               "PIX",
                               "Other"
                             ]
+                          },
+                          "categoryId": {
+                            "format": "uuid",
+                            "description": "The user's category of the parser's key; the default of the row",
+                            "type": "string"
                           },
                           "categoryName": {
                             "type": "string"
@@ -2344,7 +2350,7 @@
                     "type": "string"
                   },
                   "selections": {
-                    "description": "JSON array `[{ \"index\": number, \"neutral\": boolean }]` with the rows to import (status new, duplicate or unrecognized), each index once",
+                    "description": "JSON array `[{ \"index\": number, \"neutral\": boolean, \"categoryId\"?: uuid }]` with the rows to import (status new, duplicate or unrecognized), each index once. `categoryId` is one of the user's categories (422 `invalid_category` otherwise); omitted, the row keeps the category of the parser (see `categoryId` of the preview rows)",
                     "type": "string"
                   }
                 }

@@ -121,14 +121,14 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Preview JSON carries `categoryId` (the user's category id of the parser key) on every row, ignored and invalid included, and it equals the id behind `categoryName` (AC 1 of the API story)
-- [ ] Unit tests of `parseSelections` (`selections.test.ts`): omitted `categoryId` accepted; lowercase and uppercase UUID accepted; `null`, number, object, empty string and non-UUID string rejected with 422 `validation_error` field `selections`; the old rules still hold (empty array, repeated index, negative or fractional index, non-boolean `neutral`) (AC 5)
-- [ ] Integration: confirm with a custom category on two rows (different categories) stores each transaction with its own category, read back by `GET /transactions` (AC 2 and 7); without `categoryId` the parser category is stored as before (AC 3); a neutral row with a chosen category stores `neutral = true` and that category (AC 6)
-- [ ] Integration: a well-formed `categoryId` that does not exist, and the category id of another user, answer 422 `invalid_category` with field `selections` and the row `index` in the message; no batch, transaction, attachment or Storage object is created (`importState` unchanged) (AC 4)
-- [ ] Integration: an upper-case `categoryId` of the user's category is accepted; replaying the same idempotency key returns the stored summary (HTTP 200) without writing again
-- [ ] `api/openapi.json` regenerated (never edited by hand) documents `categoryId` on the preview rows and in the `selections` description, and the swagger test passes
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
-- [ ] Test count: the existing API tests plus about 10 new unit tests and 8 new integration tests pass (no silent deletions)
+- [x] Preview JSON carries `categoryId` (the user's category id of the parser key) on every row, ignored and invalid included, and it equals the id behind `categoryName` (AC 1 of the API story)
+- [x] Unit tests of `parseSelections` (`selections.test.ts`): omitted `categoryId` accepted; lowercase and uppercase UUID accepted; `null`, number, object, empty string and non-UUID string rejected with 422 `validation_error` field `selections`; the old rules still hold (empty array, repeated index, negative or fractional index, non-boolean `neutral`) (AC 5)
+- [x] Integration: confirm with a custom category on two rows (different categories) stores each transaction with its own category, read back by `GET /transactions` (AC 2 and 7); without `categoryId` the parser category is stored as before (AC 3); a neutral row with a chosen category stores `neutral = true` and that category (AC 6)
+- [x] Integration: a well-formed `categoryId` that does not exist, and the category id of another user, answer 422 `invalid_category` with field `selections` and the row `index` in the message; no batch, transaction, attachment or Storage object is created (`importState` unchanged) (AC 4)
+- [x] Integration: an upper-case `categoryId` of the user's category is accepted; replaying the same idempotency key returns the stored summary (HTTP 200) without writing again
+- [x] `api/openapi.json` regenerated (never edited by hand) documents `categoryId` on the preview rows and in the `selections` description, and the swagger test passes
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
+- [x] Test count: the existing API tests plus about 10 new unit tests and 8 new integration tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full

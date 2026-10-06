@@ -21,6 +21,7 @@ export const PreviewRowSchema = Type.Object({
   amount: Type.String({ description: 'Decimal string, e.g. "1234.56"' }),
   name: Type.String(),
   paymentMethod: stringEnum(PAYMENT_METHODS),
+  categoryId: Type.String({ format: 'uuid', description: "The user's category of the parser's key; the default of the row" }),
   categoryName: Type.String(),
   status: stringEnum(STATUSES),
   neutral: Type.Boolean(),
@@ -86,7 +87,7 @@ export function toPreview(rows: ClassifiedRow[], categories: Map<string, Categor
   const totals = { new: 0, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 };
   const previewRows = rows.map((row): PreviewRow => {
     totals[row.status] += 1;
-    const categoryName = (categories.get(row.categoryKey) as Category).name;
+    const { id: categoryId, name: categoryName } = categories.get(row.categoryKey) as Category;
     return {
       index: row.index,
       localDate: row.localDate,
@@ -94,6 +95,7 @@ export function toPreview(rows: ClassifiedRow[], categories: Map<string, Categor
       amount: row.amount,
       name: row.name,
       paymentMethod: row.paymentMethod,
+      categoryId,
       categoryName,
       status: row.status,
       neutral: row.neutral,
