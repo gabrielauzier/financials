@@ -207,8 +207,8 @@ Toda ambiguidade foi resolvida ou registrada aqui.
 | TUXV2-07 | P2: Toasts coloridos por tipo | In Tasks | Implementing |
 | TUXV2-08 | P2: Toasts coloridos por tipo | In Tasks | Implementing |
 | TUXV2-09 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
-| TUXV2-10 | P1: Limpar cada filtro do extrato | In Tasks | Pending |
-| TUXV2-11 | P1: Limpar cada filtro do extrato | In Tasks | Pending |
+| TUXV2-10 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
+| TUXV2-11 | P1: Limpar cada filtro do extrato | In Tasks | Implementing |
 | TUXV2-12 | P2: Dia da semana abaixo da data | In Tasks | Pending |
 | TUXV2-13 | P2: Dia da semana abaixo da data | In Tasks | Pending |
 

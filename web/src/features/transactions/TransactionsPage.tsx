@@ -46,6 +46,7 @@ import {
   useUpdateTransactionCategories,
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
+import { ClearButton, FilterField } from "./FilterField";
 import { TransactionForm } from "./TransactionForm";
 import {
   amountClassName,
@@ -86,6 +87,15 @@ const withFilters =
     return filters === state.filters ? state : { ...state, filters };
   };
 
+/** The filters with the search text applied (`q` set, or removed when empty), back on page 1; the same object when nothing changes. */
+const withQuery = (query: string) => (current: TransactionFilters) => {
+  if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
+  const next = { ...current, page: 1 };
+  if (query) next.q = query;
+  else delete next.q;
+  return next;
+};
+
 export function TransactionsPage() {
   // filters and the quick month live in one state, so no update can change one without the other
   const [{ filters, quick }, setState] = useState<FilterState>(initialState);
@@ -105,17 +115,8 @@ export function TransactionsPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const query = search.trim();
-      setState(
-        withFilters((current) => {
-          // nothing to change (the first run, right after mount): keep the filters, and the selection
-          if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
-          const next = { ...current, page: 1 };
-          if (query) next.q = query;
-          else delete next.q;
-          return next;
-        }),
-      );
+      // nothing to change (the first run, right after mount): keep the filters, and the selection
+      setState(withFilters(withQuery(search.trim())));
     }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
@@ -130,6 +131,14 @@ export function TransactionsPage() {
         return next;
       }),
     );
+  /** The "x" handler of a filter, only while that filter has a value. */
+  const clearOf = (key: "accountId" | "categoryId" | "type" | "neutral") =>
+    filters[key] !== undefined ? () => changeFilter(key, undefined) : undefined;
+  // the "x" of the search: empties the field and drops `q` now, without waiting for the 300 ms debounce
+  const clearSearch = () => {
+    setSearch("");
+    setState(withFilters(withQuery("")));
+  };
   const changeDate = (key: "from" | "to", value: string) =>
     setState((state) => applyDateFilter(state, key, value));
   const changeQuick = (part: "year" | "month", value: number) =>
@@ -217,38 +226,46 @@ export function TransactionsPage() {
         aria-label="Filtros do extrato"
         className="grid gap-4 border-b py-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
       >
-        <Filter label="De" id="filter-from">
+        <FilterField
+          label="De"
+          id="filter-from"
+          onClear={filters.from && !quickActive ? () => changeDate("from", "") : undefined}
+        >
           <DatePicker
             id="filter-from"
             value={filters.from ?? ""}
             disabled={quickActive}
             onChange={(value) => changeDate("from", value)}
           />
-        </Filter>
-        <Filter label="Até" id="filter-to">
+        </FilterField>
+        <FilterField
+          label="Até"
+          id="filter-to"
+          onClear={filters.to && !quickActive ? () => changeDate("to", "") : undefined}
+        >
           <DatePicker
             id="filter-to"
             value={filters.to ?? ""}
             disabled={quickActive}
             onChange={(value) => changeDate("to", value)}
           />
-        </Filter>
-        <Filter label="Conta" id="filter-account">
+        </FilterField>
+        <FilterField label="Conta" id="filter-account" onClear={clearOf("accountId")}>
           <AccountSelect
             id="filter-account"
             includeInactive
             value={filters.accountId}
             onChange={(value) => changeFilter("accountId", value)}
           />
-        </Filter>
-        <Filter label="Categoria" id="filter-category">
+        </FilterField>
+        <FilterField label="Categoria" id="filter-category" onClear={clearOf("categoryId")}>
           <CategorySelect
             id="filter-category"
             value={filters.categoryId}
             onChange={(value) => changeFilter("categoryId", value)}
           />
-        </Filter>
-        <Filter label="Tipo" id="filter-type">
+        </FilterField>
+        <FilterField label="Tipo" id="filter-type" onClear={clearOf("type")}>
           <SimpleSelect
             id="filter-type"
             value={filters.type ?? "all"}
@@ -261,8 +278,8 @@ export function TransactionsPage() {
               ["Expense", "Despesa"],
             ]}
           />
-        </Filter>
-        <Filter label="Neutra" id="filter-neutral">
+        </FilterField>
+        <FilterField label="Neutra" id="filter-neutral" onClear={clearOf("neutral")}>
           <SimpleSelect
             id="filter-neutral"
             value={filters.neutral === undefined ? "all" : String(filters.neutral)}
@@ -275,7 +292,7 @@ export function TransactionsPage() {
               ["false", "Não"],
             ]}
           />
-        </Filter>
+        </FilterField>
         <div className="flex items-end">
           <Button
             variant="outline"
@@ -289,7 +306,12 @@ export function TransactionsPage() {
           </Button>
         </div>
         <div className="grid grid-cols-2 items-end gap-4 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto] lg:col-span-4 xl:col-span-3">
-          <Filter label="Mês" id="filter-quick-month">
+          <FilterField
+            label="Mês"
+            clearLabel="Mês rápido"
+            id="filter-quick-month"
+            onClear={quickActive ? clearQuick : undefined}
+          >
             <SimpleSelect
               id="filter-quick-month"
               value={quick.month === undefined ? "" : String(quick.month)}
@@ -297,8 +319,8 @@ export function TransactionsPage() {
               onChange={(value) => changeQuick("month", Number(value))}
               options={MONTH_NAMES.map((name, index) => [String(index + 1), name])}
             />
-          </Filter>
-          <Filter label="Ano" id="filter-quick-year">
+          </FilterField>
+          <FilterField label="Ano" id="filter-quick-year">
             <SimpleSelect
               id="filter-quick-year"
               value={quick.year === undefined ? "" : String(quick.year)}
@@ -306,7 +328,7 @@ export function TransactionsPage() {
               onChange={(value) => changeQuick("year", Number(value))}
               options={yearOptions().map((year) => [String(year), String(year)])}
             />
-          </Filter>
+          </FilterField>
           <Button
             variant="outline"
             disabled={quick.year === undefined && quick.month === undefined}
@@ -322,11 +344,18 @@ export function TransactionsPage() {
           <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
           <Input
             id="transaction-search"
-            className="pl-9"
+            className="px-9"
             placeholder="Buscar por nome"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search !== "" && (
+            <ClearButton
+              label="Busca"
+              onClick={clearSearch}
+              className="absolute right-1.5 top-1.5 size-6 rounded-full text-muted-foreground"
+            />
+          )}
         </div>
         {invalidPeriod && (
           <p
@@ -498,14 +527,6 @@ export function TransactionsPage() {
   );
 }
 
-function Filter({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-    </div>
-  );
-}
 function SimpleSelect({
   id,
   value,

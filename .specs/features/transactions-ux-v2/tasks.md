@@ -243,13 +243,13 @@ T6 → T8
 
 **Done when**:
 
-- [ ] Each of the five filters (busca, Tipo, Conta, Categoria, Neutra) shows its "x" only while it has a value, and clicking it queries without that parameter only, keeping the other filters and `sort`/`order` and going to page 1; one test per filter (AC 1 to 6 of the filter story)
-- [ ] "Limpar filtro De" drops `from` and keeps `to`; "Limpar filtro Até" drops `to` and keeps `from`; neither shows while the quick month is active (AC 7, 8 and 9)
-- [ ] The quick month "x" shows only with month and year chosen (not with just one), and clicking it queries without `from` and `to`, enables empty De and Até, keeps the other filters and the sort and goes to page 1 (AC 10 and 11)
-- [ ] Clearing the last active filter queries with the base filters and removes every "Limpar filtro" button; clearing De or Até removes the invalid-period alert; the search "x" does not query a second time 300 ms later; clearing from page 2 goes to page 1 (edge cases)
-- [ ] The existing filter, quick month and CRUD tests keep passing without weakened assertions
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus at least 14 new pass (no silent deletions)
+- [x] Each of the five filters (busca, Tipo, Conta, Categoria, Neutra) shows its "x" only while it has a value, and clicking it queries without that parameter only, keeping the other filters and `sort`/`order` and going to page 1; one test per filter (AC 1 to 6 of the filter story)
+- [x] "Limpar filtro De" drops `from` and keeps `to`; "Limpar filtro Até" drops `to` and keeps `from`; neither shows while the quick month is active (AC 7, 8 and 9)
+- [x] The quick month "x" shows only with month and year chosen (not with just one), and clicking it queries without `from` and `to`, enables empty De and Até, keeps the other filters and the sort and goes to page 1 (AC 10 and 11)
+- [x] Clearing the last active filter queries with the base filters and removes every "Limpar filtro" button; clearing De or Até removes the invalid-period alert; the search "x" does not query a second time 300 ms later; clearing from page 2 goes to page 1 (edge cases)
+- [x] The existing filter, quick month and CRUD tests keep passing without weakened assertions
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 677 web tests pass (660 existing plus 17 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
