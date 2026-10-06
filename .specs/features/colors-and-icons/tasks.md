@@ -351,12 +351,12 @@ T7 → T13
 
 **Done when**:
 
-- [ ] `AccountLabel` renders the bank icon, the nickname and a dot with the account's `bg` class (unknown color uses `slate-600`); the dot and the icon are `aria-hidden`; the color is never the only text (ICON-03 AC 1, ICON-04 AC 7)
-- [ ] An opened `AccountSelect` renders each item as `AccountLabel` and each `option` keeps the nickname as accessible name, with ` (inativa)` for an inactive account when `includeInactive` is on; with a value the trigger shows the same label (ICON-03 AC 1 and 2)
-- [ ] The select still shows "Carregando contas…" and stays disabled while pending; the filter, transaction form, credit-expense form, investment-return form and import start step keep working with the existing tests unchanged (ICON-03 AC 6)
-- [ ] `useAccountLookup` returns `ready: false` and an empty map while loading or failing and a map by id when loaded
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 8 new ones pass (no silent deletions)
+- [x] `AccountLabel` renders the bank icon, the nickname and a dot with the account's `bg` class (unknown color uses `slate-600`); the dot and the icon are `aria-hidden`; the color is never the only text (ICON-03 AC 1, ICON-04 AC 7)
+- [x] An opened `AccountSelect` renders each item as `AccountLabel` and each `option` keeps the nickname as accessible name, with ` (inativa)` for an inactive account when `includeInactive` is on; with a value the trigger shows the same label (ICON-03 AC 1 and 2)
+- [x] The select still shows "Carregando contas…" and stays disabled while pending; the filter, transaction form, credit-expense form, investment-return form and import start step keep working with the existing tests unchanged (ICON-03 AC 6)
+- [x] `useAccountLookup` returns `ready: false` and an empty map while loading or failing and a map by id when loaded
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 8 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
