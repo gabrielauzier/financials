@@ -39,23 +39,23 @@ async function list(as: TestUser): Promise<Category[]> {
 
 // The design table "Tabela de cores semeadas".
 const SEEDED_COLORS: Record<string, string> = {
-  Entertainment: 'purple-600',
-  Food: 'orange-600',
-  Salaries: 'emerald-600',
-  Healthcare: 'rose-600',
-  Utilities: 'sky-600',
+  Entertainment: 'purple-400',
+  Food: 'orange-400',
+  Salaries: 'emerald-400',
+  Healthcare: 'rose-400',
+  Utilities: 'sky-400',
   Unknown: 'zinc-400',
-  Transport: 'blue-600',
-  Help: 'pink-600',
-  PJ: 'indigo-600',
-  Bills: 'amber-600',
-  Emergency: 'red-600',
+  Transport: 'blue-400',
+  Help: 'pink-400',
+  PJ: 'indigo-400',
+  Bills: 'amber-400',
+  Emergency: 'red-400',
   Uncategorized: 'slate-400',
-  Wishes: 'fuchsia-600',
-  Reversal: 'teal-600',
-  Shopping: 'lime-600',
-  Pets: 'yellow-600',
-  Investments: 'green-900',
+  Wishes: 'fuchsia-400',
+  Reversal: 'teal-400',
+  Shopping: 'lime-400',
+  Pets: 'yellow-400',
+  Investments: 'green-400',
 };
 
 // Spec CAT-01 keys and pt-BR names; the spec defines no order, the API sorts by name (case-insensitive).
@@ -119,7 +119,7 @@ describe('POST /categories', () => {
       key: null,
       name: 'Mercado',
       isSystem: false,
-      color: 'slate-600',
+      color: 'slate-400',
     });
 
     const rows = await getAdminSql()`
@@ -171,7 +171,7 @@ describe('PATCH /categories/:id', () => {
       key: 'Food',
       name: 'Mercado',
       isSystem: false,
-      color: 'orange-600',
+      color: 'orange-400',
     });
     expect(await getAdminSql()`select key, name, is_system from public.categories where id = ${food.id}`).toEqual([
       { key: 'Food', name: 'Mercado', is_system: false },
@@ -217,7 +217,7 @@ describe('PATCH /categories/:id', () => {
       key: 'Pets',
       name: 'Pets',
       isSystem: false,
-      color: 'yellow-600',
+      color: 'yellow-400',
     });
   });
 
@@ -417,8 +417,8 @@ describe('DELETE /categories/:id', () => {
   });
 });
 
-const INVALID_STRING_COLORS = ['', 'blue', 'blue-500', 'Blue-600', ' blue-600', '#2563eb'];
-const WRONG_TYPE_COLORS: unknown[] = [null, 5, { key: 'blue-600' }];
+const INVALID_STRING_COLORS = ['', 'blue', 'blue-500', 'blue-600', 'blue-900', 'Blue-400', ' blue-400', '#60a5fa'];
+const WRONG_TYPE_COLORS: unknown[] = [null, 5, { key: 'blue-400' }];
 
 describe('category color', () => {
   it('returns the design color of each of the 17 seeded categories, all distinct', async () => {
@@ -428,19 +428,19 @@ describe('category color', () => {
     expect(new Set(body.map((c) => c.color)).size).toBe(17);
   });
 
-  it('POST creates with the chosen color, or slate-600 when it is omitted', async () => {
+  it('POST creates with the chosen color, or slate-400 when it is omitted', async () => {
     const user = await createTestUser();
-    const chosen = await call(user, 'POST', '/categories', { name: 'Viagens', color: 'rose-900' });
+    const chosen = await call(user, 'POST', '/categories', { name: 'Viagens', color: 'rose-400' });
     expect(chosen.statusCode).toBe(201);
-    expect(chosen.json()).toMatchObject({ name: 'Viagens', color: 'rose-900' });
+    expect(chosen.json()).toMatchObject({ name: 'Viagens', color: 'rose-400' });
     const omitted = await call(user, 'POST', '/categories', { name: 'Sem cor' });
     expect(omitted.statusCode).toBe(201);
-    expect(omitted.json()).toMatchObject({ color: 'slate-600' });
+    expect(omitted.json()).toMatchObject({ color: 'slate-400' });
     expect(
       await getAdminSql()`select name, color from public.categories where user_id = ${user.id} and key is null order by name`,
     ).toEqual([
-      { name: 'Sem cor', color: 'slate-600' },
-      { name: 'Viagens', color: 'rose-900' },
+      { name: 'Sem cor', color: 'slate-400' },
+      { name: 'Viagens', color: 'rose-400' },
     ]);
   });
 
@@ -464,7 +464,7 @@ describe('category color', () => {
       expect(patch.json()).toMatchObject({ error: { code: 'validation_error', field: 'color' } });
     }
     expect(await list(user)).toHaveLength(17);
-    expect((await byKey(user, 'Food')).color).toBe('orange-600');
+    expect((await byKey(user, 'Food')).color).toBe('orange-400');
   });
 
   it('PATCH with only color changes the color and keeps the name', async () => {
@@ -481,11 +481,11 @@ describe('category color', () => {
   it('PATCH with name and color changes both', async () => {
     const user = await createTestUser();
     const pets = await byKey(user, 'Pets');
-    const res = await call(user, 'PATCH', `/categories/${pets.id}`, { name: '  Bichos ', color: 'stone-900' });
+    const res = await call(user, 'PATCH', `/categories/${pets.id}`, { name: '  Bichos ', color: 'stone-400' });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ key: 'Pets', name: 'Bichos', color: 'stone-900' });
+    expect(res.json()).toMatchObject({ key: 'Pets', name: 'Bichos', color: 'stone-400' });
     expect(await getAdminSql()`select name, color from public.categories where id = ${pets.id}`).toEqual([
-      { name: 'Bichos', color: 'stone-900' },
+      { name: 'Bichos', color: 'stone-400' },
     ]);
   });
 
@@ -496,7 +496,7 @@ describe('category color', () => {
     expect(res.statusCode).toBe(409);
     expect(res.json()).toEqual({ error: { code: 'duplicate_name', message: expect.any(String), field: 'name' } });
     expect(await getAdminSql()`select name, color from public.categories where id = ${pets.id}`).toEqual([
-      { name: 'Pets', color: 'yellow-600' },
+      { name: 'Pets', color: 'yellow-400' },
     ]);
   });
 
@@ -509,7 +509,7 @@ describe('category color', () => {
       expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'color' } });
     }
     expect(await getAdminSql()`select name, color from public.categories where id = ${pets.id}`).toEqual([
-      { name: 'Pets', color: 'yellow-600' },
+      { name: 'Pets', color: 'yellow-400' },
     ]);
   });
 
@@ -552,6 +552,6 @@ describe('category color', () => {
     const res = await call(intruder, 'PATCH', `/categories/${food.id}`, { color: 'red-400' });
     expect(res.statusCode).toBe(404);
     expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
-    expect((await byKey(owner, 'Food')).color).toBe('orange-600');
+    expect((await byKey(owner, 'Food')).color).toBe('orange-400');
   });
 });

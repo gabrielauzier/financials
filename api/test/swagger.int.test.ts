@@ -207,7 +207,7 @@ describe('OpenAPI contract', () => {
     }
   });
 
-  it('GET /docs/json documents color with the 66-key enum on the account and category responses and the key list on their bodies (COLOR-06)', async () => {
+  it('GET /docs/json documents color with the 22-key enum on the account and category responses and the key list on their bodies (COLOR-06)', async () => {
     const app = buildApp();
     try {
       const res = await app.inject({ method: 'GET', url: '/docs/json' });
@@ -230,7 +230,7 @@ describe('OpenAPI contract', () => {
         ['deactivate 200', response(doc.paths['/accounts/{id}/deactivate']?.post, '200')],
       ] as const) {
         expect(colorOf(schema)?.enum, label).toEqual([...COLOR_KEYS]);
-        expect(colorOf(schema)?.enum, label).toHaveLength(66);
+        expect(colorOf(schema)?.enum, label).toHaveLength(22);
         expect(schema?.required, label).toContain('color');
       }
       for (const [label, schema] of [

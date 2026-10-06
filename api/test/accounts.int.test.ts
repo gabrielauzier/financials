@@ -40,7 +40,7 @@ describe('POST /accounts', () => {
       nickname: 'Sofisa Pessoal',
       holderNames: ['Maria Silva', 'Maria Silva LTDA'],
       active: true,
-      color: 'slate-600',
+      color: 'slate-400',
       createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
     });
     const rows = await getAdminSql()`
@@ -126,7 +126,7 @@ describe('GET /accounts', () => {
       nickname: 'A primeira',
       holderNames: ['Maria Silva'],
       active: true,
-      color: 'slate-600',
+      color: 'slate-400',
       createdAt: expect.any(String),
     });
     expect(
@@ -163,7 +163,7 @@ describe('PATCH /accounts/:id', () => {
       nickname: 'Renomeada',
       holderNames: ['Ana', 'Bia'],
       active: true,
-      color: 'slate-600',
+      color: 'slate-400',
       createdAt: expect.any(String),
     });
 
@@ -273,8 +273,8 @@ describe('POST /accounts/:id/deactivate and /activate', () => {
   });
 });
 
-const INVALID_STRING_COLORS = ['', 'blue', 'blue-500', 'Blue-600', ' blue-600', '#2563eb'];
-const WRONG_TYPE_COLORS: unknown[] = [null, 5, { key: 'blue-600' }];
+const INVALID_STRING_COLORS = ['', 'blue', 'blue-500', 'blue-600', 'blue-900', 'Blue-400', ' blue-400', '#60a5fa'];
+const WRONG_TYPE_COLORS: unknown[] = [null, 5, { key: 'blue-400' }];
 
 describe('account color', () => {
   it('creates with a chosen color and stores it', async () => {
@@ -285,12 +285,12 @@ describe('account color', () => {
     expect(rows).toEqual([{ color: 'teal-400' }]);
   });
 
-  it('stores and returns slate-600 when the color is omitted', async () => {
+  it('stores and returns slate-400 when the color is omitted', async () => {
     const res = await call(user, 'POST', '/accounts', valid('Cor padrão'));
     expect(res.statusCode).toBe(201);
-    expect(res.json()).toMatchObject({ color: 'slate-600' });
+    expect(res.json()).toMatchObject({ color: 'slate-400' });
     const rows = await getAdminSql()`select color from public.accounts where id = ${res.json<{ id: string }>().id}`;
-    expect(rows).toEqual([{ color: 'slate-600' }]);
+    expect(rows).toEqual([{ color: 'slate-400' }]);
   });
 
   it.each(INVALID_STRING_COLORS)('POST rejects the color %j with 422 on field color and writes nothing', async (color) => {
@@ -324,7 +324,7 @@ describe('account color', () => {
       expect(patch.json()).toMatchObject({ error: { code: 'validation_error', field: 'color' } });
     }
     expect(await getAdminSql()`select count(*)::int as n from public.accounts where user_id = ${owner.id}`).toEqual([{ n: 1 }]);
-    expect(await getAdminSql()`select color from public.accounts where id = ${acc.id}`).toEqual([{ color: 'slate-600' }]);
+    expect(await getAdminSql()`select color from public.accounts where id = ${acc.id}`).toEqual([{ color: 'slate-400' }]);
   });
 
   it('PATCH with only color changes it and keeps bank, nickname and holders', async () => {
@@ -336,18 +336,18 @@ describe('account color', () => {
         holderNames: ['Ana', 'Beto'],
       })
     ).json<{ id: string }>();
-    const res = await call(owner, 'PATCH', `/accounts/${created.id}`, { color: 'rose-900' });
+    const res = await call(owner, 'PATCH', `/accounts/${created.id}`, { color: 'rose-400' });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ color: 'rose-900', bank: 'Neon', nickname: 'Só cor', holderNames: ['Ana', 'Beto'] });
+    expect(res.json()).toMatchObject({ color: 'rose-400', bank: 'Neon', nickname: 'Só cor', holderNames: ['Ana', 'Beto'] });
     expect(
       await getAdminSql()`select color, bank, nickname, holder_names from public.accounts where id = ${created.id}`,
-    ).toEqual([{ color: 'rose-900', bank: 'Neon', nickname: 'Só cor', holder_names: ['Ana', 'Beto'] }]);
+    ).toEqual([{ color: 'rose-400', bank: 'Neon', nickname: 'Só cor', holder_names: ['Ana', 'Beto'] }]);
   });
 
   it('PATCH with a color and an invalid nickname changes nothing', async () => {
     const owner = await createTestUser();
     const created = (await call(owner, 'POST', '/accounts', { ...valid('Atômica'), color: 'blue-400' })).json<{ id: string }>();
-    const res = await call(owner, 'PATCH', `/accounts/${created.id}`, { color: 'red-900', nickname: '   ' });
+    const res = await call(owner, 'PATCH', `/accounts/${created.id}`, { color: 'red-400', nickname: '   ' });
     expect(res.statusCode).toBe(422);
     expect(res.json()).toMatchObject({ error: { field: 'nickname' } });
     expect(await getAdminSql()`select color, nickname from public.accounts where id = ${created.id}`).toEqual([
@@ -357,22 +357,22 @@ describe('account color', () => {
 
   it('returns color in the list, activate and deactivate responses', async () => {
     const owner = await createTestUser();
-    const created = (await call(owner, 'POST', '/accounts', { ...valid('Status'), color: 'lime-600' })).json<{ id: string }>();
+    const created = (await call(owner, 'POST', '/accounts', { ...valid('Status'), color: 'lime-400' })).json<{ id: string }>();
     const listed = (await call(owner, 'GET', '/accounts')).json<{ id: string; color: string }[]>();
-    expect(listed).toEqual([expect.objectContaining({ id: created.id, color: 'lime-600' })]);
+    expect(listed).toEqual([expect.objectContaining({ id: created.id, color: 'lime-400' })]);
     const off = await call(owner, 'POST', `/accounts/${created.id}/deactivate`);
-    expect(off.json()).toMatchObject({ active: false, color: 'lime-600' });
+    expect(off.json()).toMatchObject({ active: false, color: 'lime-400' });
     const on = await call(owner, 'POST', `/accounts/${created.id}/activate`);
-    expect(on.json()).toMatchObject({ active: true, color: 'lime-600' });
+    expect(on.json()).toMatchObject({ active: true, color: 'lime-400' });
   });
 
   it("answers 404 when another user patches the account's color and leaves it unchanged", async () => {
     const owner = await createTestUser();
     const intruder = await createTestUser();
-    const created = (await call(owner, 'POST', '/accounts', { ...valid('Cor alheia'), color: 'teal-600' })).json<{ id: string }>();
+    const created = (await call(owner, 'POST', '/accounts', { ...valid('Cor alheia'), color: 'teal-400' })).json<{ id: string }>();
     const res = await call(intruder, 'PATCH', `/accounts/${created.id}`, { color: 'red-400' });
     expect(res.statusCode).toBe(404);
     expect(res.json()).toMatchObject({ error: { code: 'not_found' } });
-    expect(await getAdminSql()`select color from public.accounts where id = ${created.id}`).toEqual([{ color: 'teal-600' }]);
+    expect(await getAdminSql()`select color from public.accounts where id = ${created.id}`).toEqual([{ color: 'teal-400' }]);
   });
 });
