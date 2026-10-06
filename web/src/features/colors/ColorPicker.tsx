@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   COLOR_KEYS,
   DEFAULT_COLOR,
-  colorClasses,
+  badgeClasses,
   colorLabel,
   isColorKey,
   type ColorKey,
@@ -83,7 +83,7 @@ export function ColorPicker({ value, onChange, id, disabled, ariaLabel }: ColorP
             aria-hidden="true"
             className={cn(
               "size-4 rounded-full ring-1 ring-black/10 dark:ring-white/25",
-              colorClasses(shown).bg,
+              badgeClasses(shown).bg,
             )}
           />
           {colorLabel(shown)}
@@ -99,7 +99,7 @@ export function ColorPicker({ value, onChange, id, disabled, ariaLabel }: ColorP
       >
         <div role="radiogroup" aria-label="Paleta de cores" className="grid grid-cols-6 gap-1">
           {COLOR_KEYS.map((key, index) => {
-            const classes = colorClasses(key);
+            const classes = badgeClasses(key);
             const checked = index === selectedIndex;
             return (
               <button

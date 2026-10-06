@@ -1,5 +1,5 @@
 /**
- * The color palette: one key per Tailwind family, always shade 400 (22 keys), the same list and
+ * The color palette: one key per Tailwind family (22 keys, always written `<family>-400`; the shade suffix is only an identifier now, the tone shown is set by the class maps below), the same list and
  * order as `api/src/lib/palette.ts` (a contract test compares it with `api/openapi.json`).
  * Colors travel as keys, never as hex values.
  */
@@ -79,38 +79,69 @@ export function colorLabel(key: ColorKey): string {
 }
 
 /**
- * Background and text classes of every key. The strings are literal on purpose: Tailwind only
- * generates classes that appear whole in the source, so never build them with a template string.
- * Rule: background `bg-<family>-400`, text `text-<family>-800` (the same family). The 800 on 400
- * contrast is below 4.5:1 for 16 families: see the known deviation in `palette.test.ts` and in the
- * spec (COLOR-02).
+ * Class maps. The strings are literal on purpose: Tailwind only generates classes that appear whole
+ * in the source, so never build them with a template string.
+ * `BADGE_CLASSES`: category badges and the picker swatches (light tone): background
+ * `bg-<family>-200`, text `text-<family>-800` (800 on 200 reaches 4.5:1 in all 22 families,
+ * asserted in `palette.test.ts`).
+ * `ACCENT_CLASSES`: dots, bars and frames next to account names: the stronger `bg-<family>-400`.
  */
-export const COLOR_CLASSES: Record<ColorKey, { bg: string; text: string }> = {
-  "red-400": { bg: "bg-red-400", text: "text-red-800" },
-  "orange-400": { bg: "bg-orange-400", text: "text-orange-800" },
-  "amber-400": { bg: "bg-amber-400", text: "text-amber-800" },
-  "yellow-400": { bg: "bg-yellow-400", text: "text-yellow-800" },
-  "lime-400": { bg: "bg-lime-400", text: "text-lime-800" },
-  "green-400": { bg: "bg-green-400", text: "text-green-800" },
-  "emerald-400": { bg: "bg-emerald-400", text: "text-emerald-800" },
-  "teal-400": { bg: "bg-teal-400", text: "text-teal-800" },
-  "cyan-400": { bg: "bg-cyan-400", text: "text-cyan-800" },
-  "sky-400": { bg: "bg-sky-400", text: "text-sky-800" },
-  "blue-400": { bg: "bg-blue-400", text: "text-blue-800" },
-  "indigo-400": { bg: "bg-indigo-400", text: "text-indigo-800" },
-  "violet-400": { bg: "bg-violet-400", text: "text-violet-800" },
-  "purple-400": { bg: "bg-purple-400", text: "text-purple-800" },
-  "fuchsia-400": { bg: "bg-fuchsia-400", text: "text-fuchsia-800" },
-  "pink-400": { bg: "bg-pink-400", text: "text-pink-800" },
-  "rose-400": { bg: "bg-rose-400", text: "text-rose-800" },
-  "slate-400": { bg: "bg-slate-400", text: "text-slate-800" },
-  "gray-400": { bg: "bg-gray-400", text: "text-gray-800" },
-  "zinc-400": { bg: "bg-zinc-400", text: "text-zinc-800" },
-  "neutral-400": { bg: "bg-neutral-400", text: "text-neutral-800" },
-  "stone-400": { bg: "bg-stone-400", text: "text-stone-800" },
+export const BADGE_CLASSES: Record<ColorKey, { bg: string; text: string }> = {
+  "red-400": { bg: "bg-red-200", text: "text-red-800" },
+  "orange-400": { bg: "bg-orange-200", text: "text-orange-800" },
+  "amber-400": { bg: "bg-amber-200", text: "text-amber-800" },
+  "yellow-400": { bg: "bg-yellow-200", text: "text-yellow-800" },
+  "lime-400": { bg: "bg-lime-200", text: "text-lime-800" },
+  "green-400": { bg: "bg-green-200", text: "text-green-800" },
+  "emerald-400": { bg: "bg-emerald-200", text: "text-emerald-800" },
+  "teal-400": { bg: "bg-teal-200", text: "text-teal-800" },
+  "cyan-400": { bg: "bg-cyan-200", text: "text-cyan-800" },
+  "sky-400": { bg: "bg-sky-200", text: "text-sky-800" },
+  "blue-400": { bg: "bg-blue-200", text: "text-blue-800" },
+  "indigo-400": { bg: "bg-indigo-200", text: "text-indigo-800" },
+  "violet-400": { bg: "bg-violet-200", text: "text-violet-800" },
+  "purple-400": { bg: "bg-purple-200", text: "text-purple-800" },
+  "fuchsia-400": { bg: "bg-fuchsia-200", text: "text-fuchsia-800" },
+  "pink-400": { bg: "bg-pink-200", text: "text-pink-800" },
+  "rose-400": { bg: "bg-rose-200", text: "text-rose-800" },
+  "slate-400": { bg: "bg-slate-200", text: "text-slate-800" },
+  "gray-400": { bg: "bg-gray-200", text: "text-gray-800" },
+  "zinc-400": { bg: "bg-zinc-200", text: "text-zinc-800" },
+  "neutral-400": { bg: "bg-neutral-200", text: "text-neutral-800" },
+  "stone-400": { bg: "bg-stone-200", text: "text-stone-800" },
 };
 
-/** Classes of a key; an unknown value (a future API version) falls back to the default color. */
-export function colorClasses(value: string | undefined): { bg: string; text: string } {
-  return isColorKey(value) ? COLOR_CLASSES[value] : COLOR_CLASSES[DEFAULT_COLOR];
+export const ACCENT_CLASSES: Record<ColorKey, { bg: string }> = {
+  "red-400": { bg: "bg-red-400" },
+  "orange-400": { bg: "bg-orange-400" },
+  "amber-400": { bg: "bg-amber-400" },
+  "yellow-400": { bg: "bg-yellow-400" },
+  "lime-400": { bg: "bg-lime-400" },
+  "green-400": { bg: "bg-green-400" },
+  "emerald-400": { bg: "bg-emerald-400" },
+  "teal-400": { bg: "bg-teal-400" },
+  "cyan-400": { bg: "bg-cyan-400" },
+  "sky-400": { bg: "bg-sky-400" },
+  "blue-400": { bg: "bg-blue-400" },
+  "indigo-400": { bg: "bg-indigo-400" },
+  "violet-400": { bg: "bg-violet-400" },
+  "purple-400": { bg: "bg-purple-400" },
+  "fuchsia-400": { bg: "bg-fuchsia-400" },
+  "pink-400": { bg: "bg-pink-400" },
+  "rose-400": { bg: "bg-rose-400" },
+  "slate-400": { bg: "bg-slate-400" },
+  "gray-400": { bg: "bg-gray-400" },
+  "zinc-400": { bg: "bg-zinc-400" },
+  "neutral-400": { bg: "bg-neutral-400" },
+  "stone-400": { bg: "bg-stone-400" },
+};
+
+/** Badge classes of a key; an unknown value (a future API version) falls back to the default color. */
+export function badgeClasses(value: string | undefined): { bg: string; text: string } {
+  return isColorKey(value) ? BADGE_CLASSES[value] : BADGE_CLASSES[DEFAULT_COLOR];
+}
+
+/** Accent classes of a key; an unknown value falls back to the default color. */
+export function accentClasses(value: string | undefined): { bg: string } {
+  return isColorKey(value) ? ACCENT_CLASSES[value] : ACCENT_CLASSES[DEFAULT_COLOR];
 }

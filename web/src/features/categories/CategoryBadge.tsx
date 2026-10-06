@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { colorClasses } from "@/features/colors/palette";
+import { badgeClasses } from "@/features/colors/palette";
 
 type CategoryBadgeProps = { name: string; color: string | undefined; className?: string };
 
-/** Solid colored badge: the text color comes from the palette map, so it reads on both themes. */
+/** Light-tone (200) colored badge: the text color comes from the palette map, so it reads on both themes. */
 export function CategoryBadge({ name, color, className }: CategoryBadgeProps) {
-  const { bg, text } = colorClasses(color);
+  const { bg, text } = badgeClasses(color);
   return (
     <Badge
       variant="outline"

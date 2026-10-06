@@ -66,19 +66,19 @@ describe("prévia do import: badge de categoria (COLOR-10 AC 5, 6, 8)", () => {
     const trigger = await screen.findByRole("combobox", { name: "Categoria de Linha 0" });
     await waitFor(() => expect(trigger).toHaveTextContent("Alimentação"));
     expect(within(trigger).getByText("Alimentação")).toHaveClass(
-      "bg-orange-400",
+      "bg-orange-200",
       "text-orange-800",
     );
     fireEvent.click(trigger);
     const option = await screen.findByRole("option", { name: "Transporte" });
-    expect(within(option).getByText("Transporte")).toHaveClass("bg-blue-400", "text-blue-800");
+    expect(within(option).getByText("Transporte")).toHaveClass("bg-blue-200", "text-blue-800");
   });
 
   it("linha ignorada ou inválida mostra o badge com o nome do preview e a cor da categoria com o mesmo id", async () => {
     renderTable();
     await waitFor(() =>
       expect(within(categoryCell("Linha 1")).getByText("Nome do preview")).toHaveClass(
-        "bg-blue-400",
+        "bg-blue-200",
         "text-blue-800",
         "ring-inset",
       ),
@@ -90,7 +90,7 @@ describe("prévia do import: badge de categoria (COLOR-10 AC 5, 6, 8)", () => {
     renderTable();
     await waitFor(() =>
       expect(within(categoryCell("Linha 1")).getByText("Nome do preview")).toHaveClass(
-        "bg-blue-400",
+        "bg-blue-200",
       ),
     );
     const cell = categoryCell("Linha 2");

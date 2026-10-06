@@ -21,6 +21,6 @@ describe("CategoryOptionLabel (IMPIMP-03)", () => {
         category={{ id: "c1", name: "Alimentação", color: "teal-400" } as Category}
       />,
     );
-    expect(screen.getByText("Alimentação")).toHaveClass("bg-teal-400", "text-teal-800");
+    expect(screen.getByText("Alimentação")).toHaveClass("bg-teal-200", "text-teal-800");
   });
 });

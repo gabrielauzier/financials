@@ -77,7 +77,7 @@ describe("extrato: ícone e cor da conta (ICON-03 AC 3, 4)", () => {
     expect(within(rowSelect).getByText(item.categoryName)).toHaveClass("inline-block", "truncate");
     fireEvent.click(rowSelect);
     const option = await screen.findByRole("option", { name: food.name });
-    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-400");
+    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-200");
     fireEvent.keyDown(option, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("option")).not.toBeInTheDocument());
     // a transaction of an inactive account: the bank of that account, its dot, no (inativa) suffix
@@ -165,7 +165,7 @@ describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 
     await waitFor(() => expect(filter).toBeEnabled());
     fireEvent.click(filter);
     const option = await screen.findByRole("option", { name: food.name });
-    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-400");
+    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-200");
   });
 
   it("the bulk-apply category select shows badges in its options and in its value", async () => {
@@ -177,11 +177,11 @@ describe("extrato: selects com badge e rótulo de conta (COLOR-10 AC 3, ICON-03 
     const bar = (await screen.findByText(/selecionada\(s\)/)).parentElement as HTMLElement;
     fireEvent.click(within(bar).getByRole("combobox"));
     const option = await screen.findByRole("option", { name: food.name });
-    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-400");
+    expect(within(option).getByText(food.name)).toHaveClass("bg-orange-200");
     fireEvent.click(option);
     await waitFor(() =>
       expect(within(within(bar).getByRole("combobox")).getByText(food.name)).toHaveClass(
-        "bg-orange-400",
+        "bg-orange-200",
       ),
     );
   });

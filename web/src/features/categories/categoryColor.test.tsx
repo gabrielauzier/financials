@@ -58,7 +58,7 @@ describe("category create form color (COLOR-08 AC 3)", () => {
     await waitFor(() => expect(screen.getByLabelText("Nova categoria")).toHaveValue(""));
     expect(screen.getByLabelText("Cor")).toHaveTextContent("Ardósia");
     const badge = await screen.findByText("Mercado");
-    expect(badge).toHaveClass("bg-green-400");
+    expect(badge).toHaveClass("bg-green-200");
   });
 
   it("a 422 on color shows the palette message and keeps the typed name (AC 5)", async () => {
@@ -91,7 +91,7 @@ describe("category edit form color (COLOR-08 AC 4, 5, 6)", () => {
     await pickColor("Cor da categoria", "Rosê");
     fireEvent.click(screen.getByRole("button", { name: "Salvar categoria" }));
     const badge = await screen.findByText("Bichos");
-    expect(badge).toHaveClass("bg-rose-400");
+    expect(badge).toHaveClass("bg-rose-200");
     const patches = requests.filter((r) => r.method === "PATCH");
     expect(patches).toHaveLength(1);
     expect(patches[0]?.body).toEqual({ name: "Bichos", color: "rose-400" });
@@ -121,8 +121,8 @@ describe("category list badges (COLOR-10 AC 7, 4; COLOR-08 AC 7)", () => {
   it("shows each row as a badge with its color and keeps the button names", async () => {
     renderWithQuery(<CategoriesPage />);
     const food = await screen.findByText("Alimentação");
-    expect(food).toHaveClass("bg-orange-400", "text-orange-800");
-    expect(screen.getByText("Entretenimento")).toHaveClass("bg-purple-400");
+    expect(food).toHaveClass("bg-orange-200", "text-orange-800");
+    expect(screen.getByText("Entretenimento")).toHaveClass("bg-purple-200");
     expect(screen.getByRole("button", { name: "Renomear Alimentação" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Excluir Alimentação" })).toBeInTheDocument();
   });
@@ -130,7 +130,7 @@ describe("category list badges (COLOR-10 AC 7, 4; COLOR-08 AC 7)", () => {
   it("a system category shows the badge and the lock but no rename, color or delete control", async () => {
     renderWithQuery(<CategoriesPage />);
     const badge = await screen.findByText("Sem categoria");
-    expect(badge).toHaveClass("bg-slate-400");
+    expect(badge).toHaveClass("bg-slate-200");
     expect(screen.getAllByLabelText("Categoria de sistema")).toHaveLength(3);
     for (const name of ["Sem categoria", "Estorno (de compras)", "Investimentos"]) {
       expect(screen.queryByRole("button", { name: `Renomear ${name}` })).not.toBeInTheDocument();
@@ -150,7 +150,7 @@ describe("category list badges (COLOR-10 AC 7, 4; COLOR-08 AC 7)", () => {
     await waitFor(() => expect(trigger).toBeEnabled());
     fireEvent.click(trigger);
     const option = await screen.findByRole("option", { name: "Alimentação" });
-    expect(within(option).getByText("Alimentação")).toHaveClass("bg-orange-400");
+    expect(within(option).getByText("Alimentação")).toHaveClass("bg-orange-200");
     expect(screen.queryByRole("option", { name: "Entretenimento" })).not.toBeInTheDocument();
   });
 });

@@ -3,12 +3,14 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  COLOR_CLASSES,
+  ACCENT_CLASSES,
+  BADGE_CLASSES,
   COLOR_FAMILIES,
   COLOR_KEYS,
   COLOR_SHADE,
   DEFAULT_COLOR,
-  colorClasses,
+  accentClasses,
+  badgeClasses,
   colorLabel,
   isColorKey,
   type ColorKey,
@@ -105,38 +107,55 @@ describe("colorLabel", () => {
   });
 });
 
-describe("COLOR_CLASSES", () => {
-  it("has bg-<family>-400 and text-<family>-800 of the same family, for every key", () => {
-    expect(Object.keys(COLOR_CLASSES).sort()).toEqual([...COLOR_KEYS].sort());
+function mapSource(name: string): string {
+  const source = readFileSync(path.resolve(__dirname, "palette.ts"), "utf8");
+  const start = source.indexOf(`export const ${name}`);
+  const end = source.indexOf("\n};", start);
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  return source.slice(start, end);
+}
+
+describe("BADGE_CLASSES and ACCENT_CLASSES", () => {
+  it("badge: bg-<family>-200 and text-<family>-800 of the same family, for every key", () => {
+    expect(Object.keys(BADGE_CLASSES).sort()).toEqual([...COLOR_KEYS].sort());
     for (const key of COLOR_KEYS) {
       const [family] = key.split("-");
-      expect({ key, ...COLOR_CLASSES[key] }).toEqual({
+      expect({ key, ...BADGE_CLASSES[key] }).toEqual({
         key,
-        bg: `bg-${family}-400`,
+        bg: `bg-${family}-200`,
         text: `text-${family}-800`,
       });
     }
   });
 
-  it("is written with literal class strings only (Tailwind generates only whole classes)", () => {
-    const source = readFileSync(path.resolve(__dirname, "palette.ts"), "utf8");
-    const start = source.indexOf("export const COLOR_CLASSES");
-    const end = source.indexOf("\n};", start);
-    expect(start).toBeGreaterThan(-1);
-    expect(end).toBeGreaterThan(start);
-    const block = source.slice(start, end);
-    expect(block).not.toContain("${");
-    expect(block).not.toContain("`");
-    expect(block.match(/bg: "bg-[a-z]+-400"/g)).toHaveLength(22);
-    expect(block.match(/text: "text-[a-z]+-800"/g)).toHaveLength(22);
+  it("accent: bg-<family>-400 (the stronger tone) for every key", () => {
+    expect(Object.keys(ACCENT_CLASSES).sort()).toEqual([...COLOR_KEYS].sort());
+    for (const key of COLOR_KEYS) {
+      const [family] = key.split("-");
+      expect({ key, ...ACCENT_CLASSES[key] }).toEqual({ key, bg: `bg-${family}-400` });
+    }
   });
 
-  it("falls back to slate-400 for an unknown value, undefined and the empty string", () => {
-    const fallback = COLOR_CLASSES["slate-400"];
-    for (const value of ["blue-500", "blue-600", "Blue-400", undefined, ""]) {
-      expect(colorClasses(value)).toEqual(fallback);
+  it("both maps are written with literal class strings only (Tailwind generates only whole classes)", () => {
+    const badge = mapSource("BADGE_CLASSES");
+    const accent = mapSource("ACCENT_CLASSES");
+    for (const block of [badge, accent]) {
+      expect(block).not.toContain("${");
+      expect(block).not.toContain("`");
     }
-    expect(colorClasses("rose-400")).toEqual(COLOR_CLASSES["rose-400"]);
+    expect(badge.match(/bg: "bg-[a-z]+-200"/g)).toHaveLength(22);
+    expect(badge.match(/text: "text-[a-z]+-800"/g)).toHaveLength(22);
+    expect(accent.match(/bg: "bg-[a-z]+-400"/g)).toHaveLength(22);
+  });
+
+  it("falls back to slate for an unknown value, undefined and the empty string", () => {
+    for (const value of ["blue-500", "blue-600", "Blue-400", undefined, ""]) {
+      expect(badgeClasses(value)).toEqual(BADGE_CLASSES["slate-400"]);
+      expect(accentClasses(value)).toEqual(ACCENT_CLASSES["slate-400"]);
+    }
+    expect(badgeClasses("rose-400")).toEqual(BADGE_CLASSES["rose-400"]);
+    expect(accentClasses("rose-400")).toEqual(ACCENT_CLASSES["rose-400"]);
   });
 });
 
@@ -172,26 +191,6 @@ function colorOf(utility: string): number {
   return luminance(oklchOf(name));
 }
 
-/** Families whose 800 on 400 is below 4.5:1 with the Tailwind v4 theme (see spec COLOR-02, known deviation). */
-const KNOWN_LOW_CONTRAST_FAMILIES = [
-  "red",
-  "orange",
-  "amber",
-  "yellow",
-  "green",
-  "emerald",
-  "teal",
-  "cyan",
-  "sky",
-  "blue",
-  "indigo",
-  "violet",
-  "purple",
-  "fuchsia",
-  "pink",
-  "rose",
-];
-
 const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
 describe("palette contrast", () => {
@@ -200,20 +199,19 @@ describe("palette contrast", () => {
     expect(luminance(oklchOf("neutral-400"))).toBeGreaterThan(0.3);
   });
 
-  it("sees the real ratios: slate 800 on 400 passes and red 800 on 400 does not", () => {
-    const ratio = (family: string) =>
-      contrast(colorOf(`bg-${family}-400`), colorOf(`text-${family}-800`));
-    expect(ratio("slate")).toBeGreaterThan(5);
-    expect(ratio("red")).toBeLessThan(3);
+  it("sees the real ratios: 800 on 200 is high, 800 on 400 of red is low", () => {
+    const ratio = (family: string, shade: number) =>
+      contrast(colorOf(`bg-${family}-${shade}`), colorOf(`text-${family}-800`));
+    expect(ratio("slate", 200)).toBeGreaterThan(7);
+    expect(ratio("red", 400)).toBeLessThan(3);
   });
 
-  it("holds 4.5:1 (WCAG AA, threshold unchanged) for text-800 on bg-400 except the known deviation", () => {
-    const failing = COLOR_KEYS.filter((key) => {
-      const { bg, text } = COLOR_CLASSES[key];
-      return contrast(colorOf(bg), colorOf(text)) < 4.5;
-    }).map((key) => key.split("-")[0]);
-    // Owner mandate: text-800 on bg-400 of the same family. These families do not reach 4.5:1
-    // with it; the list is asserted both ways so it can neither hide a new failure nor go stale.
-    expect(failing).toEqual(KNOWN_LOW_CONTRAST_FAMILIES);
+  it("holds 4.5:1 (WCAG AA) for text-800 on bg-200 in every one of the 22 families", () => {
+    const ratios = COLOR_KEYS.map((key) => {
+      const { bg, text } = BADGE_CLASSES[key];
+      return { family: key.split("-")[0], ratio: contrast(colorOf(bg), colorOf(text)) };
+    });
+    expect(ratios).toHaveLength(22);
+    expect(ratios.filter(({ ratio }) => ratio < 4.5)).toEqual([]);
   });
 });

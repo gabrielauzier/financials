@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { messageForError } from "@/lib/api/errorMessages";
 import type { Account } from "@/lib/api/types";
-import { colorClasses } from "@/features/colors/palette";
+import { accentClasses } from "@/features/colors/palette";
 import { cn } from "@/lib/utils";
 import { AccountForm } from "./AccountForm";
 import { BankIcon } from "./BankIcon";
@@ -88,7 +88,7 @@ export function AccountsPage() {
                 aria-hidden="true"
                 className={cn(
                   "w-1.5 shrink-0 self-stretch rounded-full",
-                  colorClasses(account.color).bg,
+                  accentClasses(account.color).bg,
                 )}
               />
               <div className="grid flex-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">

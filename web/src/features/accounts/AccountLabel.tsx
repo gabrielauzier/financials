@@ -1,5 +1,5 @@
 import type { Account } from "@/lib/api/types";
-import { colorClasses } from "@/features/colors/palette";
+import { accentClasses } from "@/features/colors/palette";
 import { cn } from "@/lib/utils";
 import { BankIcon } from "./BankIcon";
 
@@ -18,7 +18,7 @@ export function AccountLabel({ account, showInactive = false }: AccountLabelProp
       <span className="truncate">{`${account.nickname}${suffix}`}</span>
       <span
         aria-hidden="true"
-        className={cn("size-2.5 shrink-0 rounded-full", colorClasses(account.color).bg)}
+        className={cn("size-2.5 shrink-0 rounded-full", accentClasses(account.color).bg)}
       />
     </span>
   );

@@ -10,7 +10,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { COLOR_CLASSES, COLOR_KEYS } from "@/features/colors/palette";
+import { BADGE_CLASSES, COLOR_KEYS } from "@/features/colors/palette";
 import { mockRequest } from "@/lib/api/mock";
 import type { Category } from "@/lib/api/types";
 import { renderWithQuery, resetSpy, responses, failures } from "@/test/apiSpy";
@@ -35,17 +35,17 @@ describe("CategoryBadge (COLOR-09)", () => {
     for (const key of COLOR_KEYS) {
       const { unmount } = render(<CategoryBadge name={`Cat ${key}`} color={key} />);
       const badge = screen.getByText(`Cat ${key}`);
-      expect(badge).toHaveClass(COLOR_CLASSES[key].bg, COLOR_CLASSES[key].text, ...RING);
+      expect(badge).toHaveClass(BADGE_CLASSES[key].bg, BADGE_CLASSES[key].text, ...RING);
       unmount();
     }
   });
 
-  it("falls back to the slate-400 classes for a color outside the palette (AC 5)", () => {
+  it("falls back to the slate badge classes for a color outside the palette (AC 5)", () => {
     for (const color of ["banana", "", undefined, "Blue-400", "blue-600"]) {
       const { unmount } = render(<CategoryBadge name="Mercado" color={color} />);
       expect(screen.getByText("Mercado")).toHaveClass(
-        COLOR_CLASSES["slate-400"].bg,
-        COLOR_CLASSES["slate-400"].text,
+        BADGE_CLASSES["slate-400"].bg,
+        BADGE_CLASSES["slate-400"].text,
       );
       unmount();
     }
@@ -83,8 +83,8 @@ describe("CategorySelect with badges (COLOR-10 AC 1, 2, 8)", () => {
       const option = screen.getByRole("option", { name: category.name });
       const badge = within(option).getByText(category.name);
       expect(badge).toHaveClass(
-        COLOR_CLASSES[category.color].bg,
-        COLOR_CLASSES[category.color].text,
+        BADGE_CLASSES[category.color].bg,
+        BADGE_CLASSES[category.color].text,
       );
     }
   });
@@ -97,7 +97,7 @@ describe("CategorySelect with badges (COLOR-10 AC 1, 2, 8)", () => {
     const trigger = await screen.findByRole("combobox");
     await waitFor(() => expect(trigger).toHaveTextContent(category.name));
     const badge = within(trigger).getByText(category.name);
-    expect(badge).toHaveClass(COLOR_CLASSES[category.color].bg);
+    expect(badge).toHaveClass(BADGE_CLASSES[category.color].bg);
   });
 
   it("shows Carregando categorias… and stays disabled while pending", () => {

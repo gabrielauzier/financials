@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ColorPicker } from "./ColorPicker";
-import { COLOR_KEYS, colorLabel } from "./palette";
+import { BADGE_CLASSES, COLOR_KEYS, colorLabel } from "./palette";
 
 afterEach(cleanup);
 
@@ -39,6 +39,18 @@ describe("ColorPicker (COLOR-07)", () => {
     expect(names).toContain("Azul");
     expect(names).toContain("Verde-azulado");
     expect(screen.getByRole("radio", { name: "Azul" })).toBeInTheDocument();
+  });
+
+  it("shows every swatch and the trigger in the badge tone (200), like the badge", async () => {
+    const { trigger } = setup("blue-400");
+    expect(trigger.querySelector("span")).toHaveClass("bg-blue-200");
+    const { radios } = await openPicker(trigger);
+    radios.forEach((radio, index) => {
+      const key = COLOR_KEYS[index]!;
+      expect(radio).toHaveClass(BADGE_CLASSES[key].bg);
+      expect(radio.className).not.toMatch(/bg-[a-z]+-400/);
+    });
+    expect(radios[indexOfKey("blue-400")]?.querySelector("svg")).toHaveClass("text-blue-800");
   });
 
   it("marks only the selected radio and shows swatch name on the trigger (AC 2)", async () => {
