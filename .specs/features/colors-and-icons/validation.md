@@ -318,3 +318,55 @@ Spec-precision gaps (SPG) to settle in `spec.md`:
 - SPG-3: COLOR-10 AC 3 and 4 and ICON-03 AC 6 list many select locations; the spec does not say which must have their own test when they share one component.
 
 Lessons distilled with `lessons.py` (see `.specs/LESSONS.md`): L-027 recurs with this feature (load failure in a new file); the surviving mutants and spec-precision gaps above are recorded as candidates.
+
+---
+
+## Addendum: post-verification changes (iteration 1 stays CONDITIONAL PASS)
+
+Recorded after the iteration-1 verdict above, which is unchanged. This addendum is not a new Verifier cycle: it lists what changed after that report and what evidence exists. The T10 and T13 browser checks are still open and belong to the owner.
+
+**Changes** (source: `docs/v1/ajustes-pontuais.md`, plan `docs/v1/plano-ajustes-pontuais.md`):
+
+| Commit | Change |
+| ------ | ------ |
+| `5d4e724` | `extratoAccountLabel.test.tsx` split into one test per select (FT2) and `selectLocations.test.tsx` for the other select locations (FT7, SPG-3) |
+| `3db3763` | Migration `0009_palette_400.sql` (0008 untouched): 22 keys in shade 400, remap of `-600`/`-900`, defaults `slate-400`, 17 distinct seeded colors; API palette, `openapi.json` and tests; the schema test now replays the files in a rolled-back transaction (FT3) |
+| `2d6e028` | Web palette, class map `bg-<family>-400 text-<family>-800`, `ColorPicker` with 22 swatches, mocks and tests; FT4 (roving `tabIndex` after reopen, edge clamp) and FT5 (the 22 names) |
+| `3ae32db` | Square bank SVGs with full-bleed backgrounds, `BankIcon` frame `overflow-hidden rounded-md` with no padding or ring, NOTICE edits and hash assertion (FT6) |
+
+**Fix tasks of iteration 1**: FT2, FT3, FT4, FT5, FT6 and FT7 are addressed by the commits above; FT0 (owner browser check) is still open; FT1 is satisfied because the T10 and T13 boxes in `tasks.md` stay unticked. SPG-1 (COLOR-06 AC 1) and SPG-2 (COLOR-07 AC 4: Down and Up on an edge cell stay, that is, clamp; with 22 cells the cells 16 and 17 also have no cell below) are settled in `spec.md`.
+
+**Mutation checks of the new guards** (temporary worktree on the external volume, removed afterwards; not the full Verifier sensor): 7 web mutants (text 900, no roving reset on open, Down not clamped, padding on the image, non-square Neon viewBox, `rx` on the XP background, a different text on one family) and 5 migration mutants (duplicate seeded color, account default left at `slate-600`, domain without `stone-400`, remap skipping accounts, `seed_categories` granted to `authenticated`) were all killed.
+
+**Known deviation: contrast of the mandated pair.** The owner asked for `text-<family>-800` on `bg-<family>-400`. With the Tailwind v4 theme values (oklch from `tailwindcss/theme.css`, WCAG relative luminance) only 6 of 22 families reach 4.5:1. The threshold was not weakened; `palette.test.ts` asserts the exact list of failing families, so it fails if the list changes either way. Ratios (800 on 400), and the same family at 900 and 950 for the owner's decision:
+
+| Family | 800 on 400 | 900 on 400 | 950 on 400 |
+| ------ | ---------- | ---------- | ---------- |
+| red | 2.90 | 3.48 | 5.58 |
+| orange | 3.09 | 3.96 | 6.58 |
+| amber | 4.15 | 5.29 | 8.73 |
+| yellow | 4.38 | 5.54 | 9.29 |
+| lime (passes) | 4.59 | 5.68 | 9.51 |
+| green | 4.00 | 5.11 | 8.40 |
+| emerald | 3.92 | 5.01 | 7.83 |
+| teal | 4.04 | 5.07 | 7.76 |
+| cyan | 4.01 | 5.04 | 7.40 |
+| sky | 3.44 | 4.34 | 6.37 |
+| blue | 3.35 | 3.94 | 5.58 |
+| indigo | 3.23 | 3.68 | 5.14 |
+| violet | 3.21 | 3.87 | 5.36 |
+| purple | 3.18 | 3.92 | 5.39 |
+| fuchsia | 3.23 | 3.90 | 5.75 |
+| pink | 2.86 | 3.51 | 5.47 |
+| rose | 2.77 | 3.37 | 5.48 |
+| slate (passes) | 5.58 | 6.79 | 7.68 |
+| gray (passes) | 5.64 | 6.82 | 7.73 |
+| zinc (passes) | 5.66 | 6.74 | 7.56 |
+| neutral (passes) | 5.83 | 6.91 | 7.63 |
+| stone (passes) | 5.87 | 6.76 | 7.63 |
+
+Failing with 800 (16): red, orange, amber, yellow, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose. Text 950 on 400 of the same family would pass in all 22; 900 passes in 12 (amber, yellow, lime, green, emerald, teal, cyan, slate, gray, zinc, neutral, stone). The owner decides whether to keep 800 or move those 16 to 950.
+
+**Icon render check** (standalone page with the four icons at 20, 32 and 96 px on a light and a dark background, plus the generic frame): all four fill the frame with the same rounding; Nubank, Neon and XP are solid brand squares; Sofisa Direto is a white square, so on a light background only the ring is visible and the rounding shows on dark; the Neon wordmark is about 3 px tall at 20 px (legible as a blue tile, not as text); in XP the "p" breaks out of the lower right edge as in the original drawing, so the mark is not centered in the square.
+
+**Manual browser steps still owed by the owner** (never run by an agent): the steps of the section above, with the new palette: the picker offers 22 swatches named by family and changes a category and an account color; the extrato, selects, accounts list and import preview reflect it; badges in light and dark themes (judge the 16 low-contrast families); the four bank icons and the generic one in the account select and the extrato; a 320 px screen with the picker; `pnpm -C api openapi:export` leaves `api/openapi.json` unchanged. After applying `0009` to the hosted database (not done here), existing colors keep their family in shade 400.

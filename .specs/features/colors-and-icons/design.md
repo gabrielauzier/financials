@@ -9,16 +9,16 @@ Contexto lido: `.specs/STATE.md` (decisões ativas AD-001 a AD-005, todas respei
 
 ## Architecture Overview
 
-Uma lista de 66 chaves, três cópias vigiadas por testes: o domínio SQL `palette_color` (quem de fato impede lixo no banco), a constante `COLOR_KEYS` da API (validação com 422 e `enum` no OpenAPI) e `COLOR_KEYS` do `web/` (mapa de classes literais, picker e mocks). O `openapi.json` é o elo entre API e web: o teste do web lê o arquivo e compara. O banco e a API são comparados por um teste de integração que lê as constraints do domínio.
+Uma lista de 22 chaves (`<família>-400`; revisão pós-verificação, migration 0009), três cópias vigiadas por testes: o domínio SQL `palette_color` (quem de fato impede lixo no banco), a constante `COLOR_KEYS` da API (validação com 422 e `enum` no OpenAPI) e `COLOR_KEYS` do `web/` (mapa de classes literais, picker e mocks). O `openapi.json` é o elo entre API e web: o teste do web lê o arquivo e compara. O banco e a API são comparados por um teste de integração que lê as constraints do domínio.
 
 No `web/`, três peças compartilhadas concentram a feature, e as telas só as usam: `palette.ts` (chaves, nomes, classes), `CategoryOptionLabel`/`CategoryBadge` (todo select de categoria passa por aqui, hoje um único ponto) e `AccountLabel`/`BankIcon` (todo select ou célula de conta). O extrato não recebe cor nem banco da API; resolve por `accountId` e `categoryId` nas listas já em cache do react-query.
 
 ```mermaid
 graph TD
-    SQL[0008_colors.sql<br/>domain palette_color + color cols + backfill + seed_categories]
+    SQL[0008_colors.sql + 0009_palette_400.sql<br/>domain palette_color (22 keys) + color cols + remap + seed_categories]
     PAL_API[api/src/lib/palette.ts<br/>COLOR_KEYS]
     ROUTES[accounts and categories routes<br/>color in schemas, 422 field color]
-    OAS[api/openapi.json<br/>enum of 66 keys]
+    OAS[api/openapi.json<br/>enum of 22 keys]
     PAL_WEB[web/src/features/colors/palette.ts<br/>COLOR_KEYS, labels, class map]
     PICKER[ColorPicker]
     BADGE[CategoryBadge via CategoryOptionLabel]
@@ -37,29 +37,29 @@ graph TD
 
 ### Tabela de cores semeadas (as mesmas na migration, nos mocks e no teste)
 
-17 chaves distintas, todas na paleta. Nenhuma coincide com o padrão `slate-600` (categorias sem `key`).
+17 chaves distintas, todas na paleta. `Uncategorized` usa `slate-400`, que é também o padrão das categorias sem `key` (a categoria de sistema é a única com essa cor).
 
 | `key` | Nome | Cor |
 | ----- | ---- | --- |
-| `Entertainment` | Entretenimento | `purple-600` |
-| `Food` | Alimentação | `orange-600` |
-| `Salaries` | Salários | `emerald-600` |
-| `Healthcare` | Saúde | `rose-600` |
-| `Utilities` | Utilidades | `sky-600` |
+| `Entertainment` | Entretenimento | `purple-400` |
+| `Food` | Alimentação | `orange-400` |
+| `Salaries` | Salários | `emerald-400` |
+| `Healthcare` | Saúde | `rose-400` |
+| `Utilities` | Utilidades | `sky-400` |
 | `Unknown` | Desconhecida | `zinc-400` |
-| `Transport` | Transporte | `blue-600` |
-| `Help` | Ajuda (a terceiros) | `pink-600` |
-| `PJ` | PJ | `indigo-600` |
-| `Bills` | Contas | `amber-600` |
-| `Emergency` | Emergência | `red-600` |
+| `Transport` | Transporte | `blue-400` |
+| `Help` | Ajuda (a terceiros) | `pink-400` |
+| `PJ` | PJ | `indigo-400` |
+| `Bills` | Contas | `amber-400` |
+| `Emergency` | Emergência | `red-400` |
 | `Uncategorized` | Sem categoria | `slate-400` |
-| `Wishes` | Desejos | `fuchsia-600` |
-| `Reversal` | Estorno (de compras) | `teal-600` |
-| `Shopping` | Compras | `lime-600` |
-| `Pets` | Pets | `yellow-600` |
-| `Investments` | Investimentos | `green-900` |
+| `Wishes` | Desejos | `fuchsia-400` |
+| `Reversal` | Estorno (de compras) | `teal-400` |
+| `Shopping` | Compras | `lime-400` |
+| `Pets` | Pets | `yellow-400` |
+| `Investments` | Investimentos | `green-400` |
 
-Contas existentes por banco: `Nubank` `purple-600`, `SofisaDireto` `teal-600`, `Neon` `sky-600`, `XP` `zinc-900`, `Other` `slate-600`.
+Contas existentes por banco: `Nubank` `purple-400`, `SofisaDireto` `teal-400`, `Neon` `sky-400`, `XP` `zinc-400`, `Other` `slate-400`. As 17 cores são 17 famílias distintas das 22.
 
 ---
 
@@ -87,7 +87,7 @@ Contas existentes por banco: `Nubank` `purple-600`, `SofisaDireto` `teal-600`, `
 
 | System | Integration Method |
 | ------ | ------------------ |
-| Postgres (`supabase/migrations`) | Migration 0008 aditiva; policies de RLS intocadas; `seed_categories` redefinida |
+| Postgres (`supabase/migrations`) | Migrations 0008 e 0009 aditivas (a 0009 remapeia `-600`/`-900` para `-400`, troca o `check` do domínio e o padrão das colunas); policies de RLS intocadas; `seed_categories` redefinida |
 | API accounts/categories | `color` nos schemas e no `columns`; sem mudança em `transactions`, `import`, dashboards |
 | `api/openapi.json` | Regenerado por `pnpm -C api openapi:export`; elo de sincronia com o web |
 | Tailwind v4 | `@source "../src"` em `web/src/styles.css` encontra as classes literais de `palette.ts`; nenhuma mudança de configuração |
@@ -103,20 +103,20 @@ Contas existentes por banco: `Nubank` `purple-600`, `SofisaDireto` `teal-600`, `
 - **Purpose**: Fonte única da lista de chaves na API.
 - **Location**: `api/src/lib/palette.ts`
 - **Interfaces**:
-  - `COLOR_FAMILIES: readonly [...]` e `COLOR_SHADES: readonly [400, 600, 900]`
-  - `COLOR_KEYS: readonly ColorKey[]` - famílias × tons, família a família, tom crescente (a mesma ordem do web)
+  - `COLOR_FAMILIES: readonly [...]` e `COLOR_SHADE = 400`
+  - `COLOR_KEYS: readonly ColorKey[]` - `<família>-400` na ordem das famílias (a mesma ordem do web)
   - `type ColorKey`
   - `isColorKey(value: string): value is ColorKey` - igualdade exata (sem trim nem caixa)
-  - `DEFAULT_COLOR = "slate-600"`
+  - `DEFAULT_COLOR = "slate-400"`
 - **Dependencies**: nenhuma.
 - **Reuses**: o desenho de `BANKS` em `accounts/routes.ts`.
 
-### Migration 0008
+### Migration 0008 e 0009 (0009_palette_400.sql)
 
 - **Purpose**: Domínio da paleta, colunas, preenchimento e semente com cor.
 - **Location**: `supabase/migrations/0008_colors.sql`
 - **Interfaces** (ordem do arquivo):
-  1. `create domain public.palette_color as text check (value in (<66 chaves>))`
+  1. `create domain public.palette_color as text check (value in (<66 chaves>))` (0008); a 0009 solta o `check` (`palette_color_check`), remapeia por `regexp_replace(color, '-(600|900)$', '-400')` no bloco `-- remap:begin` / `-- remap:end`, recria o `check` com as 22 chaves (`not valid` e `validate`), move os padrões das colunas para `slate-400` e redefine `seed_categories` com as 17 cores em 400
   2. `alter table public.categories add column color public.palette_color not null default 'slate-600'` e o mesmo em `accounts` (o Postgres preenche as linhas existentes com o padrão)
   3. Bloco entre os comentários `-- backfill:begin` e `-- backfill:end`: `update public.categories set color = case key when 'Entertainment' then 'purple-600' ... end where key in (...)` e `update public.accounts set color = case bank when 'Nubank' then 'purple-600' ... end`; o teste de integração extrai esse bloco do arquivo e o executa
   4. `create or replace function public.seed_categories(p_user uuid)` com a lista de 17 linhas agora com a coluna `color` (mesmos nomes, chaves e `is_system` da 0002), `security definer`, `set search_path = public`, `on conflict do nothing`, mais o `revoke execute ... from public, anon, authenticated` (o `create or replace` mantém os grants, mas o revoke é repetido por clareza e é idempotente)
@@ -156,16 +156,16 @@ Contas existentes por banco: `Nubank` `purple-600`, `SofisaDireto` `teal-600`, `
 - **Interfaces**:
   - `COLOR_FAMILIES`, `COLOR_SHADES`, `COLOR_KEYS: readonly ColorKey[]` (mesma ordem da API), `type ColorKey`
   - `isColorKey(value: unknown): value is ColorKey`
-  - `DEFAULT_COLOR: ColorKey = "slate-600"`
-  - `colorLabel(key: ColorKey): string` - `"Azul 600"` (nomes da tabela das Assumptions)
-  - `COLOR_CLASSES: Record<ColorKey, { bg: string; text: string }>` - 66 entradas literais (ex.: `"blue-600": { bg: "bg-blue-600", text: "text-white" }`); regra do texto: 400 `text-<família>-950`, 900 `text-white`, 600 `text-white` (red, blue, indigo, violet, purple, fuchsia, pink, rose, slate, gray, zinc, neutral, stone) ou `text-black` (orange, amber, yellow, lime, green, emerald, teal, cyan, sky)
+  - `DEFAULT_COLOR: ColorKey = "slate-400"`
+  - `colorLabel(key: ColorKey): string` - `"Azul"` (nomes da tabela das Assumptions, só a família)
+  - `COLOR_CLASSES: Record<ColorKey, { bg: string; text: string }>` - 22 entradas literais (ex.: `"blue-400": { bg: "bg-blue-400", text: "text-blue-800" }`); regra do texto: `text-<família>-800` da mesma família do fundo (decisão do dono); o contorno do badge e dos swatches segue `ring-1 ring-black/10 dark:ring-white/25`
   - `colorClasses(value: string | undefined): { bg: string; text: string }` - cor fora do mapa cai em `DEFAULT_COLOR`
 - **Dependencies**: nenhuma.
 - **Reuses**: nada; o arquivo é a única definição.
 
 ### ColorPicker
 
-- **Purpose**: Gatilho e popover com a grade de 66 cores.
+- **Purpose**: Gatilho e popover com a grade de 22 cores (4 linhas de 6 colunas, a última com 4). Setas esquerda e direita movem 1; cima e baixo movem 6; quando o destino cai fora da grade o foco fica onde está (clamp, inclusive nas células 16 e 17, sem célula abaixo). `focusIndex` volta ao item selecionado a cada abertura.
 - **Location**: `web/src/features/colors/ColorPicker.tsx`
 - **Interfaces**:
   - `ColorPicker({ value, onChange, id, disabled, ariaLabel? })`, `value: string` (aceita chave desconhecida), `onChange(key: ColorKey)`
@@ -193,7 +193,7 @@ Contas existentes por banco: `Nubank` `purple-600`, `SofisaDireto` `teal-600`, `
 - **Location**: `web/src/features/accounts/BankIcon.tsx`, `AccountLabel.tsx`, `web/src/assets/banks/*.svg`, `NOTICE`
 - **Interfaces**:
   - `bankLabels: Record<Bank, string>` (`Nubank`, `Sofisa Direto`, `Neon`, `XP`, `Outro`)
-  - `BankIcon({ bank, size?: "sm" | "lg", decorative?: boolean })`: moldura `inline-flex shrink-0 items-center justify-center rounded-md bg-white ring-1 ring-border` de `size-5` (sm) ou `size-8` (lg); `<img src alt="" aria-hidden className="size-full object-contain p-0.5" onError>`; `onError` (estado local) troca para `Landmark`; `decorative={false}` -> `role="img" aria-label="Banco <rótulo>"` e sem `aria-hidden`
+  - `BankIcon({ bank, size?: "sm" | "lg", decorative?: boolean })`: moldura `inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md` de `size-5` (sm) ou `size-8` (lg), mais `bg-muted text-muted-foreground` só no `Landmark`; `<img src alt="" aria-hidden className="size-full" onError>` (sem padding, sem anel, sem fundo branco; o SVG quadrado de fundo sangrado preenche a moldura); `onError` (estado local) troca para `Landmark`; `decorative={false}` -> `role="img" aria-label="Banco <rótulo>"` e sem `aria-hidden`
   - mapa interno `Record<Exclude<Bank,"Other">, string>` de URL importada de `nubank.svg`, `sofisa-direto.svg`, `neon.svg`, `xp.svg`; qualquer outra chave usa `Landmark`
   - `AccountLabel({ account, showInactive? })`: `<span class="flex min-w-0 items-center gap-2">` com `BankIcon`, `<span class="truncate">{account.nickname}{showInactive && !account.active ? " (inativa)" : ""}</span>` e o ponto `span aria-hidden size-2.5 shrink-0 rounded-full {bg}`
   - `useAccountLookup(): { byId: Map<string, Account>; ready: boolean }` em `accounts/hooks.ts` sobre `useAccounts()` (todas as contas)
@@ -204,7 +204,8 @@ Contas existentes por banco: `Nubank` `purple-600`, `SofisaDireto` `teal-600`, `
 
 - **Purpose**: Quatro SVGs inertes e o registro de origem.
 - **Location**: `web/src/assets/banks/` (`nubank.svg`, `sofisa-direto.svg`, `neon.svg`, `xp.svg`, `NOTICE`)
-- **Interfaces**: arquivos de origem em `Tgentil/Bancos-em-SVG` (branch `main`, commit anotado no `NOTICE` ao copiar): `Nu Pagamentos S.A/nubank-logo-fundo-roxo2021.svg` -> `nubank.svg`; `Banco Sofisa/logo-sofisa.svg` -> `sofisa-direto.svg`; `Neon/header-logo-neon.svg` -> `neon.svg` (com `viewBox` ajustado à caixa da marca); `XP Investimentos/xp-investimentos-logo.svg` -> `xp.svg`
+- **Interfaces**: arquivos de origem em `Tgentil/Bancos-em-SVG` (branch `main`, commit anotado no `NOTICE` ao copiar): `Nu Pagamentos S.A/nubank-logo-fundo-roxo2021.svg` -> `nubank.svg`; `Banco Sofisa/logo-sofisa.svg` -> `sofisa-direto.svg`; `Neon/header-logo-neon.svg` -> `neon.svg` (letreiro largo recomposto no quadrado); `XP Investimentos/xp-investimentos-logo.svg` -> `xp.svg`
+- **Contrato visual (ICON-01, ajuste pontual)**: cada arquivo é um quadrado `viewBox="0 0 2500 2500"` cujo primeiro elemento é um `rect` 2500 por 2500 sem `rx`/`ry` na cor da marca (Nubank `#820ad1`, Sofisa branco, Neon `#0f92ff` com letreiro branco, XP preto), com o logo centralizado e sem cantos arredondados próprios; o arredondamento é só da moldura do `BankIcon`. Exceção declarada: no XP o "p" sai pela borda inferior direita, como no desenho original, então o desenho não fica centrado no quadrado.
 - **Dependencies**: nenhuma.
 - **Reuses**: nada.
 
@@ -230,17 +231,16 @@ Contas existentes por banco: `Nubank` `purple-600`, `SofisaDireto` `teal-600`, `
 
 ```sql
 create domain public.palette_color as text
-  check (value in ('red-400','red-600','red-900', /* ... 66 chaves ... */ 'stone-900'));
+  check (value in ('red-400','orange-400', /* ... 22 chaves, só -400 (0009; a 0008 criou 66) ... */ 'stone-400'));
 
-alter table public.categories add column color public.palette_color not null default 'slate-600';
-alter table public.accounts   add column color public.palette_color not null default 'slate-600';
+alter table public.categories add column color public.palette_color not null default 'slate-400';
+alter table public.accounts   add column color public.palette_color not null default 'slate-400';
 ```
 
 ```typescript
 // api/src/lib/palette.ts and web/src/features/colors/palette.ts (same list, same order)
 export type ColorFamily = "red" | "orange" | /* ... 22 */ "stone";
-export type ColorShade = 400 | 600 | 900;
-export type ColorKey = `${ColorFamily}-${ColorShade}`;
+export type ColorKey = `${ColorFamily}-400`;
 
 // web/src/lib/api/types.ts
 export type Account = { id: string; bank: Bank; nickname: string; holderNames: string[];
@@ -256,7 +256,7 @@ export type Category = { id: string; key: string | null; name: string; isSystem:
 
 | Teste | Onde | Compara | Falha quando |
 | ----- | ---- | ------- | ------------ |
-| Forma da paleta da API | `api/src/lib/palette.test.ts` (unit) | 22 famílias × 3 tons = 66, sem repetição, formato `^[a-z]+-(400\|600\|900)$`, `DEFAULT_COLOR` na lista, `isColorKey` exato | uma chave some, repete ou muda de formato |
+| Forma da paleta da API | `api/src/lib/palette.test.ts` (unit) | 22 famílias, tom único 400, sem repetição, formato `^[a-z]+-400$`, `DEFAULT_COLOR` na lista, `isColorKey` exato | uma chave some, repete ou muda de formato |
 | Banco × API | `api/test/colors-schema.int.test.ts` (integração) | as chaves do domínio (consulta a `pg_constraint` com `contypid`) × `COLOR_KEYS` | o SQL e a constante divergem |
 | OpenAPI × web | `web/src/features/colors/paletteContract.test.ts` (unit) | `enum` de `color` em contas e categorias de `api/openapi.json` × `COLOR_KEYS` do web | a API mudou a lista e o web não |
 
@@ -270,7 +270,7 @@ export type Category = { id: string; key: string | null; name: string; isSystem:
 | `color` com tipo errado (`null`, número, objeto) | Schema do Fastify: 400 `validation_error` com o campo | Mensagem genérica "Dados inválidos. Revise os campos" (o front nunca envia isso) |
 | Categoria de sistema recebe PATCH de cor | `assertEditable` -> 403 `category_protected` | A página nem oferece edição de sistema; se chegar, "Categoria protegida" |
 | Nome em conflito junto de cor válida | `update` falha com 23505 na mesma transação, nada é gravado | "Já existe uma categoria com esse nome" |
-| Cor desconhecida vinda da API (versão futura) | `colorClasses` cai em `slate-600`; `ColorPicker` abre sem seleção | Badge e ponto cinza-escuros; nada quebra |
+| Cor desconhecida vinda da API (versão futura) | `colorClasses` cai em `slate-400`; `ColorPicker` abre sem seleção | Badge e ponto cinza-escuros; nada quebra |
 | SVG do banco não carrega | `onError` do `<img>` troca para o ícone genérico | Ícone `Landmark` no lugar |
 | Banco desconhecido | O mapa não tem a chave -> `Landmark` | Ícone genérico |
 | Lista de contas ou de categorias carregando ou com erro no extrato/preview | O mapa fica vazio e `ready` falso; a célula mostra o texto de hoje | Extrato igual ao de antes, sem ícone nem badge, até a lista chegar |
@@ -282,8 +282,8 @@ export type Category = { id: string; key: string | null; name: string; isSystem:
 
 | Concern | Location (file:line) | Impact | Mitigation |
 | ------- | -------------------- | ------ | ---------- |
-| Os 66 mapeamentos de classes têm que ser literais para o Tailwind gerar; um template string (`bg-${f}-${s}`) passaria no teste de chaves e sairia sem CSS | `web/src/styles.css:2` (`@source "../src"`), `web/src/features/colors/palette.ts` (novo) | Badges e swatches sem cor em produção | Teste unitário confere por regex que cada `bg`/`text` é exatamente a string esperada (`bg-<família>-<tom>`), e um teste lê o arquivo-fonte e falha se houver `${` dentro de `COLOR_CLASSES`; verificação no navegador no fim |
-| Texto branco ou preto não passa de 4,5:1 sobre o tom 600 de nove famílias claras; a regra de texto foi derivada do cálculo | `web/src/features/colors/palette.ts` | Texto ilegível se alguém trocar a regra | O teste de contraste lê `tailwindcss/theme.css` e exige 4,5 em cada uma das 66 (o parser trata `none` como matiz 0, usado por `neutral`) |
+| Os 22 mapeamentos de classes têm que ser literais para o Tailwind gerar; um template string (`bg-${f}-${s}`) passaria no teste de chaves e sairia sem CSS | `web/src/styles.css:2` (`@source "../src"`), `web/src/features/colors/palette.ts` (novo) | Badges e swatches sem cor em produção | Teste unitário confere por regex que cada `bg`/`text` é exatamente a string esperada (`bg-<família>-400` e `text-<família>-800`), e um teste lê o arquivo-fonte e falha se houver `${` dentro de `COLOR_CLASSES`; verificação no navegador no fim |
+| O par mandatado `text-<família>-800` sobre `bg-<família>-400` não chega a 4,5:1 em 16 famílias (red, orange, amber, yellow, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose); passam lime, slate, gray, zinc, neutral e stone. Desvio conhecido, decisão do dono | `web/src/features/colors/palette.ts` | Texto ilegível se alguém trocar a regra | O teste de contraste lê `tailwindcss/theme.css`, mantém o limiar de 4,5 e afirma a lista exata das famílias abaixo dele (falha tanto se uma nova família cair quanto se uma da lista passar a cumprir); o parser trata `none` como matiz 0, usado por `neutral` |
 | `Badge` do shadcn é um `div`; dentro do `ItemText` do Radix (um `span`) pode gerar aviso de aninhamento no console do teste | `web/src/components/ui/badge.tsx:29` | Ruído ou falha em teste que falha com `console.error` | `CategoryBadge` usa `Badge` com `className="inline-flex"`; se aparecer o aviso, o `Badge` troca o elemento raiz por `span` (mudança de uma linha com teste) |
 | O gatilho do Select mostra o conteúdo do item selecionado só depois que os itens montam; com o select fechado, o Radix usa o `SelectValue` do item registrado | `web/src/features/categories/CategorySelect.tsx` | Gatilho sem badge se a lista ainda não montou | O `CategorySelect` já renderiza os itens no `SelectContent` com a lista pronta; teste do gatilho com valor (AC 2 do badge em selects) e o estado de carga existente |
 | Testes existentes usam o texto do `CategoryOptionLabel` mockado (`label:<nome>`) e `getByRole("option", { name })` | `web/src/features/categories/CategorySelect.test.tsx:12-18` | Quebra por mudança de renderização | O mock do rótulo continua válido (a feature não muda o contrato do componente); os testes do badge são novos e o nome acessível do `option` é conferido |
@@ -292,8 +292,8 @@ export type Category = { id: string; key: string | null; name: string; isSystem:
 | A migration usa `create domain`, tipo que o `postgres.js` devolve como texto; as colunas aparecem como `text` na introspecção | `api/test/accounts-categories-schema.int.test.ts` | Teste de schema que checa `data_type` pode falhar | O teste novo checa `domain_name = 'palette_color'` em `information_schema.columns`; os existentes são revisados no mesmo commit |
 | O repositório de logos não tem licença; as marcas pertencem aos bancos | `web/src/assets/banks/` (novo) | Risco de uso fora do pessoal | `NOTICE` com origem, confirmação do dono e aviso; teste de sanidade; os arquivos são trocáveis por um só mapa |
 | SVG de terceiros pode conter conteúdo ativo | `web/src/assets/banks/*.svg` (novo) | Script ou recurso externo | Regra de sanitização testada, uso só em `<img>` (sem execução), limite de 12 KB por arquivo |
-| O `viewBox` do Neon (2500x2500) deixa a marca pequena e fora do centro em 20 px | `Neon/header-logo-neon.svg` (origem) | Ícone ilegível | Ajuste do `viewBox` à caixa da marca, registrado no `NOTICE`; conferência visual no navegador |
-| Jsdom renderiza 66 botões e um popover por teste do picker | `web/src/features/colors/ColorPicker.test.tsx` (novo) | Teste lento quando a suíte divide a máquina (L-027) | Interações por `fireEvent`, sem calendário nem dropdown aninhado, medição de duas suítes em paralelo e teste mais lento abaixo de 7,5 s; sem aumentar `testTimeout` |
+| O letreiro largo do Neon (2500x543) fica pequeno num quadrado de 20 px | `Neon/header-logo-neon.svg` (origem) | Ícone pouco legível | Recomposição no quadrado (fundo azul, letreiro branco a 84%), registrada no `NOTICE`; conferência visual em 20, 32 e 96 px (a 20 px o letreiro tem cerca de 3 px de altura) |
+| Jsdom renderiza 22 botões e um popover por teste do picker | `web/src/features/colors/ColorPicker.test.tsx` (novo) | Teste lento quando a suíte divide a máquina (L-027) | Interações por `fireEvent`, sem calendário nem dropdown aninhado, medição de duas suítes em paralelo e teste mais lento abaixo de 7,5 s; sem aumentar `testTimeout` |
 | O extrato resolve conta e categoria por duas listas extras | `web/src/features/transactions/TransactionsPage.tsx:597,657` | Duas consultas a mais na página | As consultas já existem em cache (`useCategories` via `CategorySelect`, `useAccounts` via `AccountSelect`); só `useAccounts()` sem filtro é nova e é a mesma chave da página de contas |
 | `AccountSelect` e o extrato usam chaves de consulta diferentes (`{active: true}` vs `{}`) | `web/src/features/accounts/hooks.ts` | Dois caches de contas | Aceito: lista pequena; a invalidação por `["accounts"]` atualiza as duas |
 
@@ -304,18 +304,18 @@ export type Category = { id: string; key: string | null; name: string; isSystem:
 | Decision | Choice | Rationale |
 | -------- | ------ | --------- |
 | Onde fica a lista no banco | Domínio `palette_color` | Uma lista só para duas tabelas e erro de check normal |
-| Colunas `not null` com padrão | `slate-600` | Sem `null` na API, no mapa e nos testes; preenchimento das linhas existentes pelo próprio `add column` |
+| Colunas `not null` com padrão | `slate-400` | Sem `null` na API, no mapa e nos testes; preenchimento das linhas existentes pelo próprio `add column` |
 | Preenchimento por chave e por banco | `update` com `case` entre marcadores `-- backfill:begin/end` | O teste de integração executa o mesmo bloco; sem lógica duplicada |
 | Redefinir `seed_categories`, não `handle_new_user` | `create or replace function public.seed_categories` | É a função que insere; `handle_new_user` só a chama (comportamento igual) |
 | Validação de cor | No handler, 422 com campo; lista na descrição do corpo, `enum` na resposta | Igual a `bank`; `enum` no OpenAPI vira o elo de sincronia com o web |
 | Sincronia web × API | O teste do web lê `api/openapi.json` | AD-001: o contrato é o OpenAPI; sem pacote compartilhado nem fixture duplicada |
 | Chaves em ordem família a família | `COLOR_KEYS` igual nos dois apps | Grade do picker previsível e diff legível |
 | Mapa `{ bg, text }` | Literais, uma entrada por chave | O Tailwind só gera classes que aparecem inteiras no código |
-| Regra de texto por contraste | 400 escuro, 900 branco, 600 por família | Medida (≥ 4,5:1) e não escolhida no olho; testada contra o `theme.css` |
+| Regra de texto | `text-<família>-800` sobre `bg-<família>-400` | Decisão do dono; contraste medido contra o `theme.css`, com 16 famílias abaixo de 4,5:1 registradas como desvio conhecido |
 | Tema claro e escuro | Preenchimento sólido + anel adaptativo | O texto não depende do fundo da página; o anel mostra o contorno |
 | Badge no select | Trocar o conteúdo de `CategoryOptionLabel` | Um ponto de mudança para todos os selects; o gatilho acompanha |
 | Cor e banco no extrato | Mapas por `id` sobre as listas em cache | Não muda o contrato de transações (fora do escopo); degrada para texto |
-| Picker em popover | Gatilho + `radiogroup` de 66 radios, 6 colunas | Cabe nos dois formulários (inline e em diálogo); teclado 2D |
+| Picker em popover | Gatilho + `radiogroup` de 22 radios, 6 colunas | Cabe nos dois formulários (inline e em diálogo); teclado 2D |
 | SVG por `<img>` | Importado pelo Vite | Inerte (sem script nem recurso externo), sem colisão de CSS entre arquivos |
 | Moldura uniforme | Quadrado branco 20/32 px com anel | Logos de formatos diferentes e legíveis nos dois temas |
 | Ícone genérico | `Landmark` (lucide) | Já no projeto; sem arquivo novo |

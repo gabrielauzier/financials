@@ -475,7 +475,7 @@ T7 → T13
 - [x] A selectable preview row's select shows the category badge in its trigger and in its opened options (COLOR-10 AC 5)
 - [x] An `ignored` or `invalid` row shows the `CategoryBadge` with the category name and the color of the user's category with that id when the lookup is ready (COLOR-10 AC 5)
 - [x] When `GET /categories` fails the column shows the `categoryName` text for every row, with no badge, as before; while loading the select shows "Carregando categorias…" (COLOR-10 AC 6 and 8)
-- [ ] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for 400, 600 and 900; the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
+- [ ] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for each of the 22 colors (shade 400, text 800; the contrast deviation of 16 families is a known item for the owner); the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
 - [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
 - [x] Test count: the existing web tests plus about 5 new ones pass (no silent deletions)
 
@@ -483,6 +483,50 @@ T7 → T13
 **Gate**: build
 
 **Commit**: `feat(colors-and-icons): show category badges in the import preview`
+
+---
+
+## Post-verification adjustments (`docs/v1/ajustes-pontuais.md`)
+
+### T14: Reduce the palette to 22 keys in shade 400 (text 800)
+
+**What**: Migration `0009_palette_400.sql` (0008 stays as applied) remaps `-600`/`-900` to `<family>-400`, replaces the `palette_color` check, moves the defaults to `slate-400` and reseeds the 17 categories in 17 distinct families; `palette.ts` in the API and the web, `openapi.json`, the class map (`bg-<family>-400 text-<family>-800`), `ColorPicker` (22 swatches, clamp at the edges, roving `tabIndex` reset on reopen), mocks, fixtures and tests follow.
+**Requirement**: COLOR-01, COLOR-02, COLOR-03, COLOR-07, COLOR-09
+**Done when**:
+
+- [x] The schema test replays 0008 then 0009 from the files in a rolled-back transaction (domain, defaults, check, remap, seed function, deleted seeded categories)
+- [x] The key lists agree in the migration, the API, `openapi.json` and the web (22 keys); the web contract test compares them
+- [x] The contrast test keeps the 4.5:1 threshold and lists the 16 families that miss it with 800 on 400 (known deviation, decision pending with the owner)
+
+**Tests**: unit, integration
+**Gate**: build
+
+**Commits**: `3db3763` (migration, API), `2d6e028` (web)
+
+### T15: Square bank icons that fill the frame
+
+**What**: Each bank SVG is a square `viewBox="0 0 2500 2500"` with a full-bleed brand background and the logo centered (Neon recomposed); `BankIcon` uses `overflow-hidden rounded-md` and `size-full` with no padding or ring; NOTICE records the edits and the commit hash.
+**Requirement**: ICON-01, ICON-02
+**Done when**:
+
+- [x] Asset tests check the square viewBox, the full-bleed first rect and the absence of own rounding; component tests check no padding, ring or white background
+- [x] A standalone page with the four icons at 20, 32 and 96 px on a light and a dark background was rendered and inspected (the in-app check stays with the owner)
+
+**Tests**: unit
+**Gate**: build
+
+**Commit**: `3ae32db`
+
+### T16: Spec, design and validation addendum
+
+**What**: `spec.md`, `design.md`, this file and the addendum of `validation.md` record the changes above.
+**Done when**:
+
+- [x] COLOR-* describe 22 keys, shade 400 and text 800; ICON-* describe the square icons; the contrast deviation is stated
+- [ ] The browser boxes of T10 and T13 stay open for the owner
+
+**Tests**: none
+**Gate**: quick
 
 ---
 
@@ -561,18 +605,18 @@ Execution is strictly sequential - there is no intra-phase parallelism; the inde
 
 | Requirement ID | Tasks |
 | -------------- | ----- |
-| COLOR-01 | T1, T4 |
-| COLOR-02 | T1 |
-| COLOR-03 | T1 |
+| COLOR-01 | T1, T4, T14 |
+| COLOR-02 | T1, T14 |
+| COLOR-03 | T1, T14 |
 | COLOR-04 | T2 |
 | COLOR-05 | T3 |
 | COLOR-06 | T2, T3, T4, T5 |
-| COLOR-07 | T6 |
+| COLOR-07 | T6, T14 |
 | COLOR-08 | T10, T11 |
-| COLOR-09 | T4, T7 |
+| COLOR-09 | T4, T7, T14 |
 | COLOR-10 | T7, T11, T12, T13 |
-| ICON-01 | T8 |
-| ICON-02 | T8 |
+| ICON-01 | T8, T15 |
+| ICON-02 | T8, T15 |
 | ICON-03 | T9, T10, T12 |
 | ICON-04 | T9, T10 |
 
