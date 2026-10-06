@@ -180,6 +180,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: mutant M12 (validation.md iteration 2) (ui-tests)
 - last seen: 2026-10-06T01:07:31Z
 
+### L-029 - Test the holder-name neutral rule on a row without identifier as well as on rows with one, since the two branches of classify are separate code paths.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `import-tests` · harmful: 0
+- features: import-fixes
+- evidence: mutant C05 (validation.md) (import-tests)
+- last seen: 2026-10-06T02:10:15Z
+
+### L-030 - When the spec says a key alone decides duplicates, add a test where the key is new but the content matches an existing row, and assert the row stays new.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `import-tests` · harmful: 0
+- features: import-fixes
+- evidence: mutant C07 (validation.md) (import-tests)
+- last seen: 2026-10-06T02:10:15Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

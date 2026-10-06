@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 29,
+  "next_id": 31,
   "lessons": [
     {
       "id": "L-001",
@@ -514,6 +514,42 @@
       ],
       "created": "2026-10-06T01:07:31Z",
       "last_seen": "2026-10-06T01:07:31Z"
+    },
+    {
+      "id": "L-029",
+      "key": "surviving_mutant::test the holder name neutral rule on a row without identifier as well as on rows with one since the two branches of classify are separate code paths",
+      "text": "Test the holder-name neutral rule on a row without identifier as well as on rows with one, since the two branches of classify are separate code paths.",
+      "signal": "surviving_mutant",
+      "scope": "import-tests",
+      "status": "candidate",
+      "features": [
+        "import-fixes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant C05 (validation.md) (import-tests)"
+      ],
+      "created": "2026-10-06T02:10:15Z",
+      "last_seen": "2026-10-06T02:10:15Z"
+    },
+    {
+      "id": "L-030",
+      "key": "surviving_mutant::when the spec says a key alone decides duplicates add a test where the key is new but the content matches an existing row and assert the row stays new",
+      "text": "When the spec says a key alone decides duplicates, add a test where the key is new but the content matches an existing row, and assert the row stays new.",
+      "signal": "surviving_mutant",
+      "scope": "import-tests",
+      "status": "candidate",
+      "features": [
+        "import-fixes"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant C07 (validation.md) (import-tests)"
+      ],
+      "created": "2026-10-06T02:10:15Z",
+      "last_seen": "2026-10-06T02:10:15Z"
     }
   ]
 }
