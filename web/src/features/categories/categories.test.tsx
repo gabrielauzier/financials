@@ -52,7 +52,7 @@ describe("categorias", () => {
     fireEvent.click(screen.getByRole("button", { name: "Renomear Desejos" }));
     const input = screen.getByLabelText("Nome da categoria");
     fireEvent.change(input, { target: { value: "Objetivos" } });
-    fireEvent.click(screen.getByRole("button", { name: "Salvar nome" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar categoria" }));
     expect(await screen.findByText("Objetivos")).toBeInTheDocument();
   });
 
@@ -105,7 +105,7 @@ describe("categorias", () => {
     failures.set("PATCH /categories/:id", new ApiError("category_protected", "Protected", 403));
     fireEvent.click(screen.getByRole("button", { name: "Renomear Alimentação" }));
     fireEvent.change(screen.getByLabelText("Nome da categoria"), { target: { value: "Outro" } });
-    fireEvent.click(screen.getByRole("button", { name: "Salvar nome" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar categoria" }));
     expect(await screen.findByText("Categoria protegida")).toBeInTheDocument();
     expect(screen.queryByText("Name already taken")).not.toBeInTheDocument();
     expect(screen.queryByText("Protected")).not.toBeInTheDocument();

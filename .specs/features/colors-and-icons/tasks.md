@@ -412,13 +412,13 @@ T7 → T13
 
 **Done when**:
 
-- [ ] The create form sends `name` and the chosen `color` (default `slate-600`); after success the name clears and the picker goes back to "Ardósia 600" (COLOR-08 AC 3)
-- [ ] The edit form shows the name and the picker with the current color; "Salvar categoria" sends one `PATCH` with `name` and `color`; a mocked 422 on `color` shows "Escolha uma cor da paleta." and keeps the edit open; another error shows the mapped Portuguese text (COLOR-08 AC 4, 5 and 6)
-- [ ] Each category row shows its `CategoryBadge` with its color and the buttons keep the names "Renomear <nome>" and "Excluir <nome>"; a system category shows the badge and the lock, with no rename, color or delete control (COLOR-10 AC 7, COLOR-08 AC 7)
-- [ ] The reassign-destination select (delete of a category in use) shows badges in its items (COLOR-10 AC 4)
-- [ ] The existing create, rename, delete and reassign tests pass with the "Salvar nome" label updated to "Salvar categoria"
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 10 new ones pass (no silent deletions)
+- [x] The create form sends `name` and the chosen `color` (default `slate-600`); after success the name clears and the picker goes back to "Ardósia 600" (COLOR-08 AC 3)
+- [x] The edit form shows the name and the picker with the current color; "Salvar categoria" sends one `PATCH` with `name` and `color`; a mocked 422 on `color` shows "Escolha uma cor da paleta." and keeps the edit open; another error shows the mapped Portuguese text (COLOR-08 AC 4, 5 and 6)
+- [x] Each category row shows its `CategoryBadge` with its color and the buttons keep the names "Renomear <nome>" and "Excluir <nome>"; a system category shows the badge and the lock, with no rename, color or delete control (COLOR-10 AC 7, COLOR-08 AC 7)
+- [x] The reassign-destination select (delete of a category in use) shows badges in its items (COLOR-10 AC 4)
+- [x] The existing create, rename, delete and reassign tests pass with the "Salvar nome" label updated to "Salvar categoria"
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 10 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
