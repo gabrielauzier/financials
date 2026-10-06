@@ -6,6 +6,7 @@ import { Type, type Static } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import postgres, { type TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
+import { PAYMENT_METHODS } from '../transactions/schema.js';
 import { classify } from './classify.js';
 import { parseImport } from './formats.js';
 import { removeImportFile, uploadImportFile } from './storage.js';
@@ -29,7 +30,7 @@ const PreviewRowSchema = Type.Object({
   type: stringEnum(['Income', 'Expense'] as const),
   amount: Type.String({ description: 'Decimal string, e.g. "1234.56"' }),
   name: Type.String(),
-  paymentMethod: stringEnum(['PIX', 'DebitCard', 'BankTransfer', 'CreditCard'] as const),
+  paymentMethod: stringEnum(PAYMENT_METHODS),
   categoryName: Type.String(),
   status: stringEnum(STATUSES),
   neutral: Type.Boolean(),

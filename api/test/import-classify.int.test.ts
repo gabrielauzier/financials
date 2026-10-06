@@ -62,6 +62,7 @@ function row(index: number, over: Partial<ParsedRow> = {}): ParsedRow {
     type: 'Expense',
     amount: '10.00',
     name: 'Mercado',
+    description: 'Mercado',
     paymentMethod: 'PIX',
     categoryKey: 'Uncategorized',
     identifier: `id-${index}`,

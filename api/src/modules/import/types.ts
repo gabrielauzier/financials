@@ -1,4 +1,9 @@
+import type { PaymentMethod } from '../transactions/schema.js';
+
 export type RowStatus = 'new' | 'duplicate' | 'ignored' | 'unrecognized' | 'invalid';
+
+/** System category keys a parser can assign (all seeded for every user). */
+export type StatementCategoryKey = 'Uncategorized' | 'Investments' | 'Reversal';
 
 export interface ParsedRow {
   /** 0-based position of the data row in the file (header excluded); the selection key. */
@@ -9,8 +14,10 @@ export interface ParsedRow {
   /** Canonical decimal string with 2 decimals (AD-004), e.g. `"1234.56"`. */
   amount: string;
   name: string;
-  paymentMethod: 'PIX' | 'DebitCard' | 'BankTransfer' | 'CreditCard';
-  categoryKey: 'Uncategorized' | 'Investments';
+  /** Original statement text (spaces collapsed, at most 500 code points); saved as `transactions.description`. */
+  description: string;
+  paymentMethod: PaymentMethod;
+  categoryKey: StatementCategoryKey;
   identifier: string | null;
   counterpartyDocument: string | null;
   counterpartyBank: string | null;

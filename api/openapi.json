@@ -2238,10 +2238,14 @@
                           "paymentMethod": {
                             "type": "string",
                             "enum": [
-                              "PIX",
-                              "DebitCard",
                               "BankTransfer",
-                              "CreditCard"
+                              "Boleto",
+                              "Cash",
+                              "CreditCard",
+                              "DebitCard",
+                              "NuPay",
+                              "PIX",
+                              "Other"
                             ]
                           },
                           "categoryName": {

@@ -1,10 +1,9 @@
 import { collapseSpaces, normalizeName } from '../../../lib/normalize.js';
 import type { PaymentMethod } from '../../transactions/schema.js';
+import type { StatementCategoryKey } from '../types.js';
 
 /** Longest `description` stored, in code points (the API limit for a transaction description). */
 export const MAX_DESCRIPTION_CODE_POINTS = 500;
-
-export type StatementCategoryKey = 'Uncategorized' | 'Investments' | 'Reversal';
 
 export interface Described {
   name: string;

@@ -119,3 +119,29 @@ describe('blank titles (a row that could not be saved)', () => {
   });
 });
 
+
+describe('parseNubankInvoice description (IMPFIX-06)', () => {
+  it('sets description to the collapsed title and keeps name, CreditCard and statuses', () => {
+    const row = one('2026-10-03,"  Loja   Um  - Parcela 3/6  ","38,16"');
+    expect(row).toMatchObject({
+      description: 'Loja Um - Parcela 3/6',
+      name: '  Loja   Um  - Parcela 3/6  ',
+      paymentMethod: 'CreditCard',
+      categoryKey: 'Uncategorized',
+      status: 'new',
+    });
+  });
+
+  it('sets description on the ignored credit and on every row of the sample, never undefined', () => {
+    const { rows } = parseNubankInvoice(fixture('nubank_invoice.csv'));
+    expect(rows.find((r) => r.status === 'ignored')).toMatchObject({ description: 'Pagamento recebido' });
+    expect(rows.every((r) => typeof r.description === 'string' && r.description === r.name.replace(/\s+/g, ' ').trim())).toBe(true);
+    expect(rows.filter((r) => r.status === 'new')).toHaveLength(18);
+  });
+
+  it('defines description for an invalid row', () => {
+    expect(one('2026-13-40,Loja,"1,00"')).toMatchObject({ status: 'invalid', description: 'Loja' });
+    expect(one('2026-10-03,Loja,abc')).toMatchObject({ status: 'invalid', description: 'Loja' });
+    expect(one('2026-10-03,  ,"1,00"')).toMatchObject({ status: 'invalid', reason: 'Empty title', description: '' });
+  });
+});

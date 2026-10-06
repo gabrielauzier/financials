@@ -211,14 +211,14 @@ T7 → T8
 
 **Done when**:
 
-- [ ] Parsing the sanitized fixture yields 96 `new` rows and the method counts 61 / 6 / 19 / 4 / 6 / 0 (`DebitCard` / `NuPay` / `PIX` / `BankTransfer` / `Boleto` / `Other`), `Reversal` on the 8 estornos and the 4 holder-name rows with the extracted names (AC 1 to 12)
-- [ ] The type is `Income` for positive and `Expense` for negative amounts in every format, including `Estorno` (AC 17)
-- [ ] Every row has `description` equal to the collapsed original text; a 600-character description is cut to 500 code points while `name` is unchanged; an invalid row has a defined `description` (never `undefined`) (AC 1 to 5 of the description story)
-- [ ] An unknown description is `Other`, `unrecognized`, with the original `name` (AC 16); an empty description is still `invalid` with "Empty description"
-- [ ] The invoice parser sets `description` to the collapsed `title` and keeps `name`, `CreditCard` and statuses unchanged
-- [ ] Existing parser tests updated to the new `name` of the formats (no deleted assertion without replacement)
-- [ ] Gate check passes: `pnpm -C api test:unit` and `pnpm -C api typecheck`
-- [ ] Test count: the existing parser tests plus 14 new ones pass (no silent deletions)
+- [x] Parsing the sanitized fixture yields 96 `new` rows and the method counts 61 / 6 / 19 / 4 / 6 / 0 (`DebitCard` / `NuPay` / `PIX` / `BankTransfer` / `Boleto` / `Other`), `Reversal` on the 8 estornos and the 4 holder-name rows with the extracted names (AC 1 to 12)
+- [x] The type is `Income` for positive and `Expense` for negative amounts in every format, including `Estorno` (AC 17)
+- [x] Every row has `description` equal to the collapsed original text; a 600-character description is cut to 500 code points while `name` is unchanged; an invalid row has a defined `description` (never `undefined`) (AC 1 to 5 of the description story)
+- [x] An unknown description is `Other`, `unrecognized`, with the original `name` (AC 16); an empty description is still `invalid` with "Empty description"
+- [x] The invoice parser sets `description` to the collapsed `title` and keeps `name`, `CreditCard` and statuses unchanged
+- [x] Existing parser tests updated to the new `name` of the formats (no deleted assertion without replacement)
+- [x] Gate check passes: `pnpm -C api test:unit` and `pnpm -C api typecheck`
+- [x] Test count: the existing parser tests plus 14 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

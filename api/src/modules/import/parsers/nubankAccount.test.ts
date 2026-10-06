@@ -211,12 +211,12 @@ describe('parseNubankAccount non-Pix descriptions (real sample)', () => {
     }
   });
 
-  it('flags an unknown description as unrecognized but still importable data', () => {
-    const row = one(`02/07/2026,-10.00,x,Compra no débito - LOJA`);
+  it('flags an unknown description as unrecognized (Other) but still importable data', () => {
+    const row = one(`02/07/2026,-10.00,x,Compra com cartão fora da tabela - LOJA`);
     expect(row).toMatchObject({
       status: 'unrecognized',
-      name: 'Compra no débito - LOJA',
-      paymentMethod: 'BankTransfer',
+      name: 'Compra com cartão fora da tabela - LOJA',
+      paymentMethod: 'Other',
       categoryKey: 'Uncategorized',
       type: 'Expense',
       amount: '10.00',
@@ -224,6 +224,15 @@ describe('parseNubankAccount non-Pix descriptions (real sample)', () => {
       counterpartyBank: null,
     });
     expect(row.reason).toBeUndefined();
+  });
+
+  it('maps "Compra no débito - LOJA" to DebitCard with the name LOJA (no longer unrecognized)', () => {
+    expect(one(`02/07/2026,-10.00,x,Compra no débito - LOJA`)).toMatchObject({
+      status: 'new',
+      name: 'LOJA',
+      paymentMethod: 'DebitCard',
+      categoryKey: 'Uncategorized',
+    });
   });
 
   it('keeps the sign-based type for known descriptions with a positive value', () => {
@@ -246,3 +255,94 @@ describe('blank descriptions (a row that could not be saved)', () => {
   });
 });
 
+
+describe('parseNubankAccount on the sanitized September statement (IMPFIX-04, 05, 07)', () => {
+  const text = fixture('nubank_statement_sanitized.csv');
+  const { rows } = parseNubankAccount(text);
+  const count = (key: (r: (typeof rows)[number]) => string) =>
+    rows.reduce<Record<string, number>>((acc, r) => ({ ...acc, [key(r)]: (acc[key(r)] ?? 0) + 1 }), {});
+
+  it('yields 96 new rows and no unrecognized or invalid row', () => {
+    expect(rows).toHaveLength(96);
+    expect(count((r) => r.status)).toEqual({ new: 96 });
+  });
+
+  it('counts the payment methods of every format: 61 / 6 / 19 / 4 / 6 / 0', () => {
+    expect(count((r) => r.paymentMethod)).toEqual({ DebitCard: 61, NuPay: 6, PIX: 19, BankTransfer: 4, Boleto: 6 });
+  });
+
+  it('assigns Reversal to the 8 estornos and Uncategorized to the other 88', () => {
+    expect(count((r) => r.categoryKey)).toEqual({ Reversal: 8, Uncategorized: 88 });
+    const estornos = rows.filter((r) => r.categoryKey === 'Reversal');
+    expect(estornos.every((r) => r.paymentMethod === 'DebitCard' && r.type === 'Income')).toBe(true);
+    expect(new Set(estornos.map((r) => r.name))).toEqual(new Set(['RIDEX *VIAGEM CENTRAL']));
+  });
+
+  it('extracts the names of the 4 rows that carry a holder name', () => {
+    const holders = rows.filter((r) => /^maria souza lima( ltda)?$/i.test(r.name));
+    expect(holders.map((r) => [r.paymentMethod, r.name, r.type])).toEqual([
+      ['PIX', 'Maria Souza Lima', 'Expense'],
+      ['BankTransfer', 'MARIA SOUZA LIMA LTDA', 'Income'],
+      ['BankTransfer', 'MARIA SOUZA LIMA LTDA', 'Income'],
+      ['BankTransfer', 'MARIA SOUZA LIMA LTDA', 'Income'],
+    ]);
+    expect(holders[0]).toMatchObject({ counterpartyDocument: '•••.381.754-••', counterpartyBank: 'NU PAGAMENTOS - IP (0260)' });
+  });
+
+  it('derives the type from the sign in every format: 13 Income and 83 Expense', () => {
+    expect(count((r) => r.type)).toEqual({ Income: 13, Expense: 83 });
+  });
+
+  it('gives every row the original text with collapsed spaces as description', () => {
+    const lines = text.trim().split('\n').slice(1);
+    expect(rows.map((r) => r.description)).toEqual(
+      lines.map((line) => line.split(',').slice(3).join(',').replace(/\s+/g, ' ').trim()),
+    );
+    const doubleSpace = rows.find((r) => r.name === 'Vitor Hugo Siqueira');
+    expect(doubleSpace?.description.startsWith('Transferência recebida pelo Pix - Vitor Hugo Siqueira - ')).toBe(true);
+  });
+});
+
+describe('parseNubankAccount description field (IMPFIX-06, IMPFIX-07)', () => {
+  it('cuts a 600-character description to 500 code points and leaves the name untouched', () => {
+    const store = 'L'.repeat(600);
+    const row = one(`02/07/2026,-10.00,x,Compra no débito - ${store}`);
+    expect(Array.from(row.description)).toHaveLength(500);
+    expect(row.description).toBe(`Compra no débito - ${store}`.slice(0, 500));
+    expect(row.name).toBe(store);
+  });
+
+  it('keeps a description of 500 code points whole', () => {
+    const text = `Compra no débito - ${'M'.repeat(481)}`;
+    expect(Array.from(text)).toHaveLength(500);
+    expect(one(`02/07/2026,-10.00,x,${text}`).description).toBe(text);
+  });
+
+  it('defines description (never undefined) for an invalid row', () => {
+    expect(one('31/02/2026,-1.00,x,Compra no débito - Loja')).toMatchObject({ status: 'invalid', description: 'Compra no débito - Loja' });
+    expect(one('02/07/2026,abc,x,Compra   no débito - Loja')).toMatchObject({ status: 'invalid', description: 'Compra no débito - Loja' });
+    const empty = one('02/07/2026,-1.00,x,   ');
+    expect(empty).toMatchObject({ status: 'invalid', reason: 'Empty description' });
+    expect(empty.description).toBe('');
+    const wrongColumns = parseNubankAccount(`${HEADER}\n02/07/2026,-1.00\n`).rows[0]!;
+    expect(wrongColumns.description).toBe('');
+  });
+
+  it('keeps an unknown description whole as the name (not collapsed) and collapsed as the description', () => {
+    expect(one('02/07/2026,-1.00,x,Coisa   estranha')).toMatchObject({
+      status: 'unrecognized',
+      paymentMethod: 'Other',
+      name: 'Coisa   estranha',
+      description: 'Coisa estranha',
+    });
+  });
+
+  it('marks as unrecognized an Estorno of another kind and a transfer without NOME - DOC - BANCO Agência:', () => {
+    expect(one('02/07/2026,5.00,x,Estorno - Pix - Fulano')).toMatchObject({ status: 'unrecognized', paymentMethod: 'Other' });
+    expect(one('02/07/2026,-5.00,x,Transferência Enviada - Fulano')).toMatchObject({ status: 'unrecognized', paymentMethod: 'Other', name: 'Transferência Enviada - Fulano' });
+  });
+
+  it('maps a lowercase, unaccented Nubank prefix like the canonical one', () => {
+    expect(one('02/07/2026,-5.00,x,COMPRA NO DEBITO VIA NUPAY - iFood')).toMatchObject({ status: 'new', paymentMethod: 'NuPay', name: 'iFood' });
+  });
+});

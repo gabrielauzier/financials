@@ -1,6 +1,7 @@
 import { readCsv } from '../csv.js';
 import type { ParsedRow, ParseResult } from '../types.js';
 import { canonicalAmount, invalidRow, localDateOf } from './common.js';
+import { originalText } from './descriptions.js';
 
 export const NUBANK_INVOICE_HEADER = ['date', 'title', 'amount'];
 
@@ -39,7 +40,7 @@ function parseRecord(record: string[], index: number): ParsedRow {
     });
   }
   const [rawDate, title, rawAmount] = record as [string, string, string];
-  const base = { name: title, paymentMethod: 'CreditCard' } as const;
+  const base = { name: title, description: originalText(title), paymentMethod: 'CreditCard' } as const;
 
   const localDate = parseDate(rawDate.trim());
   if (localDate === null) return invalidRow(index, `Invalid date "${rawDate}"`, base);
@@ -56,6 +57,7 @@ function parseRecord(record: string[], index: number): ParsedRow {
     type: parsed.negative ? 'Income' : 'Expense',
     amount: parsed.amount,
     name: title,
+    description: originalText(title),
     paymentMethod: 'CreditCard',
     categoryKey: 'Uncategorized',
     identifier: null,

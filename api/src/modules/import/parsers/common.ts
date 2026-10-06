@@ -43,6 +43,7 @@ export function invalidRow(index: number, reason: string, patch: Partial<ParsedR
     type: 'Expense',
     amount: '0.00',
     name: '',
+    description: '',
     paymentMethod: 'BankTransfer',
     categoryKey: 'Uncategorized',
     identifier: null,
