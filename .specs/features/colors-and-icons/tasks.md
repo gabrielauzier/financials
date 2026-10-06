@@ -442,13 +442,13 @@ T7 → T13
 
 **Done when**:
 
-- [ ] A table row and a mobile card of a Nubank account show the Nubank icon, the nickname and the color dot of that account, resolved by `accountId` (ICON-03 AC 3)
-- [ ] While `GET /accounts` is pending or when it fails the row and the card show only `accountNickname` as text, with no icon or dot, and the rest of the row (name, description, category select, amount) renders as before; the loaded state then swaps to the label (ICON-03 AC 4)
-- [ ] A transaction of an inactive account shows the nickname with icon and dot and no " (inativa)" suffix (edge case)
-- [ ] The filter's `AccountSelect` and the bulk-apply and row category selects show badges and account labels in the opened options (COLOR-10 AC 3 and ICON-03 AC 6) with the Portuguese option names asserted
-- [ ] The extrato tests that read the account name by text still pass (the nickname text node is intact)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 8 new ones pass (no silent deletions)
+- [x] A table row and a mobile card of a Nubank account show the Nubank icon, the nickname and the color dot of that account, resolved by `accountId` (ICON-03 AC 3)
+- [x] While `GET /accounts` is pending or when it fails the row and the card show only `accountNickname` as text, with no icon or dot, and the rest of the row (name, description, category select, amount) renders as before; the loaded state then swaps to the label (ICON-03 AC 4)
+- [x] A transaction of an inactive account shows the nickname with icon and dot and no " (inativa)" suffix (edge case)
+- [x] The filter's `AccountSelect` and the bulk-apply and row category selects show badges and account labels in the opened options (COLOR-10 AC 3 and ICON-03 AC 6) with the Portuguese option names asserted
+- [x] The extrato tests that read the account name by text still pass (the nickname text node is intact)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 8 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

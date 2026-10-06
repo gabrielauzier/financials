@@ -32,7 +32,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AccountLabel } from "@/features/accounts/AccountLabel";
 import { AccountSelect } from "@/features/accounts/AccountSelect";
+import { useAccountLookup } from "@/features/accounts/hooks";
 import { CategorySelect } from "@/features/categories/CategorySelect";
 import { formatDateLocal } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/notify";
@@ -563,6 +565,16 @@ type RowProps = {
   onEdit: () => void;
   onDelete: () => void;
 };
+/** Account of a transaction: icon and color from the cached account list, plain nickname until it loads. */
+function TransactionAccount({
+  item,
+}: {
+  item: Pick<Transaction, "accountId" | "accountNickname">;
+}) {
+  const { byId, ready } = useAccountLookup();
+  const account = ready ? byId.get(item.accountId) : undefined;
+  return account ? <AccountLabel account={account} /> : <>{item.accountNickname}</>;
+}
 function TransactionRow({
   item,
   selected,
@@ -594,7 +606,9 @@ function TransactionRow({
           </div>
         )}
       </TableCell>
-      <TableCell>{item.accountNickname}</TableCell>
+      <TableCell>
+        <TransactionAccount item={item} />
+      </TableCell>
       <TableCell className="min-w-48">
         <CategorySelect value={item.categoryId} onChange={onCategory} />
       </TableCell>
@@ -653,8 +667,8 @@ function TransactionCard(props: RowProps) {
                 {item.description}
               </p>
             )}
-            <p className="text-sm text-muted-foreground">
-              {formatDateLocal(item.occurredAt)} · {item.accountNickname}
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              {formatDateLocal(item.occurredAt)} · <TransactionAccount item={item} />
             </p>
           </div>
         </div>
