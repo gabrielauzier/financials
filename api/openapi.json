@@ -645,7 +645,7 @@
                     "type": "string"
                   },
                   "paymentMethod": {
-                    "description": "One of: BankTransfer, Boleto, Cash, CreditCard, DebitCard, NuPay, PIX",
+                    "description": "One of: BankTransfer, Boleto, Cash, CreditCard, DebitCard, NuPay, PIX, Other",
                     "type": "string"
                   },
                   "notes": {
@@ -741,7 +741,8 @@
                         "CreditCard",
                         "DebitCard",
                         "NuPay",
-                        "PIX"
+                        "PIX",
+                        "Other"
                       ]
                     },
                     "notes": {
@@ -949,7 +950,8 @@
                               "CreditCard",
                               "DebitCard",
                               "NuPay",
-                              "PIX"
+                              "PIX",
+                              "Other"
                             ]
                           },
                           "notes": {
@@ -1031,7 +1033,7 @@
                     "type": "string"
                   },
                   "paymentMethod": {
-                    "description": "One of: BankTransfer, Boleto, Cash, CreditCard, DebitCard, NuPay, PIX",
+                    "description": "One of: BankTransfer, Boleto, Cash, CreditCard, DebitCard, NuPay, PIX, Other",
                     "type": "string"
                   },
                   "notes": {
@@ -1132,7 +1134,8 @@
                         "CreditCard",
                         "DebitCard",
                         "NuPay",
-                        "PIX"
+                        "PIX",
+                        "Other"
                       ]
                     },
                     "notes": {

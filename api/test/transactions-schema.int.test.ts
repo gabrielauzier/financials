@@ -69,7 +69,7 @@ describe('transactions migration: constraints', () => {
     await expect(asUser(f.user.id, (tx) => insertTx(tx, f, { method: 'Bitcoin' }))).rejects.toThrow(
       /transactions_payment_method_check/,
     );
-    for (const method of ['BankTransfer', 'Boleto', 'Cash', 'CreditCard', 'DebitCard', 'NuPay', 'PIX']) {
+    for (const method of ['BankTransfer', 'Boleto', 'Cash', 'CreditCard', 'DebitCard', 'NuPay', 'PIX', 'Other']) {
       await asUser(f.user.id, (tx) => insertTx(tx, f, { method }));
     }
   });

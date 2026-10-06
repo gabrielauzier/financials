@@ -88,6 +88,39 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json lists Other with the 7 other payment methods in every enum and "One of" description (IMPFIX-02)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{ paths: Record<string, Record<string, OperationDoc>> }>();
+      const body = (operation: OperationDoc | undefined): SchemaDoc | undefined =>
+        operation?.requestBody?.content?.['application/json']?.schema;
+      const response = (operation: OperationDoc | undefined, status: string): SchemaDoc | undefined =>
+        operation?.responses?.[status]?.content?.['application/json']?.schema;
+      const create = doc.paths['/transactions']?.post;
+      const list = doc.paths['/transactions']?.get;
+      const edit = doc.paths['/transactions/{id}']?.patch;
+      const methods = ['BankTransfer', 'Boleto', 'Cash', 'CreditCard', 'DebitCard', 'NuPay', 'PIX', 'Other'];
+
+      for (const [label, schema] of [
+        ['POST body', body(create)],
+        ['PATCH body', body(edit)],
+      ] as const) {
+        const description = (schema?.properties?.paymentMethod as { description?: string } | undefined)?.description;
+        expect(description, label).toBe(`One of: ${methods.join(', ')}`);
+      }
+      for (const [label, schema] of [
+        ['POST 201', response(create, '201')],
+        ['GET list item', response(list, '200')?.properties?.items?.items],
+        ['PATCH 200', response(edit, '200')],
+      ] as const) {
+        expect((schema?.properties?.paymentMethod as { enum?: string[] } | undefined)?.enum, label).toEqual(methods);
+      }
+    } finally {
+      await app.close();
+    }
+  });
+
   it('pnpm openapi:export writes the document, and the committed api/openapi.json is up to date', () => {
     const dir = mkdtempSync(join(tmpdir(), 'openapi-'));
     try {

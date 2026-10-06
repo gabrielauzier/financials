@@ -163,6 +163,28 @@ describe('POST /transactions', () => {
     }
   });
 
+  it('accepts the Other payment method on creation and returns it in the response and in the list (IMPFIX-02)', async () => {
+    const res = await call(user, 'POST', '/transactions', valid({ name: 'Metodo Outro', paymentMethod: 'Other' }));
+    expect(res.statusCode).toBe(201);
+    const created = res.json<{ id: string; paymentMethod: string }>();
+    expect(created.paymentMethod).toBe('Other');
+    const listed = (await list(user, 'q=Metodo+Outro')).items as unknown as { id: string; paymentMethod: string }[];
+    expect(listed.find((r) => r.id === created.id)?.paymentMethod).toBe('Other');
+    const rows = await getAdminSql()`select payment_method from public.transactions where id = ${created.id}`;
+    expect(rows).toEqual([{ payment_method: 'Other' }]);
+  });
+
+  it.each(['other', 'Bitcoin', 'OTHER'])(
+    'rejects the payment method %s with 422 validation_error on paymentMethod and a message that lists Other (IMPFIX-02)',
+    async (value) => {
+      const res = await call(user, 'POST', '/transactions', valid({ paymentMethod: value }));
+      expect(res.statusCode).toBe(422);
+      const error = res.json<{ error: { code: string; field: string; message: string } }>().error;
+      expect(error).toMatchObject({ code: 'validation_error', field: 'paymentMethod' });
+      expect(error.message).toContain('Other');
+    },
+  );
+
   it('rejects an inactive account with 422 invalid_account and stores nothing', async () => {
     const inactive = await createAccount(user, 'Inativa');
     expect((await call(user, 'POST', `/accounts/${inactive}/deactivate`)).statusCode).toBe(200);
@@ -672,6 +694,22 @@ describe('PATCH /transactions/:id', () => {
     const expected = { ...original, amount: '99.90', name: 'Feira livre' };
     expect(res.json()).toEqual(expected);
     expect(await stored(original.id)).toEqual(expected);
+  });
+
+  it('edits the payment method to Other and rejects other or Bitcoin with 422 naming Other (IMPFIX-02)', async () => {
+    const original = await create();
+    const res = await patch(original.id, { paymentMethod: 'Other' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ ...original, paymentMethod: 'Other' });
+    expect(await stored(original.id)).toEqual({ ...original, paymentMethod: 'Other' });
+    for (const value of ['other', 'Bitcoin']) {
+      const bad = await patch(original.id, { paymentMethod: value });
+      expect(bad.statusCode, value).toBe(422);
+      const error = bad.json<{ error: { code: string; field: string; message: string } }>().error;
+      expect(error).toMatchObject({ code: 'validation_error', field: 'paymentMethod' });
+      expect(error.message).toContain('Other');
+    }
+    expect(await stored(original.id)).toEqual({ ...original, paymentMethod: 'Other' });
   });
 
   it('edits each remaining editable field alone, preserving the rest', async () => {

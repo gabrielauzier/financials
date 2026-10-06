@@ -2,7 +2,7 @@ import { Type, type Static } from '@sinclair/typebox';
 import type { TransactionSql } from 'postgres';
 
 export const TYPES = ['Income', 'Expense'] as const;
-export const PAYMENT_METHODS = ['BankTransfer', 'Boleto', 'Cash', 'CreditCard', 'DebitCard', 'NuPay', 'PIX'] as const;
+export const PAYMENT_METHODS = ['BankTransfer', 'Boleto', 'Cash', 'CreditCard', 'DebitCard', 'NuPay', 'PIX', 'Other'] as const;
 
 export type TransactionType = (typeof TYPES)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];

@@ -150,12 +150,12 @@ T7 → T8
 
 **Done when**:
 
-- [ ] `POST /transactions` and `PATCH /transactions/:id` accept `paymentMethod: "Other"` and `GET /transactions` returns it (AC 1)
-- [ ] `paymentMethod: "other"` and `"Bitcoin"` answer 422 `validation_error` on field `paymentMethod`, with a message listing `Other` (AC 2)
-- [ ] The database check test inserts `Other` along with the 7 old methods (`transactions-schema.int.test.ts`)
-- [ ] `api/openapi.json` lists `Other` in the enums and in the `One of: …` descriptions, regenerated (not edited by hand), and the swagger test confirms it is up to date (AC 4)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: the existing transactions and swagger tests plus 4 new ones pass (no silent deletions)
+- [x] `POST /transactions` and `PATCH /transactions/:id` accept `paymentMethod: "Other"` and `GET /transactions` returns it (AC 1)
+- [x] `paymentMethod: "other"` and `"Bitcoin"` answer 422 `validation_error` on field `paymentMethod`, with a message listing `Other` (AC 2)
+- [x] The database check test inserts `Other` along with the 7 old methods (`transactions-schema.int.test.ts`)
+- [x] `api/openapi.json` lists `Other` in the enums and in the `One of: …` descriptions, regenerated (not edited by hand), and the swagger test confirms it is up to date (AC 4)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: the existing transactions and swagger tests plus 4 new ones pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
