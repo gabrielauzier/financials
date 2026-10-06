@@ -21,6 +21,7 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
 afterEach(() => {
   cleanup();
   resetSpy();
+  vi.useRealTimers();
   vi.mocked(toast.success).mockClear();
   vi.mocked(toast.error).mockClear();
 });
@@ -84,6 +85,8 @@ describe("extrato: exclusão, criação e edição", () => {
     const account = await activeAccount();
     const categories = await mockRequest<Category[]>({ method: "GET", path: "/categories" });
     const uncategorized = categories.find((category) => category.key === "Uncategorized");
+    // the calendar opens on today's month: put the clock in March 2031 so the day is one click away
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(2031, 2, 10, 12) });
     renderWithQuery(<TransactionsPage />);
     await screen.findByText(/Página 1 de/);
     fireEvent.click(screen.getByRole("button", { name: "Nova transação" }));
@@ -204,7 +207,7 @@ describe("extrato: exclusão, criação e edição", () => {
 
     it("o formulário de criação abre com hoje no fuso local (23:30 em São Paulo) e recalcula ao reabrir", async () => {
       process.env["TZ"] = "America/Sao_Paulo";
-      vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date(2026, 9, 5, 23, 30) });
+      vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 9, 5, 23, 30) });
       renderWithQuery(<TransactionsPage />);
       await screen.findByText(/Página 1 de/);
       let dialog = await openCreate();
@@ -219,6 +222,8 @@ describe("extrato: exclusão, criação e edição", () => {
 
     it("escolher um dia envia occurredAt ao meio-dia local desse dia", async () => {
       process.env["TZ"] = "America/Sao_Paulo";
+      // the calendar opens on today's month: put the clock in December 2026
+      vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 11, 10, 12) });
       renderWithQuery(<TransactionsPage />);
       await screen.findByText(/Página 1 de/);
       const dialog = await openCreate();

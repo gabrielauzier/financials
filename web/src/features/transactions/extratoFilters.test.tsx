@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatBRL } from "@/lib/format";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, TransactionsPage as Page } from "@/lib/api/types";
@@ -14,6 +14,16 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
 
 const DEFAULT_QUERY = "/transactions?sort=date&order=desc&page=1";
 
+// The pickers hold no value, so their calendar opens on the month of the clock (June 2026): the tests
+// pick days of that month. The clock never moves back, because react-query would then see its cached
+// pages as not stale. Only the clock is faked; a test that waits for the 300 ms search debounce calls
+// `withDebounceClock()` to fake the timers too and advances them explicitly.
+const NOW = new Date(2026, 5, 15, 12);
+beforeEach(() => vi.useFakeTimers({ toFake: ["Date"], now: NOW }));
+const withDebounceClock = () => {
+  vi.useRealTimers();
+  vi.useFakeTimers({ shouldAdvanceTime: true, now: NOW });
+};
 afterEach(() => {
   cleanup();
   resetSpy();
@@ -25,13 +35,11 @@ const listPaths = () =>
     .filter((request) => request.method === "GET" && request.path.startsWith("/transactions?"))
     .map((request) => request.path);
 const lastList = () => listPaths().at(-1) ?? "";
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
 
 const renderLoaded = async () => {
   renderWithQuery(<TransactionsPage />);
   await screen.findByText(/Página 1 de 3/);
-  // let the initial search debounce (300 ms) settle before interacting
-  await sleep(350);
 };
 const clickButton = (name: string | RegExp) =>
   fireEvent.click(screen.getByRole("button", { name }));
@@ -52,64 +60,70 @@ const resetToDefault = async () => {
 
 describe("extrato: busca, filtros, ordenação e paginação", () => {
   it("consulta uma única vez 300 ms depois de parar de digitar, com q e página 1", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+    withDebounceClock();
     renderWithQuery(<TransactionsPage />);
     await screen.findByText(/Página 1 de 3/);
-    await act(() => vi.advanceTimersByTimeAsync(350));
+    await advance(350);
     const before = listPaths().length;
     const search = screen.getByLabelText("Buscar por nome");
     fireEvent.change(search, { target: { value: "Super" } });
-    await act(() => vi.advanceTimersByTimeAsync(200));
+    await advance(200);
     fireEvent.change(search, { target: { value: "Supermercado" } });
-    await act(() => vi.advanceTimersByTimeAsync(200));
+    await advance(200);
     expect(listPaths()).toHaveLength(before);
-    await act(() => vi.advanceTimersByTimeAsync(150));
+    await advance(150);
     await waitFor(() => expect(listPaths()).toHaveLength(before + 1));
-    await act(() => vi.advanceTimersByTimeAsync(1000));
+    await advance(1000);
     expect(listPaths().slice(before)).toEqual([
       "/transactions?sort=date&order=desc&page=1&q=Supermercado",
     ]);
   });
 
-  it("cada filtro envia o seu parâmetro e volta para a página 1 depois de navegar para a 2", async () => {
-    const [account] = await mockRequest<Account[]>({ method: "GET", path: "/accounts" });
-    const [category] = (
-      await mockRequest<Category[]>({ method: "GET", path: "/categories" })
-    ).slice(-1);
-    if (!account || !category) throw new Error("seed");
-    const cases: Array<[string, () => Promise<void> | boolean | void, string]> = [
-      ["tipo", () => chooseOption("Tipo", "Receita"), "type=Income"],
-      ["neutra", () => chooseOption("Neutra", "Sim"), "neutral=true"],
-      ["conta", () => chooseOption("Conta", account.nickname), `accountId=${account.id}`],
-      ["categoria", () => chooseOption("Categoria", category.name), `categoryId=${category.id}`],
-      ["data inicial", () => pickDate("De", "2026-04-01"), "from=2026-04-01"],
-      ["data final", () => pickDate("Até", "2026-12-31"), "to=2026-12-31"],
-    ];
-    await renderLoaded();
-    for (const [, apply, param] of cases) {
+  // One test per filter: each Select round trip costs ~1 s in jsdom, so a single loop over all of them was slow.
+  it.each(["tipo", "neutra", "conta", "categoria", "data inicial", "data final"])(
+    "o filtro %s envia o seu parâmetro e volta para a página 1 depois de navegar para a 2",
+    async (name) => {
+      const [account] = await mockRequest<Account[]>({ method: "GET", path: "/accounts" });
+      const [category] = (
+        await mockRequest<Category[]>({ method: "GET", path: "/categories" })
+      ).slice(-1);
+      if (!account || !category) throw new Error("seed");
+      const cases: Record<string, [() => Promise<void> | boolean | void, string]> = {
+        tipo: [() => chooseOption("Tipo", "Receita"), "type=Income"],
+        neutra: [() => chooseOption("Neutra", "Sim"), "neutral=true"],
+        conta: [() => chooseOption("Conta", account.nickname), `accountId=${account.id}`],
+        categoria: [() => chooseOption("Categoria", category.name), `categoryId=${category.id}`],
+        "data inicial": [() => pickDate("De", "2026-06-01"), "from=2026-06-01"],
+        "data final": [() => pickDate("Até", "2026-06-30"), "to=2026-06-30"],
+      };
+      const [apply, param] = cases[name] as (typeof cases)[string];
+      await renderLoaded();
       await goToPageTwo();
       await apply();
       await waitFor(() => expect(lastList()).toContain(param));
       expect(lastList()).toContain("page=1");
       expect(lastList()).not.toContain("page=2");
       await resetToDefault();
-    }
-  }, 30_000);
+    },
+  );
 
   it("'Limpar filtros' restaura a consulta padrão: sem filtros, data decrescente, página 1", async () => {
+    withDebounceClock();
     await renderLoaded();
     await chooseOption("Tipo", "Despesa");
-    pickDate("De", "2026-01-01");
+    pickDate("De", "2026-06-01");
     fireEvent.change(screen.getByLabelText("Buscar por nome"), { target: { value: "Farmácia" } });
+    await advance(300);
     await waitFor(() => expect(lastList()).toContain("q=Farm"));
     expect(lastList()).toContain("type=Expense");
-    expect(lastList()).toContain("from=2026-01-01");
+    expect(lastList()).toContain("from=2026-06-01");
     clickButton("Limpar filtros");
     await waitFor(() => expect(lastList()).toBe(DEFAULT_QUERY));
     expect(screen.getByLabelText("Buscar por nome")).toHaveValue("");
     expect(screen.getByLabelText("De")).toHaveTextContent("Selecione a data");
     expect(screen.getByLabelText("Tipo")).toHaveTextContent("Todos");
-    await sleep(400);
+    // the debounce fires for the emptied search and must not bring a filter back
+    await advance(400);
     expect(lastList()).toBe(DEFAULT_QUERY);
   });
 
@@ -132,11 +146,11 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
 
   it("'Limpar filtros' esvazia De e Até e consulta sem from nem to, saindo de datas escolhidas", async () => {
     await renderLoaded();
-    pickDate("De", "2026-04-01");
-    pickDate("Até", "2026-12-31");
-    await waitFor(() => expect(lastList()).toContain("to=2026-12-31"));
-    expect(screen.getByLabelText("De")).toHaveTextContent("01/04/2026");
-    expect(screen.getByLabelText("Até")).toHaveTextContent("31/12/2026");
+    pickDate("De", "2026-06-01");
+    pickDate("Até", "2026-06-30");
+    await waitFor(() => expect(lastList()).toContain("to=2026-06-30"));
+    expect(screen.getByLabelText("De")).toHaveTextContent("01/06/2026");
+    expect(screen.getByLabelText("Até")).toHaveTextContent("30/06/2026");
     clickButton("Limpar filtros");
     await waitFor(() => expect(lastList()).toBe(DEFAULT_QUERY));
     expect(screen.getByLabelText("De")).toHaveTextContent("Selecione a data");
@@ -199,10 +213,12 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
   });
 
   it("mostra 'Nenhuma transação encontrada' e sem rodapé quando a busca não encontra nada", async () => {
+    withDebounceClock();
     await renderLoaded();
     fireEvent.change(screen.getByLabelText("Buscar por nome"), {
       target: { value: "zzz sem resultado" },
     });
+    await advance(300);
     expect(await screen.findByText("Nenhuma transação encontrada")).toBeInTheDocument();
     expect(lastList()).toContain("q=zzz+sem+resultado");
     expect(screen.queryByText(/Página \d+ de/)).not.toBeInTheDocument();

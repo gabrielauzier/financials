@@ -101,6 +101,18 @@ describe("DatePicker", () => {
     expect(screen.queryByRole("grid")).not.toBeInTheDocument();
   });
 
+  // The only test that drives the month and year dropdowns: each change re-renders the whole
+  // Calendar (about 1.5 s in jsdom), so every other test picks the day in the month already shown.
+  it("os seletores de mês e de ano levam o calendário a outro mês e o dia escolhido sai como YYYY-MM-DD", () => {
+    const onChange = vi.fn();
+    render(<DatePicker value="2026-10-05" onChange={onChange} />);
+    open();
+    fireEvent.change(screen.getByLabelText("Escolher o ano"), { target: { value: "2028" } });
+    fireEvent.change(screen.getByLabelText("Escolher o mês"), { target: { value: "1" } });
+    pickDay(/(^|\s)29 de fevereiro de 2028/);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith("2028-02-29");
+  });
+
   it("parseLocalDate e formatLocalDate usam o dia local e rejeitam dias que não existem (bissexto incluso)", () => {
     for (const zone of ZONES) {
       process.env["TZ"] = zone;

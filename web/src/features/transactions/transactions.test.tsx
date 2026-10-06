@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
 import { GENERIC_ERROR } from "@/lib/api/errorMessages";
@@ -472,19 +472,26 @@ describe("extrato", () => {
       requests
         .filter((r) => r.method === "GET" && r.path.startsWith("/transactions?"))
         .map((r) => r.path);
+    // The pickers hold no value, so the calendars open on the month of the clock (October 2026).
+    const NOW = new Date(2026, 9, 15, 12);
+    beforeEach(() => vi.useFakeTimers({ toFake: ["Date"], now: NOW }));
+    afterEach(() => vi.useRealTimers());
     const setPeriod = (from: string, to: string) => {
       pickDate("De", from);
       pickDate("Até", to);
     };
 
     it("avisa e não consulta a API quando a data inicial é depois da final", async () => {
+      vi.useRealTimers();
+      vi.useFakeTimers({ shouldAdvanceTime: true, now: NOW });
       renderQuery(<TransactionsPage />);
       await screen.findByLabelText("Selecionar todas da página");
       setPeriod("2026-10-10", "2026-10-01");
       expect(
         await screen.findByText("A data inicial deve ser anterior à final"),
       ).toBeInTheDocument();
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      // past the 300 ms debounce, so a late query would already have been sent
+      await act(() => vi.advanceTimersByTimeAsync(400));
       expect(
         listPaths().filter(
           (path) => path.includes("from=2026-10-10") && path.includes("to=2026-10-01"),
