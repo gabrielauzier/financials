@@ -157,6 +157,27 @@ describe('GET /imports/:id/file (IMPIMP-08)', () => {
     expect(res.headers['content-length']).toBe(String(content.length));
   });
 
+  it('accepts a lowercase bearer scheme and still reaches Storage with the bare token', async () => {
+    const o = await owner();
+    const id = await confirm(o, ACCOUNT_CSV, 'extrato.csv');
+    const res = await download(null, id, app, `bearer ${o.user.token}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.rawPayload.toString('utf8')).toBe(ACCOUNT_CSV);
+  });
+
+  it('downloads the earliest attachment when a batch has more than one', async () => {
+    const o = await owner();
+    const id = await confirm(o, ACCOUNT_CSV, 'primeiro.csv');
+    // The later attachment points at an object that does not exist: picking it would answer 404.
+    await getAdminSql()`
+      insert into public.attachments (user_id, import_batch_id, filename, mime_type, size_bytes, storage_path, created_at)
+      values (${o.user.id}, ${id}, 'segundo.csv', 'text/csv', 1, ${`${o.user.id}/${id}/segundo.csv`}, now() + interval '1 minute')`;
+    const res = await download(o.user, id);
+    expect(res.statusCode).toBe(200);
+    expect(res.rawPayload.toString('utf8')).toBe(ACCOUNT_CSV);
+    expect(res.headers['content-disposition']).toContain('primeiro.csv');
+  });
+
   it('answers a stored name with accents, a quote and a line break with a valid header', async () => {
     const o = await owner();
     const id = await confirm(o);
