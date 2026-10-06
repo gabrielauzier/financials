@@ -20,17 +20,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ApiError } from "@/lib/api/client";
-import { messageForError } from "@/lib/api/errorMessages";
+import { ColorPicker } from "@/features/colors/ColorPicker";
+import { DEFAULT_COLOR, type ColorKey } from "@/features/colors/palette";
+import { fieldForError, messageForError } from "@/lib/api/errorMessages";
 import type { Account, AccountInput, Bank } from "@/lib/api/types";
+import { bankLabels } from "./bankLabels";
 import { useCreateAccount, useUpdateAccount } from "./hooks";
 
-const banks: Array<{ value: Bank; label: string }> = [
-  { value: "Nubank", label: "Nubank" },
-  { value: "SofisaDireto", label: "Sofisa Direto" },
-  { value: "Neon", label: "Neon" },
-  { value: "XP", label: "XP" },
-  { value: "Other", label: "Outro" },
-];
+const banks = (Object.keys(bankLabels) as Bank[]).map((value) => ({
+  value,
+  label: bankLabels[value],
+}));
 const schema = z.object({
   bank: z.enum(["Nubank", "SofisaDireto", "Neon", "XP", "Other"]),
   nickname: z.string().trim().min(1).max(100),
@@ -52,6 +52,8 @@ export function AccountForm({
   const [nickname, setNickname] = useState("");
   const [holder, setHolder] = useState("");
   const [holders, setHolders] = useState<string[]>([]);
+  const [color, setColor] = useState<ColorKey>(DEFAULT_COLOR);
+  const [colorError, setColorError] = useState("");
   const [error, setError] = useState("");
   const [holderError, setHolderError] = useState("");
   useEffect(() => {
@@ -59,9 +61,11 @@ export function AccountForm({
     setBank(account?.bank ?? "Nubank");
     setNickname(account?.nickname ?? "");
     setHolders(account?.holderNames ?? []);
+    setColor(account?.color ?? DEFAULT_COLOR);
     setHolder("");
     setError("");
     setHolderError("");
+    setColorError("");
   }, [account, open]);
   const addHolder = () => {
     const clean = holder.trim();
@@ -84,6 +88,7 @@ export function AccountForm({
     event.preventDefault();
     setError("");
     setHolderError("");
+    setColorError("");
     const pendingHolders = holder.trim() ? [...holders, holder.trim()] : holders;
     const normalizedHolders = pendingHolders.map((name) => name.toLocaleLowerCase());
     const result = schema.safeParse({ bank, nickname, holderNames: pendingHolders });
@@ -103,14 +108,16 @@ export function AccountForm({
       setError("Não foi possível salvar a conta");
       return;
     }
-    const input: AccountInput = result.data;
+    const input: AccountInput = { ...result.data, color };
     try {
       if (account) await update.mutateAsync({ id: account.id, input });
       else await create.mutateAsync(input);
       onOpenChange(false);
     } catch (reason) {
       const message = messageForError(reason, "account");
-      if (reason instanceof ApiError && reason.code === "holder_required") setHolderError(message);
+      if (fieldForError(reason) === "color") setColorError("Escolha uma cor da paleta.");
+      else if (reason instanceof ApiError && reason.code === "holder_required")
+        setHolderError(message);
       else setError(message);
     }
   };
@@ -139,6 +146,15 @@ export function AccountForm({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="account-color">Cor</Label>
+            <ColorPicker id="account-color" value={color} onChange={setColor} />
+            {colorError && (
+              <p id="account-color-error" role="alert" className="text-sm text-destructive">
+                {colorError}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="account-nickname">Apelido</Label>

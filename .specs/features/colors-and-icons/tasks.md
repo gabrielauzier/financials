@@ -382,13 +382,13 @@ T7 → T13
 
 **Done when**:
 
-- [ ] The new account form opens with the picker showing "Ardósia 600"; the edit form opens with the account's color; saving sends `color` with the other fields in the `POST` and in the `PATCH` (the spied request body is asserted) (COLOR-08 AC 1 and 2)
-- [ ] A mocked 422 on `color` shows "Escolha uma cor da paleta." and keeps what was typed; another failure shows the `messageForError` text and keeps the dialog open (COLOR-08 AC 5 and 6)
-- [ ] The accounts list shows, for each account, the bank icon, the nickname, the Portuguese bank label and a color bar with the account's `bg` class, plus the "Editar", "Desativar" and "Reativar" buttons as before (ICON-03 AC 5)
-- [ ] After a `PATCH` of the color the list refetches and the bar shows the new class without a reload; an inactive account keeps `opacity-55` and its icon and bar stay rendered (ICON-04 AC 8 and 9)
-- [ ] The browser check against the local API (create and recolor an account, see the icon and bar, light and dark theme) is recorded in the commit body
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
+- [x] The new account form opens with the picker showing "Ardósia 600"; the edit form opens with the account's color; saving sends `color` with the other fields in the `POST` and in the `PATCH` (the spied request body is asserted) (COLOR-08 AC 1 and 2)
+- [x] A mocked 422 on `color` shows "Escolha uma cor da paleta." and keeps what was typed; another failure shows the `messageForError` text and keeps the dialog open (COLOR-08 AC 5 and 6)
+- [x] The accounts list shows, for each account, the bank icon, the nickname, the Portuguese bank label and a color bar with the account's `bg` class, plus the "Editar", "Desativar" and "Reativar" buttons as before (ICON-03 AC 5)
+- [x] After a `PATCH` of the color the list refetches and the bar shows the new class without a reload; an inactive account keeps `opacity-55` and its icon and bar stay rendered (ICON-04 AC 8 and 9)
+- [x] The browser check against the local API (create and recolor an account, see the icon and bar, light and dark theme) is recorded in the commit body
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

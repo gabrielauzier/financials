@@ -13,17 +13,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { messageForError } from "@/lib/api/errorMessages";
-import type { Account, Bank } from "@/lib/api/types";
+import type { Account } from "@/lib/api/types";
+import { colorClasses } from "@/features/colors/palette";
+import { cn } from "@/lib/utils";
 import { AccountForm } from "./AccountForm";
+import { BankIcon } from "./BankIcon";
+import { bankLabels } from "./bankLabels";
 import { useAccounts, useSetAccountActive } from "./hooks";
 
-const bankLabels: Record<Bank, string> = {
-  Nubank: "Nubank",
-  SofisaDireto: "Sofisa Direto",
-  Neon: "Neon",
-  XP: "XP",
-  Other: "Outro",
-};
 export function AccountsPage() {
   const { data = [], isLoading, isError, refetch } = useAccounts();
   const statusMutation = useSetAccountActive();
@@ -85,46 +82,56 @@ export function AccountsPage() {
           {data.map((account) => (
             <article
               key={account.id}
-              className={`grid gap-4 py-5 sm:grid-cols-[1fr_auto] sm:items-center ${account.active ? "" : "opacity-55"}`}
+              className={cn("flex gap-4 py-5", !account.active && "opacity-55")}
             >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold">{account.nickname}</h2>
-                  <Badge variant={account.active ? "default" : "secondary"}>
-                    {account.active ? "Ativa" : "Inativa"}
-                  </Badge>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{bankLabels[account.bank]}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {account.holderNames.map((holder) => (
-                    <Badge key={holder} variant="outline">
-                      {holder}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "w-1.5 shrink-0 self-stretch rounded-full",
+                  colorClasses(account.color).bg,
+                )}
+              />
+              <div className="grid flex-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <BankIcon bank={account.bank} size="lg" />
+                    <h2 className="font-semibold">{account.nickname}</h2>
+                    <Badge variant={account.active ? "default" : "secondary"}>
+                      {account.active ? "Ativa" : "Inativa"}
                     </Badge>
-                  ))}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{bankLabels[account.bank]}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {account.holderNames.map((holder) => (
+                      <Badge key={holder} variant="outline">
+                        {holder}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditing(account);
-                    setFormOpen(true);
-                  }}
-                >
-                  <Pencil />
-                  Editar
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setStatusError("");
-                    setConfirming(account);
-                  }}
-                >
-                  {account.active ? "Desativar" : "Reativar"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditing(account);
+                      setFormOpen(true);
+                    }}
+                  >
+                    <Pencil />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStatusError("");
+                      setConfirming(account);
+                    }}
+                  >
+                    {account.active ? "Desativar" : "Reativar"}
+                  </Button>
+                </div>
               </div>
             </article>
           ))}
