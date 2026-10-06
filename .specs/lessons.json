@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 40,
+  "next_id": 42,
   "lessons": [
     {
       "id": "L-001",
@@ -489,17 +489,19 @@
       "features": [
         "transactions-ux",
         "import-improvements",
-        "colors-and-icons"
+        "colors-and-icons",
+        "transactions-ux-v2"
       ],
-      "recurrence": 3,
+      "recurrence": 4,
       "harmful": 0,
       "evidence": [
         "web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)",
         "web full suite x2 in parallel, 21-23 timeouts in extrato tests (validation.md) (ui-tests)",
-        "web full suite x2 in parallel, extratoAccountLabel.test.tsx (validation.md FT2) (ui-tests)"
+        "web full suite x2 in parallel, extratoAccountLabel.test.tsx (validation.md FT2) (ui-tests)",
+        "extratoClearFilters.test.tsx De/Até under two parallel suites (ui-tests)"
       ],
       "created": "2026-10-06T01:07:31Z",
-      "last_seen": "2026-10-06T06:33:41Z"
+      "last_seen": "2026-10-06T23:15:55Z"
     },
     {
       "id": "L-028",
@@ -716,6 +718,42 @@
       ],
       "created": "2026-10-06T06:33:42Z",
       "last_seen": "2026-10-06T06:33:42Z"
+    },
+    {
+      "id": "L-040",
+      "key": "ac_gap::verify third party styled ui sonner with tailwind v4 layers by computed style in a real browser or by asserting the important suffix unlayered library css beats layered utilities so class name and contrast tests in jsdom pass while nothing is painted",
+      "text": "Verify third-party-styled UI (sonner with Tailwind v4 layers) by computed style in a real browser, or by asserting the important suffix: unlayered library CSS beats layered utilities, so class-name and contrast tests in jsdom pass while nothing is painted.",
+      "signal": "ac_gap",
+      "scope": "ui-styles",
+      "status": "candidate",
+      "features": [
+        "transactions-ux-v2"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "TUXV2-07/08 (validation.md gap 1) (ui-styles)"
+      ],
+      "created": "2026-10-06T23:15:55Z",
+      "last_seen": "2026-10-06T23:15:55Z"
+    },
+    {
+      "id": "L-041",
+      "key": "surviving_mutant::test the return to page 1 from page 2 for every clear or filter handler not one a test that starts on page 1 cannot observe a missing page reset",
+      "text": "Test the return to page 1 from page 2 for every clear or filter handler, not one: a test that starts on page 1 cannot observe a missing page reset.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-ux-v2"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "F-Tipo-page, F-Busca-page, F-Ate-page (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T23:15:55Z",
+      "last_seen": "2026-10-06T23:15:55Z"
     }
   ]
 }

@@ -27,10 +27,10 @@ Corroborated across multiple features. Safe to apply as guidance.
 - last seen: 2026-10-05T19:28:15Z
 
 ### L-027 - Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.
-- signal: `gate_fail` · recurrence: 3 feature(s) · scope: `ui-tests` · harmful: 0
-- features: transactions-ux, import-improvements, colors-and-icons
-- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests) (+2 more)
-- last seen: 2026-10-06T06:33:41Z
+- signal: `gate_fail` · recurrence: 4 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux, import-improvements, colors-and-icons, transactions-ux-v2
+- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests) (+3 more)
+- last seen: 2026-10-06T23:15:55Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -245,6 +245,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: colors-and-icons
 - evidence: tasks.md:389 and tasks.md:478 (validation.md FT1) (process)
 - last seen: 2026-10-06T06:33:42Z
+
+### L-040 - Verify third-party-styled UI (sonner with Tailwind v4 layers) by computed style in a real browser, or by asserting the important suffix: unlayered library CSS beats layered utilities, so class-name and contrast tests in jsdom pass while nothing is painted.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `ui-styles` · harmful: 0
+- features: transactions-ux-v2
+- evidence: TUXV2-07/08 (validation.md gap 1) (ui-styles)
+- last seen: 2026-10-06T23:15:55Z
+
+### L-041 - Test the return to page 1 from page 2 for every clear or filter handler, not one: a test that starts on page 1 cannot observe a missing page reset.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux-v2
+- evidence: F-Tipo-page, F-Busca-page, F-Ate-page (validation.md) (ui-tests)
+- last seen: 2026-10-06T23:15:55Z
 
 ## Quarantined (failed when applied - ignore)
 
