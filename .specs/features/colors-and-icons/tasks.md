@@ -320,14 +320,14 @@ T7 → T13
 
 **Done when**:
 
-- [ ] Asset test: the four files exist; each has a root `<svg` with `viewBox`, is at most 12 KB, all together at most 40 KB; none contains `<script`, `<foreignObject`, `<image`, `<iframe`, an `on*=` attribute, an `href` or `xlink:href` that is not `#fragment`, `url(` with `http`, `https` or `//`, or `@import`; the test's own negative cases (a string with `<script>` and one with `href="https://x"`) fail the same predicate (ICON-01 AC 1, 3 and 4)
-- [ ] The `NOTICE` exists and names the repository URL, the four source files, the four vendored names, the owner's confirmation for personal use, the edits and the non-personal-use warning; the asset test checks that each of the four vendored names appears in it (ICON-01 AC 2 and 4)
-- [ ] `BankIcon` for Nubank, SofisaDireto, Neon and XP renders one `<img>` inside the 20 px frame (32 px with `size="lg"`) whose `src` is the imported file of that bank; for `Other` and an unknown value it renders the generic icon without throwing (ICON-02 AC 1 and 2)
-- [ ] By default the icon is `aria-hidden` with `alt=""` and no `role="img"`; with `decorative={false}` it has `role="img"` named `Banco Nubank`, `Banco Sofisa Direto`, `Banco Neon`, `Banco XP` or `Banco Outro` (ICON-02 AC 3 and 4)
-- [ ] A `load` error on the image swaps it for the generic icon and the frame keeps its size (ICON-02 AC 5)
-- [ ] The commit body records that the four icons were viewed rendered at 20 px and 32 px in the browser, light and dark theme (the Neon mark readable)
-- [ ] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 12 new ones pass (no silent deletions)
+- [x] Asset test: the four files exist; each has a root `<svg` with `viewBox`, is at most 12 KB, all together at most 40 KB; none contains `<script`, `<foreignObject`, `<image`, `<iframe`, an `on*=` attribute, an `href` or `xlink:href` that is not `#fragment`, `url(` with `http`, `https` or `//`, or `@import`; the test's own negative cases (a string with `<script>` and one with `href="https://x"`) fail the same predicate (ICON-01 AC 1, 3 and 4)
+- [x] The `NOTICE` exists and names the repository URL, the four source files, the four vendored names, the owner's confirmation for personal use, the edits and the non-personal-use warning; the asset test checks that each of the four vendored names appears in it (ICON-01 AC 2 and 4)
+- [x] `BankIcon` for Nubank, SofisaDireto, Neon and XP renders one `<img>` inside the 20 px frame (32 px with `size="lg"`) whose `src` is the imported file of that bank; for `Other` and an unknown value it renders the generic icon without throwing (ICON-02 AC 1 and 2)
+- [x] By default the icon is `aria-hidden` with `alt=""` and no `role="img"`; with `decorative={false}` it has `role="img"` named `Banco Nubank`, `Banco Sofisa Direto`, `Banco Neon`, `Banco XP` or `Banco Outro` (ICON-02 AC 3 and 4)
+- [x] A `load` error on the image swaps it for the generic icon and the frame keeps its size (ICON-02 AC 5)
+- [x] The commit body records that the four icons were viewed rendered at 20 px and 32 px in the browser, light and dark theme (the Neon mark readable)
+- [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 12 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
