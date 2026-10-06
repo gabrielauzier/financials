@@ -145,6 +145,29 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json documents GET /transactions/summary with the list filters and the five response fields (TLIST-06)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{
+        paths: Record<string, Record<string, OperationDoc & { parameters?: Array<{ name: string; in: string; required: boolean }> }>>;
+      }>();
+      const operation = doc.paths['/transactions/summary']?.get;
+      expect(operation?.parameters?.map((p) => [p.name, p.in, p.required])).toEqual(
+        ['from', 'to', 'accountId', 'categoryId', 'type', 'neutral', 'q'].map((name) => [name, 'query', false]),
+      );
+      const schema = operation?.responses?.['200']?.content?.['application/json']?.schema;
+      expect(Object.keys(schema?.properties ?? {}).sort()).toEqual(['balance', 'count', 'expense', 'income', 'investments']);
+      expect(schema?.required?.slice().sort()).toEqual(['balance', 'count', 'expense', 'income', 'investments']);
+      expect(schema?.properties?.count?.type).toBe('integer');
+      for (const key of ['income', 'expense', 'investments', 'balance']) {
+        expect(schema?.properties?.[key]?.type, key).toBe('string');
+      }
+    } finally {
+      await app.close();
+    }
+  });
+
   it('GET /docs/json lists Other with the 7 other payment methods in every enum and "One of" description (IMPFIX-02)', async () => {
     const app = buildApp();
     try {

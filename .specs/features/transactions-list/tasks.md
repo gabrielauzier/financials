@@ -148,7 +148,7 @@ T10 → T11
 
 ### T3: Add the transactions summary endpoint
 
-**What**: `summary.ts` with `SummarySchema` and `summaryTotals` (one query: `count` and four sums from the rules fragments over `fromJoins` and the shared `whereClause`, money converted to text in SQL); `GET /transactions/summary` registered in `routes.ts` (with `whereClause` and `Filters` exported); regenerate `api/openapi.json`; integration tests in `api/test/transactions-summary.int.test.ts` and `api/test/swagger.int.test.ts`.
+**What**: `summary.ts` with `SummarySchema` and `summaryTotals` (one query: `count` and four sums from the rules fragments over `fromJoins` and the shared `whereClause`, money converted to text in SQL); `GET /transactions/summary` registered in `routes.ts` next to the list, reusing its `whereClause`; regenerate `api/openapi.json`; integration tests in `api/test/transactions-summary.int.test.ts` and `api/test/swagger.int.test.ts`.
 **Where**: `api/src/modules/transactions/summary.ts`
 **Depends on**: T2
 **Reuses**: `api/src/modules/dashboards/rules.ts`, `whereClause` and `fromJoins`, `api/test/helpers/dashboards.ts`, `api/test/dashboards-rules.int.test.ts` (`DATASET`), `api/test/transactions-isolation.int.test.ts`
@@ -161,21 +161,21 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `GET /transactions/summary` answers 200 with exactly `count`, `income`, `expense`, `investments` and `balance`, the four values matching `^-?\d+\.\d{2}$` (AC 1)
-- [ ] No token and an invalid token answer 401 (AC 2)
-- [ ] Another user's rows never enter the totals and a user with no rows gets the zeros (AC 3 and 8)
-- [ ] Without a filter `count` equals the list `total`; with each of `from`, `to`, `accountId`, `categoryId`, `type`, `neutral` and `q` (and a combination) `count` equals the list `total` for the same query; the `X-Timezone` day boundaries and the accent-blind search behave as in the list (AC 4 and 5)
-- [ ] Invalid `type`, `neutral`, `from`, `to`, `accountId` and `categoryId` answer 422 `validation_error` with the field name; a repeated filter parameter answers like the list (AC 6 and edge case)
-- [ ] `sort`, `order`, `page` and `pageSize` change nothing (AC 7)
-- [ ] An inverted period answers 200 with the zeros and `count` 0 (assumption)
-- [ ] On the fixed dataset (neutral, CreditCard, Investments Expense and Income, Reversal Income, Reversal Expense, future-dated, inactive account, rows on the first and last local-day boundaries) the unfiltered summary equals the literal values derived from the spec rules and `income` and `expense` equal the totals computed with `INCOME_VALUE` and `EXPENSE_VALUE` over `COUNTABLE` for the same rows (AC 9 to 14)
-- [ ] On the same dataset the summary filtered by `type`, `categoryId` (Food, Investments, Reversal), `accountId` (active and inactive), `neutral`, `from`/`to` and `q` equals the expected literals of the rows each filter selects (AC 15)
-- [ ] With only future-dated rows the money fields are `"0.00"` and `count` equals the row count (AC 16)
-- [ ] 0.10 plus 0.20 sums exactly `"0.30"`, and an expense made only of Reversal Income is negative with the balance positive (AC 12 and 13, edge case)
-- [ ] `rules.guard.test.ts` still passes: `summary.ts` carries no special key in SQL (AC 17)
-- [ ] `api/openapi.json` documents the path with the seven filters in the query and the five fields in the 200 response; `swagger.int.test.ts` asserts it and that the file is current (AC 7 of the page size story)
-- [ ] Gate check passes: `pnpm -C api test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] `GET /transactions/summary` answers 200 with exactly `count`, `income`, `expense`, `investments` and `balance`, the four values matching `^-?\d+\.\d{2}$` (AC 1)
+- [x] No token and an invalid token answer 401 (AC 2)
+- [x] Another user's rows never enter the totals and a user with no rows gets the zeros (AC 3 and 8)
+- [x] Without a filter `count` equals the list `total`; with each of `from`, `to`, `accountId`, `categoryId`, `type`, `neutral` and `q` (and a combination) `count` equals the list `total` for the same query; the `X-Timezone` day boundaries and the accent-blind search behave as in the list (AC 4 and 5)
+- [x] Invalid `type`, `neutral`, `from`, `to`, `accountId` and `categoryId` answer 422 `validation_error` with the field name; a repeated filter parameter answers like the list (AC 6 and edge case)
+- [x] `sort`, `order`, `page` and `pageSize` change nothing (AC 7)
+- [x] An inverted period answers 200 with the zeros and `count` 0 (assumption)
+- [x] On the fixed dataset (neutral, CreditCard, Investments Expense and Income, Reversal Income, Reversal Expense, future-dated, inactive account, rows on the first and last local-day boundaries) the unfiltered summary equals the literal values derived from the spec rules and `income` and `expense` equal the totals computed with `INCOME_VALUE` and `EXPENSE_VALUE` over `COUNTABLE` for the same rows (AC 9 to 14)
+- [x] On the same dataset the summary filtered by `type`, `categoryId` (Food, Investments, Reversal), `accountId` (active and inactive), `neutral`, `from`/`to` and `q` equals the expected literals of the rows each filter selects (AC 15)
+- [x] With only future-dated rows the money fields are `"0.00"` and `count` equals the row count (AC 16)
+- [x] 0.10 plus 0.20 sums exactly `"0.30"`, and an expense made only of Reversal Income is negative with the balance positive (AC 12 and 13, edge case)
+- [x] `rules.guard.test.ts` still passes: `summary.ts` carries no special key in SQL (AC 17)
+- [x] `api/openapi.json` documents the path with the seven filters in the query and the five fields in the 200 response; `swagger.int.test.ts` asserts it and that the file is current (AC 7 of the page size story)
+- [x] Gate check passes: `pnpm -C api test`
+- [x] Test count: 702 integration tests (656 existing plus 46 new) and 382 unit tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full

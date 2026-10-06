@@ -17,6 +17,7 @@ import {
   type TransactionRow,
   type TransactionType,
 } from './schema.js';
+import { summaryTotals, SummarySchema } from './summary.js';
 import { parseAmount, parseReceiptUrl } from './validation.js';
 
 // Deleting a category moves its transactions to the destination. Runs once, when this module is
@@ -106,6 +107,9 @@ const ListQuery = Type.Object({
     Type.String({ description: `Rows per page: ${PAGE_SIZES.join(', ')} (default ${DEFAULT_PAGE_SIZE})` }),
   ),
 });
+
+/** The summary takes exactly the list's filters: no sort, order, page or pageSize. */
+const SummaryQuery = Type.Pick(ListQuery, ['from', 'to', 'accountId', 'categoryId', 'type', 'neutral', 'q']);
 
 const ListSchema = Type.Object({
   items: Type.Array(TransactionSchema),
@@ -399,6 +403,12 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
       });
       return { items: rows.map(toTransaction), total, page, pageSize };
     },
+  );
+
+  routes.get(
+    '/transactions/summary',
+    { schema: { querystring: SummaryQuery, response: { 200: SummarySchema } } },
+    async (request) => request.withUser((tx) => summaryTotals(tx, whereClause(tx, request.query, request.tz))),
   );
 
   routes.patch(
