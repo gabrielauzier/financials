@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/colors-and-icons/design.md`
-**Status**: Draft
+**Status**: Pending browser check
 
 **Feature prerequisites**: import-improvements complete (the `CategoryOptionLabel` single render point, `CategorySelect` in the import preview); migrations 0001 to 0007 applied (`pnpm -C api db:reset`; the local Supabase stack must be running for integration tests, `pnpm -C api db:start`). Branch `feat/colors-and-icons`, stacked on `feat/import-improvements`; the only new migration is `0008_colors.sql`; no push. Production gets the migration with `supabase db push` only after the merge and with the owner's confirmation (outside this feature).
 
@@ -325,7 +325,7 @@ T7 → T13
 - [x] `BankIcon` for Nubank, SofisaDireto, Neon and XP renders one `<img>` inside the 20 px frame (32 px with `size="lg"`) whose `src` is the imported file of that bank; for `Other` and an unknown value it renders the generic icon without throwing (ICON-02 AC 1 and 2)
 - [x] By default the icon is `aria-hidden` with `alt=""` and no `role="img"`; with `decorative={false}` it has `role="img"` named `Banco Nubank`, `Banco Sofisa Direto`, `Banco Neon`, `Banco XP` or `Banco Outro` (ICON-02 AC 3 and 4)
 - [x] A `load` error on the image swaps it for the generic icon and the frame keeps its size (ICON-02 AC 5)
-- [x] The commit body records that the four icons were viewed rendered at 20 px and 32 px in the browser, light and dark theme (the Neon mark readable)
+- [x] The commit body records that the four icons were rendered from a standalone HTML page at 20, 32 and 96 px on a light and a dark background (not in the app; the in-app check is part of the owner's browser check, see T10 and T13)
 - [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
 - [x] Test count: the existing web tests plus about 12 new ones pass (no silent deletions)
 
@@ -386,7 +386,7 @@ T7 → T13
 - [x] A mocked 422 on `color` shows "Escolha uma cor da paleta." and keeps what was typed; another failure shows the `messageForError` text and keeps the dialog open (COLOR-08 AC 5 and 6)
 - [x] The accounts list shows, for each account, the bank icon, the nickname, the Portuguese bank label and a color bar with the account's `bg` class, plus the "Editar", "Desativar" and "Reativar" buttons as before (ICON-03 AC 5)
 - [x] After a `PATCH` of the color the list refetches and the bar shows the new class without a reload; an inactive account keeps `opacity-55` and its icon and bar stay rendered (ICON-04 AC 8 and 9)
-- [x] The browser check against the local API (create and recolor an account, see the icon and bar, light and dark theme) is recorded in the commit body
+- [ ] The browser check against the local API (create and recolor an account, see the icon and bar, light and dark theme) is recorded in the commit body
 - [x] Gate check passes: `yarn --cwd web test`
 - [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
@@ -475,7 +475,7 @@ T7 → T13
 - [x] A selectable preview row's select shows the category badge in its trigger and in its opened options (COLOR-10 AC 5)
 - [x] An `ignored` or `invalid` row shows the `CategoryBadge` with the category name and the color of the user's category with that id when the lookup is ready (COLOR-10 AC 5)
 - [x] When `GET /categories` fails the column shows the `categoryName` text for every row, with no badge, as before; while loading the select shows "Carregando categorias…" (COLOR-10 AC 6 and 8)
-- [x] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for 400, 600 and 900; the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
+- [ ] The browser check against the local API is recorded in the commit body: the picker changes a category and an account color and the extrato, selects, accounts list and import preview reflect it; badges legible in the light and dark theme for 400, 600 and 900; the icon of Nubank, Sofisa Direto, Neon, XP and the generic one for Outro visible in the account select and the extrato; `pnpm -C api openapi:export` leaves `api/openapi.json` with no diff
 - [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
 - [x] Test count: the existing web tests plus about 5 new ones pass (no silent deletions)
 
