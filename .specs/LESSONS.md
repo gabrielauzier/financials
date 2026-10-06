@@ -26,6 +26,12 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: W2c and W9a/W9b (validation.md): delete failure text and account selector rules untested (ui-tests) (+1 more)
 - last seen: 2026-10-05T19:28:15Z
 
+### L-027 - Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.
+- signal: `gate_fail` · recurrence: 2 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux, import-improvements
+- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests) (+1 more)
+- last seen: 2026-10-06T03:46:57Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
@@ -168,12 +174,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SPG-2 (validation.md) (spec-outcomes)
 - last seen: 2026-10-06T00:12:53Z
 
-### L-027 - Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.
-- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
-- features: transactions-ux
-- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)
-- last seen: 2026-10-06T01:07:31Z
-
 ### L-028 - When a fix adds a pending/disabled guard to a destructive action (double-submit), assert the disabled state while the request is in flight, not only the failure path.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
 - features: transactions-ux
@@ -191,6 +191,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: import-fixes
 - evidence: mutant C07 (validation.md) (import-tests)
 - last seen: 2026-10-06T02:10:15Z
+
+### L-031 - When an action must use the account of a stored item (reimport), start the test with a different account already selected in the form and assert the request carries the item's account.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: import-improvements
+- evidence: mutant W39 (validation.md) (ui-tests)
+- last seen: 2026-10-06T03:46:56Z
+
+### L-032 - Assert the zero case of every singular/plural count text (0 importadas), since Portuguese treats 0 as plural and a count <= 1 rule hides it.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: import-improvements
+- evidence: mutant W48 (validation.md) (ui-tests)
+- last seen: 2026-10-06T03:46:57Z
+
+### L-033 - When the spec quotes a dialog sentence, assert the full text in the test, not only the first sentence by regex, so wording drift from the spec is caught.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: import-improvements
+- evidence: IMPIMP-06 dialog text (validation.md) (ui-tests)
+- last seen: 2026-10-06T03:46:57Z
 
 ## Quarantined (failed when applied - ignore)
 

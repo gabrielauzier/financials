@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 31,
+  "next_id": 34,
   "lessons": [
     {
       "id": "L-001",
@@ -485,17 +485,19 @@
       "text": "Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.",
       "signal": "gate_fail",
       "scope": "ui-tests",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "transactions-ux"
+        "transactions-ux",
+        "import-improvements"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)"
+        "web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)",
+        "web full suite x2 in parallel, 21-23 timeouts in extrato tests (validation.md) (ui-tests)"
       ],
       "created": "2026-10-06T01:07:31Z",
-      "last_seen": "2026-10-06T01:07:31Z"
+      "last_seen": "2026-10-06T03:46:57Z"
     },
     {
       "id": "L-028",
@@ -550,6 +552,60 @@
       ],
       "created": "2026-10-06T02:10:15Z",
       "last_seen": "2026-10-06T02:10:15Z"
+    },
+    {
+      "id": "L-031",
+      "key": "surviving_mutant::when an action must use the account of a stored item reimport start the test with a different account already selected in the form and assert the request carries the item s account",
+      "text": "When an action must use the account of a stored item (reimport), start the test with a different account already selected in the form and assert the request carries the item's account.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "import-improvements"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant W39 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T03:46:56Z",
+      "last_seen": "2026-10-06T03:46:56Z"
+    },
+    {
+      "id": "L-032",
+      "key": "surviving_mutant::assert the zero case of every singular plural count text 0 importadas since portuguese treats 0 as plural and a count 1 rule hides it",
+      "text": "Assert the zero case of every singular/plural count text (0 importadas), since Portuguese treats 0 as plural and a count <= 1 rule hides it.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "import-improvements"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant W48 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T03:46:57Z",
+      "last_seen": "2026-10-06T03:46:57Z"
+    },
+    {
+      "id": "L-033",
+      "key": "spec_precision_gap::when the spec quotes a dialog sentence assert the full text in the test not only the first sentence by regex so wording drift from the spec is caught",
+      "text": "When the spec quotes a dialog sentence, assert the full text in the test, not only the first sentence by regex, so wording drift from the spec is caught.",
+      "signal": "spec_precision_gap",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "import-improvements"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "IMPIMP-06 dialog text (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-06T03:46:57Z",
+      "last_seen": "2026-10-06T03:46:57Z"
     }
   ]
 }
