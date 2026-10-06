@@ -18,12 +18,16 @@ describe("diálogo de duplicadas (IMPIMP-06)", () => {
     setup({ count: 1 });
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
     expect(screen.getByText("Importar linhas duplicadas?")).toBeInTheDocument();
-    expect(screen.getByText(/1 linha selecionada já foi importada antes/)).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog")).toHaveAccessibleDescription(
+      "1 linha selecionada já foi importada antes. Importar mesmo assim cria transações repetidas.",
+    );
   });
 
   it("mostra a contagem no plural", () => {
     setup({ count: 3 });
-    expect(screen.getByText(/3 linhas selecionadas já foram importadas antes/)).toBeInTheDocument();
+    expect(screen.getByRole("alertdialog")).toHaveAccessibleDescription(
+      "3 linhas selecionadas já foram importadas antes. Importar mesmo assim cria transações repetidas.",
+    );
   });
 
   it("Importar mesmo assim confirma e Voltar cancela", () => {

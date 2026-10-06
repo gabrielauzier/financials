@@ -80,6 +80,12 @@ describe("lista de arquivos importados (IMPIMP-11)", () => {
     expect(apiRequest).toHaveBeenCalledWith("/imports");
   });
 
+  it("mostra zero no plural: 0 importadas · 0 ignoradas", async () => {
+    apiRequest.mockResolvedValue([file({ importedCount: 0, skippedCount: 0 })]);
+    renderList();
+    expect(await screen.findByText("0 importadas · 0 ignoradas")).toBeInTheDocument();
+  });
+
   it("mostra 3 linhas de skeleton enquanto carrega", () => {
     apiRequest.mockReturnValue(new Promise(() => {}));
     renderList();

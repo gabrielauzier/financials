@@ -27,6 +27,7 @@ vi.mock("@/features/accounts/AccountSelect", () => ({
     <select id={id} value={value ?? ""} onChange={(event) => onChange(event.target.value)}>
       <option value="">Selecione uma conta</option>
       <option value="acc-1">Nubank pessoal</option>
+      <option value="acc-2">Outra conta</option>
     </select>
   ),
 }));
@@ -589,5 +590,80 @@ describe("página de importação: arquivos importados e reimportação (IMPIMP-
     release(new Blob(["a,b"], { type: "text/csv" }));
     await screen.findByRole("button", { name: "Confirmar importação" });
     expect(callsTo("/imports/preview")).toHaveLength(1);
+  });
+
+  it("Reimportar com outra conta escolhida no formulário usa a conta do lote no preview e no confirm", async () => {
+    renderPage();
+    await screen.findByText("extrato-marco.csv");
+    fireEvent.change(screen.getByLabelText("Conta"), { target: { value: "acc-2" } });
+    fireEvent.click(await reimportButton());
+    fireEvent.click(await screen.findByRole("button", { name: "Confirmar importação" }));
+    await screen.findByRole("status");
+    expect(bodyOf("/imports/preview").get("accountId")).toBe("acc-1");
+    expect(bodyOf("/imports/confirm").get("accountId")).toBe("acc-1");
+  });
+
+  it("duas reimportações seguidas sem confirmar geram duas prévias e a confirmação usa uma chave nova", async () => {
+    const base = apiRequest.getMockImplementation() as (path: string) => Promise<unknown>;
+    let failNext = true;
+    apiRequest.mockImplementation((path: string) => {
+      if (path === "/imports/confirm" && failNext) {
+        failNext = false;
+        return Promise.reject(new ApiError("storage_error", "x", 500));
+      }
+      return base(path);
+    });
+    renderPage();
+    fireEvent.click(await reimportButton());
+    fireEvent.click(await screen.findByRole("button", { name: "Confirmar importação" }));
+    await screen.findByText("Nada foi importado. Tente novamente.");
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    fireEvent.click(await reimportButton());
+    await waitFor(() => expect(callsTo("/imports/preview")).toHaveLength(2));
+    expect(bodyOf("/imports/preview", 1).get("file")).not.toBe(
+      bodyOf("/imports/preview", 0).get("file"),
+    );
+    expect(callsTo("/imports/confirm")).toHaveLength(1);
+    expect(screen.queryByText("Nada foi importado. Tente novamente.")).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: "Confirmar importação" }));
+    await screen.findByRole("status");
+    expect(callsTo("/imports/confirm")).toHaveLength(2);
+    expect(bodyOf("/imports/confirm", 1).get("idempotencyKey")).not.toBe(
+      bodyOf("/imports/confirm", 0).get("idempotencyKey"),
+    );
+    expect(bodyOf("/imports/confirm", 1).get("accountId")).toBe("acc-1");
+  });
+
+  it("Reimportar com todas as duplicadas marcadas abre o diálogo e, ao confirmar, cria um novo lote", async () => {
+    const base = apiRequest.getMockImplementation() as (path: string) => Promise<unknown>;
+    apiRequest.mockImplementation((path: string) =>
+      path === "/imports/preview"
+        ? Promise.resolve({
+            rows: [row(0, "duplicate"), row(1, "duplicate"), row(2, "duplicate")],
+            totals: { new: 0, duplicate: 3, ignored: 0, unrecognized: 0, invalid: 0 },
+          })
+        : base(path),
+    );
+    renderPage();
+    fireEvent.click(await reimportButton());
+    await screen.findByRole("button", { name: "Confirmar importação" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar todas as linhas" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar importação" }));
+    expect(
+      await screen.findByText(/3 linhas selecionadas já foram importadas antes/),
+    ).toBeInTheDocument();
+    expect(callsTo("/imports/confirm")).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Importar mesmo assim" }));
+    await screen.findByRole("status");
+    expect(callsTo("/imports/confirm")).toHaveLength(1);
+    const confirmBody = bodyOf("/imports/confirm");
+    expect(confirmBody.get("accountId")).toBe("acc-1");
+    expect(JSON.parse(confirmBody.get("selections") as string)).toEqual([
+      { index: 0, neutral: false, categoryId: UNCATEGORIZED },
+      { index: 1, neutral: false, categoryId: UNCATEGORIZED },
+      { index: 2, neutral: false, categoryId: UNCATEGORIZED },
+    ]);
+    fireEvent.click(screen.getByRole("button", { name: "Importar outro arquivo" }));
+    expect(await screen.findByText("novo.csv")).toBeInTheDocument();
   });
 });

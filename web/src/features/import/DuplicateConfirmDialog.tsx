@@ -35,7 +35,7 @@ export function DuplicateConfirmDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Importar linhas duplicadas?</AlertDialogTitle>
           <AlertDialogDescription>
-            {sentence}. Importar mesmo assim cria transações repetidas no extrato.
+            {sentence}. Importar mesmo assim cria transações repetidas.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

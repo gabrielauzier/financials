@@ -5,8 +5,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Category } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { CategoryOptionLabel } from "./CategoryOptionLabel";
 import { useCategories } from "./hooks";
 
 type CategorySelectProps = {
@@ -18,11 +18,6 @@ type CategorySelectProps = {
   ariaLabel?: string | undefined;
   className?: string | undefined;
 };
-
-/** The only place that renders an option's content: the select items and the displayed value. */
-export function CategoryOptionLabel({ category }: { category: Category }) {
-  return <>{category.name}</>;
-}
 
 export function CategorySelect({
   value,

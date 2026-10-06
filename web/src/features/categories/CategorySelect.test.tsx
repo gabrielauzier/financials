@@ -3,11 +3,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { mockRequest } from "@/lib/api/mock";
 import type { Category } from "@/lib/api/types";
 import { renderWithQuery, resetSpy, responses } from "@/test/apiSpy";
-import { CategoryOptionLabel, CategorySelect } from "./CategorySelect";
+import { CategorySelect } from "./CategorySelect";
 
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest: (await import("@/test/apiSpy")).spiedApiRequest,
+}));
+
+vi.mock("./CategoryOptionLabel", () => ({
+  CategoryOptionLabel: ({ category }: { category: { name: string } }) => (
+    <>{`label:${category.name}`}</>
+  ),
 }));
 
 afterEach(() => {
@@ -24,17 +30,18 @@ describe("CategorySelect (IMPIMP-03)", () => {
     expect(trigger).toHaveClass("h-8");
   });
 
-  it("cada item e o valor exibido usam o conteúdo do CategoryOptionLabel", async () => {
-    const [category] = await mockRequest<Category[]>({ method: "GET", path: "/categories" });
+  it("cada item e o valor exibido passam pelo CategoryOptionLabel", async () => {
+    const categories = await mockRequest<Category[]>({ method: "GET", path: "/categories" });
+    const [category] = categories;
     if (!category) throw new Error("seed");
     renderWithQuery(<CategorySelect value={category.id} onChange={vi.fn()} />);
     const trigger = await screen.findByRole("combobox");
-    await waitFor(() => expect(trigger).toHaveTextContent(category.name));
+    await waitFor(() => expect(trigger).toHaveTextContent(`label:${category.name}`));
     fireEvent.click(trigger);
-    expect(await screen.findByRole("option", { name: category.name })).toBeInTheDocument();
-    cleanup();
-    renderWithQuery(<CategoryOptionLabel category={category} />);
-    expect(screen.getByText(category.name)).toBeInTheDocument();
+    for (const item of categories) {
+      expect(await screen.findByRole("option", { name: `label:${item.name}` })).toBeInTheDocument();
+    }
+    expect(screen.getAllByRole("option")).toHaveLength(categories.length);
   });
 
   it("fica desabilitado com Carregando categorias… enquanto a consulta não termina", () => {
