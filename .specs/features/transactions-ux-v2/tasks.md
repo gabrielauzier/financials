@@ -151,14 +151,14 @@ T6 → T8
 
 **Done when**:
 
-- [ ] The edit modal shows "ID" with the transaction `id` and "Identificador externo" with the exact `identifier` as text (AC 1 and 2 of the modal story)
-- [ ] A transaction without `identifier` shows "—" and has no "Copiar identificador externo" button (AC 3)
-- [ ] No input, textarea or other editable control holds either value, and the PATCH body sent by Salvar has no `id` and no `identifier` (AC 4)
-- [ ] The create form shows no identifiers block, and reopening the modal for another transaction shows the new values (AC 5 and edge case)
-- [ ] "Copiar ID" writes the exact `id` to the clipboard and emits "ID copiado"; "Copiar identificador externo" writes the exact identifier and emits "Identificador externo copiado" (AC 6 and 7)
-- [ ] With `navigator.clipboard` undefined, and with a rejected write, the toast "Não foi possível concluir a operação. Tente novamente." is emitted and the modal stays open (AC 8)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus at least 9 new pass (no silent deletions)
+- [x] The edit modal shows "ID" with the transaction `id` and "Identificador externo" with the exact `identifier` as text (AC 1 and 2 of the modal story)
+- [x] A transaction without `identifier` shows "—" and has no "Copiar identificador externo" button (AC 3)
+- [x] No input, textarea or other editable control holds either value, and the PATCH body sent by Salvar has no `id` and no `identifier` (AC 4)
+- [x] The create form shows no identifiers block, and reopening the modal for another transaction shows the new values (AC 5 and edge case)
+- [x] "Copiar ID" writes the exact `id` to the clipboard and emits "ID copiado"; "Copiar identificador externo" writes the exact identifier and emits "Identificador externo copiado" (AC 6 and 7)
+- [x] With `navigator.clipboard` undefined, and with a rejected write, the toast "Não foi possível concluir a operação. Tente novamente." is emitted and the modal stays open (AC 8)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 630 web tests pass (621 existing plus 9 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
