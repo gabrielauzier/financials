@@ -7,7 +7,20 @@ afterEach(cleanup);
 
 describe("CategoryOptionLabel (IMPIMP-03)", () => {
   it("renderiza o nome da categoria", () => {
-    render(<CategoryOptionLabel category={{ id: "c1", name: "Alimentação" } as Category} />);
+    render(
+      <CategoryOptionLabel
+        category={{ id: "c1", name: "Alimentação", color: "teal-600" } as Category}
+      />,
+    );
     expect(screen.getByText("Alimentação")).toBeInTheDocument();
+  });
+
+  it("renderiza o nome como badge com a cor da categoria", () => {
+    render(
+      <CategoryOptionLabel
+        category={{ id: "c1", name: "Alimentação", color: "teal-600" } as Category}
+      />,
+    );
+    expect(screen.getByText("Alimentação")).toHaveClass("bg-teal-600", "text-black");
   });
 });

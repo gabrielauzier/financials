@@ -291,12 +291,12 @@ T7 → T13
 
 **Done when**:
 
-- [ ] `CategoryBadge` renders the name with the `bg` and `text` classes of its key plus `ring-1`, `ring-inset`, `ring-black/10` and `dark:ring-white/25`; an unknown color uses the `slate-600` classes; a long name has the `truncate` class and the `title` with the full name (COLOR-09 AC 4, 5 and 6)
-- [ ] An opened `CategorySelect` renders every item as a badge with that category's color and each `option` keeps the category name as accessible name (the spec AC 1); with a value, the trigger shows the selected category's badge (AC 2)
-- [ ] The select still shows "Carregando categorias…" and stays disabled while the query is pending, and the existing options-count assertions pass (AC 8)
-- [ ] `useCategoryLookup` returns `ready: false` while loading or failing (empty map) and a map by id when loaded
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
+- [x] `CategoryBadge` renders the name with the `bg` and `text` classes of its key plus `ring-1`, `ring-inset`, `ring-black/10` and `dark:ring-white/25`; an unknown color uses the `slate-600` classes; a long name has the `truncate` class and the `title` with the full name (COLOR-09 AC 4, 5 and 6)
+- [x] An opened `CategorySelect` renders every item as a badge with that category's color and each `option` keeps the category name as accessible name (the spec AC 1); with a value, the trigger shows the selected category's badge (AC 2)
+- [x] The select still shows "Carregando categorias…" and stays disabled while the query is pending, and the existing options-count assertions pass (AC 8)
+- [x] `useCategoryLookup` returns `ready: false` while loading or failing (empty map) and a map by id when loaded
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 9 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
