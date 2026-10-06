@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/api/client";
 import { GENERIC_ERROR } from "@/lib/api/errorMessages";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, Transaction } from "@/lib/api/types";
@@ -115,6 +116,26 @@ describe("extrato: categoria, lote e neutra", () => {
         item.categoryName,
       ),
     );
+  });
+
+  it("mostra o texto mapeado do ApiError not_found no toast quando o PATCH da categoria da linha falha", async () => {
+    const {
+      items: [item],
+      categories,
+    } = await seed("Inline categoria not_found");
+    if (!item) throw new Error("seed");
+    const target = categories.find((c) => c.id !== item.categoryId) as Category;
+    renderWithQuery(<TransactionsPage />);
+    const row = await rowOf(item.name);
+    failures.set("PATCH /transactions/:id", new ApiError("not_found", "Missing row", 404));
+    await chooseCategoryIn(row, target.name);
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+        "Registro não encontrado. Atualize a página e tente de novo",
+      ),
+    );
+    expect(toast.error).not.toHaveBeenCalledWith("Missing row");
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   const selectTwo = async (names: string[]) => {
@@ -279,6 +300,24 @@ describe("extrato: categoria, lote e neutra", () => {
       ).not.toBeChecked();
       expect(within(current).queryByText("Neutra")).not.toBeInTheDocument();
     });
+  });
+
+  it("mostra o texto mapeado do ApiError not_found no toast quando o PATCH da chave neutra falha", async () => {
+    const {
+      items: [item],
+    } = await seed("Inline neutra not_found");
+    if (!item) throw new Error("seed");
+    renderWithQuery(<TransactionsPage />);
+    const row = await rowOf(item.name);
+    failures.set("PATCH /transactions/:id", new ApiError("not_found", "Missing row", 404));
+    fireEvent.click(within(row).getByRole("switch", { name: `Marcar ${item.name} como neutra` }));
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+        "Registro não encontrado. Atualize a página e tente de novo",
+      ),
+    );
+    expect(toast.error).not.toHaveBeenCalledWith("Missing row");
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   // The refetch after a failed save (onSettled) restores the row on its own when the server is
