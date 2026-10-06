@@ -275,13 +275,13 @@ T7 → T8
 
 **Done when**:
 
-- [ ] `PaymentMethod` and `ImportPaymentMethod` include `Other`, and `yarn --cwd web typecheck` passes with no duplicate label map left (AC 5)
-- [ ] The extrato table and the mobile card show "Outro" for a transaction with `Other` (AC 5)
-- [ ] The transaction form lists "Outro" in "Método de pagamento" and sends `paymentMethod: "Other"` when chosen (AC 5)
-- [ ] The import preview shows "Boleto", "NuPay" and "Outro" next to the 5 old labels; a test renders one row per each of the 8 methods and asserts the Portuguese text (AC 6)
-- [ ] The mock generates `Other` transactions among the methods (AC 7)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing web tests plus 5 new ones pass (no silent deletions)
+- [x] `PaymentMethod` and `ImportPaymentMethod` include `Other`, and `yarn --cwd web typecheck` passes with no duplicate label map left (AC 5)
+- [x] The extrato table and the mobile card show "Outro" for a transaction with `Other` (AC 5)
+- [x] The transaction form lists "Outro" in "Método de pagamento" and sends `paymentMethod: "Other"` when chosen (AC 5)
+- [x] The import preview shows "Boleto", "NuPay" and "Outro" next to the 5 old labels; a test renders one row per each of the 8 methods and asserts the Portuguese text (AC 6)
+- [x] The mock generates `Other` transactions among the methods (AC 7)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: the existing web tests plus 5 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

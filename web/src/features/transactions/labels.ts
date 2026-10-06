@@ -8,6 +8,7 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
   DebitCard: "Cartão de débito",
   NuPay: "NuPay",
   PIX: "PIX",
+  Other: "Outro",
 };
 export const transactionTypeLabels: Record<TransactionType, string> = {
   Income: "Receita",

@@ -9,10 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { transactionTypeLabels } from "@/features/transactions/labels";
+import { paymentMethodLabels, transactionTypeLabels } from "@/features/transactions/labels";
 import { formatBRL } from "@/lib/format";
 import type { ImportPreview, ImportRowStatus, PreviewRow } from "@/lib/api/types";
-import { formatLocalDate, importMethodLabels, importStatusLabels } from "./labels";
+import { formatLocalDate, importStatusLabels } from "./labels";
 import { isSelectable, type PreviewSelection } from "./previewSelection";
 
 type ImportPreviewTableProps = {
@@ -113,7 +113,7 @@ export function ImportPreviewTable({
                     </span>
                   ) : null}
                 </TableCell>
-                <TableCell>{importMethodLabels[row.paymentMethod]}</TableCell>
+                <TableCell>{paymentMethodLabels[row.paymentMethod]}</TableCell>
                 <TableCell>{row.categoryName}</TableCell>
                 <TableCell>{transactionTypeLabels[row.type]}</TableCell>
                 <TableCell className="text-right tabular-nums">{signedAmount(row)}</TableCell>

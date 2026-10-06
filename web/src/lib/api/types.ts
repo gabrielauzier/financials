@@ -35,7 +35,7 @@ export type Category = {
 
 export type TransactionType = "Income" | "Expense";
 export type PaymentMethod =
-  "BankTransfer" | "Boleto" | "Cash" | "CreditCard" | "DebitCard" | "NuPay" | "PIX";
+  "BankTransfer" | "Boleto" | "Cash" | "CreditCard" | "DebitCard" | "NuPay" | "PIX" | "Other";
 
 export type Transaction = {
   id: string;
@@ -98,7 +98,7 @@ export type TransactionUpdate = Partial<Omit<TransactionInput, "notes" | "receip
 };
 
 export type ImportRowStatus = "new" | "duplicate" | "ignored" | "unrecognized" | "invalid";
-export type ImportPaymentMethod = "PIX" | "DebitCard" | "BankTransfer" | "CreditCard";
+export type ImportPaymentMethod = PaymentMethod;
 
 export type PreviewRow = {
   index: number;

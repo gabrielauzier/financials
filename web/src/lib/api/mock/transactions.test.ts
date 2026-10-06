@@ -68,3 +68,31 @@ describe("transactions mock follows the API for description", () => {
     expect(both).toMatchObject({ name: "Renomeada", description: "Título original" });
   });
 });
+
+describe("transactions mock generates every payment method", () => {
+  it("includes Other among the seeded transactions and accepts it on create", async () => {
+    const all = await mockRequest<TransactionsPage>({
+      method: "GET",
+      path: "/transactions?pageSize=500",
+    });
+    const seen = new Set<string>();
+    for (let page = 1; page <= Math.ceil(all.total / all.pageSize); page += 1) {
+      const current = await mockRequest<TransactionsPage>({
+        method: "GET",
+        path: `/transactions?page=${page}`,
+      });
+      current.items.forEach((item) => seen.add(item.paymentMethod));
+    }
+    expect([...seen].sort()).toEqual([
+      "BankTransfer",
+      "Boleto",
+      "Cash",
+      "CreditCard",
+      "DebitCard",
+      "NuPay",
+      "Other",
+      "PIX",
+    ]);
+    expect((await create({ paymentMethod: "Other" })).paymentMethod).toBe("Other");
+  });
+});

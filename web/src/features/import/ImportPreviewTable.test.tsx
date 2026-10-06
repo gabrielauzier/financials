@@ -147,3 +147,35 @@ describe("tabela da prévia", () => {
     expect(screen.getByText("0 linhas selecionadas")).toBeInTheDocument();
   });
 });
+
+describe("rótulos de método da prévia", () => {
+  it("mostra o rótulo em português dos 8 métodos, incluindo Boleto, NuPay e Outro", () => {
+    const methods = [
+      ["BankTransfer", "Transferência bancária"],
+      ["Boleto", "Boleto"],
+      ["Cash", "Dinheiro"],
+      ["CreditCard", "Cartão de crédito"],
+      ["DebitCard", "Cartão de débito"],
+      ["NuPay", "NuPay"],
+      ["PIX", "PIX"],
+      ["Other", "Outro"],
+    ] as const;
+    const methodRows = methods.map(([method], index) =>
+      row(index, "new", { name: `Método ${method}`, paymentMethod: method }),
+    );
+    render(
+      <ImportPreviewTable
+        preview={{
+          rows: methodRows,
+          totals: { new: 8, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 },
+        }}
+        selection={initialSelection(methodRows)}
+        onSelectionChange={vi.fn()}
+      />,
+    );
+    for (const [method, label] of methods) {
+      const tableRow = screen.getByText(`Método ${method}`).closest("tr") as HTMLElement;
+      expect(within(tableRow).getByText(label, { selector: "td" })).toBeInTheDocument();
+    }
+  });
+});

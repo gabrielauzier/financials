@@ -1,11 +1,4 @@
-import type { ImportPaymentMethod, ImportRowStatus } from "@/lib/api/types";
-
-export const importMethodLabels: Record<ImportPaymentMethod, string> = {
-  PIX: "PIX",
-  DebitCard: "Cartão de débito",
-  BankTransfer: "Transferência bancária",
-  CreditCard: "Cartão de crédito",
-};
+import type { ImportRowStatus } from "@/lib/api/types";
 
 export const importStatusLabels: Record<ImportRowStatus, string> = {
   new: "Nova",

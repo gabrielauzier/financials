@@ -32,17 +32,9 @@ import type {
 } from "@/lib/api/types";
 import { notifyError, notifySuccess } from "@/lib/notify";
 import { useCreateTransaction, useUpdateTransaction } from "./hooks";
+import { paymentMethodLabels } from "./labels";
 import { parseBRLToDecimal, todayLocal, toLocalDateInput } from "./utils";
 
-const paymentLabels: Record<PaymentMethod, string> = {
-  BankTransfer: "Transferência bancária",
-  Boleto: "Boleto",
-  Cash: "Dinheiro",
-  CreditCard: "Cartão de crédito",
-  DebitCard: "Cartão de débito",
-  NuPay: "NuPay",
-  PIX: "PIX",
-};
 // A function, not a constant: "today" must be computed when the form opens, not when the module loads.
 const emptyForm = () => ({
   name: "",
@@ -218,7 +210,7 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(paymentLabels).map(([value, label]) => (
+                {Object.entries(paymentMethodLabels).map(([value, label]) => (
                   <SelectItem key={value} value={value}>
                     {label}
                   </SelectItem>

@@ -40,6 +40,7 @@ const methods: PaymentMethod[] = [
   "Cash",
   "NuPay",
   "CreditCard",
+  "Other",
 ];
 
 let transactions: Transaction[] = Array.from({ length: 120 }, (_, index) => {
