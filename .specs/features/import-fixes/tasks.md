@@ -90,12 +90,12 @@ T7 → T8
 
 **Done when**:
 
-- [ ] The file has 96 data rows and the counts per format of the spec: 53 "Compra no débito - X", 6 "Compra no débito via NuPay - X", 4 "Estorno - Compra no débito - X", 4 "Estorno - Ajuste de compra no débito - X", 6 "Pagamento de boleto efetuado - X", 17 "Transferência enviada pelo Pix - …", 1 "Transferência recebida pelo Pix - …", 3 "Transferência Recebida - MARIA SOUZA LIMA LTDA - <cnpj fictício> - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: …", 1 "Reembolso recebido pelo Pix - …", 1 "Pagamento de fatura" (AC 1 of the reproduction story)
-- [ ] One Pix enviada goes to "Maria Souza Lima" with a masked document (`•••.xxx.xxx-••`); the other 16 enviadas and the recebida use unrelated fictitious names; at least one name has repeated spaces and one boleto name is truncated like the original
-- [ ] Signs follow the original: estornos, Pix recebida, 3 transferências recebidas and the reembolso are positive; everything else negative
-- [ ] Every identifier is a new, distinct UUID, and a token check against the real file finds no shared name, document, identifier or counterparty word (command and result noted in the commit body; only `api/test/fixtures/` is staged)
-- [ ] Gate check passes: `pnpm -C api test:unit`
-- [ ] Test count: the existing unit tests still pass (no silent deletions); no new test (fixture only)
+- [x] The file has 96 data rows and the counts per format of the spec: 53 "Compra no débito - X", 6 "Compra no débito via NuPay - X", 4 "Estorno - Compra no débito - X", 4 "Estorno - Ajuste de compra no débito - X", 6 "Pagamento de boleto efetuado - X", 17 "Transferência enviada pelo Pix - …", 1 "Transferência recebida pelo Pix - …", 3 "Transferência Recebida - MARIA SOUZA LIMA LTDA - <cnpj fictício> - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: …", 1 "Reembolso recebido pelo Pix - …", 1 "Pagamento de fatura" (AC 1 of the reproduction story)
+- [x] One Pix enviada goes to "Maria Souza Lima" with a masked document (`•••.xxx.xxx-••`); the other 16 enviadas and the recebida use unrelated fictitious names; at least one name has repeated spaces and one boleto name is truncated like the original
+- [x] Signs follow the original: estornos, Pix recebida, 3 transferências recebidas and the reembolso are positive; everything else negative
+- [x] Every identifier is a new, distinct UUID, and a token check against the real file finds no shared name, document, identifier or counterparty word (command and result noted in the commit body; only `api/test/fixtures/` is staged)
+- [x] Gate check passes: `pnpm -C api test:unit`
+- [x] Test count: the existing unit tests still pass (no silent deletions); no new test (fixture only)
 
 **Tests**: none
 **Gate**: quick
