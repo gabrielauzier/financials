@@ -1,3 +1,5 @@
+import type { ColorKey } from "@/features/colors/palette";
+
 export type Money = string;
 
 export type ApiErrorPayload = {
@@ -20,10 +22,13 @@ export type Account = {
   nickname: string;
   holderNames: string[];
   active: boolean;
+  color: ColorKey;
   createdAt: string;
 };
 
-export type AccountInput = Pick<Account, "bank" | "nickname" | "holderNames">;
+export type AccountInput = Pick<Account, "bank" | "nickname" | "holderNames"> & {
+  color?: ColorKey;
+};
 export type AccountUpdate = Partial<AccountInput>;
 
 export type Category = {
@@ -31,7 +36,11 @@ export type Category = {
   key: string | null;
   name: string;
   isSystem: boolean;
+  color: ColorKey;
 };
+
+export type CategoryInput = { name: string; color?: ColorKey };
+export type CategoryUpdate = { name?: string; color?: ColorKey };
 
 export type TransactionType = "Income" | "Expense";
 export type PaymentMethod =

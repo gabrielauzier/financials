@@ -23,6 +23,7 @@ const account: Account = {
   nickname: "Nubank pessoal",
   holderNames: ["Gabriel"],
   active: true,
+  color: "purple-600",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 const category: Category = {
@@ -30,6 +31,7 @@ const category: Category = {
   key: "Uncategorized",
   name: "Sem categoria",
   isSystem: true,
+  color: "slate-400",
 };
 
 const failures = vi.hoisted(() => new Map<string, unknown>());

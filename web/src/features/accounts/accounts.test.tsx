@@ -73,6 +73,7 @@ describe("contas", () => {
           nickname: "Ativa",
           holderNames: ["A"],
           active: true,
+          color: "purple-600",
           createdAt: "2026-01-01",
         },
       ],

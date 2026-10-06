@@ -1,4 +1,5 @@
 import type { Account, AccountInput, AccountUpdate } from "../types";
+import { DEFAULT_COLOR, isColorKey } from "@/features/colors/palette";
 import { mockApiError, type MockHandler } from "./index";
 
 let accounts: Account[] = [
@@ -8,6 +9,7 @@ let accounts: Account[] = [
     nickname: "Nubank pessoal",
     holderNames: ["Gabriel Vasconcelos Auzier"],
     active: true,
+    color: "purple-600",
     createdAt: "2026-01-10T12:00:00.000Z",
   },
   {
@@ -16,6 +18,7 @@ let accounts: Account[] = [
     nickname: "Nubank PJ",
     holderNames: ["Gabriel Vasconcelos Auzier LTDA"],
     active: true,
+    color: "purple-600",
     createdAt: "2026-02-03T12:00:00.000Z",
   },
 ];
@@ -33,6 +36,8 @@ const duplicateNickname = (nickname: string, exceptId?: string) =>
   );
 
 function validate(input: AccountInput | AccountUpdate, exceptId?: string) {
+  if ("color" in input && input.color !== undefined && !isColorKey(input.color))
+    throw mockApiError("validation_error", "Escolha uma cor da paleta", 422, "color");
   if ("nickname" in input && input.nickname !== undefined) {
     const nickname = input.nickname.trim();
     if (!nickname) throw mockApiError("validation", "Informe o apelido", 422, "nickname");
@@ -78,6 +83,7 @@ export const accountsHandlers: MockHandler[] = [
         holderNames: cleanNames(input.holderNames),
         id: crypto.randomUUID(),
         active: true,
+        color: input.color ?? DEFAULT_COLOR,
         createdAt: new Date().toISOString(),
       };
       accounts = [...accounts, account];

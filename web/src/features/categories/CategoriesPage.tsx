@@ -26,7 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { messageForError } from "@/lib/api/errorMessages";
 import type { Category } from "@/lib/api/types";
 import { CategorySelect } from "./CategorySelect";
-import { useCategories, useCreateCategory, useDeleteCategory, useRenameCategory } from "./hooks";
+import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from "./hooks";
 
 const nameSchema = z.string().trim().min(1).max(100);
 const getCode = (reason: unknown) =>
@@ -35,7 +35,7 @@ const getCode = (reason: unknown) =>
 export function CategoriesPage() {
   const { data = [], isLoading, isError, refetch } = useCategories();
   const create = useCreateCategory();
-  const rename = useRenameCategory();
+  const rename = useUpdateCategory();
   const remove = useDeleteCategory();
   const [newName, setNewName] = useState("");
   const [createError, setCreateError] = useState("");
@@ -55,7 +55,7 @@ export function CategoriesPage() {
       return;
     }
     try {
-      await create.mutateAsync(parsed.data);
+      await create.mutateAsync({ name: parsed.data });
       setNewName("");
     } catch (reason) {
       setCreateError(messageForError(reason, "category"));

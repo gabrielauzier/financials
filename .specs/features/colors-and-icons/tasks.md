@@ -230,12 +230,12 @@ T7 → T13
 
 **Done when**:
 
-- [ ] Mock tests: `POST` and `PATCH` of accounts and categories with a valid `color` store and return it; an invalid string (`""`, `"blue-500"`, `"Blue-600"`) throws a 422 mock error with code `validation_error` and field `color`; a category `PATCH` with `name` and `color` updates both and a system category still throws `category_protected` (COLOR-06 AC 4)
-- [ ] Mock tests: the 17 seeded categories carry exactly the design table colors (all distinct) and the two seeded accounts the Nubank color `purple-600`; `GET /accounts` and `GET /categories` return `color` on every item (COLOR-06 AC 5)
-- [ ] Types: `color` required on `Account` and `Category`; the clients send `color` in create and update calls (a test asserts the request body of `createCategory`, `updateCategory`, `createAccount` and `updateAccount`) (COLOR-06 AC 3)
-- [ ] Every existing test still passes after the fixtures got `color`; `yarn --cwd web typecheck` is green at this commit (no optional `color` workaround)
-- [ ] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
-- [ ] Test count: the existing web tests plus about 10 new ones pass (no silent deletions)
+- [x] Mock tests: `POST` and `PATCH` of accounts and categories with a valid `color` store and return it; an invalid string (`""`, `"blue-500"`, `"Blue-600"`) throws a 422 mock error with code `validation_error` and field `color`; a category `PATCH` with `name` and `color` updates both and a system category still throws `category_protected` (COLOR-06 AC 4)
+- [x] Mock tests: the 17 seeded categories carry exactly the design table colors (all distinct) and the two seeded accounts the Nubank color `purple-600`; `GET /accounts` and `GET /categories` return `color` on every item (COLOR-06 AC 5)
+- [x] Types: `color` required on `Account` and `Category`; the clients send `color` in create and update calls (a test asserts the request body of `createCategory`, `updateCategory`, `createAccount` and `updateAccount`) (COLOR-06 AC 3)
+- [x] Every existing test still passes after the fixtures got `color`; `yarn --cwd web typecheck` is green at this commit (no optional `color` workaround)
+- [x] Gate check passes: `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
+- [x] Test count: the existing web tests plus about 10 new ones pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
