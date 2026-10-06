@@ -56,6 +56,8 @@ export function DatePicker({
           labels={{
             labelMonthDropdown: () => "Escolher o mês",
             labelYearDropdown: () => "Escolher o ano",
+            labelPrevious: () => "Mês anterior",
+            labelNext: () => "Próximo mês",
           }}
           startMonth={new Date(2000, 0)}
           endMonth={new Date(thisYear + 5, 11)}

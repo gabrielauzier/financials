@@ -101,6 +101,17 @@ describe("DatePicker", () => {
     expect(screen.queryByRole("grid")).not.toBeInTheDocument();
   });
 
+  it("a navegação do calendário tem nomes em português e anda um mês por clique", () => {
+    render(<DatePicker value="2026-10-05" onChange={vi.fn()} />);
+    open();
+    expect(screen.queryByRole("button", { name: /Go to/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Próximo mês" }));
+    expect(screen.getByRole("button", { name: /(^|\s)1 de novembro de 2026/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
+    fireEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
+    expect(screen.getByRole("button", { name: /(^|\s)1 de setembro de 2026/ })).toBeInTheDocument();
+  });
+
   // The only test that drives the month and year dropdowns: each change re-renders the whole
   // Calendar (about 1.5 s in jsdom), so every other test picks the day in the month already shown.
   it("os seletores de mês e de ano levam o calendário a outro mês e o dia escolhido sai como YYYY-MM-DD", () => {
