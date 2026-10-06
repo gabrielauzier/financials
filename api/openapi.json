@@ -2155,6 +2155,99 @@
         }
       }
     },
+    "/imports": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "description": "Most items returned; defaults to 50"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "filename",
+                      "mimeType",
+                      "sizeBytes",
+                      "bank",
+                      "account",
+                      "createdAt",
+                      "rowCount",
+                      "importedCount",
+                      "skippedCount"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "filename": {
+                        "description": "The name of the file as uploaded",
+                        "type": "string"
+                      },
+                      "mimeType": {
+                        "type": "string"
+                      },
+                      "sizeBytes": {
+                        "type": "integer"
+                      },
+                      "bank": {
+                        "type": "string"
+                      },
+                      "account": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "nickname"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "nickname": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "rowCount": {
+                        "description": "Data rows of the file",
+                        "type": "integer"
+                      },
+                      "importedCount": {
+                        "type": "integer"
+                      },
+                      "skippedCount": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/imports/preview": {
       "post": {
         "requestBody": {

@@ -158,6 +158,34 @@ describe('OpenAPI contract', () => {
     }
   });
 
+  it('GET /docs/json documents GET /imports with its limit query and the imported file fields (IMPIMP-14)', async () => {
+    const app = buildApp();
+    try {
+      const res = await app.inject({ method: 'GET', url: '/docs/json' });
+      const doc = res.json<{
+        paths: Record<string, Record<string, OperationDoc & { parameters?: Array<Record<string, unknown>> }>>;
+      }>();
+      const operation = doc.paths['/imports']?.get;
+      expect(operation?.parameters).toEqual([
+        expect.objectContaining({
+          name: 'limit',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', minimum: 1, maximum: 100 },
+        }),
+      ]);
+      const schema = operation?.responses?.['200']?.content?.['application/json']?.schema;
+      expect(schema?.type).toBe('array');
+      expect(Object.keys(schema?.items?.properties ?? {}).sort()).toEqual(
+        ['account', 'bank', 'createdAt', 'filename', 'id', 'importedCount', 'mimeType', 'rowCount', 'sizeBytes', 'skippedCount'],
+      );
+      expect(schema?.items?.required).toContain('skippedCount');
+      expect(schema?.items?.properties?.account?.properties).toHaveProperty('nickname');
+    } finally {
+      await app.close();
+    }
+  });
+
   it('pnpm openapi:export writes the document, and the committed api/openapi.json is up to date', () => {
     const dir = mkdtempSync(join(tmpdir(), 'openapi-'));
     try {

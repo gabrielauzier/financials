@@ -6,6 +6,7 @@ import { Type, type Static } from '@sinclair/typebox';
 import { DateTime } from 'luxon';
 import postgres, { type TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
+import { importedFilesRoutes } from './batches.js';
 import { analyze, categoriesByKey, toPreview, PreviewSchema, UUID, type Category } from './preview.js';
 import { categoryIdsOf, parseSelections, type Selection } from './selections.js';
 import { removeImportFile, uploadImportFile } from './storage.js';
@@ -249,6 +250,7 @@ export async function importRoutes(app: FastifyInstance, options: ImportRoutesOp
     limits: { fileSize: MAX_FILE_BYTES, files: 1, fields: 4, parts: 5, fieldSize: MAX_FIELD_BYTES },
   });
   const routes = app.withTypeProvider<TypeBoxTypeProvider>();
+  await app.register(importedFilesRoutes);
 
   routes.post(
     '/imports/preview',

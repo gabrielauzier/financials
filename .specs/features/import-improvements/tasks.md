@@ -182,15 +182,15 @@ T12 → T13
 
 **Done when**:
 
-- [ ] Two confirmed imports are listed newest first with the fields above and the counts of each confirm summary; the account `nickname` is the account's (AC 1 of the list story)
-- [ ] A user without batches gets `200 []` (AC 2); `limit` omitted returns at most 50 (52 batches inserted by admin SQL), `limit=1` returns only the newest, `limit=100` accepted (AC 3)
-- [ ] `limit=0`, `limit=101`, `limit=1.5` and `limit=abc` answer 400 `validation_error` (AC 4)
-- [ ] The response has no `storage_path`, `user_id` or `idempotency_key` (the raw JSON string is asserted not to contain the stored path nor those keys) (AC 5); two batches with the same `created_at` come back by `id` descending, stable across calls (AC 6)
-- [ ] A batch whose account was inactivated is still listed with its nickname
-- [ ] Isolation: user B's `GET /imports` never contains user A's batches while A's does (AC 2 of the isolation story); without a token or with an invalid token the route answers 401 `unauthorized` (AC 1)
-- [ ] `api/openapi.json` regenerated documents `GET /imports` with its `limit` query and response; the swagger test passes
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
-- [ ] Test count: the existing API tests plus about 12 new integration tests pass (no silent deletions)
+- [x] Two confirmed imports are listed newest first with the fields above and the counts of each confirm summary; the account `nickname` is the account's (AC 1 of the list story)
+- [x] A user without batches gets `200 []` (AC 2); `limit` omitted returns at most 50 (52 batches inserted by admin SQL), `limit=1` returns only the newest, `limit=100` accepted (AC 3)
+- [x] `limit=0`, `limit=101`, `limit=1.5` and `limit=abc` answer 400 `validation_error` (AC 4)
+- [x] The response has no `storage_path`, `user_id` or `idempotency_key` (the raw JSON string is asserted not to contain the stored path nor those keys) (AC 5); two batches with the same `created_at` come back by `id` descending, stable across calls (AC 6)
+- [x] A batch whose account was inactivated is still listed with its nickname
+- [x] Isolation: user B's `GET /imports` never contains user A's batches while A's does (AC 2 of the isolation story); without a token or with an invalid token the route answers 401 `unauthorized` (AC 1)
+- [x] `api/openapi.json` regenerated documents `GET /imports` with its `limit` query and response; the swagger test passes
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test`
+- [x] Test count: the existing API tests plus about 12 new integration tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
