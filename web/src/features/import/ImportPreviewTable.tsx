@@ -46,9 +46,11 @@ export function ImportPreviewTable({
   selection,
   onSelectionChange,
 }: ImportPreviewTableProps) {
-  const update = (index: number, patch: Partial<PreviewSelection[number]>) => {
-    const current = selection[index] ?? { selected: false, neutral: false };
-    onSelectionChange({ ...selection, [index]: { ...current, ...patch } });
+  // A row missing from `selection` is shown, and edited, with the neutral value the preview sent.
+  const choiceOf = (row: PreviewRow) =>
+    selection[row.index] ?? { selected: false, neutral: row.neutral };
+  const update = (row: PreviewRow, patch: Partial<PreviewSelection[number]>) => {
+    onSelectionChange({ ...selection, [row.index]: { ...choiceOf(row), ...patch } });
   };
   const selectedCount = preview.rows.filter(
     (row) => isSelectable(row.status) && selection[row.index]?.selected,
@@ -86,7 +88,7 @@ export function ImportPreviewTable({
         <TableBody>
           {preview.rows.map((row) => {
             const selectable = isSelectable(row.status);
-            const choice = selection[row.index] ?? { selected: false, neutral: row.neutral };
+            const choice = choiceOf(row);
             return (
               <TableRow
                 key={row.index}
@@ -98,9 +100,7 @@ export function ImportPreviewTable({
                     <Checkbox
                       aria-label={`Selecionar ${row.name}`}
                       checked={choice.selected}
-                      onCheckedChange={(checked) =>
-                        update(row.index, { selected: checked === true })
-                      }
+                      onCheckedChange={(checked) => update(row, { selected: checked === true })}
                     />
                   ) : null}
                 </TableCell>
@@ -122,7 +122,7 @@ export function ImportPreviewTable({
                     <Switch
                       aria-label={`Marcar ${row.name} como neutra`}
                       checked={choice.neutral}
-                      onCheckedChange={(neutral) => update(row.index, { neutral })}
+                      onCheckedChange={(neutral) => update(row, { neutral })}
                     />
                   ) : null}
                 </TableCell>

@@ -286,3 +286,45 @@ describe('classify: automatic neutrals by holder name', () => {
     ]);
   });
 });
+
+describe('classify: neutrals with the holders of two own accounts (IMPFIX-09)', () => {
+  it('marks exactly the 4 holder-name rows of the sanitized statement as neutral, whatever the case of the extrato', async () => {
+    const o = await owner();
+    const person = await account(o, ['Maria Souza Lima']);
+    await account(o, ['Maria Souza Lima LTDA']);
+    const { rows } = parseImport(fixture('nubank_statement_sanitized.csv'), 'Nubank');
+
+    const result = await run(o, rows, person);
+
+    expect(result).toHaveLength(96);
+    const neutral = result.filter((r) => r.neutral);
+    expect(neutral.map((r) => r.name).sort()).toEqual([
+      'MARIA SOUZA LIMA LTDA',
+      'MARIA SOUZA LIMA LTDA',
+      'MARIA SOUZA LIMA LTDA',
+      'Maria Souza Lima',
+    ]);
+    expect(result.filter((r) => !r.neutral)).toHaveLength(92);
+  });
+
+  it('keeps a name that only starts with a holder name not neutral, and a holder-named unrecognized or duplicate row neutral', async () => {
+    const o = await owner();
+    const person = await account(o, ['Maria Souza Lima']);
+    await account(o, ['Maria Souza Lima LTDA']);
+    await existing(o, person, { identifier: 'known' });
+
+    const result = await run(o, [
+      row(0, { name: 'Maria Souza Lima Santos' }),
+      row(1, { name: 'maria souza lima ltda' }),
+      row(2, { name: 'MARIA SOUZA LIMA', status: 'unrecognized', reason: 'Unknown description' }),
+      row(3, { name: 'Maria Souza Lima', identifier: 'known' }),
+    ], person);
+
+    expect(result.map((r) => [r.index, r.status, r.neutral])).toEqual([
+      [0, 'new', false],
+      [1, 'new', true],
+      [2, 'unrecognized', true],
+      [3, 'duplicate', true],
+    ]);
+  });
+});

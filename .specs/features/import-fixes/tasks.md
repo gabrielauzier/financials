@@ -305,13 +305,13 @@ T7 → T8
 
 **Done when**:
 
-- [ ] The proven cause (or "no code defect: holder data") is written in the commit body with the layer and the failing assertion that showed it (AC 10 of the neutral story)
-- [ ] `import-fixes.int.test.ts` passes entirely: the preview JSON has `neutral: true` on exactly the 4 transfers with a holder name and `false` on the other 92; the confirmed transactions have `neutral = true` on those 4 (AC 1 to 3 and 5)
-- [ ] A regression test in the layer of the cause (or, for a data-only cause, a `classify` integration test with both accounts) covers: holder in a different case, a name that only starts with the holder name staying `neutral: false`, and an `unrecognized` or `duplicate` row still marked neutral (AC 1 and 4)
-- [ ] Web test: a preview with `neutral: true` rows shows the "Neutra" switch on for those rows before and after selecting or unselecting them, and a confirm with a neutral row selected sends `{ index, neutral: true }`; turning the switch off sends `neutral: false` (AC 6 to 9 of the neutral story); the `update` fallback uses `row.neutral` if the web test proves the old fallback loses it
-- [ ] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
-- [ ] Browser check against the local API recorded in the commit body: import the fixture with both accounts and see 4 "Neutra" switches on, no "Não reconhecida" row and the "Outro" label available in the form
-- [ ] Test count: the existing API and web tests plus 6 new ones pass (no silent deletions)
+- [x] The proven cause (or "no code defect: holder data") is written in the commit body with the layer and the failing assertion that showed it (AC 10 of the neutral story)
+- [x] `import-fixes.int.test.ts` passes entirely: the preview JSON has `neutral: true` on exactly the 4 transfers with a holder name and `false` on the other 92; the confirmed transactions have `neutral = true` on those 4 (AC 1 to 3 and 5)
+- [x] A regression test in the layer of the cause (or, for a data-only cause, a `classify` integration test with both accounts) covers: holder in a different case, a name that only starts with the holder name staying `neutral: false`, and an `unrecognized` or `duplicate` row still marked neutral (AC 1 and 4)
+- [x] Web test: a preview with `neutral: true` rows shows the "Neutra" switch on for those rows before and after selecting or unselecting them, and a confirm with a neutral row selected sends `{ index, neutral: true }`; turning the switch off sends `neutral: false` (AC 6 to 9 of the neutral story); the `update` fallback uses `row.neutral` if the web test proves the old fallback loses it
+- [x] Gate check passes: `pnpm -C api typecheck && pnpm -C api lint && pnpm -C api test` and `yarn --cwd web typecheck && yarn --cwd web lint && yarn --cwd web test`
+- [x] Browser check against the local API recorded in the commit body: import the fixture with both accounts and see 4 "Neutra" switches on, no "Não reconhecida" row and the "Outro" label available in the form
+- [x] Test count: the existing API and web tests plus 6 new ones pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: build

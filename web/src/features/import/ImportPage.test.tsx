@@ -196,3 +196,69 @@ describe("página de importação", () => {
     expect(await screen.findByRole("button", { name: "Gerar prévia" })).toBeDisabled();
   });
 });
+
+describe("página de importação: transferências próprias neutras (IMPFIX-10)", () => {
+  const neutralRow = (index: number, name: string, neutral: boolean): PreviewRow => ({
+    ...row(index, "new"),
+    name,
+    neutral,
+  });
+  const neutralPreview: ImportPreview = {
+    rows: [
+      neutralRow(0, "Maria Souza Lima", true),
+      neutralRow(1, "MARIA SOUZA LIMA LTDA", true),
+      neutralRow(2, "Padaria Estrela Azul", false),
+    ],
+    totals: { new: 3, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 },
+  };
+  const sentSelections = () =>
+    JSON.parse(bodyOf("/imports/confirm").get("selections") as string) as unknown;
+
+  beforeEach(() => {
+    apiRequest.mockImplementation((path: string) => {
+      if (path === "/imports/preview") return Promise.resolve(neutralPreview);
+      if (path === "/imports/confirm")
+        return Promise.resolve({ batchId: "b1", imported: 3, skipped: 0 });
+      return Promise.reject(new Error(`unexpected ${path}`));
+    });
+  });
+
+  it("mostra as chaves ligadas nas linhas neutras e envia neutral true para elas no confirm", async () => {
+    renderPage();
+    await goToPreview();
+    expect(
+      screen.getByRole("switch", { name: "Marcar Maria Souza Lima como neutra" }),
+    ).toBeChecked();
+    expect(
+      screen.getByRole("switch", { name: "Marcar MARIA SOUZA LIMA LTDA como neutra" }),
+    ).toBeChecked();
+    expect(
+      screen.getByRole("switch", { name: "Marcar Padaria Estrela Azul como neutra" }),
+    ).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar importação" }));
+    await screen.findByRole("status");
+    expect(sentSelections()).toEqual([
+      { index: 0, neutral: true },
+      { index: 1, neutral: true },
+      { index: 2, neutral: false },
+    ]);
+  });
+
+  it("envia neutral false para a linha cuja chave Neutra o usuário desligou", async () => {
+    renderPage();
+    await goToPreview();
+    fireEvent.click(screen.getByRole("switch", { name: "Marcar Maria Souza Lima como neutra" }));
+    expect(
+      screen.getByRole("switch", { name: "Marcar Maria Souza Lima como neutra" }),
+    ).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar importação" }));
+    await screen.findByRole("status");
+    expect(sentSelections()).toEqual([
+      { index: 0, neutral: false },
+      { index: 1, neutral: true },
+      { index: 2, neutral: false },
+    ]);
+  });
+});

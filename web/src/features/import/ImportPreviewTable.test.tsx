@@ -179,3 +179,76 @@ describe("rótulos de método da prévia", () => {
     }
   });
 });
+
+describe("chave Neutra das transferências próprias (IMPFIX-10)", () => {
+  const neutralRows: PreviewRow[] = [
+    row(0, "new", { name: "Maria Souza Lima", neutral: true, type: "Expense" }),
+    row(1, "duplicate", { name: "MARIA SOUZA LIMA LTDA", neutral: true, type: "Income" }),
+    row(2, "unrecognized", { name: "Maria Souza Lima", neutral: true }),
+    row(3, "new", { name: "Maria Souza Lima Santos" }),
+  ];
+  const neutralPreview: ImportPreview = {
+    rows: neutralRows,
+    totals: { new: 2, duplicate: 1, ignored: 0, unrecognized: 1, invalid: 0 },
+  };
+
+  function NeutralHarness({ onChange }: { onChange: (payload: PreviewSelection) => void }) {
+    const [selection, setSelection] = useState<PreviewSelection>(() =>
+      initialSelection(neutralRows),
+    );
+    return (
+      <ImportPreviewTable
+        preview={neutralPreview}
+        selection={selection}
+        onSelectionChange={(next) => {
+          setSelection(next);
+          onChange(next);
+        }}
+      />
+    );
+  }
+  const neutralSwitch = (name: string, position = 0) =>
+    screen.getAllByRole("switch", { name: `Marcar ${name} como neutra` })[position] as HTMLElement;
+
+  it("mostra a chave Neutra ligada nas linhas neutras do preview, selecionadas ou não, antes e depois de marcar e desmarcar", () => {
+    render(<NeutralHarness onChange={vi.fn()} />);
+    const neutralSwitches = [
+      neutralSwitch("Maria Souza Lima", 0),
+      neutralSwitch("MARIA SOUZA LIMA LTDA"),
+      neutralSwitch("Maria Souza Lima", 1),
+    ];
+    for (const item of neutralSwitches) expect(item).toBeChecked();
+    expect(neutralSwitch("Maria Souza Lima Santos")).not.toBeChecked();
+
+    // The duplicate starts unselected: select it, then unselect it again.
+    const duplicateBox = screen.getByRole("checkbox", { name: "Selecionar MARIA SOUZA LIMA LTDA" });
+    expect(duplicateBox).not.toBeChecked();
+    fireEvent.click(duplicateBox);
+    expect(duplicateBox).toBeChecked();
+    for (const item of neutralSwitches) expect(item).toBeChecked();
+    fireEvent.click(duplicateBox);
+    expect(duplicateBox).not.toBeChecked();
+    for (const item of neutralSwitches) expect(item).toBeChecked();
+
+    // Unselect and reselect a selected neutral row.
+    const newBox = screen.getAllByRole("checkbox", {
+      name: "Selecionar Maria Souza Lima",
+    })[0] as HTMLElement;
+    fireEvent.click(newBox);
+    expect(neutralSwitches[0]).toBeChecked();
+    fireEvent.click(newBox);
+    expect(neutralSwitches[0]).toBeChecked();
+    expect(neutralSwitch("Maria Souza Lima Santos")).not.toBeChecked();
+  });
+
+  it("não perde a marca neutra do preview quando a linha ainda não está no estado de seleção", () => {
+    const onChange = vi.fn();
+    render(
+      <ImportPreviewTable preview={neutralPreview} selection={{}} onSelectionChange={onChange} />,
+    );
+    // The switch is rendered on from the preview value, so the first click on the checkbox must keep it.
+    expect(neutralSwitch("MARIA SOUZA LIMA LTDA")).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Selecionar MARIA SOUZA LIMA LTDA" }));
+    expect(onChange).toHaveBeenLastCalledWith({ 1: { selected: true, neutral: true } });
+  });
+});
