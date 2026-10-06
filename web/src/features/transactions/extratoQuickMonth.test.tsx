@@ -189,6 +189,49 @@ describe("extrato: filtro rápido de mês e ano", () => {
     expect(screen.getByLabelText("De")).toHaveTextContent("01/02/2028");
   });
 
+  it("escolher mês e ano estando na página 2 consulta a página 1 do mês", async () => {
+    await renderLoaded();
+    clickButton("Próxima");
+    await screen.findByText(/Página 2 de \d+/);
+    expect(lastList()).toBe(DEFAULT_QUERY.replace("page=1", "page=2"));
+    await chooseOption("Mês", "Fevereiro");
+    await chooseOption("Ano", "2028");
+    await waitFor(() => expect(lastList()).toContain("from=2028-02-01&to=2028-02-29"));
+    expect(lastList()).toContain("page=1");
+    expect(lastList()).not.toContain("page=2");
+  });
+
+  it("'Limpar mês' estando na página 2 do mês consulta a página 1 sem datas", async () => {
+    for (let day = 1; day <= 51; day++) {
+      await seed(`Limpar página ${day}`, new Date(2028, 1, 1 + (day % 28), 12));
+    }
+    await renderLoaded();
+    await chooseOption("Ano", "2028");
+    await chooseOption("Mês", "Fevereiro");
+    await screen.findByText(/Página 1 de \d+/);
+    clickButton("Próxima");
+    await screen.findByText(/Página 2 de \d+/);
+    expect(lastList()).toContain("page=2&from=2028-02-01&to=2028-02-29");
+    clickButton("Limpar mês");
+    await waitFor(() => expect(lastList()).toBe(DEFAULT_QUERY));
+    expect(await screen.findByText(/Página 1 de \d+/)).toBeInTheDocument();
+  });
+
+  it("o seletor de ano oferece do ano atual menos 5 até o ano atual mais 1 (2022 a 2028 com o relógio em 2027)", async () => {
+    await renderLoaded();
+    fireEvent.click(screen.getByLabelText("Ano"));
+    await screen.findByRole("option", { name: "2027" });
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "2022",
+      "2023",
+      "2024",
+      "2025",
+      "2026",
+      "2027",
+      "2028",
+    ]);
+  });
+
   it("trocar o mês depois de ativo consulta o novo mês e volta à página 1", async () => {
     await renderLoaded();
     await chooseOption("Mês", "Fevereiro");
