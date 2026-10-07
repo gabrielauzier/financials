@@ -7,7 +7,7 @@
 
 ## Architecture Overview
 
-Só `web/`. Dois módulos puros, sem React, concentram as regras: `savedFilterState.ts` (o estado salvo: conversão de e para o `FilterState` do extrato, igualdade, "sem filtro", conta e categoria ausentes, linhas de resumo) e `savedFilters.ts` (o armazenamento: chave por usuário, JSON versionado, validação de tudo o que se lê, nomes, limite e as três ações, todas em `try/catch`). O hook `useSavedFilters(userId)` entrega a lista ordenada e as ações à tela, e `useSessionUserId()` (novo, em `useSession.tsx`) dá o id sem lançar fora do provedor. Três componentes de apresentação (`SaveFilterDialog`, `SavedFiltersMenu`, `ManageFiltersDialog`) não conhecem o armazenamento: recebem a lista e funções que devolvem o resultado. `SavedFiltersControls` junta tudo (usuário, hook, listas de contas e categorias em cache, toasts, marcador) e é a única coisa que `TransactionsPage.tsx` importa; a página só ganha a montagem e uma função `applySaved` (estado novo e texto da busca).
+Só `web/`. Dois módulos puros, sem React, concentram as regras: `savedFilterState.ts` (o estado salvo: conversão de e para o `FilterState` do extrato, igualdade, "sem filtro", conta e categoria ausentes, linhas de resumo) e `savedFilters.ts` (o armazenamento: chave por usuário, JSON versionado, validação de tudo o que se lê, nomes, limite e as três ações, todas em `try/catch`). O hook `useSavedFilters(userId)` entrega a lista ordenada e as ações à tela, e `useSessionUserId()` (novo, em `useSessionUserId.ts`, com o contexto movido para `sessionContext.ts`) dá o id sem lançar fora do provedor. Três componentes de apresentação (`SaveFilterDialog`, `SavedFiltersMenu`, `ManageFiltersDialog`) não conhecem o armazenamento: recebem a lista e funções que devolvem o resultado. `SavedFiltersControls` junta tudo (usuário, hook, listas de contas e categorias em cache, toasts, marcador) e é a única coisa que `TransactionsPage.tsx` importa; a página só ganha a montagem e uma função `applySaved` (estado novo e texto da busca).
 
 Decisões de `STATE.md` aplicadas: AD-001 (apps independentes; nada de API aqui), AD-004 (dinheiro como texto; os filtros salvos não têm valores monetários). Nenhuma decisão ativa é substituída. Uma nova entra: AD-006, a convenção do que o navegador guarda (chave com o prefixo `financials:`, por usuário quando o dado é do usuário, JSON versionado validado na leitura, todo acesso em `try/catch`), porque as próximas preferências de tela vão seguir o mesmo caminho.
 
@@ -17,7 +17,7 @@ Lições aplicadas: L-004 (igualdade dos nomes definida na spec e testada com ca
 graph TD
     FS[savedFilterState.ts] --> ST[savedFilters.ts: storage, names, limit]
     ST --> HK[useSavedFilters]
-    SS[useSession.tsx: useSessionUserId] --> CT[SavedFiltersControls]
+    SS[useSessionUserId.ts] --> CT[SavedFiltersControls]
     HK --> CT
     FS --> CT
     LK[useAccountLookup / useCategoryLookup] --> CT
@@ -42,7 +42,7 @@ graph TD
 | `baseFilters`/`initialState` | `web/src/features/transactions/TransactionsPage.tsx` | A volta do estado salvo produz `{ sort: "date", order: "desc", page: 1, ... }` igual ao inicial; `isDefaultState` compara contra o mesmo formato |
 | `usePageSize` e `readStoredPageSize` | `web/src/features/transactions/usePageSize.ts` | Modelo do `try/catch` em volta do `localStorage` e do prefixo `financials:transactions:`; o tamanho continua fora do estado |
 | `useAccountLookup`, `useCategoryLookup` | `web/src/features/accounts/hooks.ts`, `web/src/features/categories/hooks.ts` | `byId` e `ready` de todas as contas (inclusive inativas) e de todas as categorias, para os ids ausentes e para os nomes do resumo; sem consulta nova (o extrato já as carrega) |
-| `useSession` e `SessionContext` | `web/src/features/auth/useSession.tsx` | `useSessionUserId` lê o mesmo contexto sem lançar |
+| `useSession` e `SessionContext` | `web/src/features/auth/useSession.tsx` | O contexto passa para `sessionContext.ts` (sem mudar o comportamento de `useSession`) e `useSessionUserId` o lê sem lançar |
 | `Dialog`, `AlertDialog`, `DropdownMenu`, `Button`, `Input`, `Label` | `web/src/components/ui/` | Diálogos e menu do app, com foco e teclado do Radix |
 | `ClearButton` e o padrão de `FilterField` | `web/src/features/transactions/FilterField.tsx` | Mesmo estilo de botão pequeno e de rótulo |
 | `notifySuccess`, `notifyInfo`, `notifyError` | `web/src/lib/notify.ts` | Toasts coloridos já existentes; `notifyErrorMessage(texto)` é o único acréscimo |
@@ -100,7 +100,7 @@ graph TD
 ### `useSessionUserId`
 
 - **Purpose**: o id do usuário logado ou `null`, sem lançar fora do provedor.
-- **Location**: `web/src/features/auth/useSession.tsx`
+- **Location**: `web/src/features/auth/useSessionUserId.ts` (e `sessionContext.ts`, que recebe o contexto e os tipos que estavam em `useSession.tsx`)
 - **Interfaces**: `useSessionUserId(): string | null`
 - **Dependencies**: `SessionContext`.
 - **Reuses**: o contexto de `useSession`.
@@ -237,5 +237,5 @@ type SavedFilterState = {
 | Aviso de conta ou categoria ausente em vez de marcar o filtro como desatualizado | Aplica o resto e avisa por toast | Sem estado novo no armazenamento e sem ícone de alerta na lista |
 | Componentes de apresentação recebem funções que devolvem resultado | O armazenamento e os toasts ficam em `SavedFiltersControls` | Os diálogos se testam isolados com o hook real num arranjo pequeno |
 | Posição dos botões | Célula própria depois do mês rápido | Uma coluna de 1/7 não comporta três botões; mesma seção e mesma linha no layout largo |
-| `useSessionUserId` novo em vez de tornar `useSession` tolerante | Função nova e pequena | Não muda o contrato de `useSession`, que lançar fora do provedor é proposital |
+| `useSessionUserId` novo em vez de tornar `useSession` tolerante | Função nova e pequena, em arquivo próprio, com o contexto extraído para `sessionContext.ts` | Não muda o contrato de `useSession`, que lançar fora do provedor é proposital; um segundo export de função em `useSession.tsx` criaria um aviso novo de `react-refresh/only-export-components` (o arquivo já tem um) |
 | Menu de Radix com `DropdownMenu` e não `Popover` | `DropdownMenu` | Papéis `menu` e `menuitem`, setas, Esc e foco prontos; um popover exigiria reimplementar a lista navegável |

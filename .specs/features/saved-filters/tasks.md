@@ -215,10 +215,10 @@ T9 → T10
 
 ### T3: Add the session user id hook
 
-**What**: `useSessionUserId(): string | null` in `useSession.tsx`, reading `SessionContext` without throwing; tests added to `useSession.test.tsx`.
-**Where**: `web/src/features/auth/useSession.tsx`
+**What**: `useSessionUserId(): string | null` reading `SessionContext` without throwing, with the context and its types moved from `useSession.tsx` to `sessionContext.ts` (a second function export in `useSession.tsx` would add a `react-refresh` lint warning); tests in `useSessionUserId.test.tsx`.
+**Where**: `web/src/features/auth/useSessionUserId.ts`
 **Depends on**: None
-**Reuses**: `SessionContext` and the supabase mock of `useSession.test.tsx`
+**Reuses**: `SessionContext` and the supabase mock of `useSession.test.tsx`; `useSession.tsx` itself only changes its imports
 **Requirement**: SFILT-05
 
 **Tools**:
@@ -228,11 +228,11 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Inside the provider with a session `useSessionUserId()` returns that session's `user.id` (AC 1 of the hook story)
-- [ ] Inside the provider without a session it returns `null`, and outside any provider it returns `null` without throwing (AC 1)
-- [ ] `useSession` still throws outside the provider (existing behavior unchanged)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the T2 total plus the new ones (no silent deletions)
+- [x] Inside the provider with a session `useSessionUserId()` returns that session's `user.id` (AC 1 of the hook story)
+- [x] Inside the provider without a session it returns `null`, and outside any provider it returns `null` without throwing (AC 1)
+- [x] `useSession` still throws outside the provider (existing behavior unchanged)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 966 web tests pass (963 after T2 plus 3 new; no silent deletions); lint warnings stay at 7
 
 **Tests**: unit
 **Gate**: quick
@@ -544,4 +544,4 @@ Execution is strictly sequential, in the order T1 to T10 - there is no intra-pha
 | SFILT-10 | T10 |
 | SFILT-11 | T6, T7, T8 |
 
-**Notes for the worker**: web tests that depend on time use the fake `Date` and timers of `fakeClock` (`shouldAdvanceTime`), no fixed sleeps, no raised timeouts, no month or year dropdown of the DatePicker; the page tests use `lightList` (three rows) and every test of a return to page 1 starts from page 2; the components are tested alone before the page. Tests never assert the value of a saved filter's `id`; they read stored filters by name. The saved filters are seeded in page tests with a raw JSON literal in `localStorage`, and the key is asserted as a literal at least once. The user is simulated by mocking the `useSession` module (`useSessionUserId`); `localStorage` is cleared after each test. Prove each new guard test with a quick mutation in a temporary git worktree on the external volume (never in the real tree, never `git stash`) and record the proof in the commit body. The painted colors of the menu, the applied marker and the dialogs are measured in a real Chromium page (throwaway Vite page, no login) before T10 is committed, and the facts go in the T10 commit body. The boxes "browser check by the owner" of the spec stay open: no agent logs in to the app.
+**Notes for the worker**: web tests that depend on time use the fake `Date` and timers of `fakeClock` (`shouldAdvanceTime`), no fixed sleeps, no raised timeouts, no month or year dropdown of the DatePicker; the page tests use `lightList` (three rows) and every test of a return to page 1 starts from page 2; the components are tested alone before the page. Tests never assert the value of a saved filter's `id`; they read stored filters by name. The saved filters are seeded in page tests with a raw JSON literal in `localStorage`, and the key is asserted as a literal at least once. The user is simulated by mocking the `@/features/auth/useSessionUserId` module; `localStorage` is cleared after each test. Prove each new guard test with a quick mutation in a temporary git worktree on the external volume (never in the real tree, never `git stash`) and record the proof in the commit body. The painted colors of the menu, the applied marker and the dialogs are measured in a real Chromium page (throwaway Vite page, no login) before T10 is committed, and the facts go in the T10 commit body. The boxes "browser check by the owner" of the spec stay open: no agent logs in to the app.
