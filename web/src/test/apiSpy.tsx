@@ -15,7 +15,7 @@ export const requests: RecordedRequest[] = [];
 const routeKey = (method: string, path: string) =>
   `${method} ${path
     .split("?")[0]
-    ?.replace(/^\/transactions\/(?!category$)[^/]+/, "/transactions/:id")
+    ?.replace(/^\/transactions\/(?!category$|summary$)[^/]+/, "/transactions/:id")
     .replace(/^\/credit-expenses\/[^/]+/, "/credit-expenses/:id")
     .replace(/^\/investment-returns\/[^/]+/, "/investment-returns/:id")}`;
 

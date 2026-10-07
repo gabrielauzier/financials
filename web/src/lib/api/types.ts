@@ -79,13 +79,36 @@ export type TransactionFilters = {
   sort?: "date" | "name" | "amount" | "category";
   order?: "asc" | "desc";
   page?: number;
+  /** Rows per page; the API default is 50, so the web omits it at 50. */
+  pageSize?: PageSize;
 };
+
+/** Rows per page the list accepts. */
+export type PageSize = 25 | 50 | 100;
 
 export type TransactionsPage = {
   items: Transaction[];
   total: number;
   page: number;
-  pageSize: 50;
+  /** The size the API used for this response. */
+  pageSize: PageSize;
+};
+
+/** Filters of the summary: exactly the list filters, with no sort, order, page or page size. */
+export type TransactionSummaryFilters = Omit<
+  TransactionFilters,
+  "sort" | "order" | "page" | "pageSize"
+>;
+
+/** Totals of the filtered rows, computed by the API with the dashboard rules; money is never summed in the web. */
+export type TransactionSummary = {
+  /** Every row the filter matches (the list total). */
+  count: number;
+  income: Money;
+  expense: Money;
+  /** Net invested (contributions minus redemptions), outside income, expense and balance. */
+  investments: Money;
+  balance: Money;
 };
 
 export type TransactionInput = {

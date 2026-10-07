@@ -201,14 +201,14 @@ T10 → T11
 
 **Done when**:
 
-- [ ] The types compile: `TransactionFilters.pageSize` accepts 25, 50 and 100 and rejects 30 (a `@ts-expect-error` line in the mock test) and `TransactionSummary` has a numeric `count` and four decimal strings (AC 1 of the web types story)
-- [ ] The mock list returns up to 25, 50 or 100 items with `pageSize` 25, 50 or 100, and 50 by default (AC 2)
-- [ ] The mock list rejects `pageSize` 30 with `validation_error`, status 422 and field `pageSize` (AC 3)
-- [ ] The mock summary applies the list filters and the rules on a fixture that has neutral, CreditCard, Investments, Reversal Income, Reversal Expense and future-dated rows, with exact 2-decimal strings (0.10 plus 0.20 gives `"0.30"`) (AC 4)
-- [ ] The mock summary ignores `sort`, `order`, `page` and `pageSize` (AC 5)
-- [ ] The existing mock tests and the `transactions.test.tsx` suite pass unchanged
-- [ ] Gate check passes: `yarn --cwd web test` and `yarn --cwd web typecheck`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] The types compile: `TransactionFilters.pageSize` accepts 25, 50 and 100 and rejects 30 (a `@ts-expect-error` line in the mock test) and `TransactionSummary` has a numeric `count` and four decimal strings (AC 1 of the web types story)
+- [x] The mock list returns up to 25, 50 or 100 items with `pageSize` 25, 50 or 100, and 50 by default (AC 2)
+- [x] The mock list rejects `pageSize` 30 with `validation_error`, status 422 and field `pageSize` (AC 3)
+- [x] The mock summary applies the list filters and the rules on a fixture that has neutral, CreditCard, Investments, Reversal Income, Reversal Expense and future-dated rows, with exact 2-decimal strings (0.10 plus 0.20 gives `"0.30"`) (AC 4)
+- [x] The mock summary ignores `sort`, `order`, `page` and `pageSize` (AC 5)
+- [x] The existing mock tests and the `transactions.test.tsx` suite pass unchanged
+- [x] Gate check passes: `yarn --cwd web test` and `yarn --cwd web typecheck`
+- [x] Test count: 733 web tests pass (717 existing plus 16 new; no silent deletions); typecheck 0 errors; lint 0 errors and the same 7 existing warnings
 
 **Tests**: unit
 **Gate**: quick

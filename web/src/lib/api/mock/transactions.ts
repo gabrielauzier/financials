@@ -1,7 +1,9 @@
 import type {
+  PageSize,
   PaymentMethod,
   Transaction,
   TransactionInput,
+  TransactionSummary,
   TransactionUpdate,
   TransactionsPage,
 } from "../types";
@@ -111,6 +113,66 @@ const localDate = (iso: string) => {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
+const PAGE_SIZES: readonly PageSize[] = [25, 50, 100];
+/** Like the API: only the exact text 25, 50 or 100; absent means 50; anything else is a 422 on `pageSize`. */
+function validPageSize(query: URLSearchParams): PageSize {
+  if (!query.has("pageSize")) return 50;
+  const size = PAGE_SIZES.find((candidate) => String(candidate) === query.get("pageSize"));
+  if (size === undefined)
+    throw mockApiError("validation_error", "pageSize deve ser 25, 50 ou 100", 422, "pageSize");
+  return size;
+}
+/** The rows the list filters select (the summary takes the same ones); sort and paging are not filters. */
+const filterTransactions = (query: URLSearchParams): Transaction[] =>
+  transactions.map(withCurrentRelations).filter((item) => {
+    const occurredOn = localDate(item.occurredAt);
+    return (
+      (!query.get("from") || occurredOn >= String(query.get("from"))) &&
+      (!query.get("to") || occurredOn <= String(query.get("to"))) &&
+      (!query.get("accountId") || item.accountId === query.get("accountId")) &&
+      (!query.get("categoryId") || item.categoryId === query.get("categoryId")) &&
+      (!query.get("type") || item.type === query.get("type")) &&
+      (!query.get("neutral") || String(item.neutral) === query.get("neutral")) &&
+      (!query.get("q") || normalize(item.name).includes(normalize(String(query.get("q")))))
+    );
+  });
+
+/** Integer cents of a mock amount ("10", "10.5" or "10.50"): money never goes through a float. */
+const toCents = (amount: string): bigint => {
+  const [integer = "0", fraction = ""] = amount.split(".");
+  return BigInt(integer) * 100n + BigInt(fraction.padEnd(2, "0").slice(0, 2));
+};
+const fromCents = (cents: bigint): string => {
+  const abs = cents < 0n ? -cents : cents;
+  return `${cents < 0n ? "-" : ""}${abs / 100n}.${String(abs % 100n).padStart(2, "0")}`;
+};
+/** The dashboard rules of the API (rules.ts) over the rows: neutral, CreditCard, future-dated, Investments, Reversal. */
+function summarize(rows: Transaction[]): TransactionSummary {
+  const now = Date.now();
+  let income = 0n;
+  let expense = 0n;
+  let investments = 0n;
+  for (const row of rows) {
+    const key = categoryFor(row.categoryId)?.key;
+    const countable =
+      !row.neutral &&
+      row.paymentMethod !== "CreditCard" &&
+      new Date(row.occurredAt).getTime() <= now;
+    if (!countable) continue;
+    const cents = toCents(row.amount);
+    if (key === "Investments") investments += row.type === "Expense" ? cents : -cents;
+    else if (row.type === "Expense") expense += cents;
+    else if (key === "Reversal") expense -= cents;
+    else income += cents;
+  }
+  return {
+    count: rows.length,
+    income: fromCents(income),
+    expense: fromCents(expense),
+    investments: fromCents(investments),
+    balance: fromCents(income - expense),
+  };
+}
 const find = (id: string) => {
   const item = transactions.find((candidate) => candidate.id === id);
   if (!item) throw mockApiError("not_found", "Transação não encontrada", 404);
@@ -165,18 +227,8 @@ export const transactionsHandlers: MockHandler[] = [
     path: /^\/transactions(?:\?.*)?$/,
     handle: ({ path }) => {
       const query = new URL(path, "http://mock.local").searchParams;
-      let items = transactions.map(withCurrentRelations).filter((item) => {
-        const occurredOn = localDate(item.occurredAt);
-        return (
-          (!query.get("from") || occurredOn >= String(query.get("from"))) &&
-          (!query.get("to") || occurredOn <= String(query.get("to"))) &&
-          (!query.get("accountId") || item.accountId === query.get("accountId")) &&
-          (!query.get("categoryId") || item.categoryId === query.get("categoryId")) &&
-          (!query.get("type") || item.type === query.get("type")) &&
-          (!query.get("neutral") || String(item.neutral) === query.get("neutral")) &&
-          (!query.get("q") || normalize(item.name).includes(normalize(String(query.get("q")))))
-        );
-      });
+      const pageSize = validPageSize(query);
+      let items = filterTransactions(query);
       const sort = query.get("sort") ?? "date";
       const direction = query.get("order") === "asc" ? 1 : -1;
       items = [...items].sort((a, b) => {
@@ -200,12 +252,18 @@ export const transactionsHandlers: MockHandler[] = [
       });
       const page = Math.max(1, Number(query.get("page") ?? 1));
       return {
-        items: items.slice((page - 1) * 50, page * 50),
+        items: items.slice((page - 1) * pageSize, page * pageSize),
         total: items.length,
         page,
-        pageSize: 50,
+        pageSize,
       } satisfies TransactionsPage;
     },
+  },
+  {
+    method: "GET",
+    path: /^\/transactions\/summary(?:\?.*)?$/,
+    handle: ({ path }) =>
+      summarize(filterTransactions(new URL(path, "http://mock.local").searchParams)),
   },
   {
     method: "POST",
