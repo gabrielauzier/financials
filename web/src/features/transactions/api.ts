@@ -4,6 +4,8 @@ import type {
   TransactionFilters,
   TransactionInput,
   TransactionsPage,
+  TransactionSummary,
+  TransactionSummaryFilters,
   TransactionUpdate,
 } from "@/lib/api/types";
 
@@ -16,6 +18,11 @@ const queryString = (filters: TransactionFilters) => {
 };
 export const getTransactions = (filters: TransactionFilters) =>
   apiRequest<TransactionsPage>(`/transactions?${queryString(filters)}`);
+/** Totals of the rows the filters select; the path has no `?` when no filter is active. */
+export const getTransactionSummary = (filters: TransactionSummaryFilters) => {
+  const query = queryString(filters);
+  return apiRequest<TransactionSummary>(`/transactions/summary${query ? `?${query}` : ""}`);
+};
 export const createTransaction = (input: TransactionInput) =>
   apiRequest<Transaction>("/transactions", { method: "POST", body: input });
 export const updateTransaction = ({ id, input }: { id: string; input: TransactionUpdate }) =>

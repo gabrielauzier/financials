@@ -1,5 +1,9 @@
 import { formatBRL } from "@/lib/format";
-import type { TransactionFilters, TransactionType } from "@/lib/api/types";
+import type {
+  TransactionFilters,
+  TransactionSummaryFilters,
+  TransactionType,
+} from "@/lib/api/types";
 
 export function parseBRLToDecimal(value: string): string | null {
   const clean = value.trim().replace(/\s/g, "");
@@ -74,4 +78,13 @@ export function amountClassName(type: TransactionType): string {
 export function formatSignedAmount(type: TransactionType, amount: string): string {
   if (type === "Income") return formatBRL(amount);
   return `-${formatBRL(amount.trim().replace(/^-/, ""))}`;
+}
+
+/**
+ * The filters that change the summary: the list filters without the sort, the page and the page size, which only
+ * choose which rows of the same set are shown. Equal for any page, order or size, so those never refetch it.
+ */
+export function summaryFilters(filters: TransactionFilters): TransactionSummaryFilters {
+  const { sort: _sort, order: _order, page: _page, pageSize: _pageSize, ...rest } = filters;
+  return rest;
 }

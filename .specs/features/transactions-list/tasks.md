@@ -293,15 +293,15 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `summaryFilters` drops `sort`, `order`, `page` and `pageSize` and keeps `from`, `to`, `accountId`, `categoryId`, `type`, `neutral` and `q`, returning an equal object whatever the page or order (AC 10 of the card story)
-- [ ] `useTransactionSummary` requests `/transactions/summary` with only the active filters in the query string and none of `sort`, `order`, `page` and `pageSize` (AC 10)
-- [ ] Re-rendering with only the page, the order or the page size changed sends no second summary request, and a changed filter sends one (AC 9, hook side)
-- [ ] With `enabled` false no summary request is sent (AC 13, hook side)
-- [ ] Creating, deleting, editing (with the summary in cache) and bulk recategorizing a transaction refetch the summary, and the edit's optimistic update does not break the cached summary (AC 11, risk of the shared prefix)
-- [ ] A failed summary request surfaces the error and `refetch` repeats only the summary request (AC 5, hook side)
-- [ ] The existing transactions hook and page tests pass unchanged
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] `summaryFilters` drops `sort`, `order`, `page` and `pageSize` and keeps `from`, `to`, `accountId`, `categoryId`, `type`, `neutral` and `q`, returning an equal object whatever the page or order (AC 10 of the card story)
+- [x] `useTransactionSummary` requests `/transactions/summary` with only the active filters in the query string and none of `sort`, `order`, `page` and `pageSize` (AC 10)
+- [x] Re-rendering with only the page, the order or the page size changed sends no second summary request, and a changed filter sends one (AC 9, hook side)
+- [x] With `enabled` false no summary request is sent (AC 13, hook side)
+- [x] Creating, deleting, editing (with the summary in cache) and bulk recategorizing a transaction refetch the summary, and the edit's optimistic update does not break the cached summary (AC 11, risk of the shared prefix)
+- [x] A failed summary request surfaces the error and `refetch` repeats only the summary request (AC 5, hook side)
+- [x] The existing transactions hook and page tests pass unchanged
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 777 web tests pass (764 existing plus 13 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

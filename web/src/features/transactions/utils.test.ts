@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatDateLocal } from "@/lib/format";
-import { amountClassName, formatSignedAmount, todayLocal, weekdayAbbrev } from "./utils";
+import {
+  amountClassName,
+  formatSignedAmount,
+  summaryFilters,
+  todayLocal,
+  weekdayAbbrev,
+} from "./utils";
 
 const originalTZ = process.env["TZ"];
 afterEach(() => {
@@ -164,5 +170,40 @@ describe("weekdayAbbrev (TUXV2-12)", () => {
     setZone("America/Sao_Paulo");
     expect(weekdayAbbrev("não é data")).toBe("");
     expect(weekdayAbbrev("")).toBe("");
+  });
+});
+
+describe("summaryFilters", () => {
+  const ACTIVE = {
+    from: "2026-06-01",
+    to: "2026-06-30",
+    accountId: "a",
+    categoryId: "c",
+    type: "Expense",
+    neutral: false,
+    q: "farm",
+  } as const;
+
+  it("tira sort, order, page e pageSize e mantém os sete filtros", () => {
+    expect(
+      summaryFilters({ ...ACTIVE, sort: "amount", order: "asc", page: 3, pageSize: 25 }),
+    ).toEqual(ACTIVE);
+  });
+
+  it("devolve o mesmo conteúdo para qualquer página, ordenação ou tamanho", () => {
+    const base = summaryFilters({ ...ACTIVE, sort: "date", order: "desc", page: 1 });
+    expect(
+      summaryFilters({ ...ACTIVE, sort: "name", order: "asc", page: 9, pageSize: 100 }),
+    ).toEqual(base);
+  });
+
+  it("sem filtro ativo devolve um objeto vazio", () => {
+    expect(summaryFilters({ sort: "date", order: "desc", page: 1 })).toEqual({});
+  });
+
+  it("não altera o objeto recebido", () => {
+    const input = { ...ACTIVE, sort: "date", order: "desc", page: 2, pageSize: 25 } as const;
+    summaryFilters(input);
+    expect(input).toMatchObject({ sort: "date", order: "desc", page: 2, pageSize: 25 });
   });
 });
