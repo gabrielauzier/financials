@@ -255,6 +255,7 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 10. WHILE não há filtros, o diálogo SHALL mostrar "Nenhum filtro salvo ainda".  <!-- SFILT-09 -->
 11. WHEN o filtro aplicado é renomeado THEN o marcador SHALL continuar nele, e WHEN é excluído THEN os filtros e a página do extrato SHALL ficar como estavam e nenhum item SHALL ficar marcado.  <!-- SFILT-09 -->
 12. WHEN o usuário fecha o diálogo THEN o foco SHALL voltar ao botão "Filtros salvos".  <!-- SFILT-09 -->
+13. WHEN o usuário digita depois de um erro na edição de um nome THEN o sistema SHALL apagar a mensagem de erro.  <!-- SFILT-09 -->
 
 **Independent Test**: Salvar "A", abrir o gerenciador, renomear para "B" e ver o menu com "B"; excluir "B" e ver o estado vazio.
 
@@ -321,7 +322,7 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 | SFILT-06 | P1: Salvar filtro | In Tasks | Implementing |
 | SFILT-07 | P1: Menu "Filtros salvos" e marcador | In Tasks | Implementing |
 | SFILT-08 | P1: Aplicar um filtro salvo | In Tasks | Pending |
-| SFILT-09 | P1: Gerenciar filtros | In Tasks | Pending |
+| SFILT-09 | P1: Gerenciar filtros | In Tasks | Implementing |
 | SFILT-10 | P1: Montagem no extrato | In Tasks | Pending |
 | SFILT-11 | P2: Aparência e acessibilidade | In Tasks | Implementing |
 
