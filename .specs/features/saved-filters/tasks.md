@@ -1140,19 +1140,20 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Without a user id nothing is rendered (AC 2 of the mount story)
-- [ ] "Salvar filtro" is disabled for the initial state, for an incomplete quick month and for an inverted period, and enabled for a type filter and for a sort different from date descending (AC 1 and 2 of the save story)
-- [ ] The dialog lines carry the account nickname and category name from the cached lists, and the fallbacks without them (AC 4 of the save story)
-- [ ] Saving shows `Filtro "<nome>" salvo`, stores under the literal key of the user, shows the item as applied, and does not call `onApply` (AC 5 and 6)
-- [ ] A storage failure when saving shows the toast with the storage message and keeps the dialog open (AC 11)
-- [ ] Applying calls `onApply` with the full `FilterState` of the saved filter (every field, page 1, the month's `from`/`to` for a quick month, default sort when missing) and nothing of the previous state (AC 1 of the apply story, state side)
-- [ ] A missing account, a missing category and both each apply the rest and show the exact information toast; an inactive account is kept; with the lists not loaded or failed the whole filter is applied with no toast (AC 8 and 9, edge case)
-- [ ] The applied marker follows `state`: equal state marks the item, a change unmarks it, a page change does not, and two filters with the same state are both marked (AC 3 and 4 of the menu story, edge case)
-- [ ] Renaming and deleting show `Filtro renomeado para "<nome>"` and `Filtro "<nome>" excluído`; a storage failure shows the storage toast; a `not-found` shows "Esse filtro não existe mais" and refreshes (AC 3, 7 to 9 of the manage story)
-- [ ] The applied filter keeps its marker when renamed, and deleting it leaves nothing marked and calls no `onApply` (AC 11)
-- [ ] Closing "Gerenciar filtros" gives the focus back to the "Filtros salvos" button (AC 12)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the T8 total plus the new ones (no silent deletions)
+- [x] Without a user id nothing is rendered (AC 2 of the mount story)
+- [x] "Salvar filtro" is disabled for the initial state, for an incomplete quick month and for an inverted period, and enabled for a type filter and for a sort different from date descending (AC 1 and 2 of the save story)
+- [x] The dialog lines carry the account nickname and category name from the cached lists, and the fallbacks without them (AC 4 of the save story)
+- [x] Saving shows `Filtro "<nome>" salvo`, stores under the literal key of the user, shows the item as applied, and does not call `onApply` (AC 5 and 6)
+- [x] A storage failure when saving shows the toast with the storage message and keeps the dialog open (AC 11)
+- [x] Applying calls `onApply` with the full `FilterState` of the saved filter (every field, page 1, the month's `from`/`to` for a quick month, default sort when missing) and nothing of the previous state (AC 1 of the apply story, state side)
+- [x] A missing account, a missing category and both each apply the rest and show the exact information toast; an inactive account is kept; with the lists not loaded or failed the whole filter is applied with no toast (AC 8 and 9, edge case)
+- [x] The applied marker follows `state`: equal state marks the item, a change unmarks it, a page change does not, and two filters with the same state are both marked (AC 3 and 4 of the menu story, edge case)
+- [x] Renaming and deleting show `Filtro renomeado para "<nome>"` and `Filtro "<nome>" excluído`; a storage failure shows the storage toast; a `not-found` shows "Esse filtro não existe mais" and refreshes (AC 3, 7 to 9 of the manage story)
+- [x] The applied filter keeps its marker when renamed, and deleting it leaves nothing marked and calls no `onApply` (AC 11)
+- [x] Closing "Gerenciar filtros" gives the focus back to the "Filtros salvos" button (AC 12)
+- [x] With 20 saved filters the save dialog shows the limit and does not save (AC 10 of the save story); saving, applying, renaming and deleting send no API request (AC 3 of the mount story)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 1040 web tests pass (1013 after T8 plus 27 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

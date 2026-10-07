@@ -177,7 +177,7 @@ const formatDay = (day: string) => day.split("-").reverse().join("/");
 /** The summary lines of what a saved state holds: one per applied field, and always the sort. */
 export function describeSavedState(
   saved: SavedFilterState,
-  names: { account?: string; category?: string } = {},
+  names: { account?: string | undefined; category?: string | undefined } = {},
 ): string[] {
   const lines: string[] = [];
   if (saved.q !== undefined) lines.push(`Busca: ${saved.q}`);
