@@ -185,6 +185,7 @@ describe("extrato: filtros salvos", () => {
     expect(screen.getByLabelText("Ano")).toHaveTextContent("Selecione o ano");
     expect(screen.getByLabelText("De")).toBeEnabled();
     expect(screen.getByLabelText("De")).toHaveTextContent("Selecione a data");
+    expect(screen.getByLabelText("Neutra")).toHaveTextContent("Todas");
   });
 
   it("a busca do filtro aparece na hora, uma digitação ainda em espera é descartada e um filtro sem busca esvazia o campo", async () => {
@@ -219,6 +220,27 @@ describe("extrato: filtros salvos", () => {
     await waitFor(() => expect(lastListParams()["type"]).toBe("Expense"));
     openMenu();
     expect(appliedNames()).toEqual([]);
+  });
+
+  it("aplicar um filtro esvazia a seleção de linhas", async () => {
+    seed([{ name: "Receitas", state: { type: "Income" } }]);
+    await renderLoaded();
+    fireEvent.click(screen.getByLabelText("Selecionar todas da página"));
+    expect(await screen.findByText("3 selecionada(s)")).toBeInTheDocument();
+    chooseFilter("Receitas");
+    await waitFor(() => expect(lastListParams()["type"]).toBe("Income"));
+    expect(screen.queryByText(/selecionada\(s\)/)).toBeNull();
+  });
+
+  it("trocar o tamanho da página não tira a marca do filtro aplicado", async () => {
+    seed([{ name: "Receitas", state: { type: "Income" } }]);
+    await renderLoaded();
+    chooseFilter("Receitas");
+    await waitFor(() => expect(lastListParams()["type"]).toBe("Income"));
+    await chooseOption("Itens por página", "25");
+    await waitFor(() => expect(lastListParams()["pageSize"]).toBe("25"));
+    openMenu();
+    expect(appliedNames()).toEqual(["Receitas"]);
   });
 
   it("salvar com 25 itens por página não guarda o tamanho no filtro", async () => {
