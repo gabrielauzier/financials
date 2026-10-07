@@ -54,12 +54,13 @@ export function ImportStartStep({
         <Input
           id="import-file"
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.tsv,text/csv,text/tab-separated-values"
           onChange={handleFile}
           aria-describedby="import-file-help"
         />
         <p id="import-file-help" className="text-sm text-muted-foreground">
-          Extrato da conta ou fatura do cartão Nubank, em CSV, até 5 MB.
+          Nubank (extrato da conta ou fatura do cartão) ou Sofisa Direto (extrato da conta), em CSV
+          ou TSV, até 5 MB.
         </p>
         {file ? <p className="text-sm">{file.name}</p> : null}
       </div>

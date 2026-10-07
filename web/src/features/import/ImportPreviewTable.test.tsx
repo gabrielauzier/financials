@@ -97,6 +97,59 @@ describe("tabela da prévia", () => {
     expect(income.getByText("Transferência bancária")).toBeInTheDocument();
   });
 
+  it("prévia do Sofisa: saldos ignorados sem checkbox, métodos e categorias rotulados", () => {
+    const sofisa: PreviewRow[] = [
+      row(0, "ignored", {
+        name: "Saldo em 03/11/2025",
+        reason: "Daily balance line, not a transaction",
+      }),
+      row(1, "new", { name: "IOF Limite Especial", paymentMethod: "Other", amount: "0.07" }),
+      row(2, "new", {
+        name: "Helena Prado Exemplo",
+        paymentMethod: "PIX",
+        type: "Income",
+        amount: "1215.30",
+        neutral: true,
+      }),
+      row(3, "new", {
+        name: "Aplicação - Meus Investimentos - CDB DIRETO DI",
+        paymentMethod: "BankTransfer",
+        categoryName: "Investimentos",
+      }),
+    ];
+    const sofisaPreview: ImportPreview = {
+      rows: sofisa,
+      totals: { new: 3, duplicate: 0, ignored: 1, unrecognized: 0, invalid: 0 },
+    };
+    renderWithQuery(
+      <ImportPreviewTable
+        preview={sofisaPreview}
+        selection={initialSelection(sofisa)}
+        onSelectionChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("3 linhas selecionadas")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("checkbox", { name: "Selecionar Saldo em 03/11/2025" }),
+    ).not.toBeInTheDocument();
+    const balance = within(screen.getByText("Saldo em 03/11/2025").closest("tr")!);
+    expect(balance.getByText("Ignorada")).toHaveAttribute(
+      "title",
+      "Daily balance line, not a transaction",
+    );
+    expect(
+      within(screen.getByText("IOF Limite Especial").closest("tr")!).getByText("Outro"),
+    ).toBeInTheDocument();
+    const pix = within(screen.getByText("Helena Prado Exemplo").closest("tr")!);
+    expect(pix.getByText("PIX")).toBeInTheDocument();
+    expect(pix.getByText("R$ 1.215,30")).toBeInTheDocument();
+    const invest = within(screen.getByText(/CDB DIRETO DI/).closest("tr")!);
+    expect(invest.getByText("Transferência bancária")).toBeInTheDocument();
+    expect(
+      screen.getByRole("switch", { name: "Marcar Helena Prado Exemplo como neutra" }),
+    ).toBeChecked();
+  });
+
   it("duplicadas começam desmarcadas e podem ser marcadas e desmarcadas", () => {
     const onChange = vi.fn();
     renderWithQuery(<Harness onChange={onChange} />);

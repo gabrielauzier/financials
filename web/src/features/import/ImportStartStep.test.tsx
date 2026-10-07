@@ -57,11 +57,42 @@ describe("etapa conta e arquivo", () => {
     expect(onFileChange).toHaveBeenLastCalledWith(file);
   });
 
-  it("bloqueia extensão diferente de .csv", () => {
+  it("bloqueia extensão diferente de .csv e .tsv", () => {
     const { onFileChange } = setup();
+    for (const name of ["extrato.pdf", "extrato.txt", "extrato.csv.pdf", "extrato.tsvx", "tsv"]) {
+      pick(csv(10, name));
+      expect(screen.getByRole("alert"), name).toHaveTextContent(
+        "Selecione um arquivo .csv ou .tsv",
+      );
+      expect(onFileChange, name).toHaveBeenLastCalledWith(null);
+    }
+  });
+
+  it("aceita .tsv e .TSV, e também .csv em maiúsculas, sem alerta", () => {
+    const { onFileChange } = setup();
+    for (const name of ["extrato.tsv", "EXTRATO.TSV", "extrato.Tsv", "EXTRATO.CSV"]) {
+      const file = csv(10, name);
+      pick(file);
+      expect(screen.queryByRole("alert"), name).not.toBeInTheDocument();
+      expect(onFileChange, name).toHaveBeenLastCalledWith(file);
+    }
+  });
+
+  it("limpa o erro de extensão ao escolher um .tsv em seguida", () => {
+    setup();
     pick(csv(10, "extrato.pdf"));
-    expect(screen.getByRole("alert")).toHaveTextContent("Selecione um arquivo .csv");
-    expect(onFileChange).toHaveBeenLastCalledWith(null);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    pick(csv(10, "extrato.tsv"));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("o campo aceita .csv e .tsv e o texto de ajuda cita Nubank, Sofisa Direto, CSV e TSV", () => {
+    setup();
+    const input = screen.getByLabelText("Arquivo CSV");
+    expect(input).toHaveAttribute("accept", ".csv,.tsv,text/csv,text/tab-separated-values");
+    expect(input).toHaveAccessibleDescription(
+      "Nubank (extrato da conta ou fatura do cartão) ou Sofisa Direto (extrato da conta), em CSV ou TSV, até 5 MB.",
+    );
   });
 
   it("mantém Gerar prévia desabilitado sem conta ou sem arquivo", () => {
