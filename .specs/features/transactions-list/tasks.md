@@ -262,14 +262,14 @@ T10 → T11
 
 **Done when**:
 
-- [ ] With nothing stored the hook returns 50; with `"25"` and `"100"` stored it returns 25 and 100 (AC 18)
-- [ ] Stored `"30"`, `"25 "`, `"25.0"`, `"abc"`, an empty text and a missing key return 50 (AC 19 and edge case)
-- [ ] When `localStorage.getItem` throws the hook returns 50 (AC 19)
-- [ ] The setter updates the returned value and stores the exact text `"25"` or `"100"` under the key (AC 16, storage side)
-- [ ] When `localStorage.setItem` throws the setter still updates the returned value and nothing is thrown to the caller (AC 20)
-- [ ] The exported `PAGE_SIZES` is exactly `[25, 50, 100]` and the default is 50 (AC 15, source of the option list)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] With nothing stored the hook returns 50; with `"25"` and `"100"` stored it returns 25 and 100 (AC 18)
+- [x] Stored `"30"`, `"25 "`, `"25.0"`, `"abc"`, an empty text and a missing key return 50 (AC 19 and edge case)
+- [x] When `localStorage.getItem` throws the hook returns 50 (AC 19)
+- [x] The setter updates the returned value and stores the exact text `"25"` or `"100"` under the key (AC 16, storage side)
+- [x] When `localStorage.setItem` throws the setter still updates the returned value and nothing is thrown to the caller (AC 20)
+- [x] The exported `PAGE_SIZES` is exactly `[25, 50, 100]` and the default is 50 (AC 15, source of the option list)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 764 web tests pass (743 existing plus 21 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
