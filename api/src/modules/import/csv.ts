@@ -38,7 +38,7 @@ export function readCsv(text: string): CsvContent {
       relax_quotes: false,
     }) as string[][];
   } catch {
-    throw new AppError('unsupported_format', 422, 'The file is not a valid CSV');
+    throw new AppError('unsupported_format', 422, 'The file is not a valid CSV or TSV');
   }
   const [header, ...records] = all;
   if (header === undefined || records.length === 0) {

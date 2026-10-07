@@ -22,6 +22,19 @@ describe('detectFormat', () => {
     expect(detectFormat(['date', 'title', 'amount'])).toBe('nubankInvoice');
   });
 
+  it('recognizes both Sofisa Direto headers: 3 columns (CSV) and 4 columns with an empty third (TSV)', () => {
+    expect(detectFormat(['Data', 'Descrição', 'Valor'])).toBe('sofisaAccount');
+    expect(detectFormat(['Data', 'Descrição', '', 'Valor'])).toBe('sofisaAccount');
+  });
+
+  it('returns null for near-miss Sofisa headers', () => {
+    expect(detectFormat(['Data', 'Valor', 'Descrição'])).toBeNull();
+    expect(detectFormat(['Data', 'Descrição', ' ', 'Valor'])).toBeNull();
+    expect(detectFormat(['Data', 'Descrição', 'Valor', ''])).toBeNull();
+    expect(detectFormat(['Data', 'Descricao', 'Valor'])).toBeNull();
+    expect(detectFormat(['data', 'descrição', 'valor'])).toBeNull();
+  });
+
   it('returns null for an unknown, reordered, extended or differently-cased header', () => {
     expect(detectFormat(['foo', 'bar'])).toBeNull();
     expect(detectFormat([])).toBeNull();
@@ -32,6 +45,16 @@ describe('detectFormat', () => {
 });
 
 describe('assertBankMatches', () => {
+  it('accepts the Sofisa format only for a SofisaDireto account', () => {
+    expect(() => assertBankMatches('sofisaAccount', 'SofisaDireto')).not.toThrow();
+    for (const bank of ['Nubank', 'Neon', 'XP', 'Other']) {
+      expect(failure(() => assertBankMatches('sofisaAccount', bank)), bank).toMatchObject({
+        code: 'bank_mismatch',
+        status: 422,
+      });
+    }
+  });
+
   it('accepts both Nubank formats for a Nubank account', () => {
     expect(() => assertBankMatches('nubankAccount', 'Nubank')).not.toThrow();
     expect(() => assertBankMatches('nubankInvoice', 'Nubank')).not.toThrow();
@@ -50,6 +73,10 @@ describe('assertBankMatches', () => {
 });
 
 describe('parseByFormat', () => {
+  it('dispatches to the Sofisa parser', () => {
+    expect(parseByFormat('sofisaAccount', fixture('sofisa_statement_sanitized.csv')).rows).toHaveLength(18);
+  });
+
   it('dispatches to the account and invoice parsers', () => {
     expect(parseByFormat('nubankAccount', fixture('nubank_account.csv')).rows).toHaveLength(14);
     expect(parseByFormat('nubankInvoice', fixture('nubank_invoice.csv')).rows).toHaveLength(19);
@@ -94,5 +121,43 @@ describe('parseImport (real samples)', () => {
       code: 'empty_file',
       status: 422,
     });
+  });
+});
+
+describe('parseImport (Sofisa Direto)', () => {
+  it.each(['sofisa_statement_sanitized.csv', 'sofisa_statement_sanitized.tsv'])('parses %s for a SofisaDireto account', (name) => {
+    const result = parseImport(fixture(name), 'SofisaDireto');
+    expect(result.format).toBe('sofisaAccount');
+    expect(result.rows).toHaveLength(18);
+    expect(result.rows.filter((r) => r.status === 'ignored')).toHaveLength(5);
+  });
+
+  it('gives the same rows for the CSV and the TSV', () => {
+    expect(parseImport(fixture('sofisa_statement_sanitized.tsv'), 'SofisaDireto')).toEqual(
+      parseImport(fixture('sofisa_statement_sanitized.csv'), 'SofisaDireto'),
+    );
+  });
+
+  it('raises bank_mismatch when a Sofisa file goes to a Nubank account and the other way round', () => {
+    for (const name of ['sofisa_statement_sanitized.csv', 'sofisa_statement_sanitized.tsv']) {
+      expect(failure(() => parseImport(fixture(name), 'Nubank')), name).toMatchObject({ code: 'bank_mismatch', status: 422 });
+    }
+    expect(failure(() => parseImport(fixture('nubank_account.csv'), 'SofisaDireto'))).toMatchObject({
+      code: 'bank_mismatch',
+      status: 422,
+    });
+    expect(failure(() => parseImport(fixture('nubank_invoice.csv'), 'SofisaDireto')).code).toBe('bank_mismatch');
+  });
+
+  it('raises empty_file for a header-only Sofisa file', () => {
+    expect(failure(() => parseImport('Data;Descrição;Valor\n', 'SofisaDireto')).code).toBe('empty_file');
+    expect(failure(() => parseImport('Data\tDescrição\t\tValor\n', 'SofisaDireto')).code).toBe('empty_file');
+  });
+
+  it('names the accepted formats in unsupported_format instead of only Nubank', () => {
+    const error = failure(() => parseImport('a;b;c\n1;2;3\n', 'SofisaDireto'));
+    expect(error).toMatchObject({ code: 'unsupported_format', status: 422 });
+    expect(error.message).toMatch(/Sofisa/);
+    expect(error.message).toMatch(/Nubank/);
   });
 });
