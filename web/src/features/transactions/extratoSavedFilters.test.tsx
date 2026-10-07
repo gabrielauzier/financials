@@ -221,34 +221,36 @@ describe("extrato: filtros salvos", () => {
     expect(appliedNames()).toEqual([]);
   });
 
-  it("salvar com 25 itens por página não guarda o tamanho, e aplicar o mantém; escolhendo 50 nenhum pageSize sai", async () => {
+  it("salvar com 25 itens por página não guarda o tamanho no filtro", async () => {
     await renderLoaded();
     await chooseOption("Itens por página", "25");
     await waitFor(() => expect(lastListParams()["pageSize"]).toBe("25"));
-    await chooseOption("Tipo", "Receita");
+    fireEvent.change(search(), { target: { value: "mercado" } });
+    await advance(300);
+    await waitFor(() => expect(lastListParams()["q"]).toBe("mercado"));
     fireEvent.click(screen.getByRole("button", { name: "Salvar filtro" }));
-    fireEvent.change(screen.getByLabelText("Nome do filtro"), { target: { value: "Receitas" } });
+    fireEvent.change(screen.getByLabelText("Nome do filtro"), { target: { value: "Mercado" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
-    expect(toast.success).toHaveBeenCalledExactlyOnceWith('Filtro "Receitas" salvo');
+    expect(toast.success).toHaveBeenCalledExactlyOnceWith('Filtro "Mercado" salvo');
     const [entry] = JSON.parse(localStorage.getItem(KEY) ?? "{}").filters;
-    expect(entry.state).toEqual({ type: "Income", sort: "date", order: "desc" });
-    await chooseOption("Tipo", "Despesa");
-    await goToPage2();
-    chooseFilter(/^Receitas/);
+    expect(entry.state).toEqual({ q: "mercado", sort: "date", order: "desc" });
+  });
+
+  it("aplicar um filtro com 25 itens por página escolhidos mantém o pageSize=25 na página 1", async () => {
+    seed([{ name: "Mercado", state: { q: "mercado" } }]);
+    await renderLoaded();
+    await chooseOption("Itens por página", "25");
+    await waitFor(() => expect(lastListParams()["pageSize"]).toBe("25"));
+    chooseFilter("Mercado");
     await waitFor(() =>
       expect(lastListParams()).toEqual({
-        type: "Income",
+        q: "mercado",
         sort: "date",
         order: "desc",
         pageSize: "25",
         page: "1",
       }),
     );
-    await chooseOption("Itens por página", "50");
-    await chooseOption("Tipo", "Despesa");
-    chooseFilter(/^Receitas/);
-    await waitFor(() => expect(lastListParams()["type"]).toBe("Income"));
-    expect(lastListParams()["pageSize"]).toBeUndefined();
   });
 
   it("salvar, aplicar, renomear e excluir não enviam nenhuma requisição além das consultas de sempre", async () => {

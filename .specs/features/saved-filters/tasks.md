@@ -401,7 +401,7 @@ T9 → T10
 - [x] With an inverted period "Salvar filtro" is disabled at the page too (AC 2 of the save story)
 - [x] `TransactionsPage.tsx` ends at no more than 765 lines
 - [x] Gate check passes: `yarn --cwd web test`
-- [x] Test count: 1049 web tests pass (1040 after T9 plus 9 new; no silent deletions); `TransactionsPage.tsx` 739 lines (was 740, the month names moved to `savedFilterState.ts`)
+- [x] Test count: 1050 web tests pass (1040 after T9 plus 10 new; no silent deletions); `TransactionsPage.tsx` 739 lines (was 740, the month names moved to `savedFilterState.ts`)
 
 **Tests**: unit
 **Gate**: quick
