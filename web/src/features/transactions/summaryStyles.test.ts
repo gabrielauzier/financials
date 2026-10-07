@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { contrastRatio, parseOklch, type Oklch } from "@/test/colorContrast";
-import { balanceClassName, summaryColors } from "./summaryStyles";
+import { balanceClassName, summaryActiveRing, summaryColors } from "./summaryStyles";
 
 const read = (relative: string) => readFileSync(new URL(relative, import.meta.url), "utf8");
 const tailwindTheme = read("../../../node_modules/tailwindcss/theme.css");
@@ -58,6 +58,16 @@ describe.each(THEMES)(
       expect(expense.h).toBeLessThanOrEqual(40);
       expect(investments.h).toBeGreaterThanOrEqual(230);
       expect(investments.h).toBeLessThanOrEqual(270);
+    });
+
+    it("o anel do valor ativo tem contraste de pelo menos 3:1 (não texto) contra o fundo do cartão", () => {
+      const token = /(?:^|\s)ring-(?!\d)(\S+)/.exec(summaryActiveRing)?.[1];
+      expect(token, summaryActiveRing).toBeDefined();
+      const palette = declaration(tailwindTheme, `--color-${token}`);
+      const ring = palette ? parseOklch(palette) : appToken(token as string, theme);
+      const ratio = contrastRatio(ring, appToken("card", theme));
+      expect(ratio, `anel ${token} em ${theme}: ${ratio.toFixed(2)}`).toBeGreaterThanOrEqual(3);
+      expect(summaryActiveRing.split(/\s+/)).toContain("ring-2");
     });
 
     it("o tom neutro é a cor de texto do tema (--foreground)", () => {

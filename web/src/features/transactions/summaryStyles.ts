@@ -11,8 +11,12 @@ export const summaryColors = {
   neutral: "text-foreground",
 } as const;
 
-/** Ring of a value whose filter is applied; it adds no text or background color, so contrast does not change. */
-export const summaryActiveRing = "ring-2 ring-ring";
+/**
+ * Ring of a value whose filter is applied; it adds no text or background color, so the text contrast does not
+ * change. A visible state indicator needs 3:1 against the card (WCAG 1.4.11), which the shared `--ring` token does
+ * not reach on the light card (2.6:1): `slate-500` has 4.8:1 on the light card and 3.7:1 on the dark one.
+ */
+export const summaryActiveRing = "ring-2 ring-slate-500";
 
 const ZERO = /^-?0+(?:\.0+)?$/;
 
