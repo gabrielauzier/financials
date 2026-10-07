@@ -256,13 +256,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] The list of the user comes back in alphabetical order by name ignoring case and accent, with `available` true (AC 2 of the hook story)
-- [ ] `atLimit` is true with 20 filters and false with 19 (AC 2)
-- [ ] After `add`, `rename` and `remove` the next render has the new list, and each returns the storage result (AC 2 and 3)
-- [ ] After a `not-found` result the list is re-read (a filter written by hand in the meantime appears) (AC 3)
-- [ ] Changing the `userId` gives the other user's list; `null` gives an empty list, `available` false and actions that fail with `storage` (AC 4)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the T3 total plus the new ones (no silent deletions)
+- [x] The list of the user comes back in alphabetical order by name ignoring case and accent, with `available` true (AC 2 of the hook story)
+- [x] `atLimit` is true with 20 filters and false with 19 (AC 2)
+- [x] After `add`, `rename` and `remove` the next render has the new list, and each returns the storage result (AC 2 and 3)
+- [x] After a `not-found` result the list is re-read (a filter written by hand in the meantime appears) (AC 3)
+- [x] Changing the `userId` gives the other user's list; `null` gives an empty list, `available` false and actions that fail with `storage` (AC 4)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 973 web tests pass (966 after T3 plus 7 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

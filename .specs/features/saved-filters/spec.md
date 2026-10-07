@@ -317,7 +317,7 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 | SFILT-02 | P1: Armazenamento tolerante | In Tasks | Implemented-not-verified |
 | SFILT-03 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Implemented-not-verified |
 | SFILT-04 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Implemented-not-verified |
-| SFILT-05 | P1: Hook e usuário da sessão | In Tasks | Implementing |
+| SFILT-05 | P1: Hook e usuário da sessão | In Tasks | Implemented-not-verified |
 | SFILT-06 | P1: Salvar filtro | In Tasks | Pending |
 | SFILT-07 | P1: Menu "Filtros salvos" e marcador | In Tasks | Pending |
 | SFILT-08 | P1: Aplicar um filtro salvo | In Tasks | Pending |
