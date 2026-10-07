@@ -220,6 +220,30 @@ describe('GET /transactions/summary', () => {
       });
     });
 
+    it('keeps cents exact on the income and investments sums too (1001 x 999999999999.99)', async () => {
+      // the same float8 trap as the expense sum, for the income and the investments aggregates
+      const big = (type: 'Income' | 'Expense', category: string, prefix: string) =>
+        Array.from({ length: 1001 }, (_, index) => ({ name: `${prefix} ${index}`, type, amount: '999999999999.99', at: MID, category }));
+      const incomeUser = await createTestUser();
+      await seedTransactions(incomeUser, await seedAccount(incomeUser), big('Income', 'Salaries', 'Renda'));
+      expect(await summary(incomeUser)).toEqual({
+        count: 1001,
+        income: '1000999999999989.99',
+        expense: '0.00',
+        investments: '0.00',
+        balance: '1000999999999989.99',
+      });
+      const investUser = await createTestUser();
+      await seedTransactions(investUser, await seedAccount(investUser), big('Expense', 'Investments', 'Aporte'));
+      expect(await summary(investUser)).toEqual({
+        count: 1001,
+        income: '0.00',
+        expense: '0.00',
+        investments: '1000999999999989.99',
+        balance: '0.00',
+      });
+    });
+
     it('makes the expense negative and the balance positive when only a Reversal Income exists', async () => {
       const user = await createTestUser();
       const account = await seedAccount(user);
