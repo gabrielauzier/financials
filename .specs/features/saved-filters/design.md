@@ -115,25 +115,25 @@ graph TD
 
 ### `SaveFilterDialog`
 
-- **Purpose**: diálogo de nome com o resumo do que será salvo.
+- **Purpose**: o botão "Salvar filtro" e o diálogo de nome com o resumo do que será salvo; o botão é o `DialogTrigger`, e é o Radix que devolve o foco a ele ao fechar (um diálogo sem gatilho perde o foco para o `body`).
 - **Location**: `web/src/features/transactions/SaveFilterDialog.tsx`
-- **Interfaces**: `SaveFilterDialog({ open, onOpenChange, lines: string[], atLimit: boolean, onSave: (name: string) => SavedFilterResult })`
-- **Dependencies**: `Dialog`, `Input`, `Label`, `Button`, `FILTER_MESSAGES`.
+- **Interfaces**: `SaveFilterDialog({ disabled: boolean, lines: string[], atLimit: boolean, onSave: (name: string) => SavedFilterResult })`; o estado aberto é interno
+- **Dependencies**: `Dialog`, `DialogTrigger`, `Input`, `Label`, `Button`, `FILTER_MESSAGES`.
 - **Reuses**: o padrão de foco (`onOpenAutoFocus`) e de erro (`role="alert"`, `aria-invalid`, `aria-describedby`) dos formulários do app.
 
 ### `SavedFiltersMenu`
 
 - **Purpose**: o botão "Filtros salvos" com o menu, o estado vazio e o marcador.
 - **Location**: `web/src/features/transactions/SavedFiltersMenu.tsx`
-- **Interfaces**: `SavedFiltersMenu({ filters: SavedFilter[]; appliedIds: ReadonlySet<string>; onApply: (filter: SavedFilter) => void; onManage: () => void })`
+- **Interfaces**: `SavedFiltersMenu({ filters: SavedFilter[]; appliedIds: ReadonlySet<string>; triggerRef: RefObject<HTMLButtonElement | null>; onApply: (filter: SavedFilter) => void; onManage: () => void })`
 - **Dependencies**: `DropdownMenu*`, `Button`, ícones `lucide-react`.
 - **Reuses**: `web/src/components/ui/dropdown-menu.tsx`.
 
 ### `ManageFiltersDialog`
 
-- **Purpose**: renomear (inline) e excluir (confirmação) filtros.
+- **Purpose**: renomear (inline) e excluir (confirmação) filtros; ao fechar devolve o foco ao botão "Filtros salvos", que não é seu gatilho (por isso recebe a referência dele).
 - **Location**: `web/src/features/transactions/ManageFiltersDialog.tsx`
-- **Interfaces**: `ManageFiltersDialog({ open, onOpenChange, filters: SavedFilter[]; onRename: (id, name) => SavedFilterResult; onDelete: (id) => SavedFilterResult })`
+- **Interfaces**: `ManageFiltersDialog({ open, onOpenChange, returnFocusRef: RefObject<HTMLElement | null>, filters: SavedFilter[]; onRename: (id, name) => SavedFilterResult; onDelete: (id) => SavedFilterResult })`
 - **Dependencies**: `Dialog`, `AlertDialog`, `Input`, `Button`.
 - **Reuses**: o padrão do `AlertDialog` da exclusão de transação (falha mantém o diálogo aberto).
 

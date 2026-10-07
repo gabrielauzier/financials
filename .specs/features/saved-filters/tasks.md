@@ -516,10 +516,10 @@ T9 → T10
 
 ### T6: Add the save filter dialog
 
-**What**: `SaveFilterDialog` (title, labeled name field focused on open, "Filtros que serão salvos" list, Cancelar and Salvar, inline error, limit alert, Enter to save) and its tests with a small harness around the real hook.
+**What**: `SaveFilterDialog` (the "Salvar filtro" button as the dialog trigger, so the focus returns to it; title, labeled name field focused on open, "Filtros que serão salvos" list, Cancelar and Salvar, inline error, limit alert, Enter to save) and its tests with a small harness around the real hook.
 **Where**: `web/src/features/transactions/SaveFilterDialog.tsx`
 **Depends on**: T2
-**Reuses**: `Dialog`, `Input`, `Label`, `Button`, `FILTER_MESSAGES`, `useSavedFilters` (in the harness)
+**Reuses**: `Dialog`, `DialogTrigger`, `Input`, `Label`, `Button`, `FILTER_MESSAGES`, `useSavedFilters` (in the harness)
 **Requirement**: SFILT-06, SFILT-11
 
 **Tools**:
@@ -529,15 +529,16 @@ T9 → T10
 
 **Done when**:
 
-- [ ] Opening shows the dialog named "Salvar filtro" with a description, the field labeled "Nome do filtro" empty and focused, the list "Filtros que serão salvos" with the lines it was given, and the buttons "Cancelar" and "Salvar" (AC 3 and 4 of the save story, AC 1 of the polish story)
-- [ ] "Salvar" and Enter in the field each store the filter with the trimmed name, close the dialog and give the focus back to the button that opened it (AC 5)
-- [ ] An empty, a 41-character and a repeated name keep the dialog open, show the storage message under the field (`role="alert"`, field `aria-invalid="true"`), put the focus back on the field and store nothing (AC 7); typing then clears the message (AC 8)
-- [ ] "Cancelar" and Esc close without storing, give the focus back to the opening button, and reopening shows the field empty (AC 9)
-- [ ] With 20 saved filters the dialog shows "Limite de 20 filtros salvos atingido. Exclua um para salvar outro." as an alert and "Salvar" is disabled (AC 10)
-- [ ] With `setItem` throwing the dialog stays open with the typed name and nothing is stored; the toast itself is the container's (AC 11, dialog side)
-- [ ] Pressing Enter twice stores one filter (edge case)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the T5 total plus the new ones (no silent deletions)
+- [x] Opening shows the dialog named "Salvar filtro" with a description, the field labeled "Nome do filtro" empty and focused, the list "Filtros que serão salvos" with the lines it was given, and the buttons "Cancelar" and "Salvar" (AC 3 and 4 of the save story, AC 1 of the polish story)
+- [x] "Salvar" and Enter in the field each store the filter with the trimmed name, close the dialog and give the focus back to the button that opened it (AC 5)
+- [x] An empty, a 41-character and a repeated name keep the dialog open, show the storage message under the field (`role="alert"`, field `aria-invalid="true"`), put the focus back on the field and store nothing (AC 7); typing then clears the message (AC 8)
+- [x] "Cancelar" and Esc close without storing, give the focus back to the opening button, and reopening shows the field empty (AC 9)
+- [x] With 20 saved filters the dialog shows "Limite de 20 filtros salvos atingido. Exclua um para salvar outro." as an alert and "Salvar" is disabled (AC 10)
+- [x] With `setItem` throwing the dialog stays open with the typed name and nothing is stored; the toast itself is the container's (AC 11, dialog side)
+- [x] Pressing Enter twice stores one filter (edge case)
+- [x] The `disabled` button cannot open the dialog (AC 1 and 2 of the save story, component side)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 987 web tests pass (974 after T5 plus 13 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
@@ -548,7 +549,7 @@ T9 → T10
 
 ### T7: Add the saved filters menu
 
-**What**: `SavedFiltersMenu` ("Filtros salvos" trigger, items in the given order, empty state, applied marker with `aria-current`, "Gerenciar filtros" item) and its tests.
+**What**: `SavedFiltersMenu` ("Filtros salvos" trigger exposed through `triggerRef`, items in the given order, empty state, applied marker with `aria-current`, "Gerenciar filtros" item) and its tests.
 **Where**: `web/src/features/transactions/SavedFiltersMenu.tsx`
 **Depends on**: T2
 **Reuses**: `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator`, `Button`, `lucide-react` icons
@@ -578,7 +579,7 @@ T9 → T10
 
 ### T8: Add the manage filters dialog
 
-**What**: `ManageFiltersDialog` (rows with `Renomear <nome>` and `Excluir <nome>`, inline rename with the same name rules, delete confirmation, empty state) and its tests with a small harness around the real hook.
+**What**: `ManageFiltersDialog` (rows with `Renomear <nome>` and `Excluir <nome>`, inline rename with the same name rules, delete confirmation, empty state, focus returned to `returnFocusRef` on close) and its tests with a small harness around the real hook.
 **Where**: `web/src/features/transactions/ManageFiltersDialog.tsx`
 **Depends on**: T2
 **Reuses**: `Dialog`, `AlertDialog`, `Input`, `Button`, `FILTER_MESSAGES`, the delete pattern of `TransactionsPage.tsx`, `useSavedFilters` (in the harness)
