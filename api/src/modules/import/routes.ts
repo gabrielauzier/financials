@@ -169,7 +169,10 @@ async function resolveCategories(tx: TransactionSql, rows: SelectedRow[], select
     if (chosenCategoryId !== undefined && !visible.has(chosenCategoryId)) {
       throw new AppError('invalid_category', 422, `Row ${row.index} has a category that does not exist`, 'selections');
     }
-    return { ...row, categoryId: chosenCategoryId ?? (byKey.get(row.categoryKey) as Category).id };
+    return {
+      ...row,
+      categoryId: chosenCategoryId ?? row.resolvedCategory?.id ?? (byKey.get(row.categoryKey) as Category).id,
+    };
   });
 }
 
@@ -199,9 +202,9 @@ async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<Confirm
   const inserted = await tx`
     insert into public.transactions
       (account_id, category_id, name, description, type, occurred_at, amount, payment_method, identifier,
-       counterparty_document, counterparty_bank, neutral, import_batch_id)
-    select ${c.account.id}, r.category_id, r.name, r.description, r.type, r.occurred_at, r.amount, r.payment_method, r.identifier,
-           r.counterparty_document, r.counterparty_bank, r.neutral, ${c.batchId}
+       counterparty_document, counterparty_bank, neutral, notes, receipt, import_batch_id)
+    select ${c.account.id}, r.category_id, r.name, nullif(r.description, ''), r.type, r.occurred_at, r.amount, r.payment_method, r.identifier,
+           r.counterparty_document, r.counterparty_bank, r.neutral, r.notes, r.receipt, ${c.batchId}
     from unnest(
       ${column((r) => r.categoryId)}::uuid[],
       ${column((r) => r.name)}::text[],
@@ -214,9 +217,11 @@ async function insertBatch(tx: TransactionSql, c: Confirmation): Promise<Confirm
       ${column((r) => r.counterpartyDocument)}::text[],
       ${column((r) => r.counterpartyBank)}::text[],
       -- postgres.js sends a boolean array as a scalar boolean; text round-trips exactly.
-      ${column((r) => String(r.neutral))}::text[]::boolean[]
+      ${column((r) => String(r.neutral))}::text[]::boolean[],
+      ${column((r) => r.notes ?? null)}::text[],
+      ${column((r) => r.receipt ?? null)}::text[]
     ) as r (category_id, name, description, type, occurred_at, amount, payment_method, identifier,
-            counterparty_document, counterparty_bank, neutral)`;
+            counterparty_document, counterparty_bank, neutral, notes, receipt)`;
   if (inserted.count !== imported) throw new Error(`Inserted ${inserted.count} of ${imported} transactions`);
   await tx`
     insert into public.attachments (import_batch_id, filename, mime_type, size_bytes, storage_path)

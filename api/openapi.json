@@ -2882,7 +2882,7 @@
                           },
                           "categoryId": {
                             "format": "uuid",
-                            "description": "The user's category of the parser's key; the default of the row",
+                            "description": "The user's category resolved for the row (from the file's category text or the parser's key); the default of the row",
                             "type": "string"
                           },
                           "categoryName": {
