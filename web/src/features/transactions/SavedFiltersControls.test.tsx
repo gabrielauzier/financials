@@ -240,6 +240,24 @@ describe("SavedFiltersControls", () => {
     expect(appliedNames()).toEqual(["Receitas por valor"]);
   });
 
+  it("salvar com um mês rápido completo guarda o quick (os dias vêm do mês) e aplicar de novo traz o mês", async () => {
+    const { onApply } = await mount({
+      initial: withFilters({ from: "2026-06-01", to: "2026-06-30" }, { year: 2026, month: 6 }),
+    });
+    fireEvent.click(saveButton());
+    fireEvent.change(screen.getByLabelText("Nome do filtro"), { target: { value: "Junho" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    const [entry] = stored() as Array<{ state: Record<string, unknown> }>;
+    expect(entry?.state["quick"]).toEqual({ year: 2026, month: 6 });
+    // the days stored are the month's own (monthRange), so a hand-edited quick/from mismatch cannot survive
+    expect(entry?.state).toMatchObject({ from: "2026-06-01", to: "2026-06-30" });
+    chooseFilter(/Junho/);
+    expect(onApply.mock.calls[0]?.[0]).toMatchObject({
+      filters: { from: "2026-06-01", to: "2026-06-30" },
+      quick: { year: 2026, month: 6 },
+    });
+  });
+
   it("uma falha do armazenamento ao salvar mostra o toast de erro e mantém o diálogo aberto", async () => {
     await mount({ initial: withFilters({ type: "Income" }) });
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
