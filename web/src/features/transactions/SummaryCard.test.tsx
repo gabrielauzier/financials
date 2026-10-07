@@ -105,6 +105,30 @@ describe("SummaryCard: valores da API", () => {
     }
   });
 
+  it("Investimentos negativo aparece com o sinal, em azul, e não mexe no saldo", async () => {
+    canned({ income: "0.00", expense: "0.00", investments: "-15.50", balance: "0.00" });
+    renderCard();
+    await screen.findByText("1.234");
+    expect(toggle("Investimentos")).toHaveTextContent("-R$ 15,50");
+    expect(valueOf("-R$ 15,50")).toHaveClass(...classesOf(summaryColors.investments));
+    const balanceValue = within(region()).getByText("Saldo").nextElementSibling as HTMLElement;
+    expect(balanceValue).toHaveTextContent("R$ 0,00");
+    expect(balanceValue).not.toHaveTextContent("-");
+    expect(balanceValue).toHaveClass(...classesOf(summaryColors.neutral));
+  });
+
+  it("Despesas negativa (só estornos) aparece com o sinal, em vermelho, com o saldo positivo", async () => {
+    canned({ income: "0.00", expense: "-30.00", investments: "0.00", balance: "30.00" });
+    renderCard();
+    await screen.findByText("1.234");
+    expect(toggle("Despesas")).toHaveTextContent("-R$ 30,00");
+    expect(valueOf("-R$ 30,00")).toHaveClass(...classesOf(summaryColors.expense));
+    const balanceValue = within(region()).getByText("Saldo").nextElementSibling as HTMLElement;
+    expect(balanceValue).toHaveTextContent("R$ 30,00");
+    expect(balanceValue).not.toHaveTextContent("-");
+    expect(balanceValue).toHaveClass(...classesOf(summaryColors.income));
+  });
+
   it("a quantidade fica em fonte maior que a dos valores", async () => {
     canned();
     renderCard();
