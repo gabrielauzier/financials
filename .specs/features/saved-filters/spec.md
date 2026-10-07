@@ -63,7 +63,7 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 | Ordem da lista | Alfabética pelo nome, sem diferenciar caixa e acento (`localeCompare` `pt-BR`, sensibilidade `base`), com desempate pela ordem guardada | Previsível com até 20 itens | n |
 | Menu | "Filtros salvos" é um `DropdownMenu` do app (Radix): botão `outline` com ícone, itens por filtro, separador e o item "Gerenciar filtros"; Enter, Espaço e seta para baixo abrem; setas navegam; Enter escolhe; Esc fecha e devolve o foco ao botão | Já existe em `web/src/components/ui/dropdown-menu.tsx`; teclado e aria vêm do Radix | n |
 | Estado vazio do menu | Texto "Nenhum filtro salvo ainda" no lugar dos itens e "Gerenciar filtros" desabilitado | Pedido: estado vazio da lista | n |
-| Marcador do filtro aplicado | O item tem `aria-current="true"`, um ícone de visto e o texto oculto " (aplicado)" no nome acessível, além do destaque visual (`font-medium` e `bg-accent`); nunca só a cor | Acessível e legível sem cor | n |
+| Marcador do filtro aplicado | O item tem `aria-current="true"`, um ícone de visto e o texto oculto " (aplicado)" no nome acessível, além do destaque visual (`font-medium` e `bg-muted`); nunca só a cor | Acessível e legível sem cor | n |
 | Diálogo "Salvar filtro" | `Dialog` do app com título "Salvar filtro", descrição, campo "Nome do filtro" focado ao abrir, lista "Filtros que serão salvos" (uma linha por campo aplicado e sempre a ordenação), botões "Cancelar" e "Salvar"; Enter no campo salva; o erro aparece abaixo do campo (`role="alert"`, `aria-invalid`, `aria-describedby`) e o foco volta ao campo; digitar apaga o erro; ao fechar, o foco volta ao botão "Salvar filtro" e reabrir mostra o campo vazio e sem erro de nome (o erro é apagado ao abrir) | Pedido; foco e teclado | n |
 | Linhas do resumo | `Busca: <q>`, `Tipo: Receita` ou `Despesa`, `Conta: <apelido>` e `Categoria: <nome>` (da lista em cache; sem a lista, `Conta selecionada` e `Categoria selecionada`), `Neutra: Sim` ou `Não`, `De: dd/mm/aaaa`, `Até: dd/mm/aaaa`, `Mês: <Mês> de <ano>` (no lugar de De e Até quando há mês rápido), `Ordenação: <Data, Nome, Valor ou Categoria> (crescente ou decrescente)`. As datas são formatadas do texto `AAAA-MM-DD` sem `Date` | Pedido: resumo do que será salvo; sem fuso | n |
 | Gerenciar | "Gerenciar filtros" é um `Dialog` com uma linha por filtro (nome e botões `Renomear <nome>` e `Excluir <nome>`); renomear abre o campo na própria linha, com o nome atual selecionado, e botões "Salvar nome" e "Cancelar"; Enter confirma e Esc cancela só a edição (o diálogo continua aberto); a lista vazia mostra "Nenhum filtro salvo ainda"; ao fechar, o foco volta ao botão "Filtros salvos" | Pedido | n |
@@ -314,17 +314,17 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| SFILT-01 | P1: Estado do filtro salvo | In Tasks | Implemented-not-verified |
-| SFILT-02 | P1: Armazenamento tolerante | In Tasks | Implemented-not-verified |
-| SFILT-03 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Implemented-not-verified |
-| SFILT-04 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Implemented-not-verified |
-| SFILT-05 | P1: Hook e usuário da sessão | In Tasks | Implemented-not-verified |
-| SFILT-06 | P1: Salvar filtro | In Tasks | Implemented-not-verified |
-| SFILT-07 | P1: Menu "Filtros salvos" e marcador | In Tasks | Implemented-not-verified |
-| SFILT-08 | P1: Aplicar um filtro salvo | In Tasks | Implemented-not-verified |
-| SFILT-09 | P1: Gerenciar filtros | In Tasks | Implemented-not-verified |
-| SFILT-10 | P1: Montagem no extrato | In Tasks | Implemented-not-verified |
-| SFILT-11 | P2: Aparência e acessibilidade | In Tasks | Implemented-not-verified |
+| SFILT-01 | P1: Estado do filtro salvo | In Tasks | Verified |
+| SFILT-02 | P1: Armazenamento tolerante | In Tasks | Verified |
+| SFILT-03 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Verified |
+| SFILT-04 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Verified |
+| SFILT-05 | P1: Hook e usuário da sessão | In Tasks | Verified |
+| SFILT-06 | P1: Salvar filtro | In Tasks | Verified |
+| SFILT-07 | P1: Menu "Filtros salvos" e marcador | In Tasks | Verified |
+| SFILT-08 | P1: Aplicar um filtro salvo | In Tasks | Verified |
+| SFILT-09 | P1: Gerenciar filtros | In Tasks | Verified |
+| SFILT-10 | P1: Montagem no extrato | In Tasks | Verified |
+| SFILT-11 | P2: Aparência e acessibilidade | In Tasks | Verified |
 
 **Coverage:** 11 total, 11 mapped to tasks, 0 unmapped
 

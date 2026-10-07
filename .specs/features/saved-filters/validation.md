@@ -340,3 +340,21 @@ Only files named by tasks were touched (the `useSession.tsx` change only moves t
 7. M09 is equivalent (`sanitizeSavedState` already drops a quick month with a missing part); no action.
 
 Baseline and final `git status --porcelain` of the real tree: the same five untracked paths. Only this file and the lessons files are committed by the Verifier.
+
+## Fixes after independent validation
+
+The top-line verdict above stays FAIL as the independent Verifier wrote it: no fresh independent agent has re-verified these fixes, so this report is not turned into a PASS. The fixes were written by the author of the fix commits, each new guard test was proved by a quick mutation in a temporary git worktree on the external volume (`.fix-sf`, removed with `git worktree remove --force` and `git worktree prune`; the real tree was never mutated, no `git stash`), and the evidence is in the commit bodies.
+
+| Gap | Fix | Mutation proof |
+| --- | --- | -------------- |
+| Fix task 1, C13 (quick month saved through the controls) | `SavedFiltersControls.test.tsx`: saves a complete quick month, asserts the stored `quick` and the month's days (`from`, `to` come from `monthRange`; the stored form keeps the days next to `quick`, so the test pins `quick`, not the absence of dates), then applies it again and expects the month | saving `state.filters` instead of the converted state fails it (1 failed, 27 passed) |
+| Fix task 2, S14 (order of the name checks) | `savedFilters.test.ts`: with 20 stored filters, empty and 41-character names give `invalid-name`, a duplicate gives `duplicate-name`, a fresh name gives `limit` | limit check above `checkName` fails it (1 failed, 40 passed) |
+| Fix task 3, D09 (stale error on reopen) | `SaveFilterDialog.test.tsx`: error, Cancelar, reopen, no alert and no `aria-invalid`; `spec.md` now says the dialog clears the name error on open | removing `setError(undefined)` from the open effect fails it (1 failed, 13 passed) |
+| Low, selection (SFILT-08.2) | `extratoSavedFilters.test.tsx`: applying a saved filter empties a row selection | reset effect of `TransactionsPage` no longer depends on `filters` fails it |
+| Low, page size marker (SFILT-07.4) | same file: a page size change keeps the applied marker | passing a different state to the controls when the page size is not the default fails it (and the older "25 por página não guarda o tamanho" test) |
+| Low, absent `neutral` | same file: after a filter without `neutral`, "Neutra" shows "Todas" | applying an absent `neutral` as `false` fails it (plus three older tests) |
+| Doc, spec note 1 | `spec.md`: applied-marker class is `bg-muted`, as in `SavedFiltersMenu.tsx` | not applicable |
+
+Not changed: D08 (redundant guard behind Radix focus) and M09 (equivalent) stay as the Verifier described them.
+
+Gates after the fixes: `yarn --cwd web test` three times, 1055 passed, 0 failed each (1050 plus the five new tests; 93 files by the run's own count); `yarn --cwd web typecheck` exit 0; `yarn --cwd web lint` 0 errors and the same 7 warnings as before. The traceability table of `spec.md` now reads Verified for SFILT-01 to SFILT-11 on the strength of the Verifier's evidence tables plus these fixes. Still open: a fresh independent re-verification of the fixes, and the owner's logged-in browser steps (save, apply, rename, delete in both themes and on a phone).

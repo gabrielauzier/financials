@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/saved-filters/design.md`
-**Status**: Implemented (the independent Verifier has not run yet; the owner's browser check stays open)
+**Status**: Implemented, independent Verifier ran (iteration 1, FAIL for three test gaps) and the gaps were fixed afterwards (see the addendum of `validation.md`); no fresh independent agent has re-verified the fixes, and the owner's logged-in browser check stays open
 
 **Feature prerequisites**: `transactions-list` implemented on `feat/transactions-list` (branch `feat/saved-filters` is stacked on it). Web only: no API, no database, no migration, `pnpm -C api typecheck` untouched. No push, no `db reset`, nothing touches the hosted Supabase or Vercel, `web/.env.local` is not touched, and no agent logs in to the app.
 
