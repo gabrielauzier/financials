@@ -270,6 +270,19 @@ describe("limite de 20 filtros", () => {
     expect(readSavedFilters("u1").filters).toHaveLength(20);
   });
 
+  it("com 20 filtros um nome vazio, longo ou repetido falha pela regra do nome, e o limite vem por último", () => {
+    put("u1", { version: 1, filters: many(20) });
+    const reason = (name: string) => {
+      const result = addSavedFilter("u1", name, STATE);
+      return result.ok ? "ok" : result.reason;
+    };
+    expect(reason("  ")).toBe("invalid-name");
+    expect(reason("a".repeat(41))).toBe("invalid-name");
+    expect(reason("filtro 7")).toBe("duplicate-name");
+    expect(reason("Novo")).toBe("limit");
+    expect(readSavedFilters("u1").filters).toHaveLength(20);
+  });
+
   it("o 20º ainda salva", () => {
     put("u1", { version: 1, filters: many(19) });
     expect(addSavedFilter("u1", "Vigésimo", STATE).ok).toBe(true);
