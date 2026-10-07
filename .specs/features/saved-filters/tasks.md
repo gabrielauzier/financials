@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/saved-filters/design.md`
-**Status**: In Progress
+**Status**: Implemented (the independent Verifier has not run yet; the owner's browser check stays open)
 
 **Feature prerequisites**: `transactions-list` implemented on `feat/transactions-list` (branch `feat/saved-filters` is stacked on it). Web only: no API, no database, no migration, `pnpm -C api typecheck` untouched. No push, no `db reset`, nothing touches the hosted Supabase or Vercel, `web/.env.local` is not touched, and no agent logs in to the app.
 
@@ -1177,17 +1177,18 @@ T9 → T10
 
 **Done when**:
 
-- [ ] With a user id the section "Filtros do extrato" has "Salvar filtro" and "Filtros salvos" after the "Limpar mês" button; without one neither is rendered and the existing extrato tests pass with no assertion weakened (AC 1 and 2 of the mount story)
-- [ ] From page 2, applying a saved filter sends one list query with exactly the saved parameters plus `page=1` and none of the previous ones, and the search field, "Tipo", "Conta", "Categoria", "Neutra", "De", "Até" and the sort indicator show the saved values (AC 1 to 4 of the apply story)
-- [ ] A saved quick month shows "Mês" and "Ano" with "De" and "Até" disabled, and applying a filter without one clears a quick month already there (AC 5)
-- [ ] A saved search shows in the field at once and no second list query goes out 300 ms later; a filter without search empties a typed one (AC 6, edge case)
-- [ ] The applied filter shows as applied, and changing the Tipo unmarks it (AC 7, AC 4 of the menu story)
-- [ ] With page size 25 chosen, saving and applying keeps `pageSize=25`, the stored state has no `pageSize`, and applying with size 50 sends none (AC 2 of the apply story, AC 5 of the mount story)
-- [ ] Saving, listing, applying, renaming and deleting send no request other than the list, summary, accounts and categories queries (AC 3 of the mount story)
-- [ ] "Limpar filtros" keeps the saved filters in the menu (AC 4)
-- [ ] `TransactionsPage.tsx` ends at no more than 765 lines
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the T9 total plus the new ones (no silent deletions)
+- [x] With a user id the section "Filtros do extrato" has "Salvar filtro" and "Filtros salvos" after the "Limpar mês" button; without one neither is rendered and the existing extrato tests pass with no assertion weakened (AC 1 and 2 of the mount story)
+- [x] From page 2, applying a saved filter sends one list query with exactly the saved parameters plus `page=1` and none of the previous ones, and the search field, "Tipo", "Conta", "Categoria", "Neutra", "De", "Até" and the sort indicator show the saved values (AC 1 to 4 of the apply story)
+- [x] A saved quick month shows "Mês" and "Ano" with "De" and "Até" disabled, and applying a filter without one clears a quick month already there (AC 5)
+- [x] A saved search shows in the field at once and no second list query goes out 300 ms later; a filter without search empties a typed one (AC 6, edge case)
+- [x] The applied filter shows as applied, and changing the Tipo unmarks it (AC 7, AC 4 of the menu story)
+- [x] With page size 25 chosen, saving and applying keeps `pageSize=25`, the stored state has no `pageSize`, and applying with size 50 sends none (AC 2 of the apply story, AC 5 of the mount story)
+- [x] Saving, listing, applying, renaming and deleting send no request other than the list, summary, accounts and categories queries (AC 3 of the mount story)
+- [x] "Limpar filtros" keeps the saved filters in the menu (AC 4)
+- [x] With an inverted period "Salvar filtro" is disabled at the page too (AC 2 of the save story)
+- [x] `TransactionsPage.tsx` ends at no more than 765 lines
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 1049 web tests pass (1040 after T9 plus 9 new; no silent deletions); `TransactionsPage.tsx` 739 lines (was 740, the month names moved to `savedFilterState.ts`)
 
 **Tests**: unit
 **Gate**: quick
@@ -1273,3 +1274,20 @@ Execution is strictly sequential, in the order T1 to T10 - there is no intra-pha
 | SFILT-11 | T6, T7, T8 |
 
 **Notes for the worker**: web tests that depend on time use the fake `Date` and timers of `fakeClock` (`shouldAdvanceTime`), no fixed sleeps, no raised timeouts, no month or year dropdown of the DatePicker; the page tests use `lightList` (three rows) and every test of a return to page 1 starts from page 2; the components are tested alone before the page. Tests never assert the value of a saved filter's `id`; they read stored filters by name. The saved filters are seeded in page tests with a raw JSON literal in `localStorage`, and the key is asserted as a literal at least once. The user is simulated by mocking the `@/features/auth/useSessionUserId` module; `localStorage` is cleared after each test. Prove each new guard test with a quick mutation in a temporary git worktree on the external volume (never in the real tree, never `git stash`) and record the proof in the commit body. The painted colors of the menu, the applied marker and the dialogs are measured in a real Chromium page (throwaway Vite page, no login) before T10 is committed, and the facts go in the T10 commit body. The boxes "browser check by the owner" of the spec stay open: no agent logs in to the app.
+
+### Painted check (author, real Chromium, no login)
+
+A throwaway Vite page in a temporary git worktree (`.sf-probe` on the external volume, removed afterwards) mounted the real `TransactionsPage` with the app `styles.css` and Tailwind plugin, the mock API (`VITE_MOCK_AREAS=*`), dummy Supabase variables and a fake `SessionContext` value (no sign-in, no credentials). Colors are the browser's painted ones (`getComputedStyle`, composited over the ancestors' backgrounds, WCAG ratio); transitions only advance while the page renders frames, so each measure was taken after a screenshot. Facts, light then dark:
+
+| What | Light | Dark |
+| ---- | ----- | ---- |
+| Save dialog: title, label, Cancelar | 17.62:1 on `rgb(251,250,247)` | 19.27:1 on `rgb(2,6,24)` |
+| Save dialog: description and summary list | 4.56:1 | 7.66:1 |
+| Save dialog: name error (`role="alert"`) | 4.57:1 | 6.98:1 |
+| Save dialog: Salvar button | 9.25:1 | 11.70:1 |
+| Manage dialog: title, field, Cancelar, Salvar nome (editing with error) | 17.62:1, 12.21:1, error 4.57:1 | same tokens as above |
+| Menu: item text on `rgb(255,255,255)` / `rgb(15,23,43)` | 20.16:1 | 17.04:1 |
+| Menu: applied item (`font-medium`, `bg-muted`, check icon) | 18.40:1 on `rgb(241,245,249)` | 13.97:1 on `rgb(29,41,61)` |
+| Invalid name field border (after the `aria-invalid` rule was added) | `oklch(0.577 0.245 27.325)` | not measured |
+
+Also checked in Chromium: a real mouse click on "Filtros salvos" opens the menu (`pointerdown`, which jsdom cannot do); choosing "Gerenciar filtros" opens its dialog and, after Esc, the focus is back on the "Filtros salvos" button; Esc in the rename field ends only the editing, and the next Esc closes the dialog (its `data-state` is `closed` at once, the element leaves the DOM when the exit animation ends); the success toast `Filtro "Despesas do mês" salvo` is green; at 375 px the two buttons sit on one 36 px row (24 to 334 px), the menu opens inside the viewport (24 to 186 px) and the page has no horizontal overflow; at 1440 px the buttons sit right of the quick month group, in the same row. The marker is not color-only: the check icon and the heavier weight carry it, and the background is a subtle `bg-muted`.

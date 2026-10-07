@@ -110,6 +110,7 @@ export function ManageFiltersDialog({
                     <>
                       <Input
                         ref={field}
+                        className="aria-[invalid=true]:border-destructive"
                         aria-label={`Novo nome de ${filter.name}`}
                         value={draft}
                         aria-invalid={error ? true : undefined}

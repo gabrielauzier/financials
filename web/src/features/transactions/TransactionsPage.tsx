@@ -45,6 +45,8 @@ import {
   useUpdateTransactionCategories,
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
+import { MONTH_NAMES } from "./savedFilterState";
+import { SavedFiltersControls } from "./SavedFiltersControls";
 import { ClearButton, FilterField } from "./FilterField";
 import { Pagination } from "./Pagination";
 import { SummaryCard } from "./SummaryCard";
@@ -61,20 +63,6 @@ import {
 
 type Sort = NonNullable<TransactionFilters["sort"]>;
 const baseFilters: TransactionFilters = { sort: "date", order: "desc", page: 1 };
-const MONTH_NAMES = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
 /** Current year minus 5 up to the current year plus 1, ascending. */
 const yearOptions = () => {
   const current = new Date().getFullYear();
@@ -148,6 +136,12 @@ export function TransactionsPage() {
   const clearSearch = () => {
     setSearch("");
     setState(withFilters(withQuery("")));
+  };
+  // a saved filter replaces every filter at once, so the search field changes with it (and no 300 ms debounce
+  // brings the old text back)
+  const applySaved = (next: FilterState) => {
+    setState(next);
+    setSearch(next.filters.q ?? "");
   };
   const changeDate = (key: "from" | "to", value: string) =>
     setState((state) => applyDateFilter(state, key, value));
@@ -353,6 +347,11 @@ export function TransactionsPage() {
             Limpar mês
           </Button>
         </div>
+        <SavedFiltersControls
+          state={{ filters, quick }}
+          invalidPeriod={invalidPeriod}
+          onApply={applySaved}
+        />
         <div className="relative sm:col-span-2 lg:col-span-4 xl:col-span-7">
           <Label htmlFor="transaction-search" className="sr-only">
             Buscar por nome

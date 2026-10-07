@@ -321,10 +321,10 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 | SFILT-05 | P1: Hook e usuário da sessão | In Tasks | Implemented-not-verified |
 | SFILT-06 | P1: Salvar filtro | In Tasks | Implemented-not-verified |
 | SFILT-07 | P1: Menu "Filtros salvos" e marcador | In Tasks | Implemented-not-verified |
-| SFILT-08 | P1: Aplicar um filtro salvo | In Tasks | Implementing |
+| SFILT-08 | P1: Aplicar um filtro salvo | In Tasks | Implemented-not-verified |
 | SFILT-09 | P1: Gerenciar filtros | In Tasks | Implemented-not-verified |
-| SFILT-10 | P1: Montagem no extrato | In Tasks | Pending |
-| SFILT-11 | P2: Aparência e acessibilidade | In Tasks | Implementing |
+| SFILT-10 | P1: Montagem no extrato | In Tasks | Implemented-not-verified |
+| SFILT-11 | P2: Aparência e acessibilidade | In Tasks | Implemented-not-verified |
 
 **Coverage:** 11 total, 11 mapped to tasks, 0 unmapped
 

@@ -79,6 +79,7 @@ export function SaveFilterDialog({ disabled, lines, atLimit, onSave }: Props) {
           <Input
             id="save-filter-name"
             ref={input}
+            className="aria-[invalid=true]:border-destructive"
             value={name}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "save-filter-error" : undefined}
