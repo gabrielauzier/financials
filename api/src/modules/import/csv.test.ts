@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AppError } from '../../plugins/errors.js';
-import { readCsv } from './csv.js';
+import { detectDelimiter, readCsv } from './csv.js';
 
 const BOM = '﻿';
 
@@ -75,5 +75,65 @@ describe('readCsv', () => {
     expect(() => readCsv('a,b\n"1,2\n')).toThrowError(
       expect.objectContaining({ code: 'unsupported_format', status: 422 }) as Error,
     );
+  });
+});
+
+describe('readCsv delimiter detection', () => {
+  it('reads a semicolon file with decimal commas inside the values', () => {
+    expect(readCsv('Data;Descrição;Valor\n02/01/2026;Juros;-R$ 1.210,50\n')).toEqual({
+      header: ['Data', 'Descrição', 'Valor'],
+      records: [['02/01/2026', 'Juros', '-R$ 1.210,50']],
+    });
+  });
+
+  it('reads a tab file, keeping an empty column as an empty string', () => {
+    expect(readCsv('Data\tDescrição\t\tValor\n02/01/2026\tJuros\t\t-R$ 0,19\n')).toEqual({
+      header: ['Data', 'Descrição', '', 'Valor'],
+      records: [['02/01/2026', 'Juros', '', '-R$ 0,19']],
+    });
+  });
+
+  it('prefers the tab when the header also holds a comma or a semicolon', () => {
+    expect(readCsv('a,b\tc;d\n1\t2\n').header).toEqual(['a,b', 'c;d']);
+    expect(readCsv('a;b\tc;d\n1\t2\n').header).toEqual(['a;b', 'c;d']);
+  });
+
+  it('keeps the comma when the header holds both a comma and a semicolon', () => {
+    expect(readCsv('a,b;c\n1,2;3\n')).toEqual({ header: ['a', 'b;c'], records: [['1', '2;3']] });
+  });
+
+  it('detects the delimiter from the header line only, not from the rows', () => {
+    expect(readCsv('a,b\n1;2,3\n').records).toEqual([['1;2', '3']]);
+    expect(readCsv('a;b\n1,5;2\n').records).toEqual([['1,5', '2']]);
+    expect(readCsv('a,b\n1\t2,3\n').records).toEqual([['1\t2', '3']]);
+  });
+
+  it('handles a BOM and CRLF the same way for semicolon and tab files', () => {
+    for (const [delimiter, text] of [
+      [';', 'Data;Valor\n02/01/2026;R$ 1,00\n'],
+      ['\t', 'Data\tValor\n02/01/2026\tR$ 1,00\n'],
+    ] as const) {
+      expect(readCsv(BOM + text.replace(/\n/g, '\r\n')), JSON.stringify(delimiter)).toEqual(readCsv(text));
+      expect(readCsv(BOM + text).header[0]).toBe('Data');
+    }
+  });
+
+  it('keeps quoted fields that contain the delimiter', () => {
+    expect(readCsv('a;b\n"x;y";2\n').records).toEqual([['x;y', '2']]);
+    expect(readCsv('a\tb\n"x\ty"\t2\n').records).toEqual([['x\ty', '2']]);
+  });
+
+  it('raises empty_file for a header-only semicolon or tab file', () => {
+    emptyFile(() => readCsv('Data;Descrição;Valor\n'));
+    emptyFile(() => readCsv('Data\tDescrição\t\tValor\n'));
+  });
+
+  it('exposes the choice: comma by default, tab, semicolon only without a comma', () => {
+    expect(detectDelimiter('Data,Valor,Identificador,Descrição\n')).toBe(',');
+    expect(detectDelimiter('date,title,amount')).toBe(',');
+    expect(detectDelimiter('')).toBe(',');
+    expect(detectDelimiter('Data;Valor')).toBe(';');
+    expect(detectDelimiter('Data\tValor')).toBe('\t');
+    expect(detectDelimiter('Data;Valor,x')).toBe(',');
   });
 });
