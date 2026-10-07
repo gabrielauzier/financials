@@ -27,10 +27,10 @@ Corroborated across multiple features. Safe to apply as guidance.
 - last seen: 2026-10-05T19:28:15Z
 
 ### L-027 - Budget heavy jsdom component tests so the suite stays green when a second suite or CI job shares the machine: measure a two-suite run, and keep the slowest test under half of testTimeout.
-- signal: `gate_fail` · recurrence: 3 feature(s) · scope: `ui-tests` · harmful: 0
-- features: transactions-ux, import-improvements, colors-and-icons
-- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests) (+2 more)
-- last seen: 2026-10-06T06:33:41Z
+- signal: `gate_fail` · recurrence: 5 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux, import-improvements, colors-and-icons, transactions-ux-v2, transactions-list
+- evidence: web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests) (+4 more)
+- last seen: 2026-10-07T02:21:59Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -245,6 +245,66 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: colors-and-icons
 - evidence: tasks.md:389 and tasks.md:478 (validation.md FT1) (process)
 - last seen: 2026-10-06T06:33:42Z
+
+### L-040 - Verify third-party-styled UI (sonner with Tailwind v4 layers) by computed style in a real browser, or by asserting the important suffix: unlayered library CSS beats layered utilities, so class-name and contrast tests in jsdom pass while nothing is painted.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `ui-styles` · harmful: 0
+- features: transactions-ux-v2
+- evidence: TUXV2-07/08 (validation.md gap 1) (ui-styles)
+- last seen: 2026-10-06T23:15:55Z
+
+### L-041 - Test the return to page 1 from page 2 for every clear or filter handler, not one: a test that starts on page 1 cannot observe a missing page reset.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-ux-v2
+- evidence: F-Tipo-page, F-Busca-page, F-Ate-page (validation.md) (ui-tests)
+- last seen: 2026-10-06T23:15:55Z
+
+### L-042 - Render and assert the negative form of every money figure the spec names as an edge case (a negative Despesas or Investimentos with its sign and color), not only the negative balance.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-list
+- evidence: mutants C22 C23 (validation.md) (ui-tests)
+- last seen: 2026-10-07T02:21:59Z
+
+### L-043 - Assert the literal localStorage key the spec fixes in at least one test, not only through the exported constant, so a renamed key cannot silently drop saved choices.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: transactions-list
+- evidence: mutant U7 (validation.md) (ui-tests)
+- last seen: 2026-10-07T02:21:59Z
+
+### L-044 - Give the no-floating-point money AC an input whose float sum differs from the exact sum, since rounding the total back to 2 decimals hides a float sum on small examples like 0.10 + 0.20.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `money` · harmful: 0
+- features: transactions-list
+- evidence: mutant S20 (validation.md) (money)
+- last seen: 2026-10-07T02:21:59Z
+
+### L-045 - When a derived total has no definition in the PRD (net vs gross, sign), put it to the owner as an open question with an example on the fixed dataset before the spec marks it unconfirmed.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: transactions-list
+- evidence: SPG-1 (validation.md): meaning and sign of the investments total (spec-outcomes)
+- last seen: 2026-10-07T02:21:59Z
+
+### L-046 - When a container converts state before saving it, add a test that saves a state with a quick month (a field the plain filters lack) and asserts the stored converted field, not only simple fields.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: saved-filters
+- evidence: mutant C13 (validation.md) (ui-tests)
+- last seen: 2026-10-07T04:01:05Z
+
+### L-047 - When the spec fixes the order of validation checks (name rules before the cap), add a test where two rules fail at once and assert the first one's message.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `unit-tests` · harmful: 0
+- features: saved-filters
+- evidence: mutant S14 (validation.md) (unit-tests)
+- last seen: 2026-10-07T04:01:05Z
+
+### L-048 - State in the spec whether an error message of a dialog survives a close and reopen, not only that the input is empty on reopen.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: saved-filters
+- evidence: SFILT-06 AC 9 / mutant D09 (validation.md) (spec-outcomes)
+- last seen: 2026-10-07T04:01:05Z
+
+### L-049 - When the no-floating-point AC names a large-sum example, run it for every money aggregate (income, expense, investments), not only one column: a float8 cast on an untested column survives.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `money` · harmful: 0
+- features: transactions-list
+- evidence: mutants S20b S20c (validation.md iteration 2) (money)
+- last seen: 2026-10-07T04:23:54Z
 
 ## Quarantined (failed when applied - ignore)
 

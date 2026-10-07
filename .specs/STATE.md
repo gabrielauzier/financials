@@ -42,6 +42,14 @@
 - **Date**: 2026-10-04
 - **Status**: active
 
+### AD-006
+- **Decision**: O que o navegador guarda (`localStorage`) segue uma convenção: chave com o prefixo `financials:`, uma chave por usuário (`<prefixo>:<id do usuário>`) quando o dado pertence ao usuário, valor em JSON com `version`, tudo o que se lê validado como `unknown` (dado ruim, velho ou de outra versão é ignorado sem quebrar a tela) e todo acesso em `try/catch` (bloqueado ou cota cheia nunca lança para a tela).
+- **Reason**: Os filtros salvos do extrato e as próximas preferências de tela vivem só no navegador; sem convenção, cada uma inventaria seu formato e suas falhas.
+- **Trade-off**: Código de validação por tipo de dado; versão diferente é ignorada em vez de migrada até existir a versão 2.
+- **Scope**: `web/`, features que guardam dados no navegador (`saved-filters`; a preferência `usePageSize` é global do aparelho e não precisa de chave por usuário).
+- **Date**: 2026-10-07
+- **Status**: active
+
 ## Handoff
 
 (none)

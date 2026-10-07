@@ -17,6 +17,7 @@ import {
   type TransactionRow,
   type TransactionType,
 } from './schema.js';
+import { summaryTotals, SummarySchema } from './summary.js';
 import { parseAmount, parseReceiptUrl } from './validation.js';
 
 // Deleting a category moves its transactions to the destination. Runs once, when this module is
@@ -85,7 +86,9 @@ const BulkCategoryBody = Type.Object({
 const SORTS = ['date', 'name', 'amount', 'category'] as const;
 type Sort = (typeof SORTS)[number];
 
-const PAGE_SIZE = 50 as const;
+const PAGE_SIZES = [25, 50, 100] as const;
+type PageSize = (typeof PAGE_SIZES)[number];
+const DEFAULT_PAGE_SIZE: PageSize = 50;
 
 const ListQuery = Type.Object({
   from: Type.Optional(Type.String({ description: 'Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included' })),
@@ -99,14 +102,24 @@ const ListQuery = Type.Object({
   order: Type.Optional(
     Type.String({ description: 'asc or desc (default desc for date, asc for the other columns)' }),
   ),
-  page: Type.Optional(Type.String({ description: 'Page number, starting at 1 (50 rows per page)' })),
+  page: Type.Optional(Type.String({ description: 'Page number, starting at 1' })),
+  pageSize: Type.Optional(
+    Type.String({ description: `Rows per page: ${PAGE_SIZES.join(', ')} (default ${DEFAULT_PAGE_SIZE})` }),
+  ),
 });
+
+/** The summary takes exactly the list's filters: no sort, order, page or pageSize. */
+const SummaryQuery = Type.Pick(ListQuery, ['from', 'to', 'accountId', 'categoryId', 'type', 'neutral', 'q']);
 
 const ListSchema = Type.Object({
   items: Type.Array(TransactionSchema),
   total: Type.Integer(),
   page: Type.Integer(),
-  pageSize: Type.Literal(PAGE_SIZE),
+  pageSize: Type.Unsafe<PageSize>({
+    type: 'integer',
+    enum: [...PAGE_SIZES],
+    description: 'Rows per page used for this response',
+  }),
 });
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -166,6 +179,14 @@ function validPage(value: string | undefined): number {
   const page = /^[1-9]\d{0,8}$/.test(value) ? Number(value) : 0;
   if (page < 1) throw invalid('page must be an integer greater than or equal to 1', 'page');
   return page;
+}
+
+/** Only the exact text 25, 50 or 100; absent means 50. */
+function validPageSize(value: string | undefined): PageSize {
+  if (value === undefined) return DEFAULT_PAGE_SIZE;
+  const size = PAGE_SIZES.find((candidate) => String(candidate) === value);
+  if (size === undefined) throw invalid(`pageSize must be one of: ${PAGE_SIZES.join(', ')}`, 'pageSize');
+  return size;
 }
 
 const LOCAL_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -367,6 +388,7 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
     { schema: { querystring: ListQuery, response: { 200: ListSchema } } },
     async (request) => {
       const page = validPage(request.query.page);
+      const pageSize = validPageSize(request.query.pageSize);
       const sort = validSort(request.query.sort);
       const order = validOrder(request.query.order, sort);
       const { rows, total } = await request.withUser(async (tx) => {
@@ -376,11 +398,17 @@ export async function transactionsRoutes(app: FastifyInstance): Promise<void> {
           select ${selectColumns(tx)} from ${fromJoins(tx)}
           ${where}
           ${orderByClause(tx, sort, order)}
-          limit ${PAGE_SIZE} offset ${(page - 1) * PAGE_SIZE}`;
+          limit ${pageSize} offset ${(page - 1) * pageSize}`;
         return { rows, total: (count as { n: number }).n };
       });
-      return { items: rows.map(toTransaction), total, page, pageSize: PAGE_SIZE as 50 };
+      return { items: rows.map(toTransaction), total, page, pageSize };
     },
+  );
+
+  routes.get(
+    '/transactions/summary',
+    { schema: { querystring: SummaryQuery, response: { 200: SummarySchema } } },
+    async (request) => request.withUser((tx) => summaryTotals(tx, whereClause(tx, request.query, request.tz))),
   );
 
   routes.patch(

@@ -1,5 +1,9 @@
 import { formatBRL } from "@/lib/format";
-import type { TransactionFilters, TransactionType } from "@/lib/api/types";
+import type {
+  TransactionFilters,
+  TransactionSummaryFilters,
+  TransactionType,
+} from "@/lib/api/types";
 
 export function parseBRLToDecimal(value: string): string | null {
   const clean = value.trim().replace(/\s/g, "");
@@ -17,6 +21,19 @@ export function toLocalDateInput(iso: string): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+
+/**
+ * Weekday abbreviation of the LOCAL day of an instant, in the same zone `formatDateLocal` shows the date in
+ * (the browser's), so the date and its weekday never disagree. Empty for an invalid instant. Never parses a
+ * bare `YYYY-MM-DD` with `new Date`, which would read it as UTC midnight and give the previous day in Brazil.
+ */
+export function weekdayAbbrev(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return WEEKDAYS[date.getDay()] ?? "";
 }
 
 export type QuickMonth = { year?: number; month?: number };
@@ -61,4 +78,13 @@ export function amountClassName(type: TransactionType): string {
 export function formatSignedAmount(type: TransactionType, amount: string): string {
   if (type === "Income") return formatBRL(amount);
   return `-${formatBRL(amount.trim().replace(/^-/, ""))}`;
+}
+
+/**
+ * The filters that change the summary: the list filters without the sort, the page and the page size, which only
+ * choose which rows of the same set are shown. Equal for any page, order or size, so those never refetch it.
+ */
+export function summaryFilters(filters: TransactionFilters): TransactionSummaryFilters {
+  const { sort: _sort, order: _order, page: _page, pageSize: _pageSize, ...rest } = filters;
+  return rest;
 }

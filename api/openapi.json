@@ -927,6 +927,7 @@
                     "notes",
                     "receipt",
                     "description",
+                    "identifier",
                     "neutral",
                     "counterpartyDocument",
                     "counterpartyBank"
@@ -992,6 +993,11 @@
                     },
                     "description": {
                       "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "identifier": {
+                      "description": "External identifier set by the import (e.g. the bank transaction id); read-only",
                       "type": "string",
                       "nullable": true
                     },
@@ -1101,7 +1107,16 @@
             "in": "query",
             "name": "page",
             "required": false,
-            "description": "Page number, starting at 1 (50 rows per page)"
+            "description": "Page number, starting at 1"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "description": "Rows per page: 25, 50, 100 (default 50)"
           }
         ],
         "responses": {
@@ -1136,6 +1151,7 @@
                           "notes",
                           "receipt",
                           "description",
+                          "identifier",
                           "neutral",
                           "counterpartyDocument",
                           "counterpartyBank"
@@ -1204,6 +1220,11 @@
                             "type": "string",
                             "nullable": true
                           },
+                          "identifier": {
+                            "description": "External identifier set by the import (e.g. the bank transaction id); read-only",
+                            "type": "string",
+                            "nullable": true
+                          },
                           "neutral": {
                             "type": "boolean"
                           },
@@ -1225,10 +1246,121 @@
                       "type": "integer"
                     },
                     "pageSize": {
-                      "type": "number",
+                      "type": "integer",
                       "enum": [
-                        50
-                      ]
+                        25,
+                        50,
+                        100
+                      ],
+                      "description": "Rows per page used for this response"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/summary": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Local date YYYY-MM-DD in the X-Timezone zone; the whole day is included"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "accountId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "categoryId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "description": "One of: Income, Expense"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "neutral",
+            "required": false,
+            "description": "true or false"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "description": "Name contains this text, ignoring case and accents"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "count",
+                    "income",
+                    "expense",
+                    "investments",
+                    "balance"
+                  ],
+                  "properties": {
+                    "count": {
+                      "description": "Rows that match the filter, all of them (the same as the list total)",
+                      "type": "integer"
+                    },
+                    "income": {
+                      "description": "Income of the filtered rows, with the dashboard rules (no neutral, CreditCard, Investments, Reversal or future-dated rows). Decimal string with 2 decimals; may be negative",
+                      "type": "string"
+                    },
+                    "expense": {
+                      "description": "Expense of the filtered rows, with the dashboard rules; an Income in the Reversal category abates it. Decimal string with 2 decimals; may be negative",
+                      "type": "string"
+                    },
+                    "investments": {
+                      "description": "Net invested in the Investments category (Expense minus Income), outside income, expense and balance. Decimal string with 2 decimals; may be negative",
+                      "type": "string"
+                    },
+                    "balance": {
+                      "description": "income minus expense. Decimal string with 2 decimals; may be negative",
+                      "type": "string"
                     }
                   }
                 }
@@ -1320,6 +1452,7 @@
                     "notes",
                     "receipt",
                     "description",
+                    "identifier",
                     "neutral",
                     "counterpartyDocument",
                     "counterpartyBank"
@@ -1385,6 +1518,11 @@
                     },
                     "description": {
                       "description": "Original title of the transaction (e.g. from the bank statement); read-only after creation",
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "identifier": {
+                      "description": "External identifier set by the import (e.g. the bank transaction id); read-only",
                       "type": "string",
                       "nullable": true
                     },

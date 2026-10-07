@@ -4,6 +4,8 @@ import {
   EXPENSE_VALUE,
   FROM_TRANSACTIONS,
   INCOME_VALUE,
+  INVESTMENT_ROW,
+  INVESTMENT_VALUE,
   NET_VALUE,
   rule,
 } from '../src/modules/dashboards/rules.js';
@@ -104,5 +106,47 @@ describe('calculation rules (rules.ts) against Postgres', () => {
     await getAdminSql()`update public.categories set name = 'Outro nome' where user_id = ${user.id} and key = 'Reversal'`;
     const { expense } = await totals(user.id);
     expect(expense).toBe('-30.00');
+  });
+});
+
+/** Investments total and the row counts of the three fragments, over every row of the user. */
+async function investmentTotals(userId: string) {
+  const [row] = await asUser(userId, (tx) => tx<{ investments: string; investmentRows: number; countable: number; both: number }[]>`
+    select coalesce(sum(${rule(tx, INVESTMENT_VALUE)}) filter (where ${rule(tx, INVESTMENT_ROW)}), 0.00)::text as investments,
+           (count(*) filter (where ${rule(tx, INVESTMENT_ROW)}))::int as "investmentRows",
+           (count(*) filter (where ${rule(tx, COUNTABLE)}))::int as countable,
+           (count(*) filter (where ${rule(tx, COUNTABLE)} and ${rule(tx, INVESTMENT_ROW)}))::int as both
+    from ${rule(tx, FROM_TRANSACTIONS)}`);
+  return row as { investments: string; investmentRows: number; countable: number; both: number };
+}
+
+describe('investment fragments (rules.ts) against Postgres (TLIST-03, TLIST-04)', () => {
+  it('sums an Investments Expense as positive and an Investments Income as negative (200.00 - 5.00)', async () => {
+    const { user } = await setup(DATASET);
+    expect(await investmentTotals(user.id)).toMatchObject({ investments: '195.00', investmentRows: 2 });
+  });
+
+  it('leaves out neutral, CreditCard and future-dated Investments rows and rows of other categories', async () => {
+    const { user } = await setup([
+      { type: 'Expense', amount: '7.00', at: PAST, category: 'Investments' }, // the only one that counts
+      { type: 'Expense', amount: '1.00', at: PAST, category: 'Investments', neutral: true },
+      { type: 'Expense', amount: '2.00', at: PAST, category: 'Investments', method: 'CreditCard' },
+      { type: 'Expense', amount: '3.00', at: FUTURE, category: 'Investments' },
+      { type: 'Income', amount: '4.00', at: FUTURE, category: 'Investments' },
+      { type: 'Expense', amount: '5.00', at: PAST, category: 'Food' },
+    ]);
+    expect(await investmentTotals(user.id)).toMatchObject({ investments: '7.00', investmentRows: 1 });
+  });
+
+  it('never makes a row both countable for income and expense and an investment row', async () => {
+    const { user } = await setup(DATASET);
+    // countable: Salaries 1000, Food 100, Reversal Income 30, Reversal Expense 20, Utilities 10
+    expect(await investmentTotals(user.id)).toMatchObject({ countable: 5, investmentRows: 2, both: 0 });
+  });
+
+  it('matches Investments by key, not by name (a renamed category still counts)', async () => {
+    const { user } = await setup([{ type: 'Expense', amount: '50.00', at: PAST, category: 'Investments' }]);
+    await getAdminSql()`update public.categories set name = 'Poupança' where user_id = ${user.id} and key = 'Investments'`;
+    expect(await investmentTotals(user.id)).toMatchObject({ investments: '50.00', investmentRows: 1 });
   });
 });

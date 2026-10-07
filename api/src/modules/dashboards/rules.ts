@@ -14,15 +14,33 @@ export const FROM_TRANSACTIONS = `
   join public.categories c on c.id = t.category_id and c.user_id = t.user_id`;
 
 /**
- * Rows that may count at all: not neutral, not paid by card (the invoice payment is the Expense on
- * the account statement), not an Investments contribution, and not dated after now.
+ * Rows that may count in any total: not neutral, not paid by card (the invoice payment is the Expense
+ * on the account statement) and not dated after now. Investments is split off by COUNTABLE and
+ * INVESTMENT_ROW.
  */
-export const COUNTABLE = `(
+export const COUNTABLE_BASE = `(
   NOT t.neutral
   AND t.payment_method <> 'CreditCard'
-  AND c.key <> 'Investments'
   AND t.occurred_at <= now()
 )`;
+
+/** Rows that count in income and expense: the base rows that are not an Investments contribution. */
+export const COUNTABLE = `(
+  ${COUNTABLE_BASE}
+  AND c.key <> 'Investments'
+)`;
+
+/**
+ * Rows of the Investments category that count in the separate investments total of the extrato summary:
+ * the same exclusions as the dashboard (neutral, CreditCard, future-dated), never part of income or expense.
+ */
+export const INVESTMENT_ROW = `(
+  ${COUNTABLE_BASE}
+  AND c.key = 'Investments'
+)`;
+
+/** Amount of an investment row: a contribution (Expense) is positive, a redemption (Income) negative. */
+export const INVESTMENT_VALUE = `(CASE WHEN t.type = 'Expense' THEN t.amount ELSE -t.amount END)`;
 
 /**
  * Expense of a countable row: an Expense counts in full; an Income in the Reversal category abates

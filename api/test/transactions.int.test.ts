@@ -73,6 +73,7 @@ describe('POST /transactions', () => {
       notes: 'feira',
       receipt: 'https://example.com/r/1',
       description: null,
+      identifier: null,
       neutral: false,
       counterpartyDocument: null,
       counterpartyBank: null,
@@ -307,7 +308,8 @@ describe('GET /transactions', () => {
     expect(Object.keys(body.items[0] ?? {}).sort()).toEqual(
       [
         'id', 'accountId', 'accountNickname', 'categoryId', 'categoryName', 'name', 'type', 'occurredAt', 'amount',
-        'paymentMethod', 'notes', 'receipt', 'description', 'neutral', 'counterpartyDocument', 'counterpartyBank',
+        'paymentMethod', 'notes', 'receipt', 'description', 'identifier', 'neutral', 'counterpartyDocument',
+        'counterpartyBank',
       ].sort(),
     );
   });
@@ -356,6 +358,101 @@ describe('GET /transactions', () => {
 
   it('requires authentication', async () => {
     expect((await app.inject({ method: 'GET', url: '/transactions' })).statusCode).toBe(401);
+  });
+});
+
+describe('GET /transactions pageSize (TLIST-05)', () => {
+  let u: TestUser;
+  const hour = (i: number) => new Date(Date.UTC(2026, 0, 1) + i * 3_600_000).toISOString();
+  const SIZES = [25, 50, 100] as const;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    const a = await createAccount(u, 'Tamanho');
+    // 120 rows; every 10th shares its instant with the previous one (ties). Every 3rd row is an Income and
+    // the amounts are 1.00 .. 120.00, so a sorted, filtered page has a known content.
+    await seed(
+      u,
+      a,
+      Array.from({ length: 120 }, (_, i) => ({
+        name: `Linha ${i}`,
+        type: i % 3 === 0 ? ('Income' as const) : ('Expense' as const),
+        amount: `${i + 1}.00`,
+        occurredAt: hour(i % 10 === 0 ? i + 1 : i),
+      })),
+    );
+  });
+
+  async function allIds(size: number): Promise<string[]> {
+    const ids: string[] = [];
+    for (let page = 1; page <= Math.ceil(120 / size); page++) {
+      ids.push(...(await list(u, `pageSize=${size}&page=${page}`)).items.map((r) => r.id));
+    }
+    return ids;
+  }
+
+  it('returns up to 50 items and pageSize 50 when pageSize is absent', async () => {
+    const body = await list(u);
+    expect(body).toMatchObject({ total: 120, page: 1, pageSize: 50 });
+    expect(body.items).toHaveLength(50);
+  });
+
+  it.each(SIZES)('returns %i items on page 1 with the same total and the used pageSize', async (size) => {
+    const body = await list(u, `pageSize=${size}`);
+    expect(body).toMatchObject({ total: 120, page: 1, pageSize: size });
+    expect(body.items).toHaveLength(size);
+  });
+
+  it.each(SIZES)('holds the remainder (20) on the last page of size %i', async (size) => {
+    const last = Math.ceil(120 / size);
+    const body = await list(u, `pageSize=${size}&page=${last}`);
+    expect(body).toMatchObject({ total: 120, page: last, pageSize: size });
+    expect(body.items).toHaveLength(20);
+  });
+
+  it.each(['0', '10', '30', '101', '125', 'abc', '', '050', '50.0', ' 50', '+50', '1e2', '-25'])(
+    'rejects pageSize=%j with 422 validation_error on field pageSize',
+    async (value) => {
+      const res = await call(u, 'GET', `/transactions?pageSize=${encodeURIComponent(value)}`);
+      expect(res.statusCode).toBe(422);
+      expect(res.json()).toEqual({ error: { code: 'validation_error', message: expect.any(String), field: 'pageSize' } });
+    },
+  );
+
+  it('answers a repeated pageSize like a repeated page: 400 validation_error', async () => {
+    const repeatedPage = await call(u, 'GET', '/transactions?page=1&page=2');
+    const repeatedSize = await call(u, 'GET', '/transactions?pageSize=25&pageSize=50');
+    expect(repeatedPage.statusCode).toBe(400);
+    expect(repeatedSize.statusCode).toBe(400);
+    expect(repeatedSize.json<{ error: { code: string } }>().error.code).toBe('validation_error');
+  });
+
+  it.each(SIZES)('answers an empty page past the end with the total and pageSize %i', async (size) => {
+    const body = await list(u, `pageSize=${size}&page=1000`);
+    expect(body).toEqual({ items: [], total: 120, page: 1000, pageSize: size });
+  });
+
+  it('forms the same set in the same order with pages of 25, 50 and 100 (equal instants included)', async () => {
+    const expected = (
+      await getAdminSql()<{ id: string }[]>`
+        select id from public.transactions where user_id = ${u.id} order by occurred_at desc, id desc`
+    ).map((r) => r.id);
+    for (const size of SIZES) {
+      const ids = await allIds(size);
+      expect(new Set(ids).size, `size ${size}`).toBe(120);
+      expect(ids, `size ${size}`).toEqual(expected);
+    }
+  });
+
+  it('applies the size to the filtered and sorted set', async () => {
+    // 40 Incomes with amounts 1, 4, 7, ... 118; sorted by amount ascending the first 25 are 1..73
+    const first = await list(u, 'type=Income&sort=amount&order=asc&pageSize=25');
+    expect(first).toMatchObject({ total: 40, page: 1, pageSize: 25 });
+    expect(first.items.map((r) => r.amount)).toEqual(Array.from({ length: 25 }, (_, k) => `${k * 3 + 1}.00`));
+    const second = await list(u, 'type=Income&sort=amount&order=asc&pageSize=25&page=2');
+    expect(second.total).toBe(40);
+    expect(second.items).toHaveLength(15);
+    expect(second.items[0]?.amount).toBe('76.00');
   });
 });
 
@@ -655,6 +752,7 @@ interface Txn {
   notes: string | null;
   receipt: string | null;
   description: string | null;
+  identifier: string | null;
   neutral: boolean;
   counterpartyDocument: string | null;
   counterpartyBank: string | null;
@@ -1221,5 +1319,88 @@ describe('transaction description', () => {
     const patched = await call(other, 'PATCH', `/transactions/${created.id}`, { name: 'x' });
     expect(patched.statusCode).toBe(404);
     expect(JSON.stringify(patched.json())).not.toContain('Texto privado');
+  });
+});
+
+describe('transaction identifier (read-only)', () => {
+  let u: TestUser;
+  let account: string;
+  let category: string;
+
+  beforeAll(async () => {
+    u = await createTestUser();
+    account = await createAccount(u, 'Identificador');
+    category = await categoryId(u, 'Uncategorized');
+  });
+
+  /** A row with an identifier can only come from the import, so the test writes it like the import does. */
+  async function insertImported(name: string, identifier: string | null, as: TestUser = u): Promise<string> {
+    const [row] = await getAdminSql()`
+      insert into public.transactions
+        (user_id, account_id, category_id, name, type, occurred_at, amount, payment_method, identifier)
+      values (${as.id}, ${account}, ${category}, ${name}, 'Expense', '2026-10-05T15:00:00Z', 10, 'PIX', ${identifier})
+      returning id`;
+    return (row as { id: string }).id;
+  }
+  const storedIdentifier = async (id: string) =>
+    (await getAdminSql()`select identifier from public.transactions where id = ${id}`)[0]?.identifier;
+  const create = (over: Record<string, unknown> = {}) =>
+    call(u, 'POST', '/transactions', valid({ accountId: account, ...over }));
+  type Listed = Page['items'][number] & { identifier?: string | null };
+  const find = async (name: string, as: TestUser = u) =>
+    ((await list(as, `q=${encodeURIComponent(name)}`)).items as Listed[]).find((item) => item.name === name);
+
+  it('returns the stored identifier in the list, and null for a manual transaction', async () => {
+    const id = await insertImported('Importada lista', 'a1b2c3d4-0000-4000-8000-000000000001');
+    await create({ name: 'Manual lista' });
+    expect((await find('Importada lista'))?.identifier).toBe('a1b2c3d4-0000-4000-8000-000000000001');
+    expect((await find('Manual lista'))?.identifier).toBeNull();
+    expect(await storedIdentifier(id)).toBe('a1b2c3d4-0000-4000-8000-000000000001');
+  });
+
+  it('returns the identifier untrimmed, with the spaces at the ends kept', async () => {
+    await insertImported('Importada espaços', '  ID-COM-ESPACOS  ');
+    expect((await find('Importada espaços'))?.identifier).toBe('  ID-COM-ESPACOS  ');
+  });
+
+  it.each([
+    ['a string', 'ID-ENVIADO'],
+    ['a number', 42],
+    ['an object', { v: 'x' }],
+    ['null', null],
+  ])('ignores identifier as %s on POST: 201, identifier null, nothing stored', async (_label, identifier) => {
+    const res = await create({ name: `Ignora ${_label}`, identifier });
+    expect(res.statusCode).toBe(201);
+    expect(res.json<Txn>().identifier).toBeNull();
+    expect(await storedIdentifier(res.json<Txn>().id)).toBeNull();
+  });
+
+  it('ignores identifier on PATCH (200, value unchanged), also when name changes in the same body', async () => {
+    const id = await insertImported('Original id', 'ID-ORIGINAL');
+    const only = await call(u, 'PATCH', `/transactions/${id}`, { identifier: 'OUTRO' });
+    expect(only.statusCode).toBe(200);
+    expect(only.json<Txn>().identifier).toBe('ID-ORIGINAL');
+    const both = await call(u, 'PATCH', `/transactions/${id}`, { name: 'Renomeada id', identifier: null });
+    expect(both.statusCode).toBe(200);
+    expect(both.json<Txn>()).toMatchObject({ name: 'Renomeada id', identifier: 'ID-ORIGINAL' });
+    expect(await storedIdentifier(id)).toBe('ID-ORIGINAL');
+  });
+
+  it('returns identifier null on PATCH for a manual transaction that was sent one', async () => {
+    const created = (await create({ name: 'Manual patch' })).json<Txn>();
+    const res = await call(u, 'PATCH', `/transactions/${created.id}`, { identifier: 'TENTATIVA' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json<Txn>().identifier).toBeNull();
+  });
+
+  it('does not show the identifier of one user to another', async () => {
+    const other = await createTestUser();
+    const id = await insertImported('Segredo id', 'ID-PRIVADO');
+    const theirs = await list(other, 'page=1');
+    expect(theirs.items).toEqual([]);
+    expect(JSON.stringify(theirs)).not.toContain('ID-PRIVADO');
+    const patched = await call(other, 'PATCH', `/transactions/${id}`, { name: 'x' });
+    expect(patched.statusCode).toBe(404);
+    expect(JSON.stringify(patched.json())).not.toContain('ID-PRIVADO');
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -36,9 +36,8 @@ import { AccountLabel } from "@/features/accounts/AccountLabel";
 import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { useAccountLookup } from "@/features/accounts/hooks";
 import { CategorySelect } from "@/features/categories/CategorySelect";
-import { formatDateLocal } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/notify";
-import type { Transaction, TransactionFilters } from "@/lib/api/types";
+import type { PageSize, Transaction, TransactionFilters } from "@/lib/api/types";
 import {
   useDeleteTransaction,
   useTransactions,
@@ -46,7 +45,14 @@ import {
   useUpdateTransactionCategories,
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
+import { MONTH_NAMES } from "./savedFilterState";
+import { SavedFiltersControls } from "./SavedFiltersControls";
+import { ClearButton, FilterField } from "./FilterField";
+import { Pagination } from "./Pagination";
+import { SummaryCard } from "./SummaryCard";
+import { TransactionDate } from "./TransactionDate";
 import { TransactionForm } from "./TransactionForm";
+import { DEFAULT_PAGE_SIZE, usePageSize } from "./usePageSize";
 import {
   amountClassName,
   applyDateFilter,
@@ -57,20 +63,6 @@ import {
 
 type Sort = NonNullable<TransactionFilters["sort"]>;
 const baseFilters: TransactionFilters = { sort: "date", order: "desc", page: 1 };
-const MONTH_NAMES = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
 /** Current year minus 5 up to the current year plus 1, ascending. */
 const yearOptions = () => {
   const current = new Date().getFullYear();
@@ -86,6 +78,15 @@ const withFilters =
     return filters === state.filters ? state : { ...state, filters };
   };
 
+/** The filters with the search text applied (`q` set, or removed when empty), back on page 1; the same object when nothing changes. */
+const withQuery = (query: string) => (current: TransactionFilters) => {
+  if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
+  const next = { ...current, page: 1 };
+  if (query) next.q = query;
+  else delete next.q;
+  return next;
+};
+
 export function TransactionsPage() {
   // filters and the quick month live in one state, so no update can change one without the other
   const [{ filters, quick }, setState] = useState<FilterState>(initialState);
@@ -97,7 +98,14 @@ export function TransactionsPage() {
   const [deleting, setDeleting] = useState<Transaction>();
   const quickActive = quick.year !== undefined && quick.month !== undefined;
   const invalidPeriod = Boolean(filters.from && filters.to && filters.from > filters.to);
-  const { data, isLoading, isError, refetch } = useTransactions(filters, !invalidPeriod);
+  // the page size is a view setting, not a filter: it joins the list query here and nowhere else (the API default,
+  // 50, is left out of the request)
+  const [pageSize, setPageSize] = usePageSize();
+  const listFilters = useMemo<TransactionFilters>(
+    () => (pageSize === DEFAULT_PAGE_SIZE ? filters : { ...filters, pageSize }),
+    [filters, pageSize],
+  );
+  const { data, isLoading, isError, refetch } = useTransactions(listFilters, !invalidPeriod);
   const update = useUpdateTransaction();
   const remove = useDeleteTransaction();
   const bulk = useUpdateTransactionCategories();
@@ -105,21 +113,12 @@ export function TransactionsPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const query = search.trim();
-      setState(
-        withFilters((current) => {
-          // nothing to change (the first run, right after mount): keep the filters, and the selection
-          if ((current.q ?? "") === query && (current.page ?? 1) === 1) return current;
-          const next = { ...current, page: 1 };
-          if (query) next.q = query;
-          else delete next.q;
-          return next;
-        }),
-      );
+      // nothing to change (the first run, right after mount): keep the filters, and the selection
+      setState(withFilters(withQuery(search.trim())));
     }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
-  useEffect(() => setSelected(new Set()), [filters]);
+  useEffect(() => setSelected(new Set()), [filters, pageSize]);
 
   const changeFilter = <K extends keyof TransactionFilters>(key: K, value: TransactionFilters[K]) =>
     setState(
@@ -130,6 +129,20 @@ export function TransactionsPage() {
         return next;
       }),
     );
+  /** The "x" handler of a filter, only while that filter has a value. */
+  const clearOf = (key: "accountId" | "categoryId" | "type" | "neutral") =>
+    filters[key] !== undefined ? () => changeFilter(key, undefined) : undefined;
+  // the "x" of the search: empties the field and drops `q` now, without waiting for the 300 ms debounce
+  const clearSearch = () => {
+    setSearch("");
+    setState(withFilters(withQuery("")));
+  };
+  // a saved filter replaces every filter at once, so the search field changes with it (and no 300 ms debounce
+  // brings the old text back)
+  const applySaved = (next: FilterState) => {
+    setState(next);
+    setSearch(next.filters.q ?? "");
+  };
   const changeDate = (key: "from" | "to", value: string) =>
     setState((state) => applyDateFilter(state, key, value));
   const changeQuick = (part: "year" | "month", value: number) =>
@@ -191,7 +204,13 @@ export function TransactionsPage() {
       notifyError(reason, "transaction");
     }
   };
-  const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 50));
+  const goToPage = (page: number) => setState(withFilters((current) => ({ ...current, page })));
+  const changePageSize = (size: PageSize) => {
+    setPageSize(size);
+    setState(
+      withFilters((current) => ((current.page ?? 1) === 1 ? current : { ...current, page: 1 })),
+    );
+  };
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -217,38 +236,46 @@ export function TransactionsPage() {
         aria-label="Filtros do extrato"
         className="grid gap-4 border-b py-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
       >
-        <Filter label="De" id="filter-from">
+        <FilterField
+          label="De"
+          id="filter-from"
+          onClear={filters.from && !quickActive ? () => changeDate("from", "") : undefined}
+        >
           <DatePicker
             id="filter-from"
             value={filters.from ?? ""}
             disabled={quickActive}
             onChange={(value) => changeDate("from", value)}
           />
-        </Filter>
-        <Filter label="Até" id="filter-to">
+        </FilterField>
+        <FilterField
+          label="Até"
+          id="filter-to"
+          onClear={filters.to && !quickActive ? () => changeDate("to", "") : undefined}
+        >
           <DatePicker
             id="filter-to"
             value={filters.to ?? ""}
             disabled={quickActive}
             onChange={(value) => changeDate("to", value)}
           />
-        </Filter>
-        <Filter label="Conta" id="filter-account">
+        </FilterField>
+        <FilterField label="Conta" id="filter-account" onClear={clearOf("accountId")}>
           <AccountSelect
             id="filter-account"
             includeInactive
             value={filters.accountId}
             onChange={(value) => changeFilter("accountId", value)}
           />
-        </Filter>
-        <Filter label="Categoria" id="filter-category">
+        </FilterField>
+        <FilterField label="Categoria" id="filter-category" onClear={clearOf("categoryId")}>
           <CategorySelect
             id="filter-category"
             value={filters.categoryId}
             onChange={(value) => changeFilter("categoryId", value)}
           />
-        </Filter>
-        <Filter label="Tipo" id="filter-type">
+        </FilterField>
+        <FilterField label="Tipo" id="filter-type" onClear={clearOf("type")}>
           <SimpleSelect
             id="filter-type"
             value={filters.type ?? "all"}
@@ -261,8 +288,8 @@ export function TransactionsPage() {
               ["Expense", "Despesa"],
             ]}
           />
-        </Filter>
-        <Filter label="Neutra" id="filter-neutral">
+        </FilterField>
+        <FilterField label="Neutra" id="filter-neutral" onClear={clearOf("neutral")}>
           <SimpleSelect
             id="filter-neutral"
             value={filters.neutral === undefined ? "all" : String(filters.neutral)}
@@ -275,7 +302,7 @@ export function TransactionsPage() {
               ["false", "Não"],
             ]}
           />
-        </Filter>
+        </FilterField>
         <div className="flex items-end">
           <Button
             variant="outline"
@@ -289,7 +316,12 @@ export function TransactionsPage() {
           </Button>
         </div>
         <div className="grid grid-cols-2 items-end gap-4 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto] lg:col-span-4 xl:col-span-3">
-          <Filter label="Mês" id="filter-quick-month">
+          <FilterField
+            label="Mês"
+            clearLabel="Mês rápido"
+            id="filter-quick-month"
+            onClear={quickActive ? clearQuick : undefined}
+          >
             <SimpleSelect
               id="filter-quick-month"
               value={quick.month === undefined ? "" : String(quick.month)}
@@ -297,8 +329,8 @@ export function TransactionsPage() {
               onChange={(value) => changeQuick("month", Number(value))}
               options={MONTH_NAMES.map((name, index) => [String(index + 1), name])}
             />
-          </Filter>
-          <Filter label="Ano" id="filter-quick-year">
+          </FilterField>
+          <FilterField label="Ano" id="filter-quick-year">
             <SimpleSelect
               id="filter-quick-year"
               value={quick.year === undefined ? "" : String(quick.year)}
@@ -306,7 +338,7 @@ export function TransactionsPage() {
               onChange={(value) => changeQuick("year", Number(value))}
               options={yearOptions().map((year) => [String(year), String(year)])}
             />
-          </Filter>
+          </FilterField>
           <Button
             variant="outline"
             disabled={quick.year === undefined && quick.month === undefined}
@@ -315,6 +347,11 @@ export function TransactionsPage() {
             Limpar mês
           </Button>
         </div>
+        <SavedFiltersControls
+          state={{ filters, quick }}
+          invalidPeriod={invalidPeriod}
+          onApply={applySaved}
+        />
         <div className="relative sm:col-span-2 lg:col-span-4 xl:col-span-7">
           <Label htmlFor="transaction-search" className="sr-only">
             Buscar por nome
@@ -322,11 +359,18 @@ export function TransactionsPage() {
           <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
           <Input
             id="transaction-search"
-            className="pl-9"
+            className="px-9"
             placeholder="Buscar por nome"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search !== "" && (
+            <ClearButton
+              label="Busca"
+              onClick={clearSearch}
+              className="absolute right-1.5 top-1.5 size-6 rounded-full text-muted-foreground"
+            />
+          )}
         </div>
         {invalidPeriod && (
           <p
@@ -337,6 +381,13 @@ export function TransactionsPage() {
           </p>
         )}
       </section>
+      {!invalidPeriod && (
+        <SummaryCard
+          filters={filters}
+          onSelectType={(type) => changeFilter("type", type)}
+          onSelectCategory={(categoryId) => changeFilter("categoryId", categoryId)}
+        />
+      )}
       {selected.size > 0 && (
         <div className="my-4 flex flex-col gap-3 border-y bg-muted/40 px-4 py-3 sm:flex-row sm:items-center">
           <strong className="text-sm">{selected.size} selecionada(s)</strong>
@@ -425,38 +476,14 @@ export function TransactionsPage() {
         </>
       )}
       {data && data.total > 0 && (
-        <footer className="flex flex-col gap-3 py-5 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            {data.total} transações · Página {data.page} de {pages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page <= 1}
-              onClick={() =>
-                setState(
-                  withFilters((current) => ({
-                    ...current,
-                    page: Math.max(1, (current.page ?? 1) - 1),
-                  })),
-                )
-              }
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page >= pages}
-              onClick={() =>
-                setState(withFilters((current) => ({ ...current, page: (current.page ?? 1) + 1 })))
-              }
-            >
-              Próxima
-            </Button>
-          </div>
-        </footer>
+        <Pagination
+          page={data.page}
+          total={data.total}
+          pageSize={data.pageSize}
+          selectedPageSize={pageSize}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
+        />
       )}
       <TransactionForm
         open={formOpen}
@@ -498,14 +525,6 @@ export function TransactionsPage() {
   );
 }
 
-function Filter({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-    </div>
-  );
-}
 function SimpleSelect({
   id,
   value,
@@ -593,7 +612,9 @@ function TransactionRow({
           onCheckedChange={(value) => onSelected(value === true)}
         />
       </TableCell>
-      <TableCell className="whitespace-nowrap">{formatDateLocal(item.occurredAt)}</TableCell>
+      <TableCell className="whitespace-nowrap">
+        <TransactionDate occurredAt={item.occurredAt} />
+      </TableCell>
       <TableCell className="min-w-40">
         <div className="font-medium">{item.name}</div>
         {item.description && (
@@ -667,9 +688,10 @@ function TransactionCard(props: RowProps) {
                 {item.description}
               </p>
             )}
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              {formatDateLocal(item.occurredAt)} · <TransactionAccount item={item} />
-            </p>
+            <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+              <TransactionDate occurredAt={item.occurredAt} /> <span aria-hidden="true">·</span>{" "}
+              <TransactionAccount item={item} />
+            </div>
           </div>
         </div>
         <span className={amountClassName(item.type)}>

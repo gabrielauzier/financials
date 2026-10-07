@@ -33,6 +33,7 @@ import type {
 import { notifyError, notifySuccess } from "@/lib/notify";
 import { useCreateTransaction, useUpdateTransaction } from "./hooks";
 import { paymentMethodLabels } from "./labels";
+import { TransactionIdentifiers } from "./TransactionIdentifiers";
 import { parseBRLToDecimal, todayLocal, toLocalDateInput } from "./utils";
 
 // A function, not a constant: "today" must be computed when the form opens, not when the module loads.
@@ -152,6 +153,9 @@ export function TransactionForm({ open, onOpenChange, transaction }: Props) {
             <DialogDescription>Preencha os dados do lançamento.</DialogDescription>
           )}
         </DialogHeader>
+        {transaction && (
+          <TransactionIdentifiers id={transaction.id} identifier={transaction.identifier} />
+        )}
         <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2" noValidate>
           <Field label="Nome" id="transaction-name" error={errors["name"]}>
             <Input

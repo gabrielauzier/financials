@@ -1,17 +1,7 @@
-import type { AuthResponse, Session } from "@supabase/supabase-js";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-type SignUpInput = { nome: string; apelido: string; email: string; senha: string };
-type SessionContextValue = {
-  session: Session | null;
-  loading: boolean;
-  signIn: (email: string, senha: string) => Promise<void>;
-  signUp: (input: SignUpInput) => Promise<AuthResponse>;
-  signOut: () => Promise<void>;
-};
-
-const SessionContext = createContext<SessionContextValue | null>(null);
+import { SessionContext, type SessionContextValue } from "./sessionContext";
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

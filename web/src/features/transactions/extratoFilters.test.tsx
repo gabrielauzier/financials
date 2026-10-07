@@ -5,6 +5,7 @@ import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, TransactionsPage as Page } from "@/lib/api/types";
 import { renderWithQuery, requests, resetSpy } from "@/test/apiSpy";
 import { pickDate } from "@/test/datePicker";
+import { lightList, trimTransactions } from "@/test/extratoKit";
 import { TransactionsPage } from "./TransactionsPage";
 
 vi.mock("@/lib/api/client", async (importOriginal) => ({
@@ -37,9 +38,19 @@ const listPaths = () =>
 const lastList = () => listPaths().at(-1) ?? "";
 const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
 
-const renderLoaded = async () => {
+/** The tests check the query the page sends: the list answers with 3 rows and a total of 120 (see `lightList`). */
+const renderLoaded = async (options: { real?: boolean } = {}) => {
+  if (options.real) {
+    await trimTransactions(8);
+  } else {
+    await lightList();
+    // a light list answers so fast that a click could land before the 300 ms search debounce of the still empty
+    // search, which would then send the page back to 1: fake the timers and let it settle first (L-021)
+    withDebounceClock();
+  }
   renderWithQuery(<TransactionsPage />);
-  await screen.findByText(/Página 1 de 3/);
+  await screen.findByText(options.real ? /Página 1 de 1/ : /Página 1 de 3/);
+  if (!options.real) await advance(350);
 };
 const clickButton = (name: string | RegExp) =>
   fireEvent.click(screen.getByRole("button", { name }));
@@ -61,8 +72,7 @@ const resetToDefault = async () => {
 describe("extrato: busca, filtros, ordenação e paginação", () => {
   it("consulta uma única vez 300 ms depois de parar de digitar, com q e página 1", async () => {
     withDebounceClock();
-    renderWithQuery(<TransactionsPage />);
-    await screen.findByText(/Página 1 de 3/);
+    await renderLoaded();
     await advance(350);
     const before = listPaths().length;
     const search = screen.getByLabelText("Buscar por nome");
@@ -179,7 +189,7 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
   });
 
   it("clicar em 'Valor' duas vezes pede ordem crescente e depois decrescente, nessa sequência", async () => {
-    await renderLoaded();
+    await renderLoaded({ real: true }); // the rows themselves are checked
     const before = listPaths().length;
     clickButton(/Valor/);
     await waitFor(() => expect(lastList()).toBe("/transactions?sort=amount&order=asc&page=1"));
@@ -215,6 +225,7 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
   it("mostra 'Nenhuma transação encontrada' e sem rodapé quando a busca não encontra nada", async () => {
     withDebounceClock();
     await renderLoaded();
+    await lightList({ total: 0 }); // from now on the API finds nothing
     fireEvent.change(screen.getByLabelText("Buscar por nome"), {
       target: { value: "zzz sem resultado" },
     });
@@ -226,8 +237,8 @@ describe("extrato: busca, filtros, ordenação e paginação", () => {
   });
 
   it("com mais de 50 transações mostra 'Página 1 de 3' e Próxima/Anterior navegam e desabilitam nas pontas", async () => {
-    renderWithQuery(<TransactionsPage />);
-    expect(await screen.findByText(/120 transações · Página 1 de 3/)).toBeInTheDocument();
+    await renderLoaded();
+    expect(screen.getByText(/120 transações · Página 1 de 3/)).toBeInTheDocument();
     const prev = () => screen.getByRole("button", { name: "Anterior" });
     const next = () => screen.getByRole("button", { name: "Próxima" });
     expect(prev()).toBeDisabled();
