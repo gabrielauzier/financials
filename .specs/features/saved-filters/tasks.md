@@ -22,7 +22,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | Web pure modules (`savedFilterState.ts`, `savedFilters.ts`) | unit | All branches; 1:1 to spec ACs; every listed edge case; invalid JSON, wrong shape, version mismatch, quota exceeded, blocked storage, duplicate names (case, accent, spaces), the cap and per-user isolation; the literal storage key asserted at least once (L-043) | `web/src/features/transactions/savedFilter*.test.ts` | `yarn --cwd web test` |
-| Web hooks (`useSavedFilters`, `useSessionUserId`, `notifyErrorMessage`) | unit | Spec-visible behavior per AC through `renderHook` and the real Toaster; the failure and user-change paths | `web/src/features/**/*.test.ts(x)`, `web/src/lib/notify.test.tsx` | `yarn --cwd web test` |
+| Web hooks (`useSavedFilters`, `useSessionUserId`, `notifyErrorMessage`) | unit | Spec-visible behavior per AC through `renderHook` and the real Toaster; the failure and user-change paths | `web/src/features/**/*.test.ts(x)`, `web/src/lib/notifyErrorMessage.test.tsx` | `yarn --cwd web test` |
 | Web presentational components (`SaveFilterDialog`, `SavedFiltersMenu`, `ManageFiltersDialog`) | unit | Each rendered alone with the real hook in a small harness: validation text, focus, keyboard, aria, failure paths asserting the Portuguese text and the visible options (L-013); no page, light (L-027) | `web/src/features/transactions/*.test.tsx` | `yarn --cwd web test` |
 | Web container and extrato mount (`SavedFiltersControls`, `TransactionsPage`) | unit | Toasts, apply semantics and the marker at the container; at the page only what needs it: controls updated, exact request parameters through the `apiSpy` log, page 1 from page 2, no new request, page size kept; every test uses `lightList` and starts a return to page 1 from page 2 (L-041) | `web/src/features/transactions/*.test.tsx` | `yarn --cwd web test` |
 | Styles, config | none | - (build gate only; the painted colors of the menu, the marker and the dialogs are measured in a real Chromium page and the facts are recorded, L-040) | - | build gate only |
@@ -271,9 +271,223 @@ T9 → T10
 
 ---
 
+### Phase 3: Components
+
+```
+T6
+T7
+T8
+```
+
+### Phase 4: Container and extrato
+
+```
+T9 → T10
+```
+
+---
+
+## Task Breakdown
+
+### Phase 1: State and storage modules
+
+### T1: Add the saved filter state module
+
+**What**: `savedFilterState.ts` with `SavedFilterState`, `toSavedState`, `toFilterState`, `sanitizeSavedState`, `isDefaultState`, `sameSavedState`, `withoutMissingRefs` and `describeSavedState`, and unit tests in `savedFilterState.test.ts`.
+**Where**: `web/src/features/transactions/savedFilterState.ts`
+**Depends on**: None
+**Reuses**: `FilterState`, `QuickMonth` and `monthRange` of `utils.ts`, `TransactionFilters` of `types.ts`
+**Requirement**: SFILT-01, SFILT-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] `toSavedState` of a state with every field, page 3 and a page size has exactly the keys `q`, `type`, `accountId`, `categoryId`, `neutral`, `from`, `to`, `quick`, `sort` and `order`, and no `page` or `pageSize`; empty fields are absent (AC 1 of the state story)
+- [x] `q` is stored trimmed and a blank `q` is absent (AC 2)
+- [x] A complete quick month is stored as `quick` with `from` and `to` of `monthRange`; a quick month with only the year or only the month is not stored (AC 3)
+- [x] `toFilterState` is on page 1, with `sort` and `order` of the saved state and `date`/`desc` when they are missing (AC 4), and gives `quick` and the month's `from`/`to` for a saved quick month and an empty `quick` otherwise (AC 5)
+- [x] `isDefaultState` is true for the initial state and for a lone incomplete quick month, and false for each of the ten fields set (and for `sort` or `order` different from `date`/`desc`) (AC 6)
+- [x] `sameSavedState` is true across page, page size, incomplete quick month, key order and blank `q`, and false when any of the ten fields differs, `neutral` false against absent included (AC 7)
+- [x] `withoutMissingRefs` drops an `accountId` or `categoryId` that is not in the known set and reports which, keeps it when the set is absent, and keeps it when present (AC 8)
+- [x] `describeSavedState` gives the exact Portuguese lines (`Busca: ...`, `Tipo: Receita`, `Conta: ...`, `Categoria: ...`, `Neutra: Sim`, `De: 01/06/2026`, `Até: 30/06/2026`, `Mês: Junho de 2026` instead of De and Até, `Ordenação: Valor (crescente)`), the fallbacks `Conta selecionada` and `Categoria selecionada`, and no line for page or page size (AC 9)
+- [x] `sanitizeSavedState` drops unknown fields, turns an invalid `type`, `neutral`, id, `q`, date, `quick`, `sort` and `order` into absent (`sort`/`order` into the defaults) and keeps the valid ones (AC 5 and 6 of the storage story, field level)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 923 web tests pass (877 existing plus 46 new; no silent deletions)
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(saved-filters): add the saved filter state module`
+
+---
+
+### Phase 2: Hooks
+
+```
+T3
+T4
+T5
+```
+
+### Phase 3: Components
+
+```
+T6
+T7
+T8
+```
+
+### Phase 4: Container and extrato
+
+```
+T9 → T10
+```
+
+---
+
+## Task Breakdown
+
+### Phase 1: State and storage modules
+
+### T1: Add the saved filter state module
+
+**What**: `savedFilterState.ts` with `SavedFilterState`, `toSavedState`, `toFilterState`, `sanitizeSavedState`, `isDefaultState`, `sameSavedState`, `withoutMissingRefs` and `describeSavedState`, and unit tests in `savedFilterState.test.ts`.
+**Where**: `web/src/features/transactions/savedFilterState.ts`
+**Depends on**: None
+**Reuses**: `FilterState`, `QuickMonth` and `monthRange` of `utils.ts`, `TransactionFilters` of `types.ts`
+**Requirement**: SFILT-01, SFILT-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] `toSavedState` of a state with every field, page 3 and a page size has exactly the keys `q`, `type`, `accountId`, `categoryId`, `neutral`, `from`, `to`, `quick`, `sort` and `order`, and no `page` or `pageSize`; empty fields are absent (AC 1 of the state story)
+- [x] `q` is stored trimmed and a blank `q` is absent (AC 2)
+- [x] A complete quick month is stored as `quick` with `from` and `to` of `monthRange`; a quick month with only the year or only the month is not stored (AC 3)
+- [x] `toFilterState` is on page 1, with `sort` and `order` of the saved state and `date`/`desc` when they are missing (AC 4), and gives `quick` and the month's `from`/`to` for a saved quick month and an empty `quick` otherwise (AC 5)
+- [x] `isDefaultState` is true for the initial state and for a lone incomplete quick month, and false for each of the ten fields set (and for `sort` or `order` different from `date`/`desc`) (AC 6)
+- [x] `sameSavedState` is true across page, page size, incomplete quick month, key order and blank `q`, and false when any of the ten fields differs, `neutral` false against absent included (AC 7)
+- [x] `withoutMissingRefs` drops an `accountId` or `categoryId` that is not in the known set and reports which, keeps it when the set is absent, and keeps it when present (AC 8)
+- [x] `describeSavedState` gives the exact Portuguese lines (`Busca: ...`, `Tipo: Receita`, `Conta: ...`, `Categoria: ...`, `Neutra: Sim`, `De: 01/06/2026`, `Até: 30/06/2026`, `Mês: Junho de 2026` instead of De and Até, `Ordenação: Valor (crescente)`), the fallbacks `Conta selecionada` and `Categoria selecionada`, and no line for page or page size (AC 9)
+- [x] `sanitizeSavedState` drops unknown fields, turns an invalid `type`, `neutral`, id, `q`, date, `quick`, `sort` and `order` into absent (`sort`/`order` into the defaults) and keeps the valid ones (AC 5 and 6 of the storage story, field level)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 923 web tests pass (877 existing plus 46 new; no silent deletions)
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(saved-filters): add the saved filter state module`
+
+---
+
+### T2: Add the saved filters storage module
+
+**What**: `savedFilters.ts` with the per-user key, the versioned JSON, the validation of everything read, the name rules, the cap and `addSavedFilter`, `renameSavedFilter`, `deleteSavedFilter`, `readSavedFilters`, `sortSavedFilters`, `normalizeFilterName` and `FILTER_MESSAGES`, all in `try/catch`; unit tests in `savedFilters.test.ts`.
+**Where**: `web/src/features/transactions/savedFilters.ts`
+**Depends on**: T1
+**Reuses**: `sanitizeSavedState` of T1, the `try/catch` shape of `usePageSize.ts`
+**Requirement**: SFILT-02, SFILT-03, SFILT-04
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] The key is exactly `financials:transactions:saved-filters:<userId>` asserted as a literal text, and the stored text parses to `{ version: 1, filters: [{ id, name, state }] }` with no extra field (AC 1 of the storage story)
+- [ ] Text that is not JSON, JSON that is not an object, `filters` that is not a list and `version` 2 each read as an empty list with `available` true and no throw (AC 2)
+- [ ] An entry that is not an object, has no valid `id` or has an invalid name is dropped and the others stay; duplicate `id` and duplicate name keep the first; 25 entries keep the first 20 (AC 3 and 4)
+- [ ] Unknown fields of an entry are dropped, an invalid state field reads as absent and a state with only some fields reads with the others empty (AC 5 and 6)
+- [ ] `getItem` throwing, and `localStorage` itself throwing on access, read as an empty list with `available` false and no throw (AC 7)
+- [ ] User A's filters are invisible to user B on the same storage, and an action of one does not change the other's list (AC 8); an empty user id reads empty and unavailable and every action fails with `storage` without touching the storage (AC 9)
+- [ ] The name is trimmed before validating and stored trimmed; an empty one fails with `invalid-name` and "Informe um nome para o filtro"; 41 characters fail with "O nome deve ter no máximo 40 caracteres" while 1 and exactly 40 pass (AC 1 to 3 of the names story)
+- [ ] "Mês atual" against "mes  ATUAL" and " MÊS atual" fails with `duplicate-name` and "Já existe um filtro salvo com esse nome"; renaming a filter to its own name in another case, accent or spacing succeeds (AC 4 and 5)
+- [ ] The 21st filter fails with `limit` and "Limite de 20 filtros salvos atingido. Exclua um para salvar outro."; after one is deleted saving succeeds (AC 6)
+- [ ] Saving appends one entry with the trimmed name and the state without a page, leaving the others intact; renaming changes only that `id`'s name; deleting removes only that `id`; an unknown `id` fails with `not-found` and writes nothing (AC 7 to 10)
+- [ ] An entry another tab wrote between two actions counts for the duplicate check and the cap and is kept (AC 11)
+- [ ] `setItem` throwing (quota or blocked) fails with `storage` and the storage message, and the next read gives the list from before; `getItem` throwing on an action fails with `storage` and nothing is written (AC 12 and 13)
+- [ ] `sortSavedFilters` orders by name ignoring case and accent (`Água`, `banana`, `Cebola`) and keeps equal names in stored order
+- [ ] Gate check passes: `yarn --cwd web test`
+- [ ] Test count: the T1 total plus the new ones (no silent deletions)
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(saved-filters): add the saved filters storage module`
+
+---
+
+### Phase 2: Hooks
+
+### T3: Add the session user id hook
+
+**What**: `useSessionUserId(): string | null` reading `SessionContext` without throwing, with the context and its types moved from `useSession.tsx` to `sessionContext.ts` (a second function export in `useSession.tsx` would add a `react-refresh` lint warning); tests in `useSessionUserId.test.tsx`.
+**Where**: `web/src/features/auth/useSessionUserId.ts`
+**Depends on**: None
+**Reuses**: `SessionContext` and the supabase mock of `useSession.test.tsx`; `useSession.tsx` itself only changes its imports
+**Requirement**: SFILT-05
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] Inside the provider with a session `useSessionUserId()` returns that session's `user.id` (AC 1 of the hook story)
+- [x] Inside the provider without a session it returns `null`, and outside any provider it returns `null` without throwing (AC 1)
+- [x] `useSession` still throws outside the provider (existing behavior unchanged)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 966 web tests pass (963 after T2 plus 3 new; no silent deletions); lint warnings stay at 7
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(saved-filters): add a session user id hook`
+
+---
+
+### T4: Add the saved filters hook
+
+**What**: `useSavedFilters(userId)` returning the alphabetical list, `available`, `atLimit` and `add`, `rename` and `remove`, re-reading after each action; tests in `useSavedFilters.test.ts`.
+**Where**: `web/src/features/transactions/useSavedFilters.ts`
+**Depends on**: T2
+**Reuses**: `readSavedFilters`, `addSavedFilter`, `renameSavedFilter`, `deleteSavedFilter`, `sortSavedFilters` of T2
+**Requirement**: SFILT-05
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] The list of the user comes back in alphabetical order by name ignoring case and accent, with `available` true (AC 2 of the hook story)
+- [x] `atLimit` is true with 20 filters and false with 19 (AC 2)
+- [x] After `add`, `rename` and `remove` the next render has the new list, and each returns the storage result (AC 2 and 3)
+- [x] After a `not-found` result the list is re-read (a filter written by hand in the meantime appears) (AC 3)
+- [x] Changing the `userId` gives the other user's list; `null` gives an empty list, `available` false and actions that fail with `storage` (AC 4)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 973 web tests pass (966 after T3 plus 7 new; no silent deletions)
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(saved-filters): add the saved filters hook`
+
+---
+
 ### T5: Add the error toast with its own text
 
-**What**: `notifyErrorMessage(message: string)` in `notify.ts` (the same `toast.error`), and `notify.test.tsx` rendering the real Toaster.
+**What**: `notifyErrorMessage(message: string)` in `notify.ts` (the same `toast.error`), and `notifyErrorMessage.test.tsx` rendering the real Toaster (the existing `notify.test.tsx` stays untouched).
 **Where**: `web/src/lib/notify.ts`
 **Depends on**: None
 **Reuses**: the Toaster pattern of `web/src/components/ui/toaster.test.tsx`, `toast-styles.ts`
