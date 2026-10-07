@@ -300,6 +300,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SFILT-06 AC 9 / mutant D09 (validation.md) (spec-outcomes)
 - last seen: 2026-10-07T04:01:05Z
 
+### L-049 - When the no-floating-point AC names a large-sum example, run it for every money aggregate (income, expense, investments), not only one column: a float8 cast on an untested column survives.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `money` · harmful: 0
+- features: transactions-list
+- evidence: mutants S20b S20c (validation.md iteration 2) (money)
+- last seen: 2026-10-07T04:23:54Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

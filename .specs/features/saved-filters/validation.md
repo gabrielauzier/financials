@@ -1,6 +1,8 @@
-# Validation: saved-filters (T1-T10), iteration 1 - FAIL (no functional defect; three test gaps and two spec-precision notes)
+# Validation: saved-filters (T1-T10), iteration 2 - PASS (every iteration-1 gap closed and re-proved by mutants; no open gap)
 
-**Verdict**: FAIL. The implementation matches the spec on every acceptance criterion and edge case I checked, all gates are green, the browser probe repeated the author's painted numbers exactly, and the diff touches neither the API nor the database. The verdict is FAIL because the discrimination sensor left three non-equivalent surviving mutants (a quick month saved through the controls is not asserted, the order "name rules before the limit" is not asserted, and a stale name error after reopening the save dialog is not asserted). All three are test-only fix tasks. Still pending, as in the author's report: the owner's logged-in, app-level browser steps.
+**Iteration 1 verdict (superseded by `## Iteration 2` at the end of this file)**: FAIL. The implementation matches the spec on every acceptance criterion and edge case I checked, all gates are green, the browser probe repeated the author's painted numbers exactly, and the diff touches neither the API nor the database. The verdict is FAIL because the discrimination sensor left three non-equivalent surviving mutants (a quick month saved through the controls is not asserted, the order "name rules before the limit" is not asserted, and a stale name error after reopening the save dialog is not asserted). All three are test-only fix tasks. Still pending, as in the author's report: the owner's logged-in, app-level browser steps.
+
+**Iteration 2 verdict**: PASS. A fresh independent Verifier re-checked the three fix tasks and the optional ones with mutants, re-ran every gate, and re-measured the painted controls in Chromium in both themes; no non-equivalent mutant survives in this feature's code. The owner's logged-in, app-level browser steps stay pending (not claimed).
 
 **Date**: 2026-10-07
 **Iteration**: 1 (independent Verifier; the author's self-report is in `tasks.md` and the commit bodies)
@@ -358,3 +360,85 @@ The top-line verdict above stays FAIL as the independent Verifier wrote it: no f
 Not changed: D08 (redundant guard behind Radix focus) and M09 (equivalent) stay as the Verifier described them.
 
 Gates after the fixes: `yarn --cwd web test` three times, 1055 passed, 0 failed each (1050 plus the five new tests; 93 files by the run's own count); `yarn --cwd web typecheck` exit 0; `yarn --cwd web lint` 0 errors and the same 7 warnings as before. The traceability table of `spec.md` now reads Verified for SFILT-01 to SFILT-11 on the strength of the Verifier's evidence tables plus these fixes. Still open: a fresh independent re-verification of the fixes, and the owner's logged-in browser steps (save, apply, rename, delete in both themes and on a phone).
+
+---
+
+## Iteration 2
+
+**Date**: 2026-10-07
+**Verifier**: fresh agent (author != verifier), no sub-agents, iteration 2 of at most 3. Real tree read-only; 42 mutants in the temporary worktree `/Volumes/MacOnlySSD/dev/personal/.verify2` and the painted check in `.verify2-probe` (both removed with `git worktree remove --force` and `git worktree prune`; `git worktree list` shows the real tree and the pre-existing `.fix-ci`). `git status --porcelain` of the real tree is identical to the baseline (five untracked paths: `.DS_Store`, `docs/v1/ajustes-pontuais.md`, `docs/v1/plano-ajustes-pontuais.md`, `docs/v2/`, `references/nubank_extrato_setembro.csv`) apart from the report and lessons files this run commits. No `db:reset`, no hosted Supabase or Vercel, no `git stash`, no credentials read, printed or created (the probe used the app's mock API, a stub session user id `probe-user` and dummy Supabase variables).
+**Range checked**: `8796977..6664afd` (fix commits `bc1ad1f`, `a66d808`, `201fa73`, `68cd64e`, then `6664afd`).
+
+### Iteration-1 gaps, re-checked
+
+| Gap | Closed? | Evidence (`file:line`, assertion) | Mutant |
+| --- | ------- | --------------------------------- | ------ |
+| Fix task 1, C13: quick month saved through the controls | closed | `SavedFiltersControls.test.tsx:243-260` (saves a complete quick month, asserts the stored `quick` and the month days, applies it again and expects Mês and Ano) | C13 (`saved.add(name, state.filters)`) killed: "salvar com um mês rápido completo guarda o quick..." |
+| Fix task 2, S14: name rules before the cap | closed | `savedFilters.test.ts:273-285` (20 stored filters: empty and 41-character names give `invalid-name`, a duplicate gives `duplicate-name`, a fresh name gives `limit`) | S14 (limit check above `checkName`) killed |
+| Fix task 3, D09: stale error on reopen | closed | `SaveFilterDialog.test.tsx:139-149` (error, Cancelar, reopen: no `role="alert"`, no `aria-invalid`); `spec.md` AC 9 now says the error clears on open | D09 (`setError(undefined)` removed from the open effect) killed |
+| Optional: row selection emptied on apply (SFILT-08.2) | closed | `extratoSavedFilters.test.tsx:225` block (selection empty after applying) | SEL (effect no longer depends on `filters`) killed |
+| Optional: marker stays when the page size changes (SFILT-07.4) | closed as a guard in depth | `extratoSavedFilters.test.tsx` page-size block | MARK-ps (marker compares the list filters with `pageSize`) survives, and is equivalent: `sanitizeSavedState` (`savedFilterState.ts:103-105`) drops `pageSize`, so no single-edit fault can reach the comparison. The author's claimed two-edit proof was not re-run by me |
+| Optional: absent `neutral` shows "Todas" | closed | `extratoSavedFilters.test.tsx:188` and the new block | NEUT (absent `neutral` applied as `false`) killed, 7 tests |
+| Doc: `bg-muted` in the spec row | closed | `spec.md:66` reads `bg-muted`, matching `SavedFiltersMenu.tsx:48` | n/a |
+
+D08 (redundant guard behind Radix focus) and M09 (equivalent) are unchanged and accepted as in iteration 1.
+
+### Test integrity against `8796977` (iteration-1 commit)
+
+| File | Tests | Expects |
+| ---- | ----- | ------- |
+| `SaveFilterDialog.test.tsx` | 10 to 11 | 39 to 42 |
+| `SavedFiltersControls.test.tsx` | 19 to 20 | 52 to 55 |
+| `extratoSavedFilters.test.tsx` | 10 to 12 | 53 to 60 |
+| `savedFilters.test.ts` | 32 to 33 | 89 to 94 |
+
+`git diff 8796977 HEAD -- web` has zero removed lines: the changes are pure additions, so no test was deleted or weakened (total tests 1050 to 1055). The two commits changed only tests, `spec.md` and `tasks.md`; no source file.
+
+### Gates (run by me on `6664afd`)
+
+| Gate | Result |
+| ---- | ------ |
+| `yarn --cwd web typecheck` | exit 0 |
+| `yarn --cwd web lint` | exit 0, 0 errors, the same 7 warnings |
+| `pnpm -C api typecheck`, `pnpm -C api lint` | exit 0 (the feature does not touch the API; ran because the branch carries transactions-list) |
+| `pnpm -C api test` | 382 unit + 703 integration passed |
+| `yarn --cwd web test` x3, sequential | 1055 tests, 93 files, 0 failed, 0 skipped each; 31 s, 31 s, 30 s |
+| Slowest tests alone (L-027: under 7.5 s) | 2.15 s, 2.12 s, 2.00 s (`extratoClearFilters`, `extratoSummary`, both older files); budget met |
+| Two suites started at the same time | 0 failed in both; slowest tests 5.83 s and 5.77 s (`extratoClearFilters`); no failure in `extratoSavedFilters.test.tsx` or in any new or changed file; the slowest saved-filters test stays well under half of the 15 s timeout |
+
+### Discrimination sensor (iteration 2)
+
+Mutants run against the feature (and its container, `TransactionsPage`): C13, S14, D09, SEL, NEUT, MARK-ps and the fresh ones F1 (filter keeps the page), F2 and F3 (quick month range one day off at the end and start), F4 to F6 (summary request keeps page, sort, page size), F7 and F8 (summary invalidation and key), F9 (saved-filters storage key prefix changed: 65 tests fail), F10 (page size change keeps page 2), F11 (type click rebuilds the filters), F12 (Investimentos by name), F13 (apply does not sync the search box: 2 fail), F14 and F15 (pagination and page-size options), F16 (`-0.00` tone), F17 and F18 (mock summary). All killed except MARK-ps (equivalent, above). The full table with the failing test of each mutant is in the `## Iteration 2` section of `.specs/features/transactions-list/validation.md` (same worktree, same runs). The two real survivors of that run (S20b, S20c) are in the API summary SQL of transactions-list, not in this feature.
+
+### Painted check (Chromium, both themes)
+
+Throwaway Vite page in a temporary worktree outside the repo, the app's real `TransactionsPage` with `styles.css`, Tailwind, the app `Toaster`, the mock API and a stub session; measured by canvas-converted painted colors and WCAG ratios (L-040). My numbers equal the iteration-1 table to two decimals.
+
+| What | Light | Dark |
+| ---- | ----- | ---- |
+| "Salvar filtro" and "Filtros salvos" buttons: text, 36 px high | 17.62:1 | 19.27:1 |
+| Save dialog title | 17.62:1 | 19.27:1 |
+| Save dialog description (muted) | 4.56:1 | 7.66:1 |
+| Name error text (`role="alert"`, "Informe um nome para o filtro") | 4.57:1 | 6.98:1 |
+| Invalid input border (`aria-invalid="true"`, focus kept in the field) | `oklch(0.577 0.245 27.325)`, 4.57:1 | `oklch(0.704 0.191 22.216)`, 6.98:1 |
+| Menu applied item (`aria-current="true"`, weight 500, "(aplicado)") | 18.40:1 | 13.97:1 |
+| Menu other item ("Gerenciar filtros") | 20.16:1 | 17.04:1 |
+
+Real-mouse path on desktop: Receitas active, "Salvar filtro" opened the dialog with "Tipo: Receita" and "Ordenação: Data (decrescente)", an empty "Salvar" showed the error with the field focused, typing a name and Enter closed the dialog, returned focus to "Salvar filtro", showed the toast "Filtro "Receitas do mês" salvo" and stored `{{"version":1,"filters":[{{... "state":{{"type":"Income","sort":"date","order":"desc"}}}}]}}` under `financials:transactions:saved-filters:probe-user`; "Filtros salvos" then showed the item marked applied. At 375 px emulation the two buttons fit on one row (16 to 149 px and 157 to 326 px) and the document width equals the viewport. Observation, no action: the light outline border of the two buttons is 1.18:1 against the page, the app-wide `outline` variant shared with every outline button.
+
+### Sensor and gate table
+
+| Sensor | Outcome |
+| ------ | ------- |
+| Typecheck, lint | clean (7 pre-existing warnings) |
+| Web suite x3 and the parallel pair | 1055 passed, 0 failed (five runs) |
+| API suite | 382 + 703 passed |
+| Test integrity vs `8796977` | additions only |
+| Mutants on this feature | all iteration-1 survivors killed; 1 equivalent survivor (MARK-ps); fresh mutants F1 to F18 killed |
+| Painted controls | contrast as tabled, both themes, 375 px fits |
+
+### Remaining gaps
+
+1. **Pending owner steps, not done by any agent** (need the real login): save, apply, rename and delete a filter on the real app in both themes and on a phone, against the real session user id and real accounts and categories (including the info toast when an account or category of a saved filter was deleted). Keep the spec's browser box open (L-039).
+2. Observation, no action: MARK-ps is equivalent as a single edit; the author's two-edit proof for SFILT-07.4 was not re-run.
+3. No lesson recorded for this feature: a clean pass records nothing (the one new lesson of this run, L-049, belongs to transactions-list).

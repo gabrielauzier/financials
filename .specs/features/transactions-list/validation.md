@@ -2,6 +2,8 @@
 
 **Verdict**: PASS. The iteration 2 Verifier closed every iteration 1 fix task and left one test-only blocker (the large-sum test covered the expense column only, mutants S20b and S20c). The orchestrator closed it in commit `4954649` and proved it with both float8 mutants (income and investments), which now fail the new test. That last step was not re-verified by a fresh agent. Still open for the owner: the meaning of the Investimentos total (spec.md, AC 11) and the logged-in, app-level browser steps.
 
+**Iteration 1 verdict (superseded by `## Iteration 2` at the end of this file)**: FAIL. The implementation matches the spec on every acceptance criterion I could check by hand and by test, and every gate is green. The verdict is FAIL because the discrimination sensor left seven non-equivalent surviving mutants (two spec edge cases untested, an unpinned storage key, three weak layout or mock assertions, and an AC 13 example that cannot discriminate a float sum), and because the feature measurably slows every `extrato*` test and nine of its new tests time out under two-suite load (lesson L-027 asks for a fix task). Still pending, as in the author's report: the owner's logged-in, app-level browser steps.
+
 **Date**: 2026-10-06
 **Iteration**: 1 (independent Verifier; the author's self-report is in `tasks.md` and the commit bodies)
 **Spec**: `.specs/features/transactions-list/spec.md` (also `design.md`, `tasks.md`, `.specs/STATE.md` AD-001..AD-005, `.specs/LESSONS.md` L-004, L-006, L-013, L-014, L-015, L-020, L-021, L-023, L-024, L-027, L-034, L-039, L-040, L-041), `docs/v1/plano-melhoria-transacoes.md`, `docs/PRD.md`, `.specs/features/dashboards/spec.md`.
@@ -293,6 +295,130 @@ The commit body of `6f0244c` quotes an interim measurement (slowest 5.5 s, taken
 - `yarn --cwd web test` three times: 877 tests (871 before, plus 6 new), 0 failed each time. One more run with two suites started together: 0 failed in both.
 - `pnpm -C api typecheck` and `pnpm -C api lint`: clean. `pnpm -C api test`: 382 unit and 703 integration tests pass, 0 failed (702 integration before, plus the large-sum case).
 
+---
+
+## Iteration 2
+
+**Date**: 2026-10-07
+**Verifier**: fresh agent (author != verifier), no sub-agents, iteration 2 of at most 3. Real tree read-only; mutants in `.verify2`, painted check in `.verify2-probe` (both temporary worktrees on the external volume, removed with `git worktree remove --force` and `git worktree prune`; `git worktree list` shows the real tree and the pre-existing `.fix-ci`). `git status --porcelain` of the real tree before and after: the same five untracked paths (`.DS_Store`, `docs/v1/ajustes-pontuais.md`, `docs/v1/plano-ajustes-pontuais.md`, `docs/v2/`, `references/nubank_extrato_setembro.csv`) plus, at the end, only the two validation files and the lessons files that this run commits. No `db:reset`, no hosted Supabase or Vercel, no `git stash`.
+**Range checked**: `044b79b..6664afd` (fix commits `6b4b186`, `452038c`, `213a9b7`, `6f0244c`, `5ac4904`, `93a9013`, `b437ca5`, then the saved-filters commits that sit on top of this branch).
+
+### Iteration-1 fix tasks, re-checked by me
+
+| Fix task | Closed? | Evidence (`file:line`, assertion) |
+| -------- | ------- | --------------------------------- |
+| 1. Negative Investimentos and Despesas at the card (C22, C23) | closed | `SummaryCard.test.tsx:108` (`toHaveTextContent("-R$ 15,50")`, investments classes, Saldo neutral) and `:120` (`"-R$ 30,00"`, expense classes, Saldo income class); mutants C22, C23 killed |
+| 2. L-027 for the extrato tests | closed | gates below: slowest alone 2.15 s, parallel pair slowest 5.83 s, 0 failures in both; lighter helpers `web/src/test/extratoKit.ts` (`trimTransactions`, `lightList`) discriminate: F1 (filter keeps page) fails 12, F2/F3 (month range off by a day) fail 16 and 17, F4 to F8 (summary refetch rules) fail 21, 21, 4, 4, 13, F10 (page size without page reset) fails 2 |
+| 3. Literal storage key (U7) | closed | `usePageSize.test.ts:49-58` (`getItem("financials:transactions:page-size")` is `"25"`, `localStorage.length` is 1); U7 killed |
+| 4. Weak assertions (G2, G12, M8, S20) | closed for G2, G12, M8, S20 as specified; S20 only for one column (see gap 1) | `Pagination.test.tsx:91-96` and `:166-167`; `mock/transactions.test.ts:297`; `transactions-summary.int.test.ts:205` (`expense: '1000999999999989.99'`); G2, G12, M8, S20, S21 killed; S20b and S20c survive |
+| 5. Ring contrast | closed | `summaryStyles.ts:19` (`ring-2 ring-slate-500`), `summaryStyles.test.ts:63` (>= 3:1 per theme and `ring-2`); painted 4.76:1 and 3.74:1 below; `ring-ring`, `slate-300` and no-width mutants killed |
+| 6. Spec precision | closed | `spec.md:74` (ring and its contrast), `:96-98` (Investimentos total: author decision, pending owner, with 195.00 net, 200.00 gross, 205.00 movement), `:133` (AC 13 names the 1001 x `999999999999.99` example) |
+
+The open owner decision about the Investimentos total is stated in `spec.md:96-98` as an author decision pending the owner (net as implemented, gross, or total movement), and nothing else in this verdict is conditional on it. S23 (investments as gross movement) is killed, so the net definition is pinned until the owner decides.
+
+### Test integrity against `044b79b` (iteration-1 commit)
+
+`git diff 044b79b HEAD` on the transactions-list test files, counting `it(`/`test(` titles and `expect(` calls per file (script over `git show 044b79b:<file>`):
+
+| File | Tests | Expects | Note |
+| ---- | ----- | ------- | ---- |
+| `SummaryCard.test.tsx` | 20 to 22 | 76 to 86 | fix task 1 |
+| `usePageSize.test.ts` | 8 to 9 | 13 to 17 | fix task 3 |
+| `Pagination.test.tsx` | 14 to 14 | 42 to 46 | G2 and G12 inside existing tests |
+| `summaryStyles.test.ts` | 7 to 8 | 14 to 17 | ring contrast |
+| `mock/transactions.test.ts` | 19 to 20 | 35 to 41 | neutral case |
+| `api/test/transactions-summary.int.test.ts` | 26 to 27 | 50 to 51 | large-sum case |
+| `extratoAccountLabel`, `extratoCrud`, `extratoDescriptionForm`, `extratoFilters`, `extratoInline`, `extratoQuickMonth`, `extratoSummary`, `paymentMethodOther`, `transactions` (lightened for L-027) | unchanged in every file (6, 11, 3, 11, 12, 13, 12, 3, 21) | unchanged in every file (38, 63, 17, 55, 62, 58, 58, 5, 69) | test titles identical (checked with `diff` of the title lines); only setup changed (`beforeAll(() => trimTransactions())`, `lightList`, a smaller seed) |
+
+No test deleted, no title changed, no `expect` removed. `git diff` shows exactly one removed assertion line outside imports: `extratoSummary.test.tsx` "Receitas troca Despesa por Receita e volta à página 1" now expects `{ ...SORT, page: "1", type: "Income" }` instead of `{ ...KEEP, ... }` (it no longer carries the sort `amount asc` and `from` through the swap). Judged accepted, not a weakening of the AC: the swap goes through the same `changeFilter` path as the first click, which the two neighbouring tests (`extratoSummary.test.tsx:222`, `:231`) assert with `KEEP`; my mutant F11 (a type click rebuilds the filters from the defaults) is killed by two tests. `api/openapi.json` and API source are untouched by the fixes.
+
+### Gates (run by me on `6664afd`)
+
+| Gate | Result |
+| ---- | ------ |
+| `yarn --cwd web typecheck` | exit 0 |
+| `yarn --cwd web lint` | exit 0, 0 errors, 7 warnings (the same 7 `react-refresh/only-export-components` as before, none new) |
+| `pnpm -C api typecheck`, `pnpm -C api lint` | exit 0 both, no warning |
+| `pnpm -C api test` | 382 unit + 703 integration pass, 0 failed (integration 702 at iteration 1 plus the large-sum case) |
+| `yarn --cwd web test` x3, sequential (JSON reporter) | 1055 tests, 93 files, 1055 passed, 0 failed, 0 skipped in each run; 31 s, 31 s, 30 s wall |
+| Slowest tests alone (L-027: under 7.5 s) | run 1: 2.15 s (`extratoClearFilters`), 1.96 s, 1.86 s; run 2: 2.12 s, 2.10 s, 2.01 s; run 3: 2.00 s, 1.99 s, 1.89 s (`extratoSummary`, `extratoClearFilters`). Budget met by a wide margin (iteration 1: 10.1 to 10.9 s) |
+| Two full suites started at the same time | exit 0 and 0 failed in both (1055 tests each); slowest tests 5.77 s and 5.83 s (`extratoClearFilters` "a categoria: 'Limpar filtro Categoria'..."), then `extratoSummary` 5.45 and 5.40 s, `transactions.test.tsx` 5.30 and 5.76 s, `extratoCrud` 5.17 and 5.34 s. No failure in any new or changed file; slowest under the parallel run is 39 percent of the 15 s timeout (budget: under half) |
+
+### Discrimination sensor (iteration 2)
+
+Temporary worktree `/Volumes/MacOnlySSD/dev/personal/.verify2` (detached HEAD `6664afd`, `node_modules` and `.env*` only symlinked), every mutant applied by exact single-match text replacement and reverted with `git checkout -- <file>`; real tree never touched. 42 mutants over both features (34 web, 8 API), 39 killed, 3 survived.
+
+| ID | Mutation | Outcome | Note |
+| -- | -------- | ------- | ---- |
+| C22 | negative Investimentos shown without sign | killed | `SummaryCard.test.tsx:108` |
+| C23 | negative Despesas shown without sign | killed | `SummaryCard.test.tsx:120` |
+| U7 | storage key renamed to `financials:page-size` | killed | `usePageSize.test.ts:49` |
+| S20 | expense summed through `float8` | killed | `transactions-summary.int.test.ts:205` |
+| S21 | balance computed through `float8` | killed | same test |
+| G2 | current page not the filled variant | killed (4 tests) | `Pagination.test.tsx:91-96` |
+| G12 | controls row loses `flex-wrap` | killed | `Pagination.test.tsx:166-167` |
+| M8 | mock summary and list ignore `neutral` | killed | `mock/transactions.test.ts:297` |
+| RING-ring | active ring back to `ring-ring` (2.57:1 on the light card) | killed | `summaryStyles.test.ts:63` |
+| RING-300 | ring `slate-300` | killed | same |
+| RING-nowidth | ring without `ring-2` | killed (3 tests) | same |
+| RING-inactive | ring class on inactive values too | killed | `SummaryCard.test.tsx` "o valor ativo ganha o anel e os inativos não" |
+| S22 | count only countable rows | killed (23) | |
+| S23 | investments as sum of absolute values (gross movement) | killed (7) | pins the net definition |
+| S24 | balance `income + expense` | killed (14) | |
+| S25 | expense `numeric(20,1)` | killed (23) | |
+| F1 | a filter change keeps the page | killed (12) | `extratoFilters.test.tsx` page-2 tests |
+| F2 | quick month `to` one day early | killed (16) | |
+| F3 | quick month `from` on day 2 | killed (17) | |
+| F4, F5, F6 | summary request keeps `page`, `sort`, `pageSize` | killed (21, 21, 4) | `summaryHooks.test.tsx` |
+| F7 | no summary invalidation after a mutation | killed (4) | |
+| F8 | summary key moved under the `["transactions"]` prefix | killed (13) | |
+| F9 | saved-filters storage key prefix changed | killed (65) | |
+| F10 | changing the page size does not return to page 1 | killed (2) | |
+| F11 | a type click rebuilds the filters from the defaults | killed (2) | |
+| F12 | Investimentos resolved by name, not by key | killed (14) | |
+| F13 | applying a saved filter does not sync the search box | killed (2) | |
+| F14 | page count with `floor` | killed (54) | |
+| F15 | page size options reversed | killed (3) | |
+| F16 | `-0.00` Saldo not neutral | killed | |
+| F17 | mock summary count excludes neutral rows | killed (3) | |
+| F18 | mock summary counts future-dated rows | killed (3) | |
+| **S20b** | **income summed through `float8` (`sum((...)::float8)`)** | **SURVIVED** | real gap: not equivalent (proved below) |
+| **S20c** | **investments summed through `float8`** | **SURVIVED** | real gap: not equivalent (proved below) |
+| MARK-ps | saved-filter marker compares the list filters (with `pageSize`) | survived | equivalent by construction: `sanitizeSavedState` (`savedFilterState.ts:103-105`) drops unknown fields, so `pageSize` never reaches the comparison |
+
+Proof that S20b and S20c are not equivalent: in the same worktree I added a probe test (1001 rows of `999999999999.99` as Income in `Salaries`, and as Expense in `Investments`, expecting `1000999999999989.99` for `income` and for `investments`). Unmutated code passes it; S20b and S20c each fail it. The committed large-sum test (`transactions-summary.int.test.ts:205`) seeds Expense only, so it pins the `expense` and `balance` columns and nothing else; AC 13 (`spec.md:133`) says the API computes and formats "os valores" without converting money to `number`, which covers all three sums. The probe was deleted with the worktree; no real file changed.
+
+### Browser check (iteration 2)
+
+Chromium, throwaway Vite page in a temporary worktree (`.verify2-probe`, outside the repo): the app's real `TransactionsPage`, `styles.css` and Tailwind plugin, the app's mock API (`VITE_MOCK_AREAS=*`), dummy Supabase variables and a stub session context. No login, no credentials read, printed or created. Contrast is the WCAG ratio of the painted `box-shadow` ring color against the painted `bg-card` color (colors converted by canvas, so they are the browser's, not the class names).
+
+| Theme | Pressed button | Painted ring | Card background | Ring contrast | Text contrast (unchanged by the ring) |
+| ----- | -------------- | ------------ | --------------- | ------------- | ------------------------------------- |
+| light, desktop | Receitas, `aria-pressed="true"` | 2 px `oklch(0.554 0.046 257.417)` | `rgb(255,255,255)` | 4.76:1 | 5.36:1 |
+| dark, desktop | Receitas | the same 2 px | `rgb(15,23,43)` | 3.74:1 | 9.20:1 |
+| light and dark, 375 px emulation | Despesas | 2 px, same color | same | 4.76:1 and 3.74:1 | n/a |
+
+The inactive Receitas has `box-shadow: none` before the click. At 375 px the document width equals the viewport (no horizontal overflow) and the two saved-filter buttons (cited in the saved-filters report) fit on one row. The ring meets the 3:1 non-text minimum in both themes as `spec.md:74` states (the spec numbers 4.76 and 3.74 are reproduced exactly).
+
+### Sensor and gate table
+
+| Sensor | Outcome |
+| ------ | ------- |
+| Typecheck, lint (web, API) | clean; 7 pre-existing lint warnings |
+| Web suite x3 and the parallel pair | 1055 passed, 0 failed (five runs) |
+| API suite | 382 unit + 703 integration passed |
+| Test integrity vs `044b79b` | no test or assertion removed; one swap test deliberately narrower, covered elsewhere |
+| Mutants | 42 run (both features), 39 killed, 1 equivalent, 2 real survivors (S20b, S20c) |
+| Painted ring | 4.76:1 light, 3.74:1 dark, 375 px no overflow |
+
+### Remaining gaps (ranked)
+
+1. **Fix task (low, test-only): large-sum case for `income` and `investments`** (mutants S20b, S20c; AC 13 `spec.md:133`). Extend `transactions-summary.int.test.ts:205` (or add a sibling) with 1001 Income rows and 1001 Investments rows of `999999999999.99` and assert `income` and `investments` equal `1000999999999989.99`. I proved that unmutated code passes this probe and both mutants fail it. This is the only reason for FAIL.
+2. **Owner decision (not code, not a blocker for this verdict)**: what "Investimentos" totals (net as built, gross contributions, total movement); `spec.md:96-98`.
+3. **Pending owner steps, not done by any agent** (need the real login): summary card values compared with the dashboard for the same period; refresh after creating, editing and deleting a transaction; click-to-filter from page 2 for Receitas, Despesas and Investimentos with the second click clearing it; Investimentos with the real category and a negative net; pagination with real data; page size persisted across a reload; dark theme and phone width on the real app. Keep the spec's browser box open (L-039).
+4. Observation, no action: the focus ring (`focus-visible:ring-ring`, 2.57:1 on the light card) is the app-wide token and keyboard focus is not the state indicator this spec governs.
+
+Lesson recorded: L-049 (surviving mutants S20b, S20c).
 
 ## Iteration 2 closure
 
