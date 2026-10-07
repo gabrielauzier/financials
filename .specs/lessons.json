@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 42,
+  "next_id": 46,
   "lessons": [
     {
       "id": "L-001",
@@ -490,18 +490,20 @@
         "transactions-ux",
         "import-improvements",
         "colors-and-icons",
-        "transactions-ux-v2"
+        "transactions-ux-v2",
+        "transactions-list"
       ],
-      "recurrence": 4,
+      "recurrence": 5,
       "harmful": 0,
       "evidence": [
         "web full suite x2 in parallel, 24 timeouts (extratoCrud/Filters/Inline/QuickMonth.test.tsx) (ui-tests)",
         "web full suite x2 in parallel, 21-23 timeouts in extrato tests (validation.md) (ui-tests)",
         "web full suite x2 in parallel, extratoAccountLabel.test.tsx (validation.md FT2) (ui-tests)",
-        "extratoClearFilters.test.tsx De/Até under two parallel suites (ui-tests)"
+        "extratoClearFilters.test.tsx De/Até under two parallel suites (ui-tests)",
+        "extratoPagination/extratoSummary two-suite run, extratoQuickMonth +25% (validation.md) (ui-tests)"
       ],
       "created": "2026-10-06T01:07:31Z",
-      "last_seen": "2026-10-06T23:15:55Z"
+      "last_seen": "2026-10-07T02:21:59Z"
     },
     {
       "id": "L-028",
@@ -754,6 +756,78 @@
       ],
       "created": "2026-10-06T23:15:55Z",
       "last_seen": "2026-10-06T23:15:55Z"
+    },
+    {
+      "id": "L-042",
+      "key": "surviving_mutant::render and assert the negative form of every money figure the spec names as an edge case a negative despesas or investimentos with its sign and color not only the negative balance",
+      "text": "Render and assert the negative form of every money figure the spec names as an edge case (a negative Despesas or Investimentos with its sign and color), not only the negative balance.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-list"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutants C22 C23 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-07T02:21:59Z",
+      "last_seen": "2026-10-07T02:21:59Z"
+    },
+    {
+      "id": "L-043",
+      "key": "surviving_mutant::assert the literal localstorage key the spec fixes in at least one test not only through the exported constant so a renamed key cannot silently drop saved choices",
+      "text": "Assert the literal localStorage key the spec fixes in at least one test, not only through the exported constant, so a renamed key cannot silently drop saved choices.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "transactions-list"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant U7 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-07T02:21:59Z",
+      "last_seen": "2026-10-07T02:21:59Z"
+    },
+    {
+      "id": "L-044",
+      "key": "surviving_mutant::give the no floating point money ac an input whose float sum differs from the exact sum since rounding the total back to 2 decimals hides a float sum on small examples like 0 10 0 20",
+      "text": "Give the no-floating-point money AC an input whose float sum differs from the exact sum, since rounding the total back to 2 decimals hides a float sum on small examples like 0.10 + 0.20.",
+      "signal": "surviving_mutant",
+      "scope": "money",
+      "status": "candidate",
+      "features": [
+        "transactions-list"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant S20 (validation.md) (money)"
+      ],
+      "created": "2026-10-07T02:21:59Z",
+      "last_seen": "2026-10-07T02:21:59Z"
+    },
+    {
+      "id": "L-045",
+      "key": "spec_precision_gap::when a derived total has no definition in the prd net vs gross sign put it to the owner as an open question with an example on the fixed dataset before the spec marks it unconfirmed",
+      "text": "When a derived total has no definition in the PRD (net vs gross, sign), put it to the owner as an open question with an example on the fixed dataset before the spec marks it unconfirmed.",
+      "signal": "spec_precision_gap",
+      "scope": "spec-outcomes",
+      "status": "candidate",
+      "features": [
+        "transactions-list"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPG-1 (validation.md): meaning and sign of the investments total (spec-outcomes)"
+      ],
+      "created": "2026-10-07T02:21:59Z",
+      "last_seen": "2026-10-07T02:21:59Z"
     }
   ]
 }
