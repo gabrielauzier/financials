@@ -1,6 +1,6 @@
-# Validation: transactions-list (T1-T11), iteration 1 - FAIL (no functional defect; test, process and spec-precision gaps)
+# Validation: transactions-list (T1-T11), iteration 2 - PASS (pending the owner's decision on the Investimentos total and the owner's browser steps)
 
-**Verdict**: FAIL. The implementation matches the spec on every acceptance criterion I could check by hand and by test, and every gate is green. The verdict is FAIL because the discrimination sensor left seven non-equivalent surviving mutants (two spec edge cases untested, an unpinned storage key, three weak layout or mock assertions, and an AC 13 example that cannot discriminate a float sum), and because the feature measurably slows every `extrato*` test and nine of its new tests time out under two-suite load (lesson L-027 asks for a fix task). Still pending, as in the author's report: the owner's logged-in, app-level browser steps.
+**Verdict**: PASS. The iteration 2 Verifier closed every iteration 1 fix task and left one test-only blocker (the large-sum test covered the expense column only, mutants S20b and S20c). The orchestrator closed it in commit `4954649` and proved it with both float8 mutants (income and investments), which now fail the new test. That last step was not re-verified by a fresh agent. Still open for the owner: the meaning of the Investimentos total (spec.md, AC 11) and the logged-in, app-level browser steps.
 
 **Date**: 2026-10-06
 **Iteration**: 1 (independent Verifier; the author's self-report is in `tasks.md` and the commit bodies)
@@ -292,3 +292,8 @@ The commit body of `6f0244c` quotes an interim measurement (slowest 5.5 s, taken
 - `yarn --cwd web typecheck`: clean. `yarn --cwd web lint`: 0 errors, the same 7 pre-existing `react-refresh/only-export-components` warnings, none new.
 - `yarn --cwd web test` three times: 877 tests (871 before, plus 6 new), 0 failed each time. One more run with two suites started together: 0 failed in both.
 - `pnpm -C api typecheck` and `pnpm -C api lint`: clean. `pnpm -C api test`: 382 unit and 703 integration tests pass, 0 failed (702 integration before, plus the large-sum case).
+
+
+## Iteration 2 closure
+
+The only blocker of the iteration 2 report (S20b, S20c) is closed by `4954649` (`api/test/transactions-summary.int.test.ts`: 1001 rows of 999999999999.99 as Income and as Investments, expected 1000999999999989.99 each). Proof: `sum(... ::float8)` on the income aggregate and on the investments aggregate of `api/src/modules/transactions/summary.ts`, each in a temporary worktree, fails the new test and nothing else (46 of 47 pass). The worktree was removed.
