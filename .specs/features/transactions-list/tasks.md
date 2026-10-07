@@ -327,18 +327,18 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `balanceClassName("120.00")` gives the income classes, `"-0.01"` and `"-50.00"` the expense classes, and `"0.00"` and `"-0.00"` the neutral class (AC 2 of the card story)
-- [ ] The text color of income, expense and investments in the light and the dark theme has contrast of at least 4.5:1 against the card color (`--card`) of the theme (AC 14)
-- [ ] The resolved hues are green for income (110 to 180), red for expense (0 to 40) and blue for investments (230 to 270), and the three are pairwise distinct (AC 14 and 2)
-- [ ] The neutral class resolves to `--foreground` and has at least 4.5:1 against `--card` in both themes (AC 14)
-- [ ] Every color class of the module has a `dark:` counterpart (the guard does not pass on an empty list)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] `balanceClassName("120.00")` gives the income classes, `"-0.01"` and `"-50.00"` the expense classes, and `"0.00"` and `"-0.00"` the neutral class (AC 2 of the card story)
+- [x] The text color of income, expense and investments in the light and the dark theme has contrast of at least 4.5:1 against the card color (`--card`) of the theme (AC 14)
+- [x] The resolved hues are green for income (110 to 180), red for expense (0 to 40) and blue for investments (230 to 270), and the three are pairwise distinct (AC 14 and 2)
+- [x] The neutral class resolves to `--foreground` and has at least 4.5:1 against `--card` in both themes (AC 14)
+- [x] Every color class of the module has a `dark:` counterpart (the guard does not pass on an empty list)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 793 web tests pass (777 existing plus 16 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
 
-**Commit**: `feat(transactions-list): define the summary colors and prove their contrast`
+**Commit**: `feat(transactions-list): add the summary colors and prove their contrast`
 
 ---
 
