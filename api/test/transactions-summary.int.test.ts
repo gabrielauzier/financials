@@ -202,6 +202,24 @@ describe('GET /transactions/summary', () => {
       expect(await summary(user)).toEqual({ count: 2, income: '0.00', expense: '0.30', investments: '0.00', balance: '-0.30' });
     });
 
+    it('keeps cents exact on a sum a float cannot hold (1001 x 999999999999.99 is 1000999999999989.99, 16 digits)', async () => {
+      // a float8 sum, or a float8 cast, keeps 15 significant digits and cannot give the last digit or the cents
+      const user = await createTestUser();
+      const account = await seedAccount(user);
+      await seedTransactions(
+        user,
+        account,
+        Array.from({ length: 1001 }, (_, index) => ({ name: `Grande ${index}`, type: 'Expense' as const, amount: '999999999999.99', at: MID, category: 'Food' })),
+      );
+      expect(await summary(user)).toEqual({
+        count: 1001,
+        income: '0.00',
+        expense: '1000999999999989.99',
+        investments: '0.00',
+        balance: '-1000999999999989.99',
+      });
+    });
+
     it('makes the expense negative and the balance positive when only a Reversal Income exists', async () => {
       const user = await createTestUser();
       const account = await seedAccount(user);

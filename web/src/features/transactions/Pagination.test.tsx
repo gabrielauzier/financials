@@ -88,6 +88,12 @@ describe("Pagination: página atual e reticências", () => {
         expect(button).not.toHaveAttribute("aria-current");
       }
       expect(gaps()).toHaveLength(gapCount);
+      // the current page is the filled variant, the others the outline one
+      expect(current[0]).toHaveClass("bg-primary", "text-primary-foreground");
+      for (const button of pageButtons().filter((item) => item !== current[0])) {
+        expect(button).not.toHaveClass("bg-primary");
+        expect(button).toHaveClass("border", "bg-background");
+      }
     },
   );
 
@@ -157,6 +163,8 @@ describe("Pagination: celular", () => {
     const group = pageButton(1).parentElement as HTMLElement;
     expect(group).toHaveClass("hidden", "sm:flex");
     expect(arrow("Anterior").parentElement).toHaveClass("flex-wrap");
+    // the row that holds the select and the buttons wraps too
+    expect(arrow("Anterior").parentElement?.parentElement).toHaveClass("flex", "flex-wrap");
     expect(arrow("Anterior").parentElement).not.toHaveClass("hidden");
     expect(group.contains(arrow("Anterior"))).toBe(false);
     expect(group.contains(arrow("Próxima"))).toBe(false);

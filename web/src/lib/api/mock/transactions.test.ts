@@ -294,6 +294,28 @@ describe("transactions mock summary follows the API rules", () => {
     });
   });
 
+  it("applies the neutral filter to the list and to the summary (the neutral row is out of every total)", async () => {
+    const list = (neutral: string) =>
+      mockRequest<{ items: Array<{ neutral: boolean }>; total: number }>({
+        method: "GET",
+        path: `/transactions?q=${encodeURIComponent(PREFIX)}&neutral=${neutral}`,
+      });
+    const onlyNeutral = await list("true");
+    expect(onlyNeutral.total).toBe(1);
+    expect(onlyNeutral.items.every((item) => item.neutral)).toBe(true);
+    const notNeutral = await list("false");
+    expect(notNeutral.total).toBe(11);
+    expect(notNeutral.items.some((item) => item.neutral)).toBe(false);
+    expect(await summary("&neutral=true")).toEqual({
+      count: 1,
+      income: "0.00",
+      expense: "0.00",
+      investments: "0.00",
+      balance: "0.00",
+    });
+    expect(await summary("&neutral=false")).toMatchObject({ count: 11, expense: "93.30" });
+  });
+
   it("ignores sort, order, page and pageSize, even an invalid pageSize", async () => {
     const plain = await summary();
     expect(await summary("&sort=amount&order=asc&page=9&pageSize=25")).toEqual(plain);
