@@ -562,13 +562,13 @@ T9 → T10
 
 **Done when**:
 
-- [ ] The "Filtros salvos" button opens the menu by Enter, Space and ArrowDown, listing one item per filter in the order given and the final item "Gerenciar filtros" (AC 1 of the menu story)
-- [ ] With no filters the menu shows "Nenhum filtro salvo ainda" and "Gerenciar filtros" is disabled (AC 2)
-- [ ] The item of an applied filter has `aria-current="true"` and an accessible name ending in "(aplicado)", with the check icon and `font-medium`; the others have neither the attribute nor the suffix (AC 3, AC 2 of the polish story)
-- [ ] Choosing an item with Enter closes the menu and calls `onApply` with that filter; Esc closes without calling it and gives the focus back to the button (AC 5)
-- [ ] "Gerenciar filtros" calls `onManage` (AC 6)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the T6 total plus the new ones (no silent deletions)
+- [x] The "Filtros salvos" button opens the menu by Enter, Space and ArrowDown, listing one item per filter in the order given and the final item "Gerenciar filtros" (AC 1 of the menu story; the mouse click is checked in the real Chromium page, since jsdom has no `PointerEvent` and Radix opens on `pointerdown`)
+- [x] With no filters the menu shows "Nenhum filtro salvo ainda" and "Gerenciar filtros" is disabled (AC 2)
+- [x] The item of an applied filter has `aria-current="true"` and an accessible name ending in "(aplicado)", with the check icon and `font-medium`; the others have neither the attribute nor the suffix (AC 3, AC 2 of the polish story)
+- [x] Choosing an item with Enter closes the menu and calls `onApply` with that filter; Esc closes without calling it and gives the focus back to the button (AC 5)
+- [x] "Gerenciar filtros" calls `onManage` (AC 6), and the trigger button is handed out through `triggerRef`
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 997 web tests pass (987 after T6 plus 10 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
