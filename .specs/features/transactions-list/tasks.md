@@ -430,27 +430,27 @@ T10 → T11
 
 **Done when**:
 
-- [ ] The extrato requests `/transactions/summary` once on open with no parameters and shows the API values in a region "Resumo do extrato" placed after the filters and before the list (AC 8 and 2 of the card story)
-- [ ] Changing each of Tipo, Conta, Categoria, Neutra, De, Até, the quick month and the search sends a new summary request with that filter, and none of `sort`, `order`, `page` or `pageSize` (AC 8 and 10)
-- [ ] Next page, "Página N" button, sorting by a column and changing the page size send no new summary request (assertion on the `apiSpy` log) (AC 9)
-- [ ] A summary failure keeps the list and a list failure keeps the card; "Tentar novamente" of the card requests only the summary (AC 5 and 7)
-- [ ] With an inverted period no card is rendered and no summary request is sent (AC 13)
-- [ ] Clicking Receitas from page 2 sends `type=Income&page=1` and the Tipo select shows "Receita" with its "x"; clicking again removes `type`; Despesas and Investimentos (the id of the key `Investments`) do the same with their parameter; each keeps the other filters and the sort (AC 1 to 6, 8 of the click story)
-- [ ] The footer text "N transações · Página X de Y" and "Anterior"/"Próxima" still work as before, and the page count uses the `pageSize` of the response (AC 6, 9 and 12 of the pagination story)
-- [ ] With 120 rows the bar shows buttons "1", "2", "3"; clicking "Página 3" requests `page=3`; the summary count and values are the API ones, not the sum of the rows on screen (AC 12 of the card story)
-- [ ] With total 0 no pagination is rendered (AC 13)
-- [ ] Opening without a stored size sends no `pageSize` and the select shows 50; choosing 25 from page 2 sends `pageSize=25&page=1`, stores `"25"` and clears the row selection; choosing 100 sends `pageSize=100`; choosing 50 sends none (AC 14, 16 and 17)
-- [ ] A stored `"100"` makes the first list request carry `pageSize=100`; an invalid stored value falls back to the default with no `pageSize` (AC 18 and 19)
-- [ ] "Limpar filtros" keeps the chosen size and `FilterState` has no `pageSize` (AC 21)
-- [ ] The existing `extrato*` and `transactions` suites pass with no assertion weakened (only structure adjusted where the new card or buttons require it)
-- [ ] `TransactionsPage.tsx` ends shorter than its 741 lines
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] The extrato requests `/transactions/summary` once on open with no parameters and shows the API values in a region "Resumo do extrato" placed after the filters and before the list (AC 8 and 2 of the card story)
+- [x] Changing each of Tipo, Conta, Categoria, Neutra, De, Até, the quick month and the search sends a new summary request with that filter, and none of `sort`, `order`, `page` or `pageSize` (AC 8 and 10)
+- [x] Next page, "Página N" button, sorting by a column and changing the page size send no new summary request (assertion on the `apiSpy` log) (AC 9)
+- [x] A summary failure keeps the list and a list failure keeps the card; "Tentar novamente" of the card requests only the summary (AC 5 and 7)
+- [x] With an inverted period no card is rendered and no summary request is sent (AC 13)
+- [x] Clicking Receitas from page 2 sends `type=Income&page=1` and the Tipo select shows "Receita" with its "x"; clicking again removes `type`; Despesas and Investimentos (the id of the key `Investments`) do the same with their parameter; each keeps the other filters and the sort (AC 1 to 6, 8 of the click story)
+- [x] The footer text "N transações · Página X de Y" and "Anterior"/"Próxima" still work as before, and the page count uses the `pageSize` of the response (AC 6, 9 and 12 of the pagination story)
+- [x] With 120 rows the bar shows buttons "1", "2", "3"; clicking "Página 3" requests `page=3`; the summary count and values are the API ones, not the sum of the rows on screen (AC 12 of the card story)
+- [x] With total 0 no pagination is rendered (AC 13)
+- [x] Opening without a stored size sends no `pageSize` and the select shows 50; choosing 25 from page 2 sends `pageSize=25&page=1`, stores `"25"` and clears the row selection; choosing 100 sends `pageSize=100`; choosing 50 sends none (AC 14, 16 and 17)
+- [x] A stored `"100"` makes the first list request carry `pageSize=100`; an invalid stored value falls back to the default with no `pageSize` (AC 18 and 19)
+- [x] "Limpar filtros" keeps the chosen size and `FilterState` has no `pageSize` (AC 21)
+- [x] The existing `extrato*` and `transactions` suites pass with no assertion weakened (only structure adjusted where the new card or buttons require it)
+- [x] `TransactionsPage.tsx` ends shorter than its 741 lines
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 871 web tests pass (836 existing plus 35 new; no silent deletions); TransactionsPage.tsx 740 lines (was 741)
 
 **Tests**: unit
 **Gate**: quick
 
-**Commit**: `feat(transactions-list): mount the summary card and pagination in the extrato`
+**Commit**: `feat(transactions-list): mount the summary and pagination in the extrato`
 
 ---
 

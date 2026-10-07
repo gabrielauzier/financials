@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -37,7 +37,7 @@ import { AccountSelect } from "@/features/accounts/AccountSelect";
 import { useAccountLookup } from "@/features/accounts/hooks";
 import { CategorySelect } from "@/features/categories/CategorySelect";
 import { notifyError, notifySuccess } from "@/lib/notify";
-import type { Transaction, TransactionFilters } from "@/lib/api/types";
+import type { PageSize, Transaction, TransactionFilters } from "@/lib/api/types";
 import {
   useDeleteTransaction,
   useTransactions,
@@ -46,8 +46,11 @@ import {
 } from "./hooks";
 import { paymentMethodLabels } from "./labels";
 import { ClearButton, FilterField } from "./FilterField";
+import { Pagination } from "./Pagination";
+import { SummaryCard } from "./SummaryCard";
 import { TransactionDate } from "./TransactionDate";
 import { TransactionForm } from "./TransactionForm";
+import { DEFAULT_PAGE_SIZE, usePageSize } from "./usePageSize";
 import {
   amountClassName,
   applyDateFilter,
@@ -107,7 +110,14 @@ export function TransactionsPage() {
   const [deleting, setDeleting] = useState<Transaction>();
   const quickActive = quick.year !== undefined && quick.month !== undefined;
   const invalidPeriod = Boolean(filters.from && filters.to && filters.from > filters.to);
-  const { data, isLoading, isError, refetch } = useTransactions(filters, !invalidPeriod);
+  // the page size is a view setting, not a filter: it joins the list query here and nowhere else (the API default,
+  // 50, is left out of the request)
+  const [pageSize, setPageSize] = usePageSize();
+  const listFilters = useMemo<TransactionFilters>(
+    () => (pageSize === DEFAULT_PAGE_SIZE ? filters : { ...filters, pageSize }),
+    [filters, pageSize],
+  );
+  const { data, isLoading, isError, refetch } = useTransactions(listFilters, !invalidPeriod);
   const update = useUpdateTransaction();
   const remove = useDeleteTransaction();
   const bulk = useUpdateTransactionCategories();
@@ -120,7 +130,7 @@ export function TransactionsPage() {
     }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
-  useEffect(() => setSelected(new Set()), [filters]);
+  useEffect(() => setSelected(new Set()), [filters, pageSize]);
 
   const changeFilter = <K extends keyof TransactionFilters>(key: K, value: TransactionFilters[K]) =>
     setState(
@@ -200,7 +210,13 @@ export function TransactionsPage() {
       notifyError(reason, "transaction");
     }
   };
-  const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 50));
+  const goToPage = (page: number) => setState(withFilters((current) => ({ ...current, page })));
+  const changePageSize = (size: PageSize) => {
+    setPageSize(size);
+    setState(
+      withFilters((current) => ((current.page ?? 1) === 1 ? current : { ...current, page: 1 })),
+    );
+  };
 
   return (
     <div className="mx-auto max-w-[1500px]">
@@ -366,6 +382,13 @@ export function TransactionsPage() {
           </p>
         )}
       </section>
+      {!invalidPeriod && (
+        <SummaryCard
+          filters={filters}
+          onSelectType={(type) => changeFilter("type", type)}
+          onSelectCategory={(categoryId) => changeFilter("categoryId", categoryId)}
+        />
+      )}
       {selected.size > 0 && (
         <div className="my-4 flex flex-col gap-3 border-y bg-muted/40 px-4 py-3 sm:flex-row sm:items-center">
           <strong className="text-sm">{selected.size} selecionada(s)</strong>
@@ -454,38 +477,14 @@ export function TransactionsPage() {
         </>
       )}
       {data && data.total > 0 && (
-        <footer className="flex flex-col gap-3 py-5 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            {data.total} transações · Página {data.page} de {pages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page <= 1}
-              onClick={() =>
-                setState(
-                  withFilters((current) => ({
-                    ...current,
-                    page: Math.max(1, (current.page ?? 1) - 1),
-                  })),
-                )
-              }
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page >= pages}
-              onClick={() =>
-                setState(withFilters((current) => ({ ...current, page: (current.page ?? 1) + 1 })))
-              }
-            >
-              Próxima
-            </Button>
-          </div>
-        </footer>
+        <Pagination
+          page={data.page}
+          total={data.total}
+          pageSize={data.pageSize}
+          selectedPageSize={pageSize}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
+        />
       )}
       <TransactionForm
         open={formOpen}
