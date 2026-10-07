@@ -44,6 +44,26 @@ export async function lightList(options: { total?: number; pageSize?: PageSize }
   }));
 }
 
+/**
+ * Shrinks the in-memory mock to `keep` transactions (call it in `beforeAll`: the mock is module state, so a test
+ * file starts from 120 rows and the page would render 50 of them, twice, on every change). For the tests that
+ * need the page itself (a real row to edit or delete) rather than a canned list; they seed what they check.
+ */
+export async function trimTransactions(keep = 3) {
+  const all: Page["items"] = [];
+  for (let page = 1; ; page++) {
+    const result = await mockRequest<Page>({
+      method: "GET",
+      path: `/transactions?page=${page}&pageSize=100`,
+    });
+    all.push(...result.items);
+    if (all.length >= result.total || result.items.length === 0) break;
+  }
+  for (const item of all.slice(keep)) {
+    await mockRequest({ method: "DELETE", path: `/transactions/${item.id}` });
+  }
+}
+
 export const SUMMARY: TransactionSummary = {
   count: TOTAL,
   income: "1234.56",

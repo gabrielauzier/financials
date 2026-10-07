@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
 import { GENERIC_ERROR } from "@/lib/api/errorMessages";
@@ -16,6 +16,7 @@ import { TransactionsPage } from "./TransactionsPage";
 import { parseBRLToDecimal, toLocalDateInput } from "./utils";
 import { formatDateLocal } from "@/lib/format";
 import { pickDate } from "@/test/datePicker";
+import { trimTransactions } from "@/test/extratoKit";
 
 const account: Account = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -198,6 +199,8 @@ describe("extrato", () => {
   });
 
   it("mostra colunas, valores formatados e indicação de neutra", async () => {
+    // from here on the page tests run on a small mock: 120 rows only make every render slower
+    await trimTransactions(8);
     renderQuery(<TransactionsPage />);
     expect(await screen.findByRole("columnheader", { name: /Data/ })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /Método de pagamento/ })).toBeInTheDocument();
@@ -268,6 +271,7 @@ describe("extrato", () => {
   });
 
   describe("erros da API em português", () => {
+    beforeAll(() => trimTransactions(8));
     const seeded = () => {
       const client = new QueryClient({
         defaultOptions: {
@@ -469,6 +473,7 @@ describe("extrato", () => {
   });
 
   describe("período do filtro", () => {
+    beforeAll(() => trimTransactions(8));
     const listPaths = () =>
       requests
         .filter((r) => r.method === "GET" && r.path.startsWith("/transactions?"))
@@ -525,6 +530,7 @@ describe("extrato", () => {
   });
 
   describe("cores dos valores", () => {
+    beforeAll(() => trimTransactions(8));
     const create = (name: string, type: "Income" | "Expense") =>
       mockRequest<Transaction>({
         method: "POST",

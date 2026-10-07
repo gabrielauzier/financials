@@ -1,17 +1,21 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import neon from "@/assets/banks/neon.svg";
 import nubank from "@/assets/banks/nubank.svg";
 import xp from "@/assets/banks/xp.svg";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Category, Transaction } from "@/lib/api/types";
 import { failures, renderWithQuery, resetSpy, responses } from "@/test/apiSpy";
+import { trimTransactions } from "@/test/extratoKit";
 import { TransactionsPage } from "./TransactionsPage";
 
 vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest: (await import("@/test/apiSpy")).spiedApiRequest,
 }));
+
+// each test seeds or canned the rows it acts on: the 120 rows of the mock would only make every render slower
+beforeAll(() => trimTransactions());
 
 afterEach(() => {
   cleanup();

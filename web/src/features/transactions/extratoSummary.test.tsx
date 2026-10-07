@@ -235,12 +235,13 @@ describe("extrato: clicar nos valores do resumo", () => {
   );
 
   it("Receitas troca Despesa por Receita e volta à página 1", async () => {
-    await preparePageTwo();
+    // the sort and De kept across a click are covered by the two tests above: this one only needs a second page
+    await renderLoaded();
     fireEvent.click(toggle("Despesas"));
     await waitForList((params) => expect(params["type"]).toBe("Expense"));
     await goToPageTwo();
     fireEvent.click(toggle("Receitas"));
-    await waitForList((params) => expect(params).toEqual({ ...KEEP, page: "1", type: "Income" }));
+    await waitForList((params) => expect(params).toEqual({ ...SORT, page: "1", type: "Income" }));
   });
 
   it("Investimentos aplica a categoria da chave Investments da página 2 voltando à 1, e clicar de novo remove", async () => {

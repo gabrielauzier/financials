@@ -2,7 +2,8 @@ import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Transaction } from "@/lib/api/types";
-import { renderWithQuery, requests, resetSpy } from "@/test/apiSpy";
+import { renderWithQuery, requests, resetSpy, responses } from "@/test/apiSpy";
+import { lightList } from "@/test/extratoKit";
 import { TransactionsPage } from "./TransactionsPage";
 import { applyDateFilter, monthRange } from "./utils";
 
@@ -31,7 +32,9 @@ const chooseOption = async (label: string, option: string) => {
   fireEvent.click(await screen.findByRole("option", { name: option }));
 };
 const clickButton = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
-const renderLoaded = async () => {
+/** Most tests check the query the page sends, not the rows: the list answers with 3 rows (see `lightList`). */
+const renderLoaded = async (options: { total?: number } = {}) => {
+  await lightList(options);
   renderWithQuery(<TransactionsPage />);
   await screen.findByText(/Página 1 de/);
   // let the initial search debounce (300 ms) settle before interacting
@@ -118,7 +121,14 @@ describe("extrato: filtro rápido de mês e ano", () => {
     await seed("Borda primeiro", new Date(2027, 1, 1, 12));
     await seed("Borda último", new Date(2027, 1, 28, 12));
     await seed("Borda depois", new Date(2027, 2, 1, 12));
+    // light while unfiltered, the real mock list once the month filter is on (the rows are what this test checks)
     await renderLoaded();
+    const light = responses.get("GET /transactions") as () => unknown;
+    responses.set("GET /transactions", () =>
+      new URLSearchParams(lastList().split("?")[1]).get("from")
+        ? mockRequest({ method: "GET", path: lastList() })
+        : light(),
+    );
     await chooseOption("Ano", "2027");
     await chooseOption("Mês", "Fevereiro");
     await waitFor(() => expect(lastList()).toContain("from=2027-02-01&to=2027-02-28"));
@@ -173,10 +183,7 @@ describe("extrato: filtro rápido de mês e ano", () => {
   });
 
   it("mudar a página mantém from e to do mês", async () => {
-    for (let day = 1; day <= 51; day++) {
-      await seed(`Paginação ${day}`, new Date(2028, 1, 1 + (day % 28), 12));
-    }
-    await renderLoaded();
+    await renderLoaded({ total: 60 });
     await chooseOption("Ano", "2028");
     await chooseOption("Mês", "Fevereiro");
     await screen.findByText(/Página 1 de 2/);
@@ -202,10 +209,7 @@ describe("extrato: filtro rápido de mês e ano", () => {
   });
 
   it("'Limpar mês' estando na página 2 do mês consulta a página 1 sem datas", async () => {
-    for (let day = 1; day <= 51; day++) {
-      await seed(`Limpar página ${day}`, new Date(2028, 1, 1 + (day % 28), 12));
-    }
-    await renderLoaded();
+    await renderLoaded({ total: 60 });
     await chooseOption("Ano", "2028");
     await chooseOption("Mês", "Fevereiro");
     await screen.findByText(/Página 1 de \d+/);

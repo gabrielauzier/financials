@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { mockRequest } from "@/lib/api/mock";
 import type { Account, Transaction, TransactionsPage as Page } from "@/lib/api/types";
 import { renderWithQuery, requests, resetSpy, responses } from "@/test/apiSpy";
+import { trimTransactions } from "@/test/extratoKit";
 import { TransactionsPage } from "./TransactionsPage";
 
 vi.mock("sonner", async (importOriginal) => ({
@@ -13,6 +14,9 @@ vi.mock("@/lib/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/client")>()),
   apiRequest: (await import("@/test/apiSpy")).spiedApiRequest,
 }));
+
+// the create-form tests need the page, not its 120 rows
+beforeAll(() => trimTransactions());
 
 afterEach(() => {
   cleanup();
