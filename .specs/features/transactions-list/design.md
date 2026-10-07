@@ -159,13 +159,13 @@ graph TD
 - **Purpose**: Cartão de resumo com estados e valores clicáveis.
 - **Location**: `web/src/features/transactions/SummaryCard.tsx`
 - **Interfaces**:
-  - `SummaryCard({ filters, enabled, onSelect }: { filters: TransactionFilters; enabled: boolean; onSelect: (key: "type" | "categoryId", value: string | undefined) => void })`.
+  - `SummaryCard({ filters, enabled, onSelectType, onSelectCategory }: { filters: TransactionFilters; enabled?: boolean; onSelectType: (type: TransactionType | undefined) => void; onSelectCategory: (categoryId: string | undefined) => void })`.
   - Lê `useTransactionSummary(filters, enabled)` e `useCategories()`; `investmentsCategoryId = data?.find(c => c.key === "Investments")?.id`.
   - Estados: esqueleto `role="status"` "Carregando resumo"; erro "Não foi possível carregar o resumo." e "Tentar novamente" (`refetch`); sucesso com a quantidade e o plural, os valores por `formatBRL` e o Saldo como texto.
-  - Botões `aria-pressed` com anel quando ativos; o clique chama `onSelect("type", ativo ? undefined : "Income")` e assim por diante; Investimentos como texto sem a categoria.
+  - Botões `aria-pressed` com anel quando ativos; o clique chama `onSelectType(ativo ? undefined : "Income")` e assim por diante; Investimentos como texto sem a categoria.
 - **Dependencies**: `useTransactionSummary`, `useCategories`, `formatBRL`, `summaryStyles`.
 - **Reuses**: `formatBRL`, `Button`.
-- **Montagem**: `TransactionsPage` renderiza `{!invalidPeriod && <SummaryCard filters={filters} enabled onSelect={changeFilter} />}` entre a seção de filtros e o bloco de seleção em lote.
+- **Montagem**: `TransactionsPage` renderiza `{!invalidPeriod && <SummaryCard filters={filters} onSelectType={(type) => changeFilter("type", type)} onSelectCategory={(id) => changeFilter("categoryId", id)} />}` entre a seção de filtros e o bloco de seleção em lote.
 
 ### `Pagination`
 

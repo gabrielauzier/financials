@@ -344,7 +344,7 @@ T10 → T11
 
 ### T9: Create the summary card
 
-**What**: `SummaryCard` (section "Resumo do extrato"; loading skeleton, error with "Tentar novamente", empty state; highlighted count with the plural rule; income, expense, investments and balance from the API through `formatBRL`; Receitas, Despesas and Investimentos as `aria-pressed` buttons that call `onSelect`; Investimentos as text without the category; Saldo as text) with component tests.
+**What**: `SummaryCard` (section "Resumo do extrato"; loading skeleton, error with "Tentar novamente", empty state; highlighted count with the plural rule; income, expense, investments and balance from the API through `formatBRL`; Receitas, Despesas and Investimentos as `aria-pressed` buttons that call `onSelectType` and `onSelectCategory`; Investimentos as text without the category; Saldo as text) with component tests.
 **Where**: `web/src/features/transactions/SummaryCard.tsx`
 **Depends on**: T7, T8
 **Reuses**: `web/src/features/transactions/hooks.ts`, `web/src/features/categories/hooks.ts`, `web/src/lib/format.ts`, `web/src/features/transactions/summaryStyles.ts`, `web/src/test/apiSpy.tsx`
@@ -357,20 +357,20 @@ T10 → T11
 
 **Done when**:
 
-- [ ] With a canned summary the card shows the count and "R$ 1.234,56", "R$ 100,00", "R$ 50,00" and "-R$ 10,00" exactly as the API strings format, under the labels "Receitas", "Despesas", "Investimentos" and "Saldo" (AC 1 of the card story)
-- [ ] Each value carries the class of its color (income, expense, investments, and the balance by sign: positive, negative, zero) (AC 2)
-- [ ] A count of 1 shows "transação"; 0 and 5 show "transações"; 1234 shows "1.234" (AC 3)
-- [ ] While loading a status named "Carregando resumo" is shown and no value is (AC 4)
-- [ ] A failing request shows "Não foi possível carregar o resumo." and "Tentar novamente", and activating it requests only the summary again and then shows the values (AC 5)
-- [ ] A zero summary shows count 0 and four "R$ 0,00" values (AC 6)
-- [ ] Receitas, Despesas and Investimentos are buttons and Saldo is not a button and has no `aria-pressed`; keyboard activation works through native buttons (a click on the button element and focusability asserted) (AC 7 of the click story)
-- [ ] With `type` Income in the filters Receitas has `aria-pressed="true"` and the others "false"; with `type` Expense, Despesas; with `categoryId` of the Investments category, Investimentos (AC 4)
-- [ ] Activating an inactive Receitas calls `onSelect("type", "Income")`, Despesas `onSelect("type", "Expense")` and Investimentos `onSelect("categoryId", <id of the key "Investments">)`; activating an active one calls it with `undefined` for the same key (AC 1, 2, 3 and 5)
-- [ ] With `type` Expense active, activating Receitas selects Income, and with another `categoryId` active, Investimentos selects the Investments id (AC 6)
-- [ ] When the category list lacks the key `Investments`, or has not loaded, or failed, Investimentos is plain text with no button (AC 9)
-- [ ] When the Investments category is renamed in the mock the button still selects its id (AC 10)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] With a canned summary the card shows the count and "R$ 1.234,56", "R$ 100,00", "R$ 50,00" and "-R$ 10,00" exactly as the API strings format, under the labels "Receitas", "Despesas", "Investimentos" and "Saldo" (AC 1 of the card story)
+- [x] Each value carries the class of its color (income, expense, investments, and the balance by sign: positive, negative, zero) (AC 2)
+- [x] A count of 1 shows "transação"; 0 and 5 show "transações"; 1234 shows "1.234" (AC 3)
+- [x] While loading a status named "Carregando resumo" is shown and no value is (AC 4)
+- [x] A failing request shows "Não foi possível carregar o resumo." and "Tentar novamente", and activating it requests only the summary again and then shows the values (AC 5)
+- [x] A zero summary shows count 0 and four "R$ 0,00" values (AC 6)
+- [x] Receitas, Despesas and Investimentos are buttons and Saldo is not a button and has no `aria-pressed`; keyboard activation works through native buttons (a click on the button element and focusability asserted) (AC 7 of the click story)
+- [x] With `type` Income in the filters Receitas has `aria-pressed="true"` and the others "false"; with `type` Expense, Despesas; with `categoryId` of the Investments category, Investimentos (AC 4)
+- [x] Activating an inactive Receitas calls `onSelectType("Income")`, Despesas `onSelectType("Expense")` and Investimentos `onSelectCategory(<id of the key "Investments">)`; activating an active one calls the same callback with `undefined` (AC 1, 2, 3 and 5)
+- [x] With `type` Expense active, activating Receitas selects Income, and with another `categoryId` active, Investimentos selects the Investments id (AC 6)
+- [x] When the category list lacks the key `Investments`, or has not loaded, or failed, Investimentos is plain text with no button (AC 9)
+- [x] When the list holds a user category named "Investments" (key null) and the system category has another name, the button selects the id of the key (AC 10; the real API protects system categories from renaming, so the test models the name difference with a canned list)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 818 web tests pass (793 existing plus 25 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
@@ -417,7 +417,7 @@ T10 → T11
 
 ### T11: Mount the summary card and the pagination in the extrato
 
-**What**: `TransactionsPage` renders `SummaryCard` between the filters and the list (not while the period is inverted), wires `onSelect` to `changeFilter`, replaces the footer with `Pagination` fed by `usePageSize`, sends `pageSize` only when it is not 50, clears the row selection when it changes and resets to page 1; integration tests in new `extrato` files.
+**What**: `TransactionsPage` renders `SummaryCard` between the filters and the list (not while the period is inverted), wires `onSelectType` and `onSelectCategory` to `changeFilter`, replaces the footer with `Pagination` fed by `usePageSize`, sends `pageSize` only when it is not 50, clears the row selection when it changes and resets to page 1; integration tests in new `extrato` files.
 **Where**: `web/src/features/transactions/TransactionsPage.tsx`
 **Depends on**: T9, T10
 **Reuses**: `web/src/features/transactions/extratoClearFilters.test.tsx` (`lightList`, fake clock), `web/src/features/transactions/extratoFilters.test.tsx`, `web/src/test/apiSpy.tsx`
