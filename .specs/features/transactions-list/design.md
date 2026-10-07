@@ -119,7 +119,7 @@ graph TD
 ### `pageNumbers`
 
 - **Purpose**: Lista de botões e reticências, função pura.
-- **Location**: `web/src/features/transactions/pagination.ts`
+- **Location**: `web/src/features/transactions/pageNumbers.ts`
 - **Interfaces**: `pageNumbers(current: number, total: number): Array<number | "…">`, com a regra da spec (até 7 todas; senão 7 posições; atual limitada a `1..total`; `total` menor que 1 vale 1).
 - **Dependencies**: nenhuma.
 - **Reuses**: nenhum.

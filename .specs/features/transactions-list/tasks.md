@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | API routes, rules fragments, schema and OpenAPI | integration | Every route touched (list with `pageSize`, summary): happy path + every listed edge case + error paths (422, 401) + RLS; fragments checked against Postgres; `openapi.json` content | `api/test/**/*.int.test.ts` | `pnpm -C api test` |
 | Web components and hooks | unit | Spec-visible behavior per AC; failure paths assert the Portuguese text and the exact option lists (L-013, L-024); every page reset starts from page 2 (L-021, L-041); requests asserted through the `apiSpy` log | `web/src/**/*.test.tsx` | `yarn --cwd web test` |
-| Web pure helpers (`pagination`, `summaryStyles`, `summaryFilters`) | unit | All branches; 1:1 to spec ACs; 1, 2, 7, 8 and 100 pages with the current at the edges and the middle; contrast of every color class in both themes | `web/src/**/*.test.ts` | `yarn --cwd web test` |
+| Web pure helpers (`pageNumbers`, `summaryStyles`, `summaryFilters`) | unit | All branches; 1:1 to spec ACs; 1, 2, 7, 8 and 100 pages with the current at the edges and the middle; contrast of every color class in both themes | `web/src/**/*.test.ts` | `yarn --cwd web test` |
 | Web mocks and hand-written API types | unit when behavior (mock handlers); none for types | Mock list and summary behave like the API for `pageSize` and the rules; types by typecheck | `web/src/lib/api/**/*.test.ts` | `yarn --cwd web test` |
 | Styles, config | none | - (build gate only; the color classes are covered through the contrast test of the module that holds them) | - | build gate only |
 
@@ -220,7 +220,7 @@ T10 → T11
 ### T5: Create the page number list
 
 **What**: `pageNumbers(current, total)`, a pure function returning page numbers and `"…"`, with its unit tests.
-**Where**: `web/src/features/transactions/pagination.ts`
+**Where**: `web/src/features/transactions/pageNumbers.ts`
 **Depends on**: None
 **Reuses**: `web/src/features/transactions/utils.test.ts` (style)
 **Requirement**: TLIST-12
@@ -384,7 +384,7 @@ T10 → T11
 **What**: `Pagination` (nav "Paginação do extrato"; the text "N transações · Página X de Y"; the "Itens por página" select with 25, 50 and 100; "Anterior"; numbered buttons from `pageNumbers` with `aria-current` and names `Página N`; ellipsis as non-button; "Próxima"; `hidden sm:flex` numbered group, `flex-wrap` bar and `min-h-9 min-w-9` buttons) with component tests.
 **Where**: `web/src/features/transactions/Pagination.tsx`
 **Depends on**: T5, T6
-**Reuses**: `web/src/features/transactions/pagination.ts`, `web/src/features/transactions/usePageSize.ts`, `web/src/components/ui/select.tsx`, `web/src/components/ui/button.tsx`
+**Reuses**: `web/src/features/transactions/pageNumbers.ts`, `web/src/features/transactions/usePageSize.ts`, `web/src/components/ui/select.tsx`, `web/src/components/ui/button.tsx`
 **Requirement**: TLIST-13, TLIST-14
 
 **Tools**:
@@ -394,17 +394,17 @@ T10 → T11
 
 **Done when**:
 
-- [ ] For 120 rows with page size 50 on page 1 the bar shows "120 transações · Página 1 de 3", buttons "1", "2", "3" and "Anterior" disabled and "Próxima" enabled (AC 6 and 8 of the pagination story)
-- [ ] The page button of the current page has `aria-current="page"`, the others have no `aria-current`, and the ellipsis elements are not buttons, for 100 pages at pages 1, 5, 50 and 100 (AC 7)
-- [ ] On the last page "Próxima" is disabled and "Anterior" is enabled (AC 8)
-- [ ] "Anterior", "Próxima" and a numbered button call `onPageChange` with the previous, next and clicked page; the current page button does not call it (AC 9)
-- [ ] One page (50 rows of 50) shows only "1" with both navigation buttons disabled, and 51 rows of 50 show two pages (AC 10, edge case)
-- [ ] The page count uses the `pageSize` prop (the API size) and not the selected size (AC 12)
-- [ ] The select named "Itens por página" shows the selected size and lists exactly "25", "50", "100" in that order (AC 14 and 15)
-- [ ] Choosing 25 calls `onPageSizeChange(25)` and choosing 100 calls `onPageSizeChange(100)` (AC 16, component side)
-- [ ] The numbered group carries `hidden sm:flex`, the bar `flex-wrap` and the buttons `min-h-9 min-w-9` (AC 11)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] For 120 rows with page size 50 on page 1 the bar shows "120 transações · Página 1 de 3", buttons "1", "2", "3" and "Anterior" disabled and "Próxima" enabled (AC 6 and 8 of the pagination story)
+- [x] The page button of the current page has `aria-current="page"`, the others have no `aria-current`, and the ellipsis elements are not buttons, for 100 pages at pages 1, 5, 50 and 100 (AC 7)
+- [x] On the last page "Próxima" is disabled and "Anterior" is enabled (AC 8)
+- [x] "Anterior", "Próxima" and a numbered button call `onPageChange` with the previous, next and clicked page; the current page button does not call it (AC 9)
+- [x] One page (50 rows of 50) shows only "1" with both navigation buttons disabled, and 51 rows of 50 show two pages (AC 10, edge case)
+- [x] The page count uses the `pageSize` prop (the API size) and not the selected size (AC 12)
+- [x] The select named "Itens por página" shows the selected size and lists exactly "25", "50", "100" in that order (AC 14 and 15)
+- [x] Choosing 25 calls `onPageSizeChange(25)` and choosing 100 calls `onPageSizeChange(100)` (AC 16, component side)
+- [x] The numbered group carries `hidden sm:flex`, the bar `flex-wrap` and the buttons `min-h-9 min-w-9` (AC 11)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 836 web tests pass (818 existing plus 18 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

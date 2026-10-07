@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pageNumbers } from "./pagination";
+import { pageNumbers } from "./pageNumbers";
 
 const range = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, index) => from + index);
