@@ -136,6 +136,17 @@ describe("SaveFilterDialog", () => {
     expect(field()).toHaveValue("");
   });
 
+  it("um erro de nome some ao cancelar: reabrir não mostra alerta nem aria-invalid", () => {
+    render(<Harness />);
+    openDialog();
+    pressEnter();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    openDialog();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(field()).not.toHaveAttribute("aria-invalid");
+  });
+
   it("Esc fecha sem guardar e devolve o foco ao botão", async () => {
     render(<Harness />);
     openDialog();
