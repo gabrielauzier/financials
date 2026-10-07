@@ -45,6 +45,19 @@ describe("usePageSize: o tamanho guardado", () => {
   });
 });
 
+describe("usePageSize: a chave literal do spec", () => {
+  it("usa a chave financials:transactions:page-size, não só a constante", () => {
+    expect(PAGE_SIZE_STORAGE_KEY).toBe("financials:transactions:page-size");
+    localStorage.setItem("financials:transactions:page-size", "100");
+    expect(renderHook(() => usePageSize()).result.current[0]).toBe(100);
+    localStorage.clear();
+    const { result } = renderHook(() => usePageSize());
+    act(() => result.current[1](25));
+    expect(localStorage.getItem("financials:transactions:page-size")).toBe("25");
+    expect(localStorage.length).toBe(1);
+  });
+});
+
 describe("usePageSize: trocar o tamanho", () => {
   it.each([25, 50, 100] as const)("trocar para %i muda o valor e guarda o texto exato", (size) => {
     const { result } = renderHook(() => usePageSize());
