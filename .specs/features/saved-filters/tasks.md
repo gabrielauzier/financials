@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/saved-filters/design.md`
-**Status**: Approved
+**Status**: In Progress
 
 **Feature prerequisites**: `transactions-list` implemented on `feat/transactions-list` (branch `feat/saved-filters` is stacked on it). Web only: no API, no database, no migration, `pnpm -C api typecheck` untouched. No push, no `db reset`, nothing touches the hosted Supabase or Vercel, `web/.env.local` is not touched, and no agent logs in to the app.
 
@@ -92,17 +92,17 @@ T9 → T10
 
 **Done when**:
 
-- [ ] `toSavedState` of a state with every field, page 3 and a page size has exactly the keys `q`, `type`, `accountId`, `categoryId`, `neutral`, `from`, `to`, `quick`, `sort` and `order`, and no `page` or `pageSize`; empty fields are absent (AC 1 of the state story)
-- [ ] `q` is stored trimmed and a blank `q` is absent (AC 2)
-- [ ] A complete quick month is stored as `quick` with `from` and `to` of `monthRange`; a quick month with only the year or only the month is not stored (AC 3)
-- [ ] `toFilterState` is on page 1, with `sort` and `order` of the saved state and `date`/`desc` when they are missing (AC 4), and gives `quick` and the month's `from`/`to` for a saved quick month and an empty `quick` otherwise (AC 5)
-- [ ] `isDefaultState` is true for the initial state and for a lone incomplete quick month, and false for each of the ten fields set (and for `sort` or `order` different from `date`/`desc`) (AC 6)
-- [ ] `sameSavedState` is true across page, page size, incomplete quick month, key order and blank `q`, and false when any of the ten fields differs, `neutral` false against absent included (AC 7)
-- [ ] `withoutMissingRefs` drops an `accountId` or `categoryId` that is not in the known set and reports which, keeps it when the set is absent, and keeps it when present (AC 8)
-- [ ] `describeSavedState` gives the exact Portuguese lines (`Busca: ...`, `Tipo: Receita`, `Conta: ...`, `Categoria: ...`, `Neutra: Sim`, `De: 01/06/2026`, `Até: 30/06/2026`, `Mês: Junho de 2026` instead of De and Até, `Ordenação: Valor (crescente)`), the fallbacks `Conta selecionada` and `Categoria selecionada`, and no line for page or page size (AC 9)
-- [ ] `sanitizeSavedState` drops unknown fields, turns an invalid `type`, `neutral`, id, `q`, date, `quick`, `sort` and `order` into absent (`sort`/`order` into the defaults) and keeps the valid ones (AC 5 and 6 of the storage story, field level)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: 877 existing tests still pass plus the new ones (no silent deletions)
+- [x] `toSavedState` of a state with every field, page 3 and a page size has exactly the keys `q`, `type`, `accountId`, `categoryId`, `neutral`, `from`, `to`, `quick`, `sort` and `order`, and no `page` or `pageSize`; empty fields are absent (AC 1 of the state story)
+- [x] `q` is stored trimmed and a blank `q` is absent (AC 2)
+- [x] A complete quick month is stored as `quick` with `from` and `to` of `monthRange`; a quick month with only the year or only the month is not stored (AC 3)
+- [x] `toFilterState` is on page 1, with `sort` and `order` of the saved state and `date`/`desc` when they are missing (AC 4), and gives `quick` and the month's `from`/`to` for a saved quick month and an empty `quick` otherwise (AC 5)
+- [x] `isDefaultState` is true for the initial state and for a lone incomplete quick month, and false for each of the ten fields set (and for `sort` or `order` different from `date`/`desc`) (AC 6)
+- [x] `sameSavedState` is true across page, page size, incomplete quick month, key order and blank `q`, and false when any of the ten fields differs, `neutral` false against absent included (AC 7)
+- [x] `withoutMissingRefs` drops an `accountId` or `categoryId` that is not in the known set and reports which, keeps it when the set is absent, and keeps it when present (AC 8)
+- [x] `describeSavedState` gives the exact Portuguese lines (`Busca: ...`, `Tipo: Receita`, `Conta: ...`, `Categoria: ...`, `Neutra: Sim`, `De: 01/06/2026`, `Até: 30/06/2026`, `Mês: Junho de 2026` instead of De and Até, `Ordenação: Valor (crescente)`), the fallbacks `Conta selecionada` and `Categoria selecionada`, and no line for page or page size (AC 9)
+- [x] `sanitizeSavedState` drops unknown fields, turns an invalid `type`, `neutral`, id, `q`, date, `quick`, `sort` and `order` into absent (`sort`/`order` into the defaults) and keeps the valid ones (AC 5 and 6 of the storage story, field level)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 923 web tests pass (877 existing plus 46 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

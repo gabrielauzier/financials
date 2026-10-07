@@ -313,8 +313,8 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| SFILT-01 | P1: Estado do filtro salvo | In Tasks | Pending |
-| SFILT-02 | P1: Armazenamento tolerante | In Tasks | Pending |
+| SFILT-01 | P1: Estado do filtro salvo | In Tasks | Implemented-not-verified |
+| SFILT-02 | P1: Armazenamento tolerante | In Tasks | Implementing |
 | SFILT-03 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Pending |
 | SFILT-04 | P1: Salvar, renomear e excluir no armazenamento | In Tasks | Pending |
 | SFILT-05 | P1: Hook e usuário da sessão | In Tasks | Pending |
