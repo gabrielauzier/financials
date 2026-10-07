@@ -23,6 +23,16 @@ export interface ParsedRow {
   counterpartyBank: string | null;
   status: RowStatus;
   reason?: string;
+  /** Raw category text of the file (Notion model), resolved against the user's categories by `analyze`. */
+  categoryLabel?: string;
+  /** Free-text notes saved as `transactions.notes`. */
+  notes?: string | null;
+  /** Receipt URL (http or https) saved as `transactions.receipt`. */
+  receipt?: string | null;
+  /** The file marks the row neutral (Notion `Type = Neutral`); saved as `neutral` unless the user changes it. */
+  neutralHint?: boolean;
+  /** Set by `analyze` from `categoryLabel`; wins over `categoryKey`. */
+  resolvedCategory?: { id: string; name: string };
 }
 
 export interface ClassifiedRow extends ParsedRow {
