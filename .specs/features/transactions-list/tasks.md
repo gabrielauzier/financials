@@ -232,13 +232,13 @@ T10 → T11
 
 **Done when**:
 
-- [ ] For 1 page the result is `[1]`, for 2 pages `[1, 2]`, for 7 pages `[1, 2, 3, 4, 5, 6, 7]` with the current at the first, a middle and the last page (AC 1)
-- [ ] For 8 pages: current 1 to 4 gives `[1, 2, 3, 4, 5, "…", 8]`; current 5 to 8 gives `[1, "…", 4, 5, 6, 7, 8]` (AC 2 and 3, the boundary between the two branches)
-- [ ] For 100 pages: current 1 gives `[1, 2, 3, 4, 5, "…", 100]`; current 4 gives the same; current 5 gives `[1, "…", 4, 5, 6, "…", 100]`; current 50 gives `[1, "…", 49, 50, 51, "…", 100]`; current 96 gives `[1, "…", 95, 96, 97, "…", 100]`; current 97 and 100 give `[1, "…", 96, 97, 98, 99, 100]` (AC 2, 3 and 4)
-- [ ] Every result for more than 7 pages has exactly 7 entries, starts with 1 and ends with the total (width stays fixed)
-- [ ] `total` 0, negative or non-integer is treated as 1, and a current below 1 or above the total is clamped (AC 5)
-- [ ] Gate check passes: `yarn --cwd web test`
-- [ ] Test count: the existing tests pass plus the new ones (counts recorded in the commit body; no silent deletions)
+- [x] For 1 page the result is `[1]`, for 2 pages `[1, 2]`, for 7 pages `[1, 2, 3, 4, 5, 6, 7]` with the current at the first, a middle and the last page (AC 1)
+- [x] For 8 pages: current 1 to 4 gives `[1, 2, 3, 4, 5, "…", 8]`; current 5 to 8 gives `[1, "…", 4, 5, 6, 7, 8]` (AC 2 and 3, the boundary between the two branches)
+- [x] For 100 pages: current 1 gives `[1, 2, 3, 4, 5, "…", 100]`; current 4 gives the same; current 5 gives `[1, "…", 4, 5, 6, "…", 100]`; current 50 gives `[1, "…", 49, 50, 51, "…", 100]`; current 96 gives `[1, "…", 95, 96, 97, "…", 100]`; current 97 and 100 give `[1, "…", 96, 97, 98, 99, 100]` (AC 2, 3 and 4)
+- [x] Every result for more than 7 pages has exactly 7 entries, starts with 1 and ends with the total (width stays fixed)
+- [x] `total` 0 or negative is treated as 1, and a current below 1 or above the total is clamped (AC 5)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 743 web tests pass (733 existing plus 10 new; no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
