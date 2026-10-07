@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/transactions-list/design.md`
-**Status**: In Progress
+**Status**: Done (implemented; awaiting the independent Verifier and the owner's browser check)
 
 **Feature prerequisites**: `transactions-ux-v2` implemented on `feat/transactions-ux-v2` (branch `feat/transactions-list` is stacked on it); migrations 0001 to 0009 applied locally (no new migration); local Supabase running. No push, no `db reset`, nothing touches the hosted Supabase or Vercel.
 

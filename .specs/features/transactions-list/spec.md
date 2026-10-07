@@ -268,21 +268,21 @@ Toda ambiguidade foi resolvida ou registrada aqui. As linhas marcadas "y" são d
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| TLIST-01 | P1: Resumo do filtro na API | In Tasks | Pending |
-| TLIST-02 | P1: Resumo do filtro na API | In Tasks | Pending |
-| TLIST-03 | P1: Resumo do filtro na API | In Tasks | Pending |
-| TLIST-04 | P1: Resumo do filtro na API | In Tasks | Pending |
-| TLIST-05 | P1: Tamanho da página na API | In Tasks | Pending |
-| TLIST-06 | P1: Tamanho da página na API | In Tasks | Pending |
-| TLIST-07 | P1: Tipos e mocks do web | In Tasks | Pending |
-| TLIST-08 | P1: Cartão de resumo no extrato | In Tasks | Pending |
-| TLIST-09 | P1: Cartão de resumo no extrato | In Tasks | Pending |
-| TLIST-10 | P1: Filtro rápido pelos valores | In Tasks | Pending |
-| TLIST-11 | P1: Cartão de resumo no extrato | In Tasks | Pending |
-| TLIST-12 | P1: Paginação com botões numerados | In Tasks | Pending |
-| TLIST-13 | P1: Paginação com botões numerados | In Tasks | Pending |
-| TLIST-14 | P1: Paginação com botões numerados | In Tasks | Pending |
-| TLIST-15 | P1: Paginação com botões numerados | In Tasks | Pending |
+| TLIST-01 | P1: Resumo do filtro na API | In Tasks | Implemented, not verified |
+| TLIST-02 | P1: Resumo do filtro na API | In Tasks | Implemented, not verified |
+| TLIST-03 | P1: Resumo do filtro na API | In Tasks | Implemented, not verified |
+| TLIST-04 | P1: Resumo do filtro na API | In Tasks | Implemented, not verified |
+| TLIST-05 | P1: Tamanho da página na API | In Tasks | Implemented, not verified |
+| TLIST-06 | P1: Tamanho da página na API | In Tasks | Implemented, not verified |
+| TLIST-07 | P1: Tipos e mocks do web | In Tasks | Implemented, not verified |
+| TLIST-08 | P1: Cartão de resumo no extrato | In Tasks | Implemented, not verified |
+| TLIST-09 | P1: Cartão de resumo no extrato | In Tasks | Implemented, not verified |
+| TLIST-10 | P1: Filtro rápido pelos valores | In Tasks | Implemented, not verified |
+| TLIST-11 | P1: Cartão de resumo no extrato | In Tasks | Implemented, not verified |
+| TLIST-12 | P1: Paginação com botões numerados | In Tasks | Implemented, not verified |
+| TLIST-13 | P1: Paginação com botões numerados | In Tasks | Implemented, not verified |
+| TLIST-14 | P1: Paginação com botões numerados | In Tasks | Implemented, not verified |
+| TLIST-15 | P1: Paginação com botões numerados | In Tasks | Implemented, not verified |
 
 **Coverage:** 15 total, 15 mapped to tasks, 0 unmapped
 
