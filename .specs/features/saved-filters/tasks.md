@@ -111,6 +111,68 @@ T9 → T10
 
 ---
 
+### Phase 2: Hooks
+
+```
+T3
+T4
+T5
+```
+
+### Phase 3: Components
+
+```
+T6
+T7
+T8
+```
+
+### Phase 4: Container and extrato
+
+```
+T9 → T10
+```
+
+---
+
+## Task Breakdown
+
+### Phase 1: State and storage modules
+
+### T1: Add the saved filter state module
+
+**What**: `savedFilterState.ts` with `SavedFilterState`, `toSavedState`, `toFilterState`, `sanitizeSavedState`, `isDefaultState`, `sameSavedState`, `withoutMissingRefs` and `describeSavedState`, and unit tests in `savedFilterState.test.ts`.
+**Where**: `web/src/features/transactions/savedFilterState.ts`
+**Depends on**: None
+**Reuses**: `FilterState`, `QuickMonth` and `monthRange` of `utils.ts`, `TransactionFilters` of `types.ts`
+**Requirement**: SFILT-01, SFILT-02
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] `toSavedState` of a state with every field, page 3 and a page size has exactly the keys `q`, `type`, `accountId`, `categoryId`, `neutral`, `from`, `to`, `quick`, `sort` and `order`, and no `page` or `pageSize`; empty fields are absent (AC 1 of the state story)
+- [x] `q` is stored trimmed and a blank `q` is absent (AC 2)
+- [x] A complete quick month is stored as `quick` with `from` and `to` of `monthRange`; a quick month with only the year or only the month is not stored (AC 3)
+- [x] `toFilterState` is on page 1, with `sort` and `order` of the saved state and `date`/`desc` when they are missing (AC 4), and gives `quick` and the month's `from`/`to` for a saved quick month and an empty `quick` otherwise (AC 5)
+- [x] `isDefaultState` is true for the initial state and for a lone incomplete quick month, and false for each of the ten fields set (and for `sort` or `order` different from `date`/`desc`) (AC 6)
+- [x] `sameSavedState` is true across page, page size, incomplete quick month, key order and blank `q`, and false when any of the ten fields differs, `neutral` false against absent included (AC 7)
+- [x] `withoutMissingRefs` drops an `accountId` or `categoryId` that is not in the known set and reports which, keeps it when the set is absent, and keeps it when present (AC 8)
+- [x] `describeSavedState` gives the exact Portuguese lines (`Busca: ...`, `Tipo: Receita`, `Conta: ...`, `Categoria: ...`, `Neutra: Sim`, `De: 01/06/2026`, `Até: 30/06/2026`, `Mês: Junho de 2026` instead of De and Até, `Ordenação: Valor (crescente)`), the fallbacks `Conta selecionada` and `Categoria selecionada`, and no line for page or page size (AC 9)
+- [x] `sanitizeSavedState` drops unknown fields, turns an invalid `type`, `neutral`, id, `q`, date, `quick`, `sort` and `order` into absent (`sort`/`order` into the defaults) and keeps the valid ones (AC 5 and 6 of the storage story, field level)
+- [x] Gate check passes: `yarn --cwd web test`
+- [x] Test count: 923 web tests pass (877 existing plus 46 new; no silent deletions)
+
+**Tests**: unit
+**Gate**: quick
+
+**Commit**: `feat(saved-filters): add the saved filter state module`
+
+---
+
 ### T2: Add the saved filters storage module
 
 **What**: `savedFilters.ts` with the per-user key, the versioned JSON, the validation of everything read, the name rules, the cap and `addSavedFilter`, `renameSavedFilter`, `deleteSavedFilter`, `readSavedFilters`, `sortSavedFilters`, `normalizeFilterName` and `FILTER_MESSAGES`, all in `try/catch`; unit tests in `savedFilters.test.ts`.
