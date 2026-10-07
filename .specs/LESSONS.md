@@ -282,6 +282,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SPG-1 (validation.md): meaning and sign of the investments total (spec-outcomes)
 - last seen: 2026-10-07T02:21:59Z
 
+### L-046 - When a container converts state before saving it, add a test that saves a state with a quick month (a field the plain filters lack) and asserts the stored converted field, not only simple fields.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui-tests` · harmful: 0
+- features: saved-filters
+- evidence: mutant C13 (validation.md) (ui-tests)
+- last seen: 2026-10-07T04:01:05Z
+
+### L-047 - When the spec fixes the order of validation checks (name rules before the cap), add a test where two rules fail at once and assert the first one's message.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `unit-tests` · harmful: 0
+- features: saved-filters
+- evidence: mutant S14 (validation.md) (unit-tests)
+- last seen: 2026-10-07T04:01:05Z
+
+### L-048 - State in the spec whether an error message of a dialog survives a close and reopen, not only that the input is empty on reopen.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec-outcomes` · harmful: 0
+- features: saved-filters
+- evidence: SFILT-06 AC 9 / mutant D09 (validation.md) (spec-outcomes)
+- last seen: 2026-10-07T04:01:05Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

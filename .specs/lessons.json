@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 46,
+  "next_id": 49,
   "lessons": [
     {
       "id": "L-001",
@@ -828,6 +828,60 @@
       ],
       "created": "2026-10-07T02:21:59Z",
       "last_seen": "2026-10-07T02:21:59Z"
+    },
+    {
+      "id": "L-046",
+      "key": "surviving_mutant::when a container converts state before saving it add a test that saves a state with a quick month a field the plain filters lack and asserts the stored converted field not only simple fields",
+      "text": "When a container converts state before saving it, add a test that saves a state with a quick month (a field the plain filters lack) and asserts the stored converted field, not only simple fields.",
+      "signal": "surviving_mutant",
+      "scope": "ui-tests",
+      "status": "candidate",
+      "features": [
+        "saved-filters"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant C13 (validation.md) (ui-tests)"
+      ],
+      "created": "2026-10-07T04:01:05Z",
+      "last_seen": "2026-10-07T04:01:05Z"
+    },
+    {
+      "id": "L-047",
+      "key": "surviving_mutant::when the spec fixes the order of validation checks name rules before the cap add a test where two rules fail at once and assert the first one s message",
+      "text": "When the spec fixes the order of validation checks (name rules before the cap), add a test where two rules fail at once and assert the first one's message.",
+      "signal": "surviving_mutant",
+      "scope": "unit-tests",
+      "status": "candidate",
+      "features": [
+        "saved-filters"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "mutant S14 (validation.md) (unit-tests)"
+      ],
+      "created": "2026-10-07T04:01:05Z",
+      "last_seen": "2026-10-07T04:01:05Z"
+    },
+    {
+      "id": "L-048",
+      "key": "spec_precision_gap::state in the spec whether an error message of a dialog survives a close and reopen not only that the input is empty on reopen",
+      "text": "State in the spec whether an error message of a dialog survives a close and reopen, not only that the input is empty on reopen.",
+      "signal": "spec_precision_gap",
+      "scope": "spec-outcomes",
+      "status": "candidate",
+      "features": [
+        "saved-filters"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SFILT-06 AC 9 / mutant D09 (validation.md) (spec-outcomes)"
+      ],
+      "created": "2026-10-07T04:01:05Z",
+      "last_seen": "2026-10-07T04:01:05Z"
     }
   ]
 }
