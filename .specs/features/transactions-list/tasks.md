@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/transactions-list/design.md`
-**Status**: Done (implemented; awaiting the independent Verifier and the owner's browser check)
+**Status**: Done (implemented; the independent Verifier report is FAIL on iteration 1, its gaps were fixed afterwards by the author and **not re-verified by a fresh independent agent**; the traceability in `spec.md` is Verified on the Verifier evidence plus those fixes; the owner's browser check and the owner's decision on the Investimentos definition stay open)
 
 **Feature prerequisites**: `transactions-ux-v2` implemented on `feat/transactions-ux-v2` (branch `feat/transactions-list` is stacked on it); migrations 0001 to 0009 applied locally (no new migration); local Supabase running. No push, no `db reset`, nothing touches the hosted Supabase or Vercel.
 

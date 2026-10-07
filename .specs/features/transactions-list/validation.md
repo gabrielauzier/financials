@@ -254,3 +254,41 @@ Baseline and final `git status --porcelain` of the real tree: the same five untr
 ## Summary
 
 Verdict FAIL with no functional defect. Ranked: 1 the two negative-value edge cases at the card are untested (C22, C23), 2 the extrato tests got about 25 percent slower and nine new ones time out under two-suite load (L-027), 3 the literal storage key is unpinned (U7), 4 four low-risk weak assertions (S20, G2, G12, M8), 5 owner decision on the meaning of "investimentos" and four smaller spec-precision gaps. Gates are green, 135 of 146 mutants are killed (4 of the 11 survivors are equivalent), the summary equals the dashboard routes on the fixed dataset, and the painted colors meet 4.5:1 in both themes at desktop and 375 px.
+
+---
+
+## Fixes after independent validation
+
+This addendum was written by the **author** of the fixes, not by the Verifier. **No fresh independent agent re-verified these fixes**, so the verdict at the top of this file stays FAIL (iteration 1, as the Verifier wrote it). The statuses in `spec.md` (Verified; TLIST-03 "Verified (AC 11 definition pending owner)") rest on the Verifier's evidence above plus the fixes below; a new independent Verifier run is still needed before this report can say PASS. The owner's logged-in browser steps and the owner's decision on the Investimentos definition also remain open.
+
+| Fix task | What changed | Commit | Mutation proof (temporary worktree on the external volume, real tree untouched) |
+| -------- | ------------ | ------ | ------------------------------------------------------------------------------ |
+| 1. Negative values at the card | `SummaryCard.test.tsx`: Investimentos `-15.50` shown as "-R$ 15,50" in the investments tone with Saldo `0.00` plain; Despesas `-30.00` as "-R$ 30,00" in the expense tone with Saldo `30.00` in the income tone | `6b4b186` | C22 and C23 now fail (survived before) |
+| 2. L-027 | see the timings below | `6f0244c` | filter change that keeps the page fails 4 `extratoFilters` tests; a month ending one day early fails 5 `extratoQuickMonth` tests |
+| 3. Literal storage key | `usePageSize.test.ts` reads and writes `financials:transactions:page-size` by its literal text | `452038c` | U7 now fails |
+| 4. Weak assertions | G2 (current page has `bg-primary`, the others the outline classes), G12 (`flex-wrap` on the controls row), M8 (mock list and summary with `neutral`), S20 (1001 rows of `999999999999.99` must sum to `1000999999999989.99`) | `213a9b7` | G2, G12, M8, S20 now fail; S12 (float8 cast) fails too |
+| 5. Ring contrast | `summaryActiveRing` is `ring-2 ring-slate-500` (4.77:1 light, 3.74:1 dark by the theme values; test asserts at least 3:1 per theme) | `5ac4904` | `ring-ring` back in fails the light-theme test |
+| 6. Spec precision | `spec.md` records the Investimentos definition as an author decision pending the owner, with the three alternatives and the fixed-dataset numbers (195.00 net, 200.00 gross, 205.00 movement); AC 13 names the large-sum example; the ring class and its contrast are in the spec | see git log | not a guard test |
+
+Notes on the two numbers the Verifier suggested:
+
+- **S20**: the suggested small example (many `0.10` rows, or `999999999999.99` plus `0.01`) cannot discriminate. Postgres casts a `float8` to `numeric` with 15 significant digits, so a float sum below about 1e14 is rounded back to the exact two-decimal value. The test needs a total of 16 or more digits: 1001 rows of the largest `numeric(14,2)` amount give `1000999999999989.99`, which a `float8` sum or cast cannot produce (the `float8` mutants fail it).
+- **Ring**: measured in Chromium with a throwaway Vite page that mounts the real `SummaryCard` with the app `styles.css` and the mock API (temporary worktree, no login, dummy Supabase variables, page and worktree removed): the pressed Receitas has a 2 px ring `oklch(0.554 0.046 257.417)`, painted contrast 4.76:1 on the white card and 3.74:1 on the dark card (`oklch(0.208 0.042 265.755)`); the inactive value has no ring.
+
+### L-027 timings (`yarn --cwd web test`, files in parallel)
+
+| Measurement | Before (HEAD `213a9b7`, 875 tests) | After (HEAD `5ac4904`, 877 tests) |
+| ----------- | ---------------------------------- | --------------------------------- |
+| Slowest test, full suite alone | 12.6 s (the Verifier measured 10.1 to 10.9 s) | 1.96, 1.88 and 1.88 s in three runs (limit 15 s, goal under 7.5 s) |
+| Full suite wall time | about 68 s (the Verifier's three runs) | 26.1, 26.2 and 26.0 s |
+| Two suites started together | 29 and 30 failed (extratoFilters 6, extratoQuickMonth 6, extratoCrud 5, extratoInline 4, transactions 4 or 5, extratoDescriptionForm 3, extratoAccountLabel 1; none in the new files this time, the Verifier saw 9 there) | 0 and 0 failed; slowest test 4.78 and 4.76 s (`extratoSummary`) |
+| `extratoQuickMonth.test.tsx` alone | 24 s | 5.6 s |
+| `extratoCrud.test.tsx` alone | 16.4 s | 5.7 s |
+
+The commit body of `6f0244c` quotes an interim measurement (slowest 5.5 s, taken before the last two lightening edits); the table above is the final one. How: tests that only check the query use the 3-row `lightList` of `web/src/test/extratoKit.ts`; the ones that act on real rows shrink the 120-row mock with the new `trimTransactions` helper; two 51-row seeds were replaced by a total of 60; tests that start from a light list fake the timers before rendering and let the search debounce settle (L-021). No timeout raised, no assertion removed (one scenario, the Receitas to Despesas swap, starts from the light page instead of a page-2 setup that the two neighboring tests already cover).
+
+### Gates after the fixes (author's run)
+
+- `yarn --cwd web typecheck`: clean. `yarn --cwd web lint`: 0 errors, the same 7 pre-existing `react-refresh/only-export-components` warnings, none new.
+- `yarn --cwd web test` three times: 877 tests (871 before, plus 6 new), 0 failed each time. One more run with two suites started together: 0 failed in both.
+- `pnpm -C api typecheck` and `pnpm -C api lint`: clean. `pnpm -C api test`: 382 unit and 703 integration tests pass, 0 failed (702 integration before, plus the large-sum case).
