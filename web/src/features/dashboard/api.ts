@@ -4,6 +4,7 @@ import type {
   CategoryDistribution,
   DashboardPeriod,
   DashboardYears,
+  ExpenseTrend,
   InvestmentReturn,
   InvestmentReturnInput,
   InvestmentReturns,
@@ -22,6 +23,8 @@ export const getTrend = (period?: DashboardPeriod) =>
   apiRequest<Trend>(`/dashboard/trend${period ? periodQuery(period) : ""}`);
 export const getCategoryDistribution = (period: DashboardPeriod) =>
   apiRequest<CategoryDistribution>(`/dashboard/categories${periodQuery(period)}`);
+export const getExpenseTrend = (period?: DashboardPeriod) =>
+  apiRequest<ExpenseTrend>(`/dashboard/expense-trend${period ? periodQuery(period) : ""}`);
 export const getYears = () => apiRequest<DashboardYears>("/dashboard/years");
 export const getNetWorth = () => apiRequest<NetWorth>("/dashboard/net-worth");
 export const getCardView = (period: DashboardPeriod) =>

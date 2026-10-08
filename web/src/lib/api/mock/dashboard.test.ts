@@ -3,6 +3,7 @@ import type {
   CardView,
   CategoryDistribution,
   DashboardYears,
+  ExpenseTrend,
   InvestmentReturns,
   Last30Days,
   NetWorth,
@@ -151,5 +152,37 @@ describe("dashboard mocks follow the API contract", () => {
     expect(
       (await get<Trend>("/dashboard/trend?from=2016-02-01&to=2026-01-31")).points,
     ).toHaveLength(120);
+  });
+
+  it("answers the expense trend by category: largest first, a value per category and month, negative Estorno, zero categories omitted", async () => {
+    const trend = await get<ExpenseTrend>("/dashboard/expense-trend");
+    expect(trend.months).toHaveLength(12);
+    expect(trend.categories.map((category) => category.name)).toEqual([
+      "Moradia",
+      "Alimentação",
+      "Transporte",
+      "Estorno (de compras)",
+    ]);
+    for (const category of trend.categories) expect(category.color).toMatch(/^[a-z]+-400$/);
+    for (const point of trend.points) {
+      expect(Object.keys(point.values).sort()).toEqual(
+        trend.categories.map((category) => category.categoryId).sort(),
+      );
+    }
+    const reversal = trend.categories.at(-1)?.categoryId as string;
+    expect(trend.points.at(-1)?.values[reversal]).toBe("-45.90");
+    expect(trend.points[0]?.values[reversal]).toBe("0.00");
+    const old = await get<ExpenseTrend>("/dashboard/expense-trend?from=2020-01-01&to=2020-02-29");
+    expect(old.months).toEqual(["2020-01", "2020-02"]);
+    expect(old.categories).toEqual([]);
+    expect(old.points).toEqual([
+      { month: "2020-01", values: {} },
+      { month: "2020-02", values: {} },
+    ]);
+    setMockDataMode("empty");
+    expect((await get<ExpenseTrend>("/dashboard/expense-trend")).categories).toEqual([]);
+    await expect(get("/dashboard/expense-trend?to=2026-01-01")).rejects.toMatchObject({
+      code: "invalid_period",
+    });
   });
 });

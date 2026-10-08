@@ -11,6 +11,7 @@ import {
   DEFAULT_COLOR,
   accentClasses,
   badgeClasses,
+  chartColor,
   colorLabel,
   isColorKey,
   type ColorKey,
@@ -213,5 +214,17 @@ describe("palette contrast", () => {
     });
     expect(ratios).toHaveLength(22);
     expect(ratios.filter(({ ratio }) => ratio < 4.5)).toEqual([]);
+  });
+});
+
+describe("chartColor", () => {
+  it("maps every palette key to the theme variable of its family at shade 400", () => {
+    expect(chartColor("orange-400")).toBe("var(--color-orange-400)");
+    for (const key of COLOR_KEYS) expect(chartColor(key)).toBe(`var(--color-${key})`);
+  });
+
+  it("falls back to the default color for an unknown value or none", () => {
+    expect(chartColor("not-a-color")).toBe("var(--color-slate-400)");
+    expect(chartColor(undefined)).toBe("var(--color-slate-400)");
   });
 });

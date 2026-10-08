@@ -2,6 +2,7 @@ import type {
   CardView,
   CategoryDistribution,
   DashboardYears,
+  ExpenseTrend,
   Last30Days,
   NetWorth,
   Trend,
@@ -80,15 +81,21 @@ function monthsBetween(from: string, to: string): string[] {
 
 const MAX_PERIOD_MONTHS = 120;
 
-/** Without parameters: the rolling 12 months. With both: one point per month of the period (max 120). */
-function trend({ path }: { path: string }): Trend {
+/** The months a trend answers: the rolling 12 without parameters, else the period's (max 120). */
+function periodMonths(path: string): string[] {
   const params = new URL(path, "http://mock.local").searchParams;
-  const hasPeriod = params.has("from") || params.has("to");
-  const period = hasPeriod ? parsePeriod(path) : null;
-  const rolling = months();
-  const list = period ? monthsBetween(period.from, period.to) : rolling;
+  if (!params.has("from") && !params.has("to")) return months();
+  const period = parsePeriod(path);
+  const list = monthsBetween(period.from, period.to);
   if (list.length > MAX_PERIOD_MONTHS)
     throw mockApiError("invalid_period", "Período inválido", 422, "to");
+  return list;
+}
+
+/** Without parameters: the rolling 12 months. With both: one point per month of the period (max 120). */
+function trend({ path }: { path: string }): Trend {
+  const rolling = months();
+  const list = periodMonths(path);
   const points = list.map((month) => {
     const index = rolling.indexOf(month);
     const [income, expense] =
@@ -112,6 +119,47 @@ function years(): DashboardYears {
   if (empty) return { years: [] };
   return {
     years: [...new Set(months().map((month) => Number(month.slice(0, 4))))].sort((a, b) => b - a),
+  };
+}
+
+// Expense per category and month (oldest first, like `monthly`); the Estorno is negative in its own category.
+const expenseCategories = [
+  { categoryId: categoryIds.housing, name: "Moradia", color: "orange-400" },
+  { categoryId: categoryIds.food, name: "Alimentação", color: "emerald-400" },
+  { categoryId: categoryIds.transport, name: "Transporte", color: "sky-400" },
+  { categoryId: categoryIds.reversal, name: "Estorno (de compras)", color: "slate-400" },
+];
+const expenseCents = (categoryId: string, index: number): bigint => {
+  if (categoryId === categoryIds.housing) return 120000n;
+  if (categoryId === categoryIds.food) return 80000n + BigInt(index) * 1000n;
+  if (categoryId === categoryIds.transport) return 32050n;
+  return index === 11 ? -4590n : 0n;
+};
+
+function expenseTrend({ path }: { path: string }): ExpenseTrend {
+  const list = periodMonths(path);
+  const rolling = months();
+  const cents = (categoryId: string, month: string) => {
+    const index = rolling.indexOf(month);
+    return empty || index < 0 ? 0n : expenseCents(categoryId, index);
+  };
+  const total = (categoryId: string) =>
+    list.reduce((sum, month) => sum + cents(categoryId, month), 0n);
+  const listed = expenseCategories
+    .filter((category) => total(category.categoryId) !== 0n)
+    .sort((a, b) => Number(total(b.categoryId) - total(a.categoryId)));
+  return {
+    months: list,
+    categories: listed,
+    points: list.map((month) => ({
+      month,
+      values: Object.fromEntries(
+        listed.map((category) => [
+          category.categoryId,
+          fromCents(cents(category.categoryId, month)),
+        ]),
+      ),
+    })),
   };
 }
 
@@ -203,6 +251,11 @@ function card(path: string): CardView {
 export const dashboardHandlers: MockHandler[] = [
   { method: "GET", path: "/dashboard/last-30-days", handle: last30Days },
   { method: "GET", path: /^\/dashboard\/trend(?:\?.*)?$/, handle: trend },
+  {
+    method: "GET",
+    path: /^\/dashboard\/expense-trend(?:\?.*)?$/,
+    handle: expenseTrend,
+  },
   { method: "GET", path: "/dashboard/years", handle: years },
   { method: "GET", path: "/dashboard/net-worth", handle: netWorth },
   {

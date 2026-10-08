@@ -5,6 +5,7 @@ import {
   deleteInvestmentReturn,
   getCardView,
   getCategoryDistribution,
+  getExpenseTrend,
   getInvestmentReturns,
   getLast30Days,
   getNetWorth,
@@ -29,6 +30,14 @@ export const netWorthQueryOptions = () =>
 
 export const useLast30Days = () => useQuery(last30DaysQueryOptions());
 export const useTrend = (period?: DashboardPeriod | null) => useQuery(trendQueryOptions(period));
+/** Same period rules as the trend: `undefined` = rolling 12 months, `null` = no request. */
+export const useExpenseTrend = (period?: DashboardPeriod | null) =>
+  useQuery({
+    queryKey: ["dashboard", "expense-trend", period ?? "default"],
+    queryFn: () => getExpenseTrend(period ?? undefined),
+    enabled: period !== null,
+  });
+
 /** Years with transactions for the month/year select and the year shortcuts; `enabled` skips the request. */
 export const useYears = (enabled = true) =>
   useQuery({ queryKey: ["dashboard", "years"], queryFn: getYears, enabled });

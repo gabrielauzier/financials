@@ -216,6 +216,14 @@ export type TrendPoint = { month: string; income: Money; expense: Money; balance
 export type TrendTotals = { income: Money; expense: Money; balance: Money };
 export type Trend = { points: TrendPoint[]; totals: TrendTotals };
 
+/** `color` is a palette key (`orange-400`). `values` has an entry per listed category for every month. */
+export type ExpenseTrendCategory = { categoryId: string; name: string; color: string };
+export type ExpenseTrend = {
+  months: string[];
+  categories: ExpenseTrendCategory[];
+  points: { month: string; values: Record<string, Money> }[];
+};
+
 export type CategoryTotal = { categoryId: string; name: string; total: Money };
 export type CategoryDistribution = { items: CategoryTotal[] };
 
