@@ -57,6 +57,8 @@ function Results({ term, result }: { term: string; result: ExpenseSearch }) {
       <div aria-hidden="true">
         <ChartContainer config={config} className="aspect-auto h-64 w-full">
           <LineChart
+            // room on the right so the last month label is not cut at the card edge
+            margin={{ right: 16 }}
             data={result.points.map((point): Row => ({
               label: formatMonth(point.month),
               // Plotted only; every visible value is the API string.
@@ -65,11 +67,7 @@ function Results({ term, result }: { term: string; result: ExpenseSearch }) {
             }))}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="label"
-              interval={result.points.length > 12 ? "preserveStartEnd" : 0}
-              fontSize={12}
-            />
+            <XAxis dataKey="label" interval="preserveStartEnd" fontSize={12} />
             <YAxis fontSize={12} width={56} />
             <ChartTooltip content={<SearchTooltip />} />
             <Line

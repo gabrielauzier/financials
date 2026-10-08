@@ -116,7 +116,7 @@ export function ExpenseTrendChart() {
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="label"
-                  interval={data.months.length > 12 ? "preserveStartEnd" : 0}
+                  interval="preserveStartEnd"
                   tickLine={false}
                   axisLine={false}
                   fontSize={12}
