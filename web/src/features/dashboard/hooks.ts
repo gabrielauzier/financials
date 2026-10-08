@@ -5,6 +5,7 @@ import {
   deleteInvestmentReturn,
   getCardView,
   getCategoryDistribution,
+  getExpenseSearch,
   getExpenseTrend,
   getInvestmentReturns,
   getLast30Days,
@@ -36,6 +37,14 @@ export const useExpenseTrend = (period?: DashboardPeriod | null) =>
     queryKey: ["dashboard", "expense-trend", period ?? "default"],
     queryFn: () => getExpenseTrend(period ?? undefined),
     enabled: period !== null,
+  });
+
+/** `term` null (nothing submitted yet) sends no request; the search runs only for a submitted term. */
+export const useExpenseSearch = (term: string | null) =>
+  useQuery({
+    queryKey: ["dashboard", "expense-search", term],
+    queryFn: () => getExpenseSearch(term as string),
+    enabled: term !== null,
   });
 
 /** Years with transactions for the month/year select and the year shortcuts; `enabled` skips the request. */

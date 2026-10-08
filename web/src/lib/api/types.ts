@@ -224,6 +224,13 @@ export type ExpenseTrend = {
   points: { month: string; values: Record<string, Money> }[];
 };
 
+/** `points` run from the first month with a match to the current one; `total` and `count` cover them all. */
+export type ExpenseSearch = {
+  points: { month: string; total: Money }[];
+  total: Money;
+  count: number;
+};
+
 export type CategoryTotal = { categoryId: string; name: string; total: Money };
 export type CategoryDistribution = { items: CategoryTotal[] };
 

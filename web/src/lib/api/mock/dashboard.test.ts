@@ -3,6 +3,7 @@ import type {
   CardView,
   CategoryDistribution,
   DashboardYears,
+  ExpenseSearch,
   ExpenseTrend,
   InvestmentReturns,
   Last30Days,
@@ -184,5 +185,28 @@ describe("dashboard mocks follow the API contract", () => {
     await expect(get("/dashboard/expense-trend?to=2026-01-01")).rejects.toMatchObject({
       code: "invalid_period",
     });
+  });
+
+  it("searches expenses by name or description ignoring case and accents, with gaps as zero, and 422 for a bad text", async () => {
+    const netflix = await get<ExpenseSearch>("/dashboard/expense-search?q=NetFLIX");
+    expect(netflix.count).toBe(6);
+    expect(netflix.total).toBe("335.40");
+    expect(netflix.points).toHaveLength(6);
+    expect(netflix.points.at(-1)?.total).toBe("55.90");
+    const byDescription = await get<ExpenseSearch>("/dashboard/expense-search?q=padaria");
+    expect(byDescription.count).toBe(2);
+    expect(await get<ExpenseSearch>("/dashboard/expense-search?q=xyzzy")).toEqual({
+      points: [],
+      total: "0.00",
+      count: 0,
+    });
+    for (const q of ["", "%20%20", "a".repeat(81)]) {
+      await expect(get(`/dashboard/expense-search?q=${q}`)).rejects.toMatchObject({
+        code: "invalid_query",
+        status: 422,
+      });
+    }
+    setMockDataMode("empty");
+    expect((await get<ExpenseSearch>("/dashboard/expense-search?q=netflix")).count).toBe(0);
   });
 });

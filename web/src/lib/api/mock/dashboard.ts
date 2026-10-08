@@ -2,6 +2,7 @@ import type {
   CardView,
   CategoryDistribution,
   DashboardYears,
+  ExpenseSearch,
   ExpenseTrend,
   Last30Days,
   NetWorth,
@@ -163,6 +164,42 @@ function expenseTrend({ path }: { path: string }): ExpenseTrend {
   };
 }
 
+// Expenses the search looks through: [name, description, amount, first rolling-month index], one per month after it.
+const searchable: [string, string, string, number][] = [
+  ["Netflix", "NETFLIX.COM", "55.90", 6],
+  ["Spotify Premium", "Assinatura música", "21.90", 8],
+  ["Café da Esquina", "Padaria", "12.50", 10],
+];
+const plain = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+function expenseSearch({ path }: { path: string }): ExpenseSearch {
+  const q = (new URL(path, "http://mock.local").searchParams.get("q") ?? "").trim();
+  if (q.length < 1 || q.length > 80)
+    throw mockApiError("invalid_query", "Texto inválido", 422, "q");
+  const found = empty
+    ? []
+    : searchable.filter(([name, description]) =>
+        plain(`${name} ${description}`).includes(plain(q)),
+      );
+  if (found.length === 0) return { points: [], total: "0.00", count: 0 };
+  const rolling = months();
+  const first = Math.min(...found.map(([, , , from]) => from));
+  let all = 0n;
+  let count = 0;
+  const points = rolling.slice(first).map((month, offset) => {
+    const matches = found.filter(([, , , from]) => from <= first + offset);
+    const total = matches.reduce((sum, [, , amount]) => sum + toCents(amount), 0n);
+    all += total;
+    count += matches.length;
+    return { month, total: fromCents(total) };
+  });
+  return { points, total: fromCents(all), count };
+}
+
 function netWorth(): NetWorth {
   if (empty) return { current: "0.00", series: [] };
   const returns = listMockInvestmentReturns();
@@ -255,6 +292,11 @@ export const dashboardHandlers: MockHandler[] = [
     method: "GET",
     path: /^\/dashboard\/expense-trend(?:\?.*)?$/,
     handle: expenseTrend,
+  },
+  {
+    method: "GET",
+    path: /^\/dashboard\/expense-search(?:\?.*)?$/,
+    handle: expenseSearch,
   },
   { method: "GET", path: "/dashboard/years", handle: years },
   { method: "GET", path: "/dashboard/net-worth", handle: netWorth },
