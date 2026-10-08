@@ -125,4 +125,31 @@ describe("dashboard mocks follow the API contract", () => {
     setMockDataMode("empty");
     expect(await get<DashboardYears>("/dashboard/years")).toEqual({ years: [] });
   });
+
+  it("answers a trend period with one point per month from the month of from to the month of to, and totals that add up", async () => {
+    const { points, totals } = await get<Trend>("/dashboard/trend?from=2020-11-15&to=2021-02-03");
+    expect(points.map((point) => point.month)).toEqual([
+      "2020-11",
+      "2020-12",
+      "2021-01",
+      "2021-02",
+    ]);
+    expect(totals).toEqual({ income: "0.00", expense: "0.00", balance: "0.00" });
+    const rolling = await get<Trend>("/dashboard/trend");
+    expect(rolling.totals.income).toBe("63650.00");
+    expect(rolling.totals.expense).toBe("49150.50");
+    expect(rolling.totals.balance).toBe("14499.50");
+  });
+
+  it("rejects a half trend period and a period of more than 120 months with invalid_period", async () => {
+    await expect(get("/dashboard/trend?from=2026-01-01")).rejects.toMatchObject({
+      code: "invalid_period",
+    });
+    await expect(get("/dashboard/trend?from=2010-01-01&to=2020-01-01")).rejects.toMatchObject({
+      code: "invalid_period",
+    });
+    expect(
+      (await get<Trend>("/dashboard/trend?from=2016-02-01&to=2026-01-31")).points,
+    ).toHaveLength(120);
+  });
 });

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -17,11 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { TrendPoint } from "@/lib/api/types";
+import { balanceClassName, summaryColors } from "@/features/transactions/summaryStyles";
+import type { TrendPoint, TrendTotals } from "@/lib/api/types";
 import { formatBRL } from "@/lib/format";
 import { Panel } from "./Panel";
+import { TrendFilters } from "./TrendFilters";
 import { useTrend } from "./hooks";
 import { formatMonth } from "./months";
+import { initialTrendPeriod, queryPeriod, resolvePeriod } from "./period";
 
 const INCOME = "#16a34a";
 const EXPENSE = "#dc2626";
@@ -51,51 +55,105 @@ function TrendTooltip({ active, payload }: TooltipProps) {
   );
 }
 
+/** Receitas, despesas and balanço of the period shown, straight from the API `totals`. */
+function TrendSummary({ totals }: { totals: TrendTotals }) {
+  return (
+    <dl
+      aria-label="Resumo do período"
+      className="mt-4 grid grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-3"
+    >
+      <div>
+        <dt className="text-sm text-muted-foreground">Receitas</dt>
+        <dd className={`text-lg font-semibold tabular-nums ${summaryColors.income}`}>
+          {formatBRL(totals.income)}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-sm text-muted-foreground">Despesas</dt>
+        <dd className={`text-lg font-semibold tabular-nums ${summaryColors.expense}`}>
+          {formatBRL(totals.expense)}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-sm text-muted-foreground">Balanço</dt>
+        <dd className={`text-lg font-semibold tabular-nums ${balanceClassName(totals.balance)}`}>
+          {formatBRL(totals.balance)}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 export function TrendChart() {
-  const { data, isLoading, isError, refetch } = useTrend();
+  const [state, setState] = useState(initialTrendPeriod);
+  const resolved = resolvePeriod(state);
+  const period = queryPeriod(resolved);
+  const { data, isLoading, isError, refetch } = useTrend(period);
+  const requested = period !== null;
   const points = data?.points ?? [];
+  const caption =
+    resolved.status === "default"
+      ? "Receitas, despesas e balanço dos últimos 12 meses"
+      : "Receitas, despesas e balanço do período escolhido";
   return (
     <Panel
       title="Tendência de 12 meses"
-      isLoading={isLoading}
-      isError={isError}
+      isLoading={requested && isLoading}
+      isError={requested && isError}
       onRetry={() => refetch()}
+      actions={
+        <TrendFilters
+          id="trend"
+          value={state}
+          onChange={setState}
+          invalid={resolved.status === "invalid"}
+        />
+      }
     >
-      <div className="h-72 w-full" aria-hidden="true">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={points.map(plot)}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="label" interval={0} fontSize={12} />
-            <YAxis fontSize={12} width={56} />
-            <Tooltip content={<TrendTooltip />} />
-            <Legend />
-            <Bar dataKey="income" name="Receitas" fill={INCOME} />
-            <Bar dataKey="expense" name="Despesas" fill={EXPENSE} />
-            <Line dataKey="balance" name="Balanço" stroke={BALANCE} strokeWidth={2} />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-      <Table className="sr-only">
-        <caption>Receitas, despesas e balanço dos últimos 12 meses</caption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Mês</TableHead>
-            <TableHead>Receitas</TableHead>
-            <TableHead>Despesas</TableHead>
-            <TableHead>Balanço</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {points.map((point) => (
-            <TableRow key={point.month}>
-              <TableCell>{formatMonth(point.month)}</TableCell>
-              <TableCell>{formatBRL(point.income)}</TableCell>
-              <TableCell>{formatBRL(point.expense)}</TableCell>
-              <TableCell>{formatBRL(point.balance)}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {requested && data && (
+        <>
+          <div className="h-72 w-full" aria-hidden="true">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={points.map(plot)}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  interval={points.length > 12 ? "preserveStartEnd" : 0}
+                  fontSize={12}
+                />
+                <YAxis fontSize={12} width={56} />
+                <Tooltip content={<TrendTooltip />} />
+                <Legend />
+                <Bar dataKey="income" name="Receitas" fill={INCOME} />
+                <Bar dataKey="expense" name="Despesas" fill={EXPENSE} />
+                <Line dataKey="balance" name="Balanço" stroke={BALANCE} strokeWidth={2} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+          <Table className="sr-only">
+            <caption>{caption}</caption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Mês</TableHead>
+                <TableHead>Receitas</TableHead>
+                <TableHead>Despesas</TableHead>
+                <TableHead>Balanço</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {points.map((point) => (
+                <TableRow key={point.month}>
+                  <TableCell>{formatMonth(point.month)}</TableCell>
+                  <TableCell>{formatBRL(point.income)}</TableCell>
+                  <TableCell>{formatBRL(point.expense)}</TableCell>
+                  <TableCell>{formatBRL(point.balance)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <TrendSummary totals={data.totals} />
+        </>
+      )}
     </Panel>
   );
 }

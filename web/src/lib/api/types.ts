@@ -212,7 +212,9 @@ export type CreditExpenseUpdate = Partial<Omit<CreditExpenseInput, "notes">> & {
 export type Last30Days = { total: Money; previousTotal: Money; changePct: number | null };
 
 export type TrendPoint = { month: string; income: Money; expense: Money; balance: Money };
-export type Trend = { points: TrendPoint[] };
+/** `totals` are the API's own sum of the points of the period shown (never added up in the front). */
+export type TrendTotals = { income: Money; expense: Money; balance: Money };
+export type Trend = { points: TrendPoint[]; totals: TrendTotals };
 
 export type CategoryTotal = { categoryId: string; name: string; total: Money };
 export type CategoryDistribution = { items: CategoryTotal[] };
