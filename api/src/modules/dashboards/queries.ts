@@ -4,9 +4,9 @@
  * aggregation. Money is summed in SQL and returned as decimal text, never as a JS number.
  */
 import { DateTime } from 'luxon';
-import type { TransactionSql } from 'postgres';
-import { COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, rule } from './rules.js';
-import type { MonthWindow, Window } from './time.js';
+import type { PendingQuery, Row, TransactionSql } from 'postgres';
+import { COUNTABLE, EXPENSE_ROW, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, rule } from './rules.js';
+import { localMonth, monthsFrom, type MonthWindow, type Window } from './time.js';
 
 /** The months to chart plus the instants that decide which rows count (the ends may be partial months). */
 export interface ReportPeriod {
@@ -125,4 +125,66 @@ export async function expenseTrendQuery(tx: TransactionSql, period: ReportPeriod
     (byMonth.get(r.month) as Record<string, string>)[r.category_id] = r.value;
   }
   return { months: names, categories, points: names.map((month) => ({ month, values: byMonth.get(month) as Record<string, string> })) };
+}
+
+// Accent folding in SQL without the `unaccent` extension (no migrations): a fixed Latin map, plus lower().
+const ACCENTED = 'áàâãäåéèêëíìîïóòôõöúùûüçñýÿÁÀÂÃÄÅÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑÝ';
+const PLAIN = 'aaaaaaeeeeiiiiooooouuuucnyyAAAAAAEEEEIIIIOOOOOUUUUCNY';
+
+/** Case- and accent-insensitive key of an SQL text expression. */
+function fold(tx: TransactionSql, expression: PendingQuery<Row[]>) {
+  return tx`lower(translate(normalize(${expression}, NFC), ${ACCENTED}::text, ${PLAIN}::text))`;
+}
+
+/** Escapes `like` wildcards so the search text always matches literally (used with `escape '\'`). */
+export function escapeLike(text: string): string {
+  return text.replace(/[\\%_]/g, '\\$&');
+}
+
+export interface ExpenseSearchResult {
+  points: { month: string; total: string }[];
+  total: string;
+  count: number;
+}
+
+export async function expenseSearchQuery(tx: TransactionSql, text: string, now: Date, zone: string): Promise<ExpenseSearchResult> {
+  const pattern = `%${escapeLike(text)}%`;
+  const matches = tx`
+    ${rule(tx, EXPENSE_ROW)} and ${rule(tx, COUNTABLE)}
+    and (${fold(tx, tx.unsafe('t.name'))} like ${fold(tx, tx`${pattern}::text`)} escape '\\'
+      or ${fold(tx, tx.unsafe('t.description'))} like ${fold(tx, tx`${pattern}::text`)} escape '\\')`;
+  const [first] = await tx<{ first: Date | null }[]>`
+    select min(t.occurred_at) as first from ${rule(tx, FROM_TRANSACTIONS)} where ${matches}`;
+  if (!first?.first) return { points: [], total: '0.00', count: 0 };
+
+  const months = monthsFrom(localMonth(first.first, zone), now, zone);
+  const names = months.map((m) => m.month);
+  const froms = months.map((m) => m.from.toISOString());
+  const tos = months.map((m) => m.to.toISOString());
+  const rows = await tx<{ month: string; total: string; all_total: string; all_count: number }[]>`
+    with months(month, m_from, m_to) as (
+      select * from unnest(${names}::text[], ${froms}::timestamptz[], ${tos}::timestamptz[])
+    ),
+    rows as (
+      select t.occurred_at, ${rule(tx, EXPENSE_VALUE)} as value
+      from ${rule(tx, FROM_TRANSACTIONS)}
+      where ${matches}
+    ),
+    per_month as (
+      select m.month, coalesce(sum(r.value), 0.00) as total, count(r.value) as n
+      from months m
+      left join rows r on r.occurred_at >= m.m_from and r.occurred_at < m.m_to
+      group by m.month
+    )
+    select month, total::text as total,
+           (sum(total) over ())::text as all_total,
+           (sum(n) over ())::int as all_count
+    from per_month
+    order by month`;
+  const last = rows.at(-1) as (typeof rows)[number];
+  return {
+    points: rows.map((r) => ({ month: r.month, total: r.total })),
+    total: last.all_total,
+    count: last.all_count,
+  };
 }

@@ -16,7 +16,7 @@ import {
   type MonthWindow,
   type Window,
 } from './time.js';
-import { expenseTrendQuery, trendQuery, yearsQuery, type ReportPeriod } from './queries.js';
+import { expenseSearchQuery, expenseTrendQuery, trendQuery, yearsQuery, type ReportPeriod } from './queries.js';
 
 const Money = (description: string) => Type.String({ description });
 
@@ -76,6 +76,22 @@ const ExpenseTrendSchema = Type.Object({
     }),
     { description: 'One point per month of months. The sum of every value equals the total expense /dashboard/categories reports for the same period' },
   ),
+});
+
+const ExpenseSearchQuery = Type.Object({
+  q: Type.Optional(Type.String({ description: 'Text to find in the name or description, 1 to 80 characters after trimming; otherwise 422 invalid_query' })),
+});
+
+const ExpenseSearchSchema = Type.Object({
+  points: Type.Array(
+    Type.Object({
+      month: Type.String({ description: 'Local calendar month, YYYY-MM' }),
+      total: Money('Matching expense of the month, decimal string with 2 decimals; 0.00 when none'),
+    }),
+    { description: 'One point per local month from the first month with a match to the current month; empty without a match' },
+  ),
+  total: Money('Sum of all matching expenses, decimal string with 2 decimals'),
+  count: Type.Integer({ description: 'Number of matching transactions' }),
 });
 
 const NetWorthSchema = Type.Object({
@@ -202,6 +218,18 @@ export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
     async (request) => {
       const period = reportPeriod(request.query, request.tz);
       return request.withUser((tx) => expenseTrendQuery(tx, period));
+    },
+  );
+
+  routes.get(
+    '/dashboard/expense-search',
+    { schema: { querystring: ExpenseSearchQuery, response: { 200: ExpenseSearchSchema } } },
+    async (request) => {
+      const text = (request.query.q ?? '').trim();
+      if (text.length < 1 || text.length > 80) {
+        throw new AppError('invalid_query', 422, 'q must have 1 to 80 characters', 'q');
+      }
+      return request.withUser((tx) => expenseSearchQuery(tx, text, new Date(), request.tz));
     },
   );
 

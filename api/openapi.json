@@ -2257,6 +2257,69 @@
         }
       }
     },
+    "/dashboard/expense-search": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "description": "Text to find in the name or description, 1 to 80 characters after trimming; otherwise 422 invalid_query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "points",
+                    "total",
+                    "count"
+                  ],
+                  "properties": {
+                    "points": {
+                      "description": "One point per local month from the first month with a match to the current month; empty without a match",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "month",
+                          "total"
+                        ],
+                        "properties": {
+                          "month": {
+                            "description": "Local calendar month, YYYY-MM",
+                            "type": "string"
+                          },
+                          "total": {
+                            "description": "Matching expense of the month, decimal string with 2 decimals; 0.00 when none",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "description": "Sum of all matching expenses, decimal string with 2 decimals",
+                      "type": "string"
+                    },
+                    "count": {
+                      "description": "Number of matching transactions",
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard/categories": {
       "get": {
         "parameters": [
