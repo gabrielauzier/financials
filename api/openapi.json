@@ -2033,6 +2033,26 @@
     },
     "/dashboard/trend": {
       "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "First local day, YYYY-MM-DD, inclusive; give both from and to or neither"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Last local day, YYYY-MM-DD, inclusive"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response",
@@ -2041,11 +2061,12 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "points"
+                    "points",
+                    "totals"
                   ],
                   "properties": {
                     "points": {
-                      "description": "Always 12 points, oldest first: the 11 previous months and the current one",
+                      "description": "Oldest first. Without from/to: 12 points, the 11 previous months and the current one. With from/to: one point per local month from the month of from to the month of to (at most 120); only rows inside the inclusive local-day range count, so the end months may be partial",
                       "type": "array",
                       "items": {
                         "type": "object",
@@ -2072,6 +2093,29 @@
                             "description": "income minus expense, decimal string with 2 decimals (may be negative)",
                             "type": "string"
                           }
+                        }
+                      }
+                    },
+                    "totals": {
+                      "description": "Sums of the whole range shown, computed in the database; equal to the sum of the points",
+                      "type": "object",
+                      "required": [
+                        "income",
+                        "expense",
+                        "balance"
+                      ],
+                      "properties": {
+                        "income": {
+                          "description": "Income of the whole range, decimal string with 2 decimals",
+                          "type": "string"
+                        },
+                        "expense": {
+                          "description": "Expense of the whole range (Reversal abates it), decimal string with 2 decimals",
+                          "type": "string"
+                        },
+                        "balance": {
+                          "description": "income minus expense of the whole range, decimal string with 2 decimals (may be negative)",
+                          "type": "string"
                         }
                       }
                     }
