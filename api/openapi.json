@@ -2155,6 +2155,108 @@
         }
       }
     },
+    "/dashboard/expense-trend": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "First local day, YYYY-MM-DD, inclusive; give both from and to or neither"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Last local day, YYYY-MM-DD, inclusive"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "months",
+                    "categories",
+                    "points"
+                  ],
+                  "properties": {
+                    "months": {
+                      "description": "Oldest first; the same months as points",
+                      "type": "array",
+                      "items": {
+                        "description": "Local calendar month, YYYY-MM",
+                        "type": "string"
+                      }
+                    },
+                    "categories": {
+                      "description": "Largest period total first; categories whose total over the period is zero are omitted",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "categoryId",
+                          "name",
+                          "color"
+                        ],
+                        "properties": {
+                          "categoryId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Category name in Portuguese",
+                            "type": "string"
+                          },
+                          "color": {
+                            "description": "Palette key of the category, e.g. orange-400",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "points": {
+                      "description": "One point per month of months. The sum of every value equals the total expense /dashboard/categories reports for the same period",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "month",
+                          "values"
+                        ],
+                        "properties": {
+                          "month": {
+                            "description": "Local calendar month, YYYY-MM",
+                            "type": "string"
+                          },
+                          "values": {
+                            "description": "Keyed by categoryId. Every category of categories has a key in every month; \"0.00\" when the month has no expense of that category",
+                            "type": "object",
+                            "additionalProperties": {
+                              "description": "Expense of the category in the month, decimal string with 2 decimals; negative for Estorno",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard/categories": {
       "get": {
         "parameters": [

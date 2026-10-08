@@ -16,7 +16,7 @@ import {
   type MonthWindow,
   type Window,
 } from './time.js';
-import { trendQuery, yearsQuery, type ReportPeriod } from './queries.js';
+import { expenseTrendQuery, trendQuery, yearsQuery, type ReportPeriod } from './queries.js';
 
 const Money = (description: string) => Type.String({ description });
 
@@ -55,6 +55,27 @@ const YearsSchema = Type.Object({
   years: Type.Array(Type.Integer(), {
     description: 'Local years (user zone) with at least one countable transaction, descending; empty without data',
   }),
+});
+
+const ExpenseTrendSchema = Type.Object({
+  months: Type.Array(Type.String({ description: 'Local calendar month, YYYY-MM' }), { description: 'Oldest first; the same months as points' }),
+  categories: Type.Array(
+    Type.Object({
+      categoryId: Type.String({ format: 'uuid' }),
+      name: Type.String({ description: 'Category name in Portuguese' }),
+      color: Type.String({ description: 'Palette key of the category, e.g. orange-400' }),
+    }),
+    { description: 'Largest period total first; categories whose total over the period is zero are omitted' },
+  ),
+  points: Type.Array(
+    Type.Object({
+      month: Type.String({ description: 'Local calendar month, YYYY-MM' }),
+      values: Type.Record(Type.String(), Money('Expense of the category in the month, decimal string with 2 decimals; negative for Estorno'), {
+        description: 'Keyed by categoryId. Every category of categories has a key in every month; "0.00" when the month has no expense of that category',
+      }),
+    }),
+    { description: 'One point per month of months. The sum of every value equals the total expense /dashboard/categories reports for the same period' },
+  ),
 });
 
 const NetWorthSchema = Type.Object({
@@ -173,6 +194,15 @@ export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
     '/dashboard/years',
     { schema: { response: { 200: YearsSchema } } },
     async (request) => ({ years: await request.withUser((tx) => yearsQuery(tx, request.tz)) }),
+  );
+
+  routes.get(
+    '/dashboard/expense-trend',
+    { schema: { querystring: PeriodQuery, response: { 200: ExpenseTrendSchema } } },
+    async (request) => {
+      const period = reportPeriod(request.query, request.tz);
+      return request.withUser((tx) => expenseTrendQuery(tx, period));
+    },
   );
 
   routes.get(

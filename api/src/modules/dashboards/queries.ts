@@ -85,3 +85,44 @@ export async function yearsQuery(tx: TransactionSql, zone: string): Promise<numb
     order by y.year desc`;
   return rows.map((r) => r.year);
 }
+
+export interface ExpenseTrendResult {
+  months: string[];
+  categories: { categoryId: string; name: string; color: string }[];
+  points: { month: string; values: Record<string, string> }[];
+}
+
+export async function expenseTrendQuery(tx: TransactionSql, period: ReportPeriod): Promise<ExpenseTrendResult> {
+  const names = period.months.map((m) => m.month);
+  const froms = period.months.map((m) => m.from.toISOString());
+  const tos = period.months.map((m) => m.to.toISOString());
+  const { from, to } = period.window;
+  const rows = await tx<{ category_id: string; name: string; color: string; month: string; value: string }[]>`
+    with months(month, m_from, m_to) as (
+      select * from unnest(${names}::text[], ${froms}::timestamptz[], ${tos}::timestamptz[])
+    ),
+    rows as (
+      select t.occurred_at, c.id as category_id, c.name, c.color, ${rule(tx, EXPENSE_VALUE)} as value
+      from ${rule(tx, FROM_TRANSACTIONS)}
+      where ${rule(tx, COUNTABLE)} and t.occurred_at >= ${from} and t.occurred_at < ${to}
+    ),
+    cats as (
+      select category_id, name, color, sum(value) as total
+      from rows
+      group by category_id, name, color
+      having sum(value) <> 0
+    )
+    select k.category_id, k.name, k.color, m.month, coalesce(sum(r.value), 0.00)::text as value
+    from cats k
+    cross join months m
+    left join rows r on r.category_id = k.category_id and r.occurred_at >= m.m_from and r.occurred_at < m.m_to
+    group by k.category_id, k.name, k.color, k.total, m.month
+    order by k.total desc, k.name, k.category_id, m.month`;
+  const categories: ExpenseTrendResult['categories'] = [];
+  const byMonth = new Map<string, Record<string, string>>(names.map((m) => [m, {}]));
+  for (const r of rows) {
+    if (categories.at(-1)?.categoryId !== r.category_id) categories.push({ categoryId: r.category_id, name: r.name, color: r.color });
+    (byMonth.get(r.month) as Record<string, string>)[r.category_id] = r.value;
+  }
+  return { months: names, categories, points: names.map((month) => ({ month, values: byMonth.get(month) as Record<string, string> })) };
+}
