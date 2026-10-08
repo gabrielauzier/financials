@@ -3,9 +3,10 @@ import { Type } from '@sinclair/typebox';
 import type { TransactionSql } from 'postgres';
 import { AppError } from '../../plugins/errors.js';
 import { PAYMENT_METHODS } from '../transactions/schema.js';
+import { applyCategoryLabels, type UserCategory } from './categoryLabels.js';
 import { classify } from './classify.js';
 import { parseImport } from './formats.js';
-import type { ClassifiedRow, RowStatus } from './types.js';
+import type { ClassifiedRow, ParsedRow, RowStatus } from './types.js';
 
 const STATUSES: readonly RowStatus[] = ['new', 'duplicate', 'ignored', 'unrecognized', 'invalid'];
 
@@ -21,7 +22,10 @@ export const PreviewRowSchema = Type.Object({
   amount: Type.String({ description: 'Decimal string, e.g. "1234.56"' }),
   name: Type.String(),
   paymentMethod: stringEnum(PAYMENT_METHODS),
-  categoryId: Type.String({ format: 'uuid', description: "The user's category of the parser's key; the default of the row" }),
+  categoryId: Type.String({
+    format: 'uuid',
+    description: "The user's category resolved for the row (from the file's category text or the parser's key); the default of the row",
+  }),
   categoryName: Type.String(),
   status: stringEnum(STATUSES),
   neutral: Type.Boolean(),
@@ -47,6 +51,13 @@ export function invalidAccount(): AppError {
   return new AppError('invalid_account', 422, 'Select an active account', 'accountId');
 }
 
+/** Resolves the category texts of the file (Notion) against the user's categories; one query, only when needed. */
+async function resolveLabels(tx: TransactionSql, rows: ParsedRow[]): Promise<ParsedRow[]> {
+  if (!rows.some((r) => (r.categoryLabel ?? '').trim() !== '')) return rows;
+  const categories = await tx<UserCategory[]>`select id, key, name from public.categories`;
+  return applyCategoryLabels(rows, categories);
+}
+
 export interface Analysis {
   account: { id: string; bank: string };
   rows: ClassifiedRow[];
@@ -63,7 +74,7 @@ export async function analyze(tx: TransactionSql, accountId: string, content: Bu
     : [];
   if (!account) throw invalidAccount();
   const { rows } = parseImport(content.toString('utf8'), account.bank);
-  return { account, rows: await classify(tx, rows, account.id, tz) };
+  return { account, rows: await classify(tx, await resolveLabels(tx, rows), account.id, tz) };
 }
 
 export interface Category {
@@ -87,7 +98,7 @@ export function toPreview(rows: ClassifiedRow[], categories: Map<string, Categor
   const totals = { new: 0, duplicate: 0, ignored: 0, unrecognized: 0, invalid: 0 };
   const previewRows = rows.map((row): PreviewRow => {
     totals[row.status] += 1;
-    const { id: categoryId, name: categoryName } = categories.get(row.categoryKey) as Category;
+    const { id: categoryId, name: categoryName } = row.resolvedCategory ?? (categories.get(row.categoryKey) as Category);
     return {
       index: row.index,
       localDate: row.localDate,

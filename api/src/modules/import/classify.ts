@@ -62,7 +62,7 @@ async function holderNames(tx: TransactionSql): Promise<Set<string>> {
  *    (in `tz`), amount and type. Rows of the file are not compared with each other, so identical
  *    rows of a first import are all kept.
  * A row that is both `unrecognized` and a duplicate becomes `duplicate` and keeps its `reason`.
- * Then sets `neutral` (IMP-08) on `new`, `unrecognized` and `duplicate` rows whose normalized name
+ * Then sets `neutral` (IMP-08, or the file's own `neutralHint`) on `new`, `unrecognized` and `duplicate` rows whose normalized name
  * equals a normalized holder name of any account of the user; no value or date heuristic.
  * `tx` must be a `withUser` transaction so every read is limited to the user's rows.
  */
@@ -83,7 +83,7 @@ export async function classify(
 
   return rows.map((row, position) => {
     if (!dedupable(row)) return { ...row, neutral: false };
-    const neutral = holders.has(normalizeName(row.name));
+    const neutral = row.neutralHint === true || holders.has(normalizeName(row.name));
     if (row.identifier === null) {
       return { ...row, status: matched.has(position) ? 'duplicate' : row.status, neutral };
     }

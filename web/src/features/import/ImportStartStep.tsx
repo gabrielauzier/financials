@@ -59,8 +59,9 @@ export function ImportStartStep({
           aria-describedby="import-file-help"
         />
         <p id="import-file-help" className="text-sm text-muted-foreground">
-          Nubank (extrato da conta ou fatura do cartão) ou Sofisa Direto (extrato da conta), em CSV
-          ou TSV, até 5 MB.
+          Nubank (extrato da conta ou fatura do cartão), Sofisa Direto (extrato da conta) ou o
+          modelo de transações do Notion, em CSV ou TSV, até 5 MB. O modelo do Notion vale para
+          qualquer conta.
         </p>
         {file ? <p className="text-sm">{file.name}</p> : null}
       </div>

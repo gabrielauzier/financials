@@ -35,6 +35,15 @@ describe('detectFormat', () => {
     expect(detectFormat(['data', 'descrição', 'valor'])).toBeNull();
   });
 
+  it('recognizes the Notion header exactly, and not a near miss', () => {
+    const header = ['Name', 'Type', 'Date', 'Amount', 'Category', 'Payment Method', 'Notes', 'Receipt', 'Created time', 'ID', 'Identifier'];
+    expect(detectFormat(header)).toBe('notion');
+    expect(detectFormat(header.slice(0, 10))).toBeNull();
+    expect(detectFormat([...header, 'Extra'])).toBeNull();
+    expect(detectFormat(header.map((c) => c.toLowerCase()))).toBeNull();
+    expect(detectFormat([...header.slice(0, 9), 'Identifier', 'ID'])).toBeNull();
+  });
+
   it('returns null for an unknown, reordered, extended or differently-cased header', () => {
     expect(detectFormat(['foo', 'bar'])).toBeNull();
     expect(detectFormat([])).toBeNull();
@@ -68,6 +77,14 @@ describe('assertBankMatches', () => {
           status: 422,
         });
       }
+    }
+  });
+});
+
+describe('assertBankMatches (Notion)', () => {
+  it('is not bank-specific: every bank accepts it', () => {
+    for (const bank of ['Nubank', 'SofisaDireto', 'Neon', 'XP', 'Other']) {
+      expect(() => assertBankMatches('notion', bank), bank).not.toThrow();
     }
   });
 });
@@ -121,6 +138,30 @@ describe('parseImport (real samples)', () => {
       code: 'empty_file',
       status: 422,
     });
+  });
+});
+
+describe('parseImport (Notion)', () => {
+  it.each(['Nubank', 'SofisaDireto', 'Neon', 'XP', 'Other'])('parses the Notion model for a %s account', (bank) => {
+    const result = parseImport(fixture('notion_sanitized.csv'), bank);
+    expect(result.format).toBe('notion');
+    expect(result.rows).toHaveLength(27);
+  });
+
+  it('still raises bank_mismatch for the bank-specific formats', () => {
+    expect(failure(() => parseImport(fixture('nubank_account.csv'), 'XP')).code).toBe('bank_mismatch');
+    expect(failure(() => parseImport(fixture('sofisa_statement_sanitized.csv'), 'Nubank')).code).toBe('bank_mismatch');
+  });
+
+  it('raises empty_file for a header-only Notion file', () => {
+    const header = 'Name,Type,Date,Amount,Category,Payment Method,Notes,Receipt,Created time,ID,Identifier\n';
+    expect(failure(() => parseImport(header, 'Nubank')).code).toBe('empty_file');
+  });
+
+  it('lists Notion among the formats of unsupported_format', () => {
+    const error = failure(() => parseImport('a,b,c\n1,2,3\n', 'Nubank'));
+    expect(error.code).toBe('unsupported_format');
+    expect(error.message).toMatch(/Notion/);
   });
 });
 

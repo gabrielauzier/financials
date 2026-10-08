@@ -86,12 +86,12 @@ describe("etapa conta e arquivo", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("o campo aceita .csv e .tsv e o texto de ajuda cita Nubank, Sofisa Direto, CSV e TSV", () => {
+  it("o campo aceita .csv e .tsv e o texto de ajuda cita Nubank, Sofisa Direto, Notion, CSV e TSV", () => {
     setup();
     const input = screen.getByLabelText("Arquivo CSV");
     expect(input).toHaveAttribute("accept", ".csv,.tsv,text/csv,text/tab-separated-values");
     expect(input).toHaveAccessibleDescription(
-      "Nubank (extrato da conta ou fatura do cartão) ou Sofisa Direto (extrato da conta), em CSV ou TSV, até 5 MB.",
+      "Nubank (extrato da conta ou fatura do cartão), Sofisa Direto (extrato da conta) ou o modelo de transações do Notion, em CSV ou TSV, até 5 MB. O modelo do Notion vale para qualquer conta.",
     );
   });
 

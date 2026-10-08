@@ -1,0 +1,28 @@
+﻿Name,Type,Date,Amount,Category,Payment Method,Notes,Receipt,Created time,ID,Identifier
+Empório Zeta,Expense,03/03/2025,R$25.37,Food,Debit Card,Nota fictícia um,,"March 03, 2025 9:15 AM",90007,00000000-0000-4000-8000-000000000001
+Cobrança Lua Fictícia,Expense,04/03/2025,"R$9,999.99",Bills,Credit Card,,,"March 03, 2025 9:15 AM",90014,
+Salário Fictício,Income,05/03/2025,"R$1,234.50",Salaries,Bank Transfer,,,"March 03, 2025 9:15 AM",90021,00000000-0000-4000-8000-000000000002
+Corrida Fictícia,Expense,06/03/2025,-R$45.61,Transport,PIX,,,"March 03, 2025 9:15 AM",90028,
+  Forneria   Zeta  ,Expense,07/03/2025,R$12.30,Food,Cash,,,"March 03, 2025 9:15 AM",777,
+Devolução Fictícia,Neutral,08/03/2025,R$30.43,Reversal,PIX,Nota fictícia dois,,"March 03, 2025 9:15 AM",90042,
+Aporte Fictício,Neutral,09/03/2025,R$100.29,Investments,PIX,,,"March 03, 2025 9:15 AM",90049,
+Pedido Cancelado Fictício,Canceled,10/03/2025,R$15.83,Food,Debit Card,,,"March 03, 2025 9:15 AM",90056,00000000-0000-4000-8000-000000000003
+Outra Cancelada Fictícia,Canceled,11/03/2025,R$20.71,Bills,,,,"March 03, 2025 9:15 AM",90063,
+Petisco Sem Tipo,,12/03/2025,-R$18.00,Food,Debit Card,,,"March 03, 2025 9:15 AM",777,
+Entrada Colada Fictícia,,13/03/2025,R$300.17,,,,,"March 03, 2025 9:15 AM",90077,
+Pedido Sem Tipo,,14/03/2025,R$22.59,Food,Debit Card,,,"March 03, 2025 9:15 AM",90084,
+Saldo Fictício,,15/03/2025,,,,,,"March 03, 2025 9:15 AM",90091,
+Reserva Fictícia,Expense,16/03/2025,R$50.93,Needed,PIX,,,"March 03, 2025 9:15 AM",90098,
+Ração Fictícia,Expense,17/03/2025,R$35.47,Leo 😺,Debit Card,,,"March 03, 2025 9:15 AM",90105,
+Item Sem Categoria,Expense,18/03/2025,R$8.13,,,,,"March 03, 2025 9:15 AM",90112,
+Item Categoria Estranha,Expense,19/03/2025,R$9.07,Xyzzy,PIX,,,"March 03, 2025 9:15 AM",90119,
+Feira Fictícia,Expense,20/03/2025,R$14.89,alimentacao,Debit Card,,,"March 03, 2025 9:15 AM",90126,
+Mercadinho Fictício,Expense,21/03/2025,R$16.31,FOOD,Debit Card,,,"March 03, 2025 9:15 AM",90133,
+Guia Fictício,Expense,22/03/2025,R$200.53,Bills,Boleto,,,"March 03, 2025 9:15 AM",90140,
+Carteira Fictícia,Expense,23/03/2025,R$40.79,Shopping,NuPay,,,"March 03, 2025 9:15 AM",90147,
+Livraria Fictícia,Expense,24/03/2025,R$60.41,Shopping,Debit Card,Nota fictícia três,https://example.com/recibos/1,"March 03, 2025 9:15 AM",90154,
+Recibo Ruim Fictício,Expense,25/03/2025,R$11.67,Shopping,Debit Card,,recibo-sem-url,"March 03, 2025 9:15 AM",90161,
+Repetida Fictícia,Expense,26/03/2025,R$21.41,Food,Debit Card,,,"March 03, 2025 9:15 AM",90168,00000000-0000-4000-8000-000000000001
+Quitação Cheque Fictício,Expense,27/03/2025,R$75.19,Help,Cheque,,,"March 03, 2025 9:15 AM",90175,
+Consulta Fictícia,Expense,28/03/2025,R$150.23,Healthcare,Debit Card,,,"March 03, 2025 9:15 AM",90182,
+Desconhecida Fictícia,Expense,29/03/2025,R$19.97,Unknown,PIX,,,"March 03, 2025 9:15 AM",90189,
