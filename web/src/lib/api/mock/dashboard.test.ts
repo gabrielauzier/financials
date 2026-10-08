@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import type {
   CardView,
   CategoryDistribution,
+  DashboardYears,
+  ExpenseSearch,
+  ExpenseTrend,
   InvestmentReturns,
   Last30Days,
   NetWorth,
@@ -113,5 +116,97 @@ describe("dashboard mocks follow the API contract", () => {
       items: [],
       lastDate: null,
     });
+  });
+
+  it("lists the years of the months with data, newest first, and none without data", async () => {
+    const { years } = await get<DashboardYears>("/dashboard/years");
+    const now = new Date().getFullYear();
+    expect(years[0]).toBe(now);
+    expect([...years].sort((a, b) => b - a)).toEqual(years);
+    expect(new Set(years).size).toBe(years.length);
+    setMockDataMode("empty");
+    expect(await get<DashboardYears>("/dashboard/years")).toEqual({ years: [] });
+  });
+
+  it("answers a trend period with one point per month from the month of from to the month of to, and totals that add up", async () => {
+    const { points, totals } = await get<Trend>("/dashboard/trend?from=2020-11-15&to=2021-02-03");
+    expect(points.map((point) => point.month)).toEqual([
+      "2020-11",
+      "2020-12",
+      "2021-01",
+      "2021-02",
+    ]);
+    expect(totals).toEqual({ income: "0.00", expense: "0.00", balance: "0.00" });
+    const rolling = await get<Trend>("/dashboard/trend");
+    expect(rolling.totals.income).toBe("63650.00");
+    expect(rolling.totals.expense).toBe("49150.50");
+    expect(rolling.totals.balance).toBe("14499.50");
+  });
+
+  it("rejects a half trend period and a period of more than 120 months with invalid_period", async () => {
+    await expect(get("/dashboard/trend?from=2026-01-01")).rejects.toMatchObject({
+      code: "invalid_period",
+    });
+    await expect(get("/dashboard/trend?from=2010-01-01&to=2020-01-01")).rejects.toMatchObject({
+      code: "invalid_period",
+    });
+    expect(
+      (await get<Trend>("/dashboard/trend?from=2016-02-01&to=2026-01-31")).points,
+    ).toHaveLength(120);
+  });
+
+  it("answers the expense trend by category: largest first, a value per category and month, negative Estorno, zero categories omitted", async () => {
+    const trend = await get<ExpenseTrend>("/dashboard/expense-trend");
+    expect(trend.months).toHaveLength(12);
+    expect(trend.categories.map((category) => category.name)).toEqual([
+      "Moradia",
+      "Alimentação",
+      "Transporte",
+      "Estorno (de compras)",
+    ]);
+    for (const category of trend.categories) expect(category.color).toMatch(/^[a-z]+-400$/);
+    for (const point of trend.points) {
+      expect(Object.keys(point.values).sort()).toEqual(
+        trend.categories.map((category) => category.categoryId).sort(),
+      );
+    }
+    const reversal = trend.categories.at(-1)?.categoryId as string;
+    expect(trend.points.at(-1)?.values[reversal]).toBe("-45.90");
+    expect(trend.points[0]?.values[reversal]).toBe("0.00");
+    const old = await get<ExpenseTrend>("/dashboard/expense-trend?from=2020-01-01&to=2020-02-29");
+    expect(old.months).toEqual(["2020-01", "2020-02"]);
+    expect(old.categories).toEqual([]);
+    expect(old.points).toEqual([
+      { month: "2020-01", values: {} },
+      { month: "2020-02", values: {} },
+    ]);
+    setMockDataMode("empty");
+    expect((await get<ExpenseTrend>("/dashboard/expense-trend")).categories).toEqual([]);
+    await expect(get("/dashboard/expense-trend?to=2026-01-01")).rejects.toMatchObject({
+      code: "invalid_period",
+    });
+  });
+
+  it("searches expenses by name or description ignoring case and accents, with gaps as zero, and 422 for a bad text", async () => {
+    const netflix = await get<ExpenseSearch>("/dashboard/expense-search?q=NetFLIX");
+    expect(netflix.count).toBe(6);
+    expect(netflix.total).toBe("335.40");
+    expect(netflix.points).toHaveLength(6);
+    expect(netflix.points.at(-1)?.total).toBe("55.90");
+    const byDescription = await get<ExpenseSearch>("/dashboard/expense-search?q=padaria");
+    expect(byDescription.count).toBe(2);
+    expect(await get<ExpenseSearch>("/dashboard/expense-search?q=xyzzy")).toEqual({
+      points: [],
+      total: "0.00",
+      count: 0,
+    });
+    for (const q of ["", "%20%20", "a".repeat(81)]) {
+      await expect(get(`/dashboard/expense-search?q=${q}`)).rejects.toMatchObject({
+        code: "invalid_query",
+        status: 422,
+      });
+    }
+    setMockDataMode("empty");
+    expect((await get<ExpenseSearch>("/dashboard/expense-search?q=netflix")).count).toBe(0);
   });
 });

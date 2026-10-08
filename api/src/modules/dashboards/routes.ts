@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type } from '@sinclair/typebox';
-import { CARD_PURCHASE, CARD_VALUE, COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, NET_VALUE, OPEN_CREDIT_EXPENSE, rule } from './rules.js';
+import { CARD_PURCHASE, CARD_VALUE, COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, NET_VALUE, OPEN_CREDIT_EXPENSE, rule } from './rules.js';
 import { AppError } from '../../plugins/errors.js';
 import {
   currentMonthWindow,
@@ -10,10 +10,13 @@ import {
   localDate,
   localMonth,
   monthsFrom,
+  periodMonths,
   periodWindow,
   previous30DaysWindow,
+  type MonthWindow,
   type Window,
 } from './time.js';
+import { expenseSearchQuery, expenseTrendQuery, trendQuery, yearsQuery, type ReportPeriod } from './queries.js';
 
 const Money = (description: string) => Type.String({ description });
 
@@ -33,8 +36,62 @@ const TrendSchema = Type.Object({
       expense: Money('Expense of the month (Reversal abates it), decimal string with 2 decimals'),
       balance: Money('income minus expense, decimal string with 2 decimals (may be negative)'),
     }),
-    { description: 'Always 12 points, oldest first: the 11 previous months and the current one' },
+    {
+      description:
+        'Oldest first. Without from/to: 12 points, the 11 previous months and the current one. With from/to: one point per local month from the month of from to the month of to (at most 120); only rows inside the inclusive local-day range count, so the end months may be partial',
+    },
   ),
+  totals: Type.Object(
+    {
+      income: Money('Income of the whole range, decimal string with 2 decimals'),
+      expense: Money('Expense of the whole range (Reversal abates it), decimal string with 2 decimals'),
+      balance: Money('income minus expense of the whole range, decimal string with 2 decimals (may be negative)'),
+    },
+    { description: 'Sums of the whole range shown, computed in the database; equal to the sum of the points' },
+  ),
+});
+
+const YearsSchema = Type.Object({
+  years: Type.Array(Type.Integer(), {
+    description: 'Local years (user zone) with at least one countable transaction, descending; empty without data',
+  }),
+});
+
+const ExpenseTrendSchema = Type.Object({
+  months: Type.Array(Type.String({ description: 'Local calendar month, YYYY-MM' }), { description: 'Oldest first; the same months as points' }),
+  categories: Type.Array(
+    Type.Object({
+      categoryId: Type.String({ format: 'uuid' }),
+      name: Type.String({ description: 'Category name in Portuguese' }),
+      color: Type.String({ description: 'Palette key of the category, e.g. orange-400' }),
+    }),
+    { description: 'Largest period total first; categories whose total over the period is zero are omitted' },
+  ),
+  points: Type.Array(
+    Type.Object({
+      month: Type.String({ description: 'Local calendar month, YYYY-MM' }),
+      values: Type.Record(Type.String(), Money('Expense of the category in the month, decimal string with 2 decimals; negative for Estorno'), {
+        description: 'Keyed by categoryId. Every category of categories has a key in every month; "0.00" when the month has no expense of that category',
+      }),
+    }),
+    { description: 'One point per month of months. The sum of every value equals the total expense /dashboard/categories reports for the same period' },
+  ),
+});
+
+const ExpenseSearchQuery = Type.Object({
+  q: Type.Optional(Type.String({ description: 'Text to find in the name or description, 1 to 80 characters after trimming; otherwise 422 invalid_query' })),
+});
+
+const ExpenseSearchSchema = Type.Object({
+  points: Type.Array(
+    Type.Object({
+      month: Type.String({ description: 'Local calendar month, YYYY-MM' }),
+      total: Money('Matching expense of the month, decimal string with 2 decimals; 0.00 when none'),
+    }),
+    { description: 'One point per local month from the first month with a match to the current month; empty without a match' },
+  ),
+  total: Money('Sum of all matching expenses, decimal string with 2 decimals'),
+  count: Type.Integer({ description: 'Number of matching transactions' }),
 });
 
 const NetWorthSchema = Type.Object({
@@ -81,17 +138,34 @@ const CategoriesSchema = Type.Object({
   ),
 });
 
-/** Period of `from`/`to` (local dates, inclusive) or the current local month when both are absent. */
-function requestedPeriod(query: { from?: string; to?: string }, zone: string): Window {
+/** Validated `from`/`to` (local dates, inclusive) with their window, or null when both are absent. */
+function requestedRange(query: { from?: string; to?: string }, zone: string): { from: string; to: string; window: Window } | null {
   const { from, to } = query;
-  if (from === undefined && to === undefined) return currentMonthWindow(new Date(), zone);
+  if (from === undefined && to === undefined) return null;
   if (from === undefined || to === undefined) {
     throw new AppError('invalid_period', 422, 'from and to must be given together', from === undefined ? 'from' : 'to');
   }
   const window = periodWindow(from, to, zone);
-  if (window) return window;
+  if (window) return { from, to, window };
   const bad = periodWindow(from, from, zone) === null ? 'from' : periodWindow(to, to, zone) === null ? 'to' : 'from';
   throw new AppError('invalid_period', 422, 'from and to must be valid YYYY-MM-DD dates with from not after to', bad);
+}
+
+/** Period of `from`/`to` (local dates, inclusive) or the current local month when both are absent. */
+function requestedPeriod(query: { from?: string; to?: string }, zone: string): Window {
+  return requestedRange(query, zone)?.window ?? currentMonthWindow(new Date(), zone);
+}
+
+/** Months and row window of a chart: the `from`/`to` range, or the rolling 12 months when both are absent. */
+function reportPeriod(query: { from?: string; to?: string }, zone: string): ReportPeriod {
+  const range = requestedRange(query, zone);
+  if (!range) {
+    const months = last12Months(new Date(), zone);
+    return { months, window: { from: (months[0] as MonthWindow).from, to: (months[11] as MonthWindow).to } };
+  }
+  const months = periodMonths(range.from, range.to, zone);
+  if (!months) throw new AppError('invalid_period', 422, 'the period may span at most 120 months', 'to');
+  return { months, window: range.window };
 }
 
 export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
@@ -125,32 +199,37 @@ export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
 
   routes.get(
     '/dashboard/trend',
-    { schema: { response: { 200: TrendSchema } } },
+    { schema: { querystring: PeriodQuery, response: { 200: TrendSchema } } },
     async (request) => {
-      const months = last12Months(new Date(), request.tz);
-      const names = months.map((m) => m.month);
-      const froms = months.map((m) => m.from.toISOString());
-      const tos = months.map((m) => m.to.toISOString());
-      const first = months[0]?.from as Date;
-      const last = months[11]?.to as Date;
-      const rows = await request.withUser((tx) => tx<{ month: string; income: string; expense: string; balance: string }[]>`
-        with months(month, m_from, m_to) as (
-          select * from unnest(${names}::text[], ${froms}::timestamptz[], ${tos}::timestamptz[])
-        ),
-        rows as (
-          select t.occurred_at, ${rule(tx, INCOME_VALUE)} as income, ${rule(tx, EXPENSE_VALUE)} as expense
-          from ${rule(tx, FROM_TRANSACTIONS)}
-          where ${rule(tx, COUNTABLE)} and t.occurred_at >= ${first} and t.occurred_at < ${last}
-        )
-        select m.month,
-               coalesce(sum(r.income), 0.00)::text as income,
-               coalesce(sum(r.expense), 0.00)::text as expense,
-               (coalesce(sum(r.income), 0.00) - coalesce(sum(r.expense), 0.00))::text as balance
-        from months m
-        left join rows r on r.occurred_at >= m.m_from and r.occurred_at < m.m_to
-        group by m.month
-        order by m.month`);
-      return { points: rows.map((r) => ({ month: r.month, income: r.income, expense: r.expense, balance: r.balance })) };
+      const period = reportPeriod(request.query, request.tz);
+      return request.withUser((tx) => trendQuery(tx, period));
+    },
+  );
+
+  routes.get(
+    '/dashboard/years',
+    { schema: { response: { 200: YearsSchema } } },
+    async (request) => ({ years: await request.withUser((tx) => yearsQuery(tx, request.tz)) }),
+  );
+
+  routes.get(
+    '/dashboard/expense-trend',
+    { schema: { querystring: PeriodQuery, response: { 200: ExpenseTrendSchema } } },
+    async (request) => {
+      const period = reportPeriod(request.query, request.tz);
+      return request.withUser((tx) => expenseTrendQuery(tx, period));
+    },
+  );
+
+  routes.get(
+    '/dashboard/expense-search',
+    { schema: { querystring: ExpenseSearchQuery, response: { 200: ExpenseSearchSchema } } },
+    async (request) => {
+      const text = (request.query.q ?? '').trim();
+      if (text.length < 1 || text.length > 80) {
+        throw new AppError('invalid_query', 422, 'q must have 1 to 80 characters', 'q');
+      }
+      return request.withUser((tx) => expenseSearchQuery(tx, text, new Date(), request.tz));
     },
   );
 

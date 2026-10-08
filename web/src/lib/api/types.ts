@@ -212,7 +212,24 @@ export type CreditExpenseUpdate = Partial<Omit<CreditExpenseInput, "notes">> & {
 export type Last30Days = { total: Money; previousTotal: Money; changePct: number | null };
 
 export type TrendPoint = { month: string; income: Money; expense: Money; balance: Money };
-export type Trend = { points: TrendPoint[] };
+/** `totals` are the API's own sum of the points of the period shown (never added up in the front). */
+export type TrendTotals = { income: Money; expense: Money; balance: Money };
+export type Trend = { points: TrendPoint[]; totals: TrendTotals };
+
+/** `color` is a palette key (`orange-400`). `values` has an entry per listed category for every month. */
+export type ExpenseTrendCategory = { categoryId: string; name: string; color: string };
+export type ExpenseTrend = {
+  months: string[];
+  categories: ExpenseTrendCategory[];
+  points: { month: string; values: Record<string, Money> }[];
+};
+
+/** `points` run from the first month with a match to the current one; `total` and `count` cover them all. */
+export type ExpenseSearch = {
+  points: { month: string; total: Money }[];
+  total: Money;
+  count: number;
+};
 
 export type CategoryTotal = { categoryId: string; name: string; total: Money };
 export type CategoryDistribution = { items: CategoryTotal[] };
@@ -225,6 +242,9 @@ export type CardView = {
 };
 
 export type DashboardPeriod = { from: string; to: string };
+
+/** Years with countable transactions, newest first. */
+export type DashboardYears = { years: number[] };
 
 export type InvestmentReturn = {
   id: string;

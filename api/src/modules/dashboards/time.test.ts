@@ -6,6 +6,7 @@ import {
   localMonth,
   monthBounds,
   monthsFrom,
+  periodMonths,
   periodWindow,
   previous30DaysWindow,
 } from './time.js';
@@ -126,5 +127,24 @@ describe('months since the first activity', () => {
   it('names the local month of an instant (23:30 on the last day stays in that month)', () => {
     expect(localMonth(new Date('2026-10-01T02:30:00Z'), SP)).toBe('2026-09');
     expect(localMonth(new Date('2026-10-01T02:30:00Z'), 'UTC')).toBe('2026-10');
+  });
+});
+
+describe('periodMonths', () => {
+  it('lists every local month from the month of from to the month of to, crossing the year', () => {
+    const months = periodMonths('2024-11-20', '2025-02-03', SP);
+    expect(months?.map((m) => m.month)).toEqual(['2024-11', '2024-12', '2025-01', '2025-02']);
+    expect(iso(months?.[1]?.from as Date)).toBe('2024-12-01T03:00:00.000Z');
+    expect(iso(months?.[1]?.to as Date)).toBe('2025-01-01T03:00:00.000Z');
+  });
+
+  it('returns one month for dates in the same month', () => {
+    expect(periodMonths('2025-03-05', '2025-03-05', SP)?.map((m) => m.month)).toEqual(['2025-03']);
+  });
+
+  it('allows 120 months and returns null beyond (without building them)', () => {
+    expect(periodMonths('2015-01-01', '2024-12-31', SP)).toHaveLength(120);
+    expect(periodMonths('2015-01-01', '2025-01-01', SP)).toBeNull();
+    expect(periodMonths('0001-01-01', '2025-01-01', SP)).toBeNull();
   });
 });

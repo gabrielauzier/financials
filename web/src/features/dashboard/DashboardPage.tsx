@@ -1,5 +1,7 @@
 import { CardView } from "./CardView";
 import { CategoryBreakdown } from "./CategoryBreakdown";
+import { ExpenseTracker } from "./ExpenseTracker";
+import { ExpenseTrendChart } from "./ExpenseTrendChart";
 import { InvestmentReturns } from "./InvestmentReturns";
 import { Last30DaysCard } from "./Last30DaysCard";
 import { NetWorthChart } from "./NetWorthChart";
@@ -12,7 +14,7 @@ export function DashboardPage() {
       <header className="border-b pb-6">
         <h1 className="text-3xl font-semibold">Dashboard</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Despesas, tendência, categorias, cartão e patrimônio em um só lugar.
+          Despesas, tendências, categorias, cartão e patrimônio em um só lugar.
         </p>
       </header>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -20,7 +22,9 @@ export function DashboardPage() {
         <NetWorthChart />
       </div>
       <TrendChart />
+      <ExpenseTrendChart />
       <CategoryBreakdown />
+      <ExpenseTracker />
       <CardView />
       <InvestmentReturns />
     </div>

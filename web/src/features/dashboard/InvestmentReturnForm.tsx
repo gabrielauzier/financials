@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -105,11 +106,10 @@ export function InvestmentReturnForm({ open, onOpenChange, investmentReturn }: P
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4" noValidate>
           <Field label="Data" id="investment-return-date" error={errors["occurredOn"]}>
-            <Input
+            <DatePicker
               id="investment-return-date"
-              type="date"
               value={form.date}
-              onChange={(e) => set("date", e.target.value)}
+              onChange={(value) => set("date", value)}
             />
           </Field>
           <Field label="Conta" id="investment-return-account" error={errors["accountId"]}>

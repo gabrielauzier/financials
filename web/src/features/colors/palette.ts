@@ -145,3 +145,12 @@ export function badgeClasses(value: string | undefined): { bg: string; text: str
 export function accentClasses(value: string | undefined): { bg: string } {
   return isColorKey(value) ? ACCENT_CLASSES[value] : ACCENT_CLASSES[DEFAULT_COLOR];
 }
+
+/**
+ * CSS color of a key for charts: the Tailwind theme variable of its family at shade 400 (`orange-400` ->
+ * `var(--color-orange-400)`). Tailwind emits that variable because the key's `bg-<family>-400` class
+ * (`ACCENT_CLASSES`) is in the source. An unknown value falls back to the default color.
+ */
+export function chartColor(value: string | undefined): string {
+  return `var(--color-${isColorKey(value) ? value : DEFAULT_COLOR})`;
+}

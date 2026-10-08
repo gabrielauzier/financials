@@ -25,6 +25,8 @@ export interface TxSeed {
   neutral?: boolean;
   accountId?: string;
   name?: string;
+  /** Original bank description (nullable column). */
+  description?: string;
 }
 
 /** Inserts transactions directly (as the user, so RLS and FKs apply). */
@@ -32,10 +34,10 @@ export async function seedTransactions(user: TestUser, accountId: string, rows: 
   await asUser(user.id, async (tx) => {
     for (const r of rows) {
       await tx`
-        insert into public.transactions (account_id, category_id, name, type, occurred_at, amount, payment_method, neutral)
+        insert into public.transactions (account_id, category_id, name, description, type, occurred_at, amount, payment_method, neutral)
         values (${r.accountId ?? accountId},
                 (select id from public.categories where key = ${r.category ?? 'Uncategorized'}),
-                ${r.name ?? 'seed'}, ${r.type}, ${r.at}, ${r.amount}, ${r.method ?? 'PIX'}, ${r.neutral ?? false})`;
+                ${r.name ?? 'seed'}, ${r.description ?? null}, ${r.type}, ${r.at}, ${r.amount}, ${r.method ?? 'PIX'}, ${r.neutral ?? false})`;
     }
   });
 }

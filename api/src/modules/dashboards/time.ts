@@ -81,6 +81,22 @@ export function monthsFrom(firstMonth: string, now: Date, zone: string): MonthWi
   return out;
 }
 
+/** Most months a period may span (inclusive of both end months). */
+export const MAX_PERIOD_MONTHS = 120;
+
+/**
+ * Every local calendar month from the month of `from` to the month of `to` (local dates
+ * `YYYY-MM-DD`, already validated by `periodWindow`), oldest first. Null when the span exceeds
+ * `MAX_PERIOD_MONTHS`, checked before any month is built.
+ */
+export function periodMonths(from: string, to: string, zone: string): MonthWindow[] | null {
+  const first = DateTime.fromFormat(from, DATE_FORMAT, { zone }).startOf('month');
+  const last = DateTime.fromFormat(to, DATE_FORMAT, { zone }).startOf('month');
+  const count = Math.round(last.diff(first, 'months').months) + 1;
+  if (count < 1 || count > MAX_PERIOD_MONTHS) return null;
+  return Array.from({ length: count }, (_, i) => monthWindow(first.plus({ months: i })));
+}
+
 /** The calendar month `YYYY-MM`'s instants in the zone. Throws on a malformed month. */
 export function monthBounds(month: string, zone: string): MonthWindow {
   const first = DateTime.fromFormat(month, MONTH_FORMAT, { zone });

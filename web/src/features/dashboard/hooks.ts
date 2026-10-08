@@ -5,10 +5,13 @@ import {
   deleteInvestmentReturn,
   getCardView,
   getCategoryDistribution,
+  getExpenseSearch,
+  getExpenseTrend,
   getInvestmentReturns,
   getLast30Days,
   getNetWorth,
   getTrend,
+  getYears,
   updateInvestmentReturn,
 } from "./api";
 
@@ -16,13 +19,37 @@ export const NET_WORTH_KEY = ["dashboard", "net-worth"] as const;
 
 export const last30DaysQueryOptions = () =>
   queryOptions({ queryKey: ["dashboard", "last-30-days"], queryFn: getLast30Days });
-export const trendQueryOptions = () =>
-  queryOptions({ queryKey: ["dashboard", "trend"], queryFn: getTrend });
+/** `undefined` period: the rolling 12 months (no parameters); `null`: incomplete choice, no request. */
+export const trendQueryOptions = (period?: DashboardPeriod | null) =>
+  queryOptions({
+    queryKey: ["dashboard", "trend", period ?? "default"],
+    queryFn: () => getTrend(period ?? undefined),
+    enabled: period !== null,
+  });
 export const netWorthQueryOptions = () =>
   queryOptions({ queryKey: NET_WORTH_KEY, queryFn: getNetWorth });
 
 export const useLast30Days = () => useQuery(last30DaysQueryOptions());
-export const useTrend = () => useQuery(trendQueryOptions());
+export const useTrend = (period?: DashboardPeriod | null) => useQuery(trendQueryOptions(period));
+/** Same period rules as the trend: `undefined` = rolling 12 months, `null` = no request. */
+export const useExpenseTrend = (period?: DashboardPeriod | null) =>
+  useQuery({
+    queryKey: ["dashboard", "expense-trend", period ?? "default"],
+    queryFn: () => getExpenseTrend(period ?? undefined),
+    enabled: period !== null,
+  });
+
+/** `term` null (nothing submitted yet) sends no request; the search runs only for a submitted term. */
+export const useExpenseSearch = (term: string | null) =>
+  useQuery({
+    queryKey: ["dashboard", "expense-search", term],
+    queryFn: () => getExpenseSearch(term as string),
+    enabled: term !== null,
+  });
+
+/** Years with transactions for the month/year select and the year shortcuts; `enabled` skips the request. */
+export const useYears = (enabled = true) =>
+  useQuery({ queryKey: ["dashboard", "years"], queryFn: getYears, enabled });
 export const useNetWorth = () => useQuery(netWorthQueryOptions());
 
 /** `period` null (custom range incomplete or invalid) disables the query. */

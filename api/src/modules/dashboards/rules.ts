@@ -54,6 +54,9 @@ export const EXPENSE_VALUE = `(
   END
 )`;
 
+/** Rows typed Expense (a Reversal Income is not one); used by the expense search, always together with COUNTABLE. */
+export const EXPENSE_ROW = `(t.type = 'Expense')`;
+
 /** Income of a countable row: Incomes other than Reversal. */
 export const INCOME_VALUE = `(
   CASE WHEN t.type = 'Income' AND c.key <> 'Reversal' THEN t.amount ELSE 0.00 END

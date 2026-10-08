@@ -22,7 +22,9 @@ const PANELS = [
   "Despesas dos últimos 30 dias",
   "Patrimônio",
   "Tendência de 12 meses",
+  "Tendência de Despesas",
   "Gastos por categoria",
+  "Acompanhar Despesas",
   "Visão do cartão",
   "Rendimentos de investimentos",
 ];
@@ -30,6 +32,13 @@ const getsTo = (path: string) =>
   requests.filter((request) => request.method === "GET" && request.path.startsWith(path));
 
 describe("DashboardPage", () => {
+  it("lists the panels in the fixed order", () => {
+    renderWithQuery(<DashboardPage />);
+    expect(
+      screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent),
+    ).toEqual(PANELS);
+  });
+
   it("renders every panel from the mocked API", async () => {
     renderWithQuery(<DashboardPage />);
     expect(screen.getByRole("heading", { level: 1, name: "Dashboard" })).toBeInTheDocument();
@@ -56,6 +65,14 @@ describe("DashboardPage", () => {
       panel("Visão do cartão").getByText("Parcelas e recorrências a pagar"),
     ).toBeInTheDocument();
 
+    const expenseTrend = await panel("Tendência de Despesas").findByRole("table");
+    expect(within(expenseTrend).getAllByRole("row")).toHaveLength(13);
+    expect(within(expenseTrend).getByRole("columnheader", { name: "Moradia" })).toBeInTheDocument();
+
+    expect(
+      panel("Acompanhar Despesas").getByText(/Pesquise uma despesa pelo nome/),
+    ).toBeInTheDocument();
+
     const returns = await panel("Rendimentos de investimentos").findByRole("table");
     expect(within(returns).getAllByRole("row")).toHaveLength(4);
     expect(within(returns).getByText(/^-R\$ 18,50$/)).toBeInTheDocument();
@@ -63,6 +80,8 @@ describe("DashboardPage", () => {
     const paths = requests.map((request) => request.path);
     expect(paths).toContain("/dashboard/last-30-days");
     expect(paths).toContain("/dashboard/trend");
+    expect(paths).toContain("/dashboard/expense-trend");
+    expect(paths.some((path) => path.startsWith("/dashboard/expense-search"))).toBe(false);
     expect(paths).toContain("/dashboard/net-worth");
     expect(paths).toContain("/investment-returns");
     expect(
@@ -89,6 +108,9 @@ describe("DashboardPage", () => {
     expect(within(trend).getAllByRole("row")).toHaveLength(13);
     expect(cells.filter((cell) => cell.textContent === "R$ 0,00")).toHaveLength(36);
 
+    expect(
+      await panel("Tendência de Despesas").findByText("Sem despesas no período"),
+    ).toBeInTheDocument();
     expect(
       await panel("Gastos por categoria").findByText("Sem despesas no período"),
     ).toBeInTheDocument();
@@ -119,6 +141,24 @@ describe("DashboardPage", () => {
     );
     expect(await panel("Tendência de 12 meses").findByRole("table")).toBeInTheDocument();
     expect(getsTo("/dashboard/trend")).toHaveLength(2);
+  });
+
+  it("the expense trend failing shows its own error while the other panels keep rendering", async () => {
+    failures.set(
+      "GET /dashboard/expense-trend",
+      new ApiError("internal_error", "Technical English", 500),
+    );
+    renderWithQuery(<DashboardPage />);
+    expect(
+      await panel("Tendência de Despesas").findByText("Não foi possível carregar este painel."),
+    ).toBeInTheDocument();
+    expect(await panel("Tendência de 12 meses").findByRole("table")).toBeInTheDocument();
+    expect(await panel("Gastos por categoria").findByText("Moradia")).toBeInTheDocument();
+    failures.clear();
+    fireEvent.click(
+      panel("Tendência de Despesas").getByRole("button", { name: "Tentar novamente" }),
+    );
+    expect(await panel("Tendência de Despesas").findByRole("table")).toBeInTheDocument();
   });
 
   it("deleting an investment return refreshes the net worth shown in the page", async () => {

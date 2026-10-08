@@ -3,6 +3,9 @@ import type {
   CardView,
   CategoryDistribution,
   DashboardPeriod,
+  DashboardYears,
+  ExpenseSearch,
+  ExpenseTrend,
   InvestmentReturn,
   InvestmentReturnInput,
   InvestmentReturns,
@@ -16,9 +19,16 @@ const periodQuery = ({ from, to }: DashboardPeriod) =>
   `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
 
 export const getLast30Days = () => apiRequest<Last30Days>("/dashboard/last-30-days");
-export const getTrend = () => apiRequest<Trend>("/dashboard/trend");
+/** No period: the API answers the rolling last 12 months. */
+export const getTrend = (period?: DashboardPeriod) =>
+  apiRequest<Trend>(`/dashboard/trend${period ? periodQuery(period) : ""}`);
 export const getCategoryDistribution = (period: DashboardPeriod) =>
   apiRequest<CategoryDistribution>(`/dashboard/categories${periodQuery(period)}`);
+export const getExpenseTrend = (period?: DashboardPeriod) =>
+  apiRequest<ExpenseTrend>(`/dashboard/expense-trend${period ? periodQuery(period) : ""}`);
+export const getExpenseSearch = (q: string) =>
+  apiRequest<ExpenseSearch>(`/dashboard/expense-search?q=${encodeURIComponent(q)}`);
+export const getYears = () => apiRequest<DashboardYears>("/dashboard/years");
 export const getNetWorth = () => apiRequest<NetWorth>("/dashboard/net-worth");
 export const getCardView = (period: DashboardPeriod) =>
   apiRequest<CardView>(`/dashboard/card${periodQuery(period)}`);
