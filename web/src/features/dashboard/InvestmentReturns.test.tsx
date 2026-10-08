@@ -5,6 +5,7 @@ import { mockRequest } from "@/lib/api/mock";
 import { setMockDataMode } from "@/lib/api/mock/dashboard";
 import type { Account, InvestmentReturn, InvestmentReturns as Returns } from "@/lib/api/types";
 import { failures, renderWithQuery, requests, resetSpy, responses } from "@/test/apiSpy";
+import { pickDate } from "@/test/datePicker";
 import { InvestmentReturns } from "./InvestmentReturns";
 
 vi.mock("@/lib/api/client", async (importOriginal) => ({
@@ -39,8 +40,7 @@ const dataRows = () => within(screen.getByRole("table")).getAllByRole("row").sli
 
 async function fillAndSave(fields: { amount?: string; date?: string; notes?: string }) {
   const dialog = await screen.findByRole("dialog");
-  if (fields.date !== undefined)
-    fireEvent.change(within(dialog).getByLabelText("Data"), { target: { value: fields.date } });
+  if (fields.date !== undefined) pickDate(within(dialog).getByLabelText("Data"), fields.date);
   if (fields.amount !== undefined)
     fireEvent.change(within(dialog).getByLabelText("Valor"), { target: { value: fields.amount } });
   if (fields.notes !== undefined)
@@ -185,6 +185,18 @@ describe("InvestmentReturns create", () => {
     expect(row.getByText("14/10/2026")).toBeInTheDocument();
     expect(row.getByText("Resgate ruim")).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("the date is a calendar picker that opens on today, not a native input", async () => {
+    renderWithQuery(<InvestmentReturns />);
+    await screen.findByRole("table");
+    fireEvent.click(screen.getByRole("button", { name: "Novo rendimento" }));
+    const dialog = await screen.findByRole("dialog");
+    const date = within(dialog).getByLabelText("Data");
+    expect(date.tagName).toBe("BUTTON");
+    expect(date).toHaveTextContent("15/10/2026");
+    pickDate(date, "2026-10-03");
+    expect(date).toHaveTextContent("03/10/2026");
   });
 
   it("shows the Portuguese message, never the API text, when the API rejects the create", async () => {

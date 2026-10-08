@@ -9,6 +9,7 @@ import {
   getLast30Days,
   getNetWorth,
   getTrend,
+  getYears,
   updateInvestmentReturn,
 } from "./api";
 
@@ -23,6 +24,9 @@ export const netWorthQueryOptions = () =>
 
 export const useLast30Days = () => useQuery(last30DaysQueryOptions());
 export const useTrend = () => useQuery(trendQueryOptions());
+/** Years with transactions for the month/year select and the year shortcuts; `enabled` skips the request. */
+export const useYears = (enabled = true) =>
+  useQuery({ queryKey: ["dashboard", "years"], queryFn: getYears, enabled });
 export const useNetWorth = () => useQuery(netWorthQueryOptions());
 
 /** `period` null (custom range incomplete or invalid) disables the query. */

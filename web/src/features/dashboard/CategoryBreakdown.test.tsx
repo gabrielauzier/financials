@@ -2,6 +2,7 @@ import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/client";
 import { failures, renderWithQuery, requests, resetSpy, responses } from "@/test/apiSpy";
+import { pickDate } from "@/test/datePicker";
 import { CategoryBreakdown } from "./CategoryBreakdown";
 
 vi.mock("@/lib/api/client", async (importOriginal) => ({
@@ -73,21 +74,21 @@ describe("CategoryBreakdown", () => {
     await screen.findByText("Moradia");
     await choose("Personalizado");
     expect(paths()).toHaveLength(1);
-    fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-08-10" } });
+    pickDate("De", "2026-10-05");
     expect(paths()).toHaveLength(1);
-    fireEvent.change(screen.getByLabelText("Até"), { target: { value: "2026-08-20" } });
+    pickDate("Até", "2026-10-20");
     await waitFor(() =>
-      expect(paths().at(-1)).toBe("/dashboard/categories?from=2026-08-10&to=2026-08-20"),
+      expect(paths().at(-1)).toBe("/dashboard/categories?from=2026-10-05&to=2026-10-20"),
     );
     const before = paths().length;
-    fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-08-25" } });
+    pickDate("De", "2026-10-25");
     expect(await screen.findByText("Período inválido")).toBeInTheDocument();
     expect(paths()).toHaveLength(before);
     expect(screen.queryByText("Moradia")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-08-15" } });
+    pickDate("De", "2026-10-15");
     await waitFor(() => expect(screen.queryByText("Período inválido")).not.toBeInTheDocument());
     await waitFor(() =>
-      expect(paths().at(-1)).toBe("/dashboard/categories?from=2026-08-15&to=2026-08-20"),
+      expect(paths().at(-1)).toBe("/dashboard/categories?from=2026-10-15&to=2026-10-20"),
     );
   });
 

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type {
   CardView,
   CategoryDistribution,
+  DashboardYears,
   InvestmentReturns,
   Last30Days,
   NetWorth,
@@ -113,5 +114,15 @@ describe("dashboard mocks follow the API contract", () => {
       items: [],
       lastDate: null,
     });
+  });
+
+  it("lists the years of the months with data, newest first, and none without data", async () => {
+    const { years } = await get<DashboardYears>("/dashboard/years");
+    const now = new Date().getFullYear();
+    expect(years[0]).toBe(now);
+    expect([...years].sort((a, b) => b - a)).toEqual(years);
+    expect(new Set(years).size).toBe(years.length);
+    setMockDataMode("empty");
+    expect(await get<DashboardYears>("/dashboard/years")).toEqual({ years: [] });
   });
 });

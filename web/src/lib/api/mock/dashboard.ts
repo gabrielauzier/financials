@@ -1,4 +1,11 @@
-import type { CardView, CategoryDistribution, Last30Days, NetWorth, Trend } from "../types";
+import type {
+  CardView,
+  CategoryDistribution,
+  DashboardYears,
+  Last30Days,
+  NetWorth,
+  Trend,
+} from "../types";
 import { mockApiError, type MockHandler } from "./index";
 import { localIsoDate, localMonth } from "./dates";
 import { listMockInvestmentReturns, resetInvestmentReturnsMock } from "./investmentReturns";
@@ -62,6 +69,14 @@ function trend(): Trend {
       const [income, expense] = empty ? ["0.00", "0.00"] : (monthly[index] as [string, string]);
       return { month, income, expense, balance: fromCents(toCents(income) - toCents(expense)) };
     }),
+  };
+}
+
+/** Years of the months that have data, newest first; none without data. */
+function years(): DashboardYears {
+  if (empty) return { years: [] };
+  return {
+    years: [...new Set(months().map((month) => Number(month.slice(0, 4))))].sort((a, b) => b - a),
   };
 }
 
@@ -153,6 +168,7 @@ function card(path: string): CardView {
 export const dashboardHandlers: MockHandler[] = [
   { method: "GET", path: "/dashboard/last-30-days", handle: last30Days },
   { method: "GET", path: "/dashboard/trend", handle: trend },
+  { method: "GET", path: "/dashboard/years", handle: years },
   { method: "GET", path: "/dashboard/net-worth", handle: netWorth },
   {
     method: "GET",

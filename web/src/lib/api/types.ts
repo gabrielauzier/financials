@@ -226,6 +226,9 @@ export type CardView = {
 
 export type DashboardPeriod = { from: string; to: string };
 
+/** Years with countable transactions, newest first. */
+export type DashboardYears = { years: number[] };
+
 export type InvestmentReturn = {
   id: string;
   accountId: string;
