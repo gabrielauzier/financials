@@ -3,6 +3,7 @@
  * calculation rules come from `rules.ts` and all windows from `time.ts`; this file only shapes the
  * aggregation. Money is summed in SQL and returned as decimal text, never as a JS number.
  */
+import { DateTime } from 'luxon';
 import type { TransactionSql } from 'postgres';
 import { COUNTABLE, EXPENSE_VALUE, FROM_TRANSACTIONS, INCOME_VALUE, rule } from './rules.js';
 import type { MonthWindow, Window } from './time.js';
@@ -57,4 +58,30 @@ export async function trendQuery(tx: TransactionSql, period: ReportPeriod): Prom
     points: rows.map((r) => ({ month: r.month, income: r.income, expense: r.expense, balance: r.balance })),
     totals: totals as TrendResult['totals'],
   };
+}
+
+/** Local years (descending) with at least one countable transaction. */
+export async function yearsQuery(tx: TransactionSql, zone: string): Promise<number[]> {
+  const [bounds] = await tx<{ first: Date | null; last: Date | null }[]>`
+    select min(t.occurred_at) as first, max(t.occurred_at) as last
+    from ${rule(tx, FROM_TRANSACTIONS)}
+    where ${rule(tx, COUNTABLE)}`;
+  if (!bounds?.first || !bounds.last) return [];
+  const firstYear = DateTime.fromJSDate(bounds.first, { zone }).year;
+  const lastYear = DateTime.fromJSDate(bounds.last, { zone }).year;
+  const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
+  const froms = years.map((y) => DateTime.fromObject({ year: y }, { zone }).toJSDate().toISOString());
+  const tos = years.map((y) => DateTime.fromObject({ year: y + 1 }, { zone }).toJSDate().toISOString());
+  const rows = await tx<{ year: number }[]>`
+    with years(year, y_from, y_to) as (
+      select * from unnest(${years}::int[], ${froms}::timestamptz[], ${tos}::timestamptz[])
+    )
+    select y.year
+    from years y
+    where exists (
+      select 1 from ${rule(tx, FROM_TRANSACTIONS)}
+      where ${rule(tx, COUNTABLE)} and t.occurred_at >= y.y_from and t.occurred_at < y.y_to
+    )
+    order by y.year desc`;
+  return rows.map((r) => r.year);
 }

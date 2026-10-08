@@ -16,7 +16,7 @@ import {
   type MonthWindow,
   type Window,
 } from './time.js';
-import { trendQuery, type ReportPeriod } from './queries.js';
+import { trendQuery, yearsQuery, type ReportPeriod } from './queries.js';
 
 const Money = (description: string) => Type.String({ description });
 
@@ -49,6 +49,12 @@ const TrendSchema = Type.Object({
     },
     { description: 'Sums of the whole range shown, computed in the database; equal to the sum of the points' },
   ),
+});
+
+const YearsSchema = Type.Object({
+  years: Type.Array(Type.Integer(), {
+    description: 'Local years (user zone) with at least one countable transaction, descending; empty without data',
+  }),
 });
 
 const NetWorthSchema = Type.Object({
@@ -161,6 +167,12 @@ export async function dashboardsRoutes(app: FastifyInstance): Promise<void> {
       const period = reportPeriod(request.query, request.tz);
       return request.withUser((tx) => trendQuery(tx, period));
     },
+  );
+
+  routes.get(
+    '/dashboard/years',
+    { schema: { response: { 200: YearsSchema } } },
+    async (request) => ({ years: await request.withUser((tx) => yearsQuery(tx, request.tz)) }),
   );
 
   routes.get(
